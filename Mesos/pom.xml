@@ -5,9 +5,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>it.polimi.ingsw</groupId>
-    <artifactId>PSP000</artifactId>
+    <artifactId>PSP22</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>Galaxy Trucker</name>
+    <name>Mesos</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
