@@ -14,3 +14,6 @@ public class InventorCard extends CharacterCard{
         return inventionIcon;
     }
 }
+
+// TODO : matching icons logic
+// TODO : different icons logic

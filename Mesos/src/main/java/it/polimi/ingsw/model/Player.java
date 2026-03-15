@@ -13,11 +13,12 @@ public class Player {
     public Player(String nickname, Totem totem) {
         this.nickname = nickname;
         this.totem = totem;
-        this.food = 0; // Inizializza il cibo base
-        this.prestigePoints = 0; // Inizializza i punti prestigio base
-        this.tribe = new Tribe(); // Ogni giocatore inizia con una nuova tribù
+        this.food = 0;
+        this.prestigePoints = 0;
+        this.tribe = new Tribe();
     }
 
+    // TODO : give initial food based on number of players
     public void addFood(int amount) {
         this.food += amount;
     }
@@ -35,7 +36,7 @@ public class Player {
     }
 
     public void removePrestigePoints(int amount) {
-        this.prestigePoints = Math.max(0, this.prestigePoints - amount);
+        this.prestigePoints -= amount;
     }
 
     public boolean canAfford(int cost) {

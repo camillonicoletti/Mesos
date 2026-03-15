@@ -2,7 +2,7 @@ package it.polimi.ingsw.model;
 
 import it.polimi.ingsw.model.card.BuildingCard;
 import it.polimi.ingsw.model.card.CharacterCard;
-import it.polimi.ingsw.model.enums.CharacterType;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,19 +28,18 @@ public class Tribe {
         return this.characterCards.size();
     }
 
-    public int countCharactersByType(CharacterType characterType) {
-        // Logica base: conta quante carte di quel tipo ci sono nella tribù
+    public int countCharactersByType(Class<? extends CharacterCard> type) {
         int count = 0;
         for (CharacterCard card : characterCards) {
-            if (card.getType() == characterType) {
+            if (type.isInstance(card)) {
                 count++;
             }
         }
-        return count;
+            return count;
     }
 
     public int getBuildingDiscount() {
-        // Da implementare con la logica del gioco (es. controllando le carte builder)
+        // TODO
         return 0;
     }
 
