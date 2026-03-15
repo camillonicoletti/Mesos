@@ -1,10 +1,12 @@
 package it.polimi.ingsw.model.card;
 
+import it.polimi.ingsw.model.card.effect.Effect;
+
 public class BuildingCard extends PlayerCard{
     private final int foodCost;
-    private final BuildingEffect effect;
+    private final Effect effect;
 
-    public BuildingCard(int foodCost, int pointsEndOfMatch, BuildingEffect effect) {
+    public BuildingCard(int foodCost, int pointsEndOfMatch, Effect effect) {
         super(pointsEndOfMatch);
         this.foodCost = foodCost;
         this.effect = effect;
@@ -14,7 +16,7 @@ public class BuildingCard extends PlayerCard{
         return foodCost;
     }
 
-    public BuildingEffect getEffect() {
+    public Effect getEffect() {
         return effect;
     }
 
