@@ -1,10 +1,13 @@
 package it.polimi.ingsw.model.card;
 
+import it.polimi.ingsw.model.enums.Era;
+
 public class ShamanCard extends CharacterCard{
     private final int stars;
 
-    public ShamanCard(int stars) {
+    public ShamanCard(int stars, Era era) {
 
+        super(era);
         this.stars = stars;
 
     }
