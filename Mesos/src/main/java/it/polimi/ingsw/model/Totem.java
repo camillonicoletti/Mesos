@@ -23,4 +23,6 @@ public class Totem {
     public void setPosition(TotemPosition position) {
         this.position = position;
     }
+
+
 }
