@@ -1,8 +1,6 @@
 package it.polimi.ingsw.model;
 
-import it.polimi.ingsw.model.card.BuildingCard;
-import it.polimi.ingsw.model.card.CharacterCard;
-
+import it.polimi.ingsw.model.card.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,4 +48,26 @@ public class Tribe {
     public List<BuildingCard> getBuildingCards() {
         return buildingCards;
     }
+
+    // Method used for FullSetFoodEffect and EndFullSetPPEffect
+    public int countFullSets() {
+
+        int[] counts = {
+                countCharactersByType(ArtistCard.class),
+                countCharactersByType(BuilderCard.class),
+                countCharactersByType(GathererCard.class),
+                countCharactersByType(HunterCard.class),
+                countCharactersByType(InventorCard.class),
+                countCharactersByType(ShamanCard.class)
+        };
+
+        int sets = counts[0];
+        for (int count : counts) {
+            sets = Math.min(sets, count);
+        }
+
+        return sets;
+
+    }
+
 }
