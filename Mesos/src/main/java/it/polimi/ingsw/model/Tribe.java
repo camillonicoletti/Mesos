@@ -1,9 +1,12 @@
 package it.polimi.ingsw.model;
 
 import it.polimi.ingsw.model.card.*;
+import it.polimi.ingsw.model.enums.InventorIcons;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Tribe {
     private List<CharacterCard> characterCards;
@@ -69,5 +72,22 @@ public class Tribe {
         return sets;
 
     }
+    // Method used for InventorPairFoodEffect
+    // TODO : Refactor this method for counting pp for inventors at the end of the game
+    public int countInventorPairs() {
+        Map<InventorIcons, Integer> iconCounts = new HashMap<>();
 
+        for (CharacterCard card : characterCards) {
+            if (card instanceof InventorCard inventor) {
+                InventorIcons icon = inventor.getInventionIcon();
+                iconCounts.put(icon, iconCounts.getOrDefault(icon, 0) + 1);
+            }
+        }
+
+        int pairs = 0;
+        for (int count : iconCounts.values()) {
+            pairs += count / 2;
+        }
+        return pairs;
+    }
 }
