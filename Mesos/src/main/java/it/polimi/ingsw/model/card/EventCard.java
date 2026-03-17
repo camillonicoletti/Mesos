@@ -2,23 +2,16 @@ package it.polimi.ingsw.model.card;
 
 import it.polimi.ingsw.model.Game;
 import it.polimi.ingsw.model.enums.Era;
-import it.polimi.ingsw.model.enums.EventType;
 
-public class EventCard extends Card {
+public abstract class EventCard extends Card {
 
-    private EventType type;
-    private boolean closeEvent;
-    private int priorityValue;
+    private final boolean closeEvent;
+    private final int priorityValue;
 
-    public EventCard(Era era, EventType type, boolean closeEvent, int priorityValue) {
+    public EventCard(Era era, boolean closeEvent, int priorityValue) {
         super(era);
-        this.type = type;
         this.closeEvent = closeEvent;
         this.priorityValue = priorityValue;
-    }
-
-    public EventType getType() {
-        return type;
     }
 
     public boolean isCloseEvent() {
@@ -29,27 +22,5 @@ public class EventCard extends Card {
         return priorityValue;
     }
 
-    public void apply(Game game) {
-        switch (type) {
-            case HUNT -> applyHunt(game);
-            case SHAMANIC_RITUAL -> applyShamanicRitual(game);
-            case ROCK_PAINTINGS -> applyRockPaintings(game);
-            case SUSTENANCE -> applySustenance(game);
-        }
-    }
-    private void applyHunt(Game game) {
-        // TODO
-    }
-
-    private void applyShamanicRitual(Game game) {
-        // TODO
-    }
-
-    private void applyRockPaintings(Game game) {
-        // TODO
-    }
-
-    private void applySustenance(Game game) {
-        // TODO
-    }
+    public abstract void apply(Game game);
 }

@@ -1,0 +1,81 @@
+package it.polimi.ingsw.model.card;
+
+import it.polimi.ingsw.model.Game;
+import it.polimi.ingsw.model.Player;
+import it.polimi.ingsw.model.enums.Era;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class ShamanicRitualEventCard extends EventCard {
+
+    private final int prestigePointsForMost;
+    private final int prestigePointsLostForLeast;
+
+    public ShamanicRitualEventCard(Era era, boolean closeEvent, int priorityValue,
+                                   int prestigePointsForMost, int prestigePointsLostForLeast) {
+        super(era, closeEvent, priorityValue);
+        this.prestigePointsForMost = prestigePointsForMost;
+        this.prestigePointsLostForLeast = prestigePointsLostForLeast;
+    }
+
+    public int getPrestigePointsForMost() {
+        return prestigePointsForMost;
+    }
+
+    public int getPrestigePointsLostForLeast() {
+        return prestigePointsLostForLeast;
+    }
+
+    @Override
+    public void apply(Game game) {
+        List<Player> players = game.getPlayers();
+        if (players == null || players.isEmpty()) {
+            return;
+        }
+
+        int maxStars = Integer.MIN_VALUE;
+        int minStars = Integer.MAX_VALUE;
+
+        for (Player player : players) {
+            int stars = countShamanStars(player);
+            maxStars = Math.max(maxStars, stars);
+            minStars = Math.min(minStars, stars);
+        }
+
+        List<Player> playersWithMostStars = new ArrayList<>();
+        List<Player> playersWithLeastStars = new ArrayList<>();
+
+        for (Player player : players) {
+            int stars = countShamanStars(player);
+
+            if (stars == maxStars) {
+                playersWithMostStars.add(player);
+            }
+
+            if (stars == minStars) {
+                playersWithLeastStars.add(player);
+            }
+        }
+
+        for (Player player : playersWithMostStars) {
+            player.addPrestigePoints(prestigePointsForMost);
+        }
+
+        for (Player player : playersWithLeastStars) {
+            player.removePrestigePoints(prestigePointsLostForLeast);
+        }
+    }
+
+    private int countShamanStars(Player player) {
+        int totalStars = 0;
+
+        for (CharacterCard card : player.getTribe().getCharacterCards()) {
+            if (card instanceof ShamanCard shamanCard) {
+                totalStars += shamanCard.getStars();
+            }
+        }
+
+        return totalStars;
+    }
+}
