@@ -1,16 +1,16 @@
-package it.polimi.ingsw.model;
+package it.polimi.ingsw.model.card;
 
-import it.polimi.ingsw.model.card.Card;
+import it.polimi.ingsw.model.Game;
 import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.EventType;
 
-public class Event extends Card {
+public class EventCard extends Card {
 
     private EventType type;
     private boolean closeEvent;
     private int priorityValue;
 
-    public Event(Era era, EventType type, boolean closeEvent, int priorityValue) {
+    public EventCard(Era era, EventType type, boolean closeEvent, int priorityValue) {
         super(era);
         this.type = type;
         this.closeEvent = closeEvent;

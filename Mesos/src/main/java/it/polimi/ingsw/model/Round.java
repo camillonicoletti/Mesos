@@ -6,6 +6,7 @@ import it.polimi.ingsw.model.board.OfferTile;
 import it.polimi.ingsw.model.card.CharacterCard;
 import it.polimi.ingsw.model.card.BuildingCard;
 import it.polimi.ingsw.model.card.Card;
+import it.polimi.ingsw.model.card.EventCard;
 import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.enums.SlotType;
@@ -22,8 +23,8 @@ public class Round {
     private final Game game;
     private RoundPhase phase;
     private final Era era;
-    private List<Event> lowerRowEvents;
-    private List<Event> upperRowEvents;
+    private List<EventCard> lowerRowEventCards;
+    private List<EventCard> upperRowEventCards;
     private List<CharacterCard> lowerRowTribute;
     private List<CharacterCard> upperRowTribute;
     private List<BuildingCard> lowerRowBuildings;
@@ -32,15 +33,15 @@ public class Round {
 
 
     public Round(int number, Game game, RoundPhase phase, Era era,
-                 List<Event> lowerRowEvents, List<Event> upperRowEvents,
+                 List<EventCard> lowerRowEventCards, List<EventCard> upperRowEventCards,
                  List<CharacterCard> lowerRowTribute, List<CharacterCard> upperRowTribute,
                  List<BuildingCard> lowerRowBuildings, List<BuildingCard> upperRowBuildings) {
         this.number = number;
         this.game = game;
         this.phase = phase;
         this.era = era;
-        this.lowerRowEvents = (lowerRowEvents != null) ? lowerRowEvents : new ArrayList<>();
-        this.upperRowEvents = (upperRowEvents != null) ? upperRowEvents : new ArrayList<>();
+        this.lowerRowEventCards = (lowerRowEventCards != null) ? lowerRowEventCards : new ArrayList<>();
+        this.upperRowEventCards = (upperRowEventCards != null) ? upperRowEventCards : new ArrayList<>();
         this.lowerRowTribute = (lowerRowTribute != null) ? lowerRowTribute : new ArrayList<>();
         this.upperRowTribute = (upperRowTribute != null) ? upperRowTribute : new ArrayList<>();
         this.lowerRowBuildings = (lowerRowBuildings != null) ? lowerRowBuildings : new ArrayList<>();
@@ -63,12 +64,12 @@ public class Round {
         return era;
     }
 
-    public List<Event> getLowerRowEvents() {
-        return lowerRowEvents;
+    public List<EventCard> getLowerRowEvents() {
+        return lowerRowEventCards;
     }
 
-    public List<Event> getUpperRowEvents() {
-        return upperRowEvents;
+    public List<EventCard> getUpperRowEvents() {
+        return upperRowEventCards;
     }
 
     public List<CharacterCard> getLowerRowTribute() {
@@ -109,8 +110,8 @@ public class Round {
                 game,
                 RoundPhase.TOTEM_PLACEMENT,
                 game.getCurrentEra(),
-                new ArrayList<>(lowerRowEvents),
-                new ArrayList<>(upperRowEvents),
+                new ArrayList<>(lowerRowEventCards),
+                new ArrayList<>(upperRowEventCards),
                 new ArrayList<>(lowerRowTribute),
                 new ArrayList<>(upperRowTribute),
                 new ArrayList<>(lowerRowBuildings),
@@ -121,8 +122,8 @@ public class Round {
     private void drawCardToUpperRow(List<Card> deck) {
         Card drawn = deck.remove(0);
 
-        if (drawn instanceof Event event) {
-            upperRowEvents.add(event);
+        if (drawn instanceof EventCard eventCard) {
+            upperRowEventCards.add(eventCard);
         } else if (drawn instanceof CharacterCard characterCard) {
             upperRowTribute.add(characterCard);
         } else {
@@ -133,8 +134,8 @@ public class Round {
     private void drawCardToLowerRow(List<Card> deck) {
         Card drawn = deck.remove(0);
 
-        if (drawn instanceof Event event) {
-            lowerRowEvents.add(event);
+        if (drawn instanceof EventCard eventCard) {
+            lowerRowEventCards.add(eventCard);
         } else if (drawn instanceof CharacterCard characterCard) {
             lowerRowTribute.add(characterCard);
         } else {
@@ -195,25 +196,25 @@ public class Round {
     }
 
 
-    public List<Event> collectEvent() {
-        List<Event> events = new ArrayList<>();
-        events.addAll(lowerRowEvents);
-        events.addAll(upperRowEvents);
-        return events;
+    public List<EventCard> collectEvent() {
+        List<EventCard> eventCards = new ArrayList<>();
+        eventCards.addAll(lowerRowEventCards);
+        eventCards.addAll(upperRowEventCards);
+        return eventCards;
     }
 
     public void resolveEvent() {
-        List<Event> events = collectEvent();
+        List<EventCard> eventCards = collectEvent();
 
-        for (Event event : events){
-            event.apply(game);
+        for (EventCard eventCard : eventCards){
+            eventCard.apply(game);
         }
     }
 
     public List<Card> getCurrentBoardCardsUp() {
         List<Card> cards = new ArrayList<>();
         cards.addAll(upperRowTribute);
-        cards.addAll(upperRowEvents);
+        cards.addAll(upperRowEventCards);
         cards.addAll(upperRowBuildings);
         return cards;
     }
@@ -221,30 +222,30 @@ public class Round {
     public List<Card> getCurrentBoardCardsLow() {
         List<Card> cards = new ArrayList<>();
         cards.addAll(lowerRowTribute);
-        cards.addAll(lowerRowEvents);
+        cards.addAll(lowerRowEventCards);
         cards.addAll(lowerRowBuildings);
         return cards;
     }
 
     public void discardLowerRow() {
-        lowerRowEvents.clear();
+        lowerRowEventCards.clear();
         lowerRowTribute.clear();
     }
 
     public void shiftUpperToLowerRow() {
-        lowerRowEvents = upperRowEvents;
+        lowerRowEventCards = upperRowEventCards;
         lowerRowTribute = upperRowTribute;
 
-        upperRowEvents = new ArrayList<>();
+        upperRowEventCards = new ArrayList<>();
         upperRowTribute = new ArrayList<>();
     }
 
     public int getUpperTributeRowSize() {
-        return upperRowTribute.size() + upperRowEvents.size();
+        return upperRowTribute.size() + upperRowEventCards.size();
     }
 
     public int getLowerTributeRowSize() {
-        return lowerRowTribute.size() + lowerRowEvents.size();
+        return lowerRowTribute.size() + lowerRowEventCards.size();
     }
 
     public void refillUpperRow() {
@@ -254,8 +255,8 @@ public class Round {
         while (getUpperTributeRowSize() < targetSize && !tributeDeck.isEmpty()) {
             Card drawnCard = tributeDeck.remove(0);
 
-            if (drawnCard instanceof Event event) {
-                upperRowEvents.add(event);
+            if (drawnCard instanceof EventCard eventCard) {
+                upperRowEventCards.add(eventCard);
             } else if (drawnCard instanceof CharacterCard characterCard) {
                 upperRowTribute.add(characterCard);
             } else {
@@ -278,12 +279,12 @@ public class Round {
             }
         }
 
-        for (Event event : upperRowEvents) {
-            if (currentEra == Era.I && event.getEra() == Era.II) {
+        for (EventCard eventCard : upperRowEventCards) {
+            if (currentEra == Era.I && eventCard.getEra() == Era.II) {
                 game.endEra();
                 return;
             }
-            if (currentEra == Era.II && event.getEra() == Era.III) {
+            if (currentEra == Era.II && eventCard.getEra() == Era.III) {
                 game.endEra();
                 return;
             }
