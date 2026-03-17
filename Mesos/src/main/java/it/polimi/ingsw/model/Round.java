@@ -28,6 +28,8 @@ public class Round {
     private List<CharacterCard> upperRowTribute;
     private List<BuildingCard> lowerRowBuildings;
     private List<BuildingCard> upperRowBuildings;
+    private Map<Player, OfferTile> playerChoices = new LinkedHashMap<>();
+
 
     public Round(int number, Game game, RoundPhase phase, Era era,
                  List<Event> lowerRowEvents, List<Event> upperRowEvents,
@@ -82,25 +84,24 @@ public class Round {
     public List<BuildingCard> getLowerRowBuildings(){return lowerRowBuildings;}
 
     public void execute() {
-        phase = RoundPhase.TOTEM_PLACEMENT;
-        placeTotemOffer();
 
+        // playerChoices maps each player to the OfferTile they selected during TOTEM_PLACEMENT,
+        // allowing execute() to resolve the correct action for each player
         phase = RoundPhase.ACTION_RESOLUTION;
-        resolveOfferAction();
-
+        for (Map.Entry<Player, OfferTile> entry : playerChoices.entrySet()) {
+            resolveOfferAction(entry.getKey(), entry.getValue());
+        }
         phase = RoundPhase.TURN_ORDER;
         placeTotemOrder();
-
         phase = RoundPhase.EVENT_RESOLUTION;
         resolveEvent();
-
         phase = RoundPhase.ROUND_CLEANUP;
         discardLowerRow();
         shiftUpperToLowerRow();
         refillUpperRow();
         checkEraTransition();
-
     }
+
 
     public Round createNextRound(int nextRoundNumber) {
         return new Round(
@@ -158,16 +159,17 @@ public class Round {
 
     public boolean placeTotemOffer(Player player, OfferTile chosenTile) {
         int numPlayers = game.getPlayers().size();
-
-        if (!chosenTile.isAvailableFor(numPlayers)) {
+        if (!chosenTile.isAvailableFor(numPlayers))
             return false;
-        }
-        if (chosenTile.isOccupied()) {
+        if (chosenTile.isOccupied())
             return false;
-        }
         chosenTile.placeTotem(player.getTotem());
+        // Saves the player's choice so that execute() can resolve actions for each player
+        // using their chosen OfferTile during ACTION_RESOLUTION phase
+        playerChoices.put(player, chosenTile);
         return true;
     }
+
 
 
     public void resolveOfferAction(Player player, OfferTile chosenTile) {
@@ -188,7 +190,7 @@ public class Round {
 
 
     public void placeTotemOrder() {
-        Board board = game.getBoard(); //TODO: modify Game.java
+        Board board = game.getBoard();
         board.getTurnOrderTile().assignTurnOrder(board);
     }
 
