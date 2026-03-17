@@ -24,7 +24,7 @@ public class BoardTest {
     void setUp() {
         totem1 = new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK);
         totem2 = new Totem(TotemColor.BLUE, TotemPosition.OFFER_TRACK);
-        totem3 = new Totem(TotemColor.GREEN, TotemPosition.OFFER_TRACK);
+        totem3 = new Totem(TotemColor.PURPLE, TotemPosition.OFFER_TRACK);
 
         List<ActionSlot> slotsA = List.of(new ActionSlot(SlotType.UPPER_ROW, 2));
         List<ActionSlot> slotsC = List.of(new ActionSlot(SlotType.LOWER_ROW, 3));

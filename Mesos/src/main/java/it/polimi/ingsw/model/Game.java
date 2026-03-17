@@ -168,6 +168,11 @@ public class Game {
         return currentRound;
     }
 
+    public void setCurrentRound(Round round) {
+        this.currentRound = round;
+    }
+
+
     public List<Player> getPlayers() {
         return players;
     }
