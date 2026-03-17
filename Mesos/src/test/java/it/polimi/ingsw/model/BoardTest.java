@@ -1,5 +1,6 @@
 package it.polimi.ingsw.model;
 
+import it.polimi.ingsw.model.board.*;
 import it.polimi.ingsw.model.enums.SlotEffect;
 import it.polimi.ingsw.model.enums.SlotType;
 import it.polimi.ingsw.model.enums.TotemColor;

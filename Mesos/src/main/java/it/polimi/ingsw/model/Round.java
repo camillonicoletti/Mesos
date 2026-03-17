@@ -1,10 +1,14 @@
 package it.polimi.ingsw.model;
 
+import it.polimi.ingsw.model.board.ActionSlot;
+import it.polimi.ingsw.model.board.Board;
+import it.polimi.ingsw.model.board.OfferTile;
 import it.polimi.ingsw.model.card.CharacterCard;
 import it.polimi.ingsw.model.card.BuildingCard;
 import it.polimi.ingsw.model.card.Card;
 import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.RoundPhase;
+import it.polimi.ingsw.model.enums.SlotType;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -149,17 +153,42 @@ public class Round {
         }
     }
 
-    public void placeTotemOffer() {
-        // TODO: Camillo
+    public boolean placeTotemOffer(Player player, OfferTile chosenTile) {
+        int numPlayers = game.getPlayers().size();
+
+        if (!chosenTile.isAvailableFor(numPlayers)) {
+            return false;
+        }
+        if (chosenTile.isOccupied()) {
+            return false;
+        }
+        chosenTile.placeTotem(player.getTotem());
+        return true;
     }
 
-    public void resolveOfferAction() {
-        // TODO: implement offer action resolution
+
+    public void resolveOfferAction(Player player, OfferTile chosenTile) {
+        for (ActionSlot slot : chosenTile.getSlots()) {
+            SlotType type = slot.getType();
+            if (type == SlotType.UPPER_ROW || type == SlotType.LOWER_ROW) {
+                int amount = slot.getAmount();
+                // Select the correct row and draw the first `amount` cards, giving each one to the player
+                List<CharacterCard> row = (type == SlotType.UPPER_ROW) ? upperRowTribute : lowerRowTribute;
+                for (int i = 0; i < amount && !row.isEmpty(); i++) {
+                    player.addCharacterCard(row.remove(0));
+                }
+            } else if (type == SlotType.FOOD) {
+                player.addFood(slot.getAmount());
+            }
+        }
     }
+
 
     public void placeTotemOrder() {
-        // TODO: Camillo
+        Board board = game.getBoard(); //TODO: modify Game.java
+        board.getTurnOrderTile().assignTurnOrder(board);
     }
+
 
     public List<Event> collectEvent() {
         List<Event> events = new ArrayList<>();

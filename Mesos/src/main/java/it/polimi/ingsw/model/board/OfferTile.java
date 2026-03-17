@@ -1,4 +1,6 @@
-package it.polimi.ingsw.model;
+package it.polimi.ingsw.model.board;
+
+import it.polimi.ingsw.model.Totem;
 
 import java.util.List;
 
@@ -11,7 +13,7 @@ public class OfferTile {
     public OfferTile(char letter, int minPlayers, List<ActionSlot> slots) {
         this.letter = letter;
         this.minPlayers = minPlayers;
-        this.totemSlot = null;   // all'inizio la tessera è libera
+        this.totemSlot = null;
         this.slots = slots;
     }
 
