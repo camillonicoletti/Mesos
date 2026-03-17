@@ -99,13 +99,13 @@ public class GameTest {
 
     // =========================================================
     // GETTERS
-    // verifica che tutti i getter restituiscano i valori passati
-    // nel costruttore o impostati tramite setter
+    // Verifies that all getters return the values passed to the
+    // constructor or set via setter
     // =========================================================
 
     @Test
     void testGetPlayers() {
-        // deve restituire esattamente i 2 giocatori creati nel setup
+        // must return exactly the 2 players created in setUp
         assertEquals(2, game.getPlayers().size());
         assertTrue(game.getPlayers().contains(player1));
         assertTrue(game.getPlayers().contains(player2));
@@ -113,37 +113,37 @@ public class GameTest {
 
     @Test
     void testGetBoard() {
-        // deve restituire lo stesso oggetto board passato al costruttore
+        // must return the same board object passed to the constructor
         assertEquals(board, game.getBoard());
     }
 
     @Test
     void testGetCurrentEra() {
-        // il game parte da Era.I
+        // game starts at Era.I
         assertEquals(Era.I, game.getCurrentEra());
     }
 
     @Test
     void testGetTributeDeck() {
-        // deve restituire lo stesso riferimento al mazzo tribute
+        // must return the same reference to the tribute deck
         assertEquals(tributeDeck, game.getTributeDeck());
     }
 
     @Test
     void testGetRemainingTributeDeck() {
-        // il mazzo tribute è stato creato con 30 carte
+        // tribute deck was created with 30 cards
         assertEquals(30, game.getRemainingTributeDeck());
     }
 
     @Test
     void testGetRemainingBuildingDeck() {
-        // era1=1, era2=2, era3=3 → totale 6
+        // era1=1, era2=2, era3=3 → total 6
         assertEquals(6, game.getRemainingBuildingDeck());
     }
 
     @Test
     void testGetCurrentRoundAndSetCurrentRound() {
-        // getCurrentRound deve restituire il round impostato con setCurrentRound
+        // getCurrentRound must return the round set via setCurrentRound
         assertEquals(round, game.getCurrentRound());
 
         Round newRound = new Round(2, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
@@ -157,7 +157,7 @@ public class GameTest {
 
     @Test
     void testGetBuildingsForEra() {
-        // ogni era deve restituire il proprio mazzo buildings
+        // each era must return its own building deck
         assertEquals(era1Deck, game.getBuildingsForEra(Era.I));
         assertEquals(era2Deck, game.getBuildingsForEra(Era.II));
         assertEquals(era3Deck, game.getBuildingsForEra(Era.III));
@@ -165,13 +165,13 @@ public class GameTest {
 
     // =========================================================
     // START
-    // start() può essere chiamato solo su un game in stato WAITING:
-    // imposta era, round e status correttamente
+    // start() can only be called on a game in WAITING status:
+    // correctly sets era, round and status
     // =========================================================
 
     @Test
     void testStartSetsStatusAndEraAndRound() {
-        // crea un game fresco in stato WAITING
+        // create a fresh game in WAITING status
         Game freshGame = new Game(
                 List.of(player1, player2),
                 0, null, null, null,
@@ -182,7 +182,7 @@ public class GameTest {
 
         freshGame.start();
 
-        // dopo start: era = I, round creato, non è game over
+        // after start: era = I, round created, game is not over
         assertEquals(Era.I, freshGame.getCurrentEra());
         assertNotNull(freshGame.getCurrentRound());
         assertFalse(freshGame.isGameOver());
@@ -190,32 +190,32 @@ public class GameTest {
 
     @Test
     void testStartThrowsIfNotWaiting() {
-        // il game è già IN_PROGRESS → start() deve lanciare eccezione
+        // game is already IN_PROGRESS → start() must throw
         assertThrows(IllegalStateException.class, () -> game.start());
     }
 
     // =========================================================
     // END / IS GAME OVER
-    // end() imposta lo stato FINISHED
-    // isGameOver() è true se FINISHED oppure round >= MAX_ROUNDS (10)
+    // end() sets status to FINISHED
+    // isGameOver() is true if FINISHED or round >= MAX_ROUNDS (10)
     // =========================================================
 
     @Test
     void testIsGameOverFalseAtStart() {
-        // al round 1 il game non è finito
+        // at round 1 the game is not over
         assertFalse(game.isGameOver());
     }
 
     @Test
     void testEndSetsGameOver() {
-        // dopo end() il game risulta terminato
+        // after end() the game must be over
         game.end();
         assertTrue(game.isGameOver());
     }
 
     @Test
     void testIsGameOverTrueAtMaxRounds() {
-        // un game al round 10 (MAX_ROUNDS) è già game over
+        // a game at round 10 (MAX_ROUNDS) is already over
         Game maxRoundGame = new Game(
                 List.of(player1, player2),
                 10, null, Era.I, null,
@@ -228,8 +228,8 @@ public class GameTest {
 
     // =========================================================
     // NEXT ERA / END ERA
-    // nextEra() avanza l'era corrente (I→II→III, oltre lancia eccezione)
-    // endEra() gestisce i buildings e chiama nextEra()
+    // nextEra() advances the current era (I→II→III, throws beyond that)
+    // endEra() manages buildings and calls nextEra()
     // =========================================================
 
     @Test
@@ -247,7 +247,7 @@ public class GameTest {
 
     @Test
     void testNextEraFromIIIThrows() {
-        // non si può avanzare oltre Era III
+        // cannot advance beyond Era III
         game.nextEra();
         game.nextEra();
         assertThrows(IllegalStateException.class, () -> game.nextEra());
@@ -255,14 +255,14 @@ public class GameTest {
 
     @Test
     void testEndEraFromIAdvancesToII() {
-        // endEra() sposta i buildings e avanza l'era
+        // endEra() moves buildings and advances the era
         game.endEra();
         assertEquals(Era.II, game.getCurrentEra());
     }
 
     @Test
     void testEndEraFromIIAdvancesToIII() {
-        // forziamo Era II senza toccare buildings, poi endEra
+        // force Era II without touching buildings, then endEra
         game.nextEra();
         game.endEra();
         assertEquals(Era.III, game.getCurrentEra());
@@ -270,7 +270,7 @@ public class GameTest {
 
     @Test
     void testEndEraFromIIIDoesNothing() {
-        // da Era III endEra() esce subito senza modificare nulla
+        // from Era III endEra() returns immediately without any changes
         game.nextEra();
         game.nextEra();
         game.endEra();
@@ -278,14 +278,14 @@ public class GameTest {
     }
 
     // =========================================================
-    // NEXT ROUND / END ROUND — simulazione multi-round
-    // nextRound() crea il round successivo incrementando il numero
-    // endRound() esegue il round corrente poi chiama nextRound()
+    // NEXT ROUND / END ROUND — multi-round simulation
+    // nextRound() creates the next round incrementing the number
+    // endRound() executes the current round then calls nextRound()
     // =========================================================
 
     @Test
     void testNextRoundIncrementsNumber() {
-        // il numero del round deve aumentare di 1
+        // round number must increase by 1
         int before = game.getCurrentRound().getNumber();
         game.nextRound();
         assertEquals(before + 1, game.getCurrentRound().getNumber());
@@ -293,7 +293,7 @@ public class GameTest {
 
     @Test
     void testNextRoundCreatesNewRound() {
-        // deve essere un oggetto Round diverso da quello precedente
+        // must be a different Round object from the previous one
         Round oldRound = game.getCurrentRound();
         game.nextRound();
         assertNotSame(oldRound, game.getCurrentRound());
@@ -301,14 +301,14 @@ public class GameTest {
 
     @Test
     void testEndRoundThrowsIfNotInProgress() {
-        // endRound() non può essere chiamato se il game è finito
+        // endRound() cannot be called if the game is over
         game.end();
         assertThrows(IllegalStateException.class, () -> game.endRound());
     }
 
     @Test
     void testEndRoundAdvancesToRound2() {
-        // dopo endRound il game deve essere al round 2
+        // after endRound the game must be at round 2
         round.placeTotemOffer(player1, tileA);
         round.placeTotemOffer(player2, tileB);
 
@@ -320,8 +320,8 @@ public class GameTest {
     @Test
     void testTwoCompleteRounds() {
         // --- Round 1 ---
-        // player1 sceglie tileA → prende 2 carte dalla upper row
-        // player2 sceglie tileB → riceve 3 cibo
+        // player1 picks tileA → takes 2 cards from the upper row
+        // player2 picks tileB → receives 3 food
         round.placeTotemOffer(player1, tileA);
         round.placeTotemOffer(player2, tileB);
 
@@ -332,9 +332,9 @@ public class GameTest {
         assertEquals(2, game.getCurrentRound().getNumber());
 
         // --- Round 2 ---
-        // i ruoli si invertono:
-        // player2 sceglie tileA → prende carte
-        // player1 sceglie tileB → riceve 3 cibo
+        // roles are swapped:
+        // player2 picks tileA → takes cards
+        // player1 picks tileB → receives 3 food
         Round round2 = game.getCurrentRound();
         tileA.removeTotem();
         tileB.removeTotem();
@@ -344,16 +344,16 @@ public class GameTest {
 
         game.endRound();
 
-        // player1 ora ha 3 cibo accumulato dal round 2
+        // player1 now has 3 food accumulated from round 2
         assertEquals(3, player1.getFood());
-        // player2 ha almeno 2 carte dal round 2
+        // player2 has at least 2 cards from round 2
         assertTrue(player2.getTribe().getCharacterCards().size() >= 2);
         assertEquals(3, game.getCurrentRound().getNumber());
     }
 
     @Test
     void testEndRoundEndsGameAtMaxRounds() {
-        // un game al round 9: endRound lo porta a 10 = MAX_ROUNDS → game over
+        // a game at round 9: endRound brings it to 10 = MAX_ROUNDS → game over
         Game nearEndGame = new Game(
                 List.of(player1, player2),
                 9, null, Era.I, null,
