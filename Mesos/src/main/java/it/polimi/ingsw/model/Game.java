@@ -5,6 +5,8 @@ import it.polimi.ingsw.model.card.Card;
 import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.GameStatus;
 import it.polimi.ingsw.model.enums.RoundPhase;
+import it.polimi.ingsw.model.board.Board;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
