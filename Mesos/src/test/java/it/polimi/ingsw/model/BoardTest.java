@@ -45,7 +45,7 @@ public class BoardTest {
     }
 
     // =========================================================
-    // CASI LIMITE SU OFFER TILE / TURN SLOT
+    // EDGE CASES FOR OFFER TILE / TURN SLOT
     // =========================================================
 
     @Test
@@ -91,7 +91,7 @@ public class BoardTest {
     }
 
     // =========================================================
-    // CASI LIMITE SU TURN ORDER TILE
+    // EDGE CASES FOR TURN ORDER TILE
     // =========================================================
 
     @Test
@@ -147,27 +147,27 @@ public class BoardTest {
     }
 
     // =========================================================
-    // TEST LIMITE MOLTO IMPORTANTI:
-    // QUESTI PROBABILMENTE FALLISCONO COL CODICE ATTUALE
+    // CRITICAL EDGE CASES
     // =========================================================
 
     @Test
     void testAssignTurnOrderShouldResetPreviousTurnSlots() {
-        // situazione sporca iniziale
+
         turnOrderTile.getSlots().get(0).placeTotem(totem3);
         turnOrderTile.getSlots().get(1).placeTotem(totem1);
         turnOrderTile.getSlots().get(2).placeTotem(totem2);
 
-        // nuova situazione sulle offer tile
+        // new state on offer tiles
+
         offerTiles.get(1).placeTotem(totem2); // A
         offerTiles.get(0).placeTotem(totem1); // C
-        // E resta vuota
+
 
         turnOrderTile.assignTurnOrder(board);
 
         List<Totem> order = turnOrderTile.getTurnOrder();
 
-        // se assignTurnOrder NON resetta, qui potresti trovarti ancora 3 totem
+        // if assignTurnOrder does NOT reset, you might still find 3 totems here
         assertEquals(2, order.size());
         assertEquals(totem2, order.get(0)); // A -> posizione 1
         assertEquals(totem1, order.get(1)); // C -> posizione 2
