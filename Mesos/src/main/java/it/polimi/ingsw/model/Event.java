@@ -1,23 +1,20 @@
 package it.polimi.ingsw.model;
 
+import it.polimi.ingsw.model.card.Card;
 import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.EventType;
 
-public class Event {
-    private Era era;
+public class Event extends Card {
+
     private EventType type;
     private boolean closeEvent;
     private int priorityValue;
 
     public Event(Era era, EventType type, boolean closeEvent, int priorityValue) {
-        this.era = era;
+        super(era);
         this.type = type;
         this.closeEvent = closeEvent;
         this.priorityValue = priorityValue;
-    }
-
-    public Era getEra() {
-        return era;
     }
 
     public EventType getType() {
@@ -33,6 +30,26 @@ public class Event {
     }
 
     public void apply(Game game) {
-        // TODO: implement event logic
+        switch (type) {
+            case HUNT -> applyHunt(game);
+            case SHAMANIC_RITUAL -> applyShamanicRitual(game);
+            case ROCK_PAINTINGS -> applyRockPaintings(game);
+            case SUSTENANCE -> applySustenance(game);
+        }
+    }
+    private void applyHunt(Game game) {
+        // TODO
+    }
+
+    private void applyShamanicRitual(Game game) {
+        // TODO
+    }
+
+    private void applyRockPaintings(Game game) {
+        // TODO
+    }
+
+    private void applySustenance(Game game) {
+        // TODO
     }
 }

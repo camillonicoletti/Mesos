@@ -1,75 +1,172 @@
 package it.polimi.ingsw.model;
 
 import it.polimi.ingsw.model.card.BuildingCard;
-import it.polimi.ingsw.model.card.PlayerCard;
+import it.polimi.ingsw.model.card.Card;
 import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.GameStatus;
+import it.polimi.ingsw.model.enums.RoundPhase;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.ArrayList;
 
 public class Game {
 
-    private List<Object> players;
+    private static final int MAX_ROUNDS = 10;
+
+    private final List<Player> players;
     private int currentRoundNumber;
     private Round currentRound;
     private Era currentEra;
-    private int remainingCard;
-    private Object date;
-    private Object board;
-    private List<PlayerCard> tributeDeck;
-    private List<BuildingCard> buildingDeck;
+    private LocalDateTime date;
+    private Board board;
+    private List<Card> tributeDeck;
+    private List<BuildingCard> era1BuildingDeck;
+    private List<BuildingCard> era2BuildingDeck;
+    private List<BuildingCard> era3BuildingDeck;
     private GameStatus status;
+    private int getBuildingCountForEra(Era era) {
+        int playersCount = players.size();
 
-    public Game(List<Object> players, int currentRoundNumber, Round currentRound,
-                Era currentEra, int remainingCard, Object date,
-                Object board, List<PlayerCard> tributeDeck, List<BuildingCard> buildingDeck, GameStatus status) {
+        return switch (playersCount) {
+            case 2 -> switch (era) {
+                case I -> 1;
+                case II -> 2;
+                case III -> 3;
+            };
+            case 3 -> switch (era) {
+                case I -> 2;
+                case II -> 2;
+                case III -> 4;
+            };
+            case 4 -> switch (era) {
+                case I -> 2;
+                case II -> 3;
+                case III -> 4;
+            };
+            case 5 -> switch (era) {
+                case I -> 2;
+                case II -> 3;
+                case III -> 5;
+            };
+            default -> throw new IllegalStateException("Unsupported number of players");
+        };
+    }
+
+    public Game(List<Player> players, int currentRoundNumber, Round currentRound,
+                Era currentEra, LocalDateTime date,
+                Board board, List<Card> tributeDeck, List<BuildingCard> era1BuildingDeck, List<BuildingCard> era2BuildingDeck, List<BuildingCard> era3BuildingDeck, GameStatus status) {
 
         this.players = players;
         this.currentRoundNumber = currentRoundNumber;
         this.currentRound = currentRound;
         this.currentEra = currentEra;
-        this.remainingCard = remainingCard;
         this.date = date;
         this.board = board;
         this.tributeDeck = tributeDeck;
-        this.buildingDeck = buildingDeck;
+        this.era1BuildingDeck = era1BuildingDeck != null ? era1BuildingDeck : new ArrayList<>();
+        this.era2BuildingDeck = era2BuildingDeck != null ? era2BuildingDeck : new ArrayList<>();
+        this.era3BuildingDeck = era3BuildingDeck != null ? era3BuildingDeck : new ArrayList<>();
         this.status = status;
     }
 
     public void start() {
-        // TODO: start game logic
+        if (status != GameStatus.WAITING) {
+            throw new IllegalStateException("Game cannot start from status: " + status);
+        }
+
+        currentRoundNumber = 1;
+        currentEra = Era.I;
+        status = GameStatus.IN_PROGRESS;
+
+        if (currentRound == null) {
+            currentRound = new Round(currentRoundNumber, this, RoundPhase.TOTEM_PLACEMENT, Era.I, null, null, null, null, null, null);
+        }
+
+        currentRound.setupInitialRows();
+        currentRound.setupInitialBuildings(era1BuildingDeck);
+        era1BuildingDeck.clear();
     }
 
+
     public void end() {
-        // TODO: end game logic
+        status = GameStatus.FINISHED;
     }
 
     public boolean isGameOver() {
-        // TODO: check game end conditions
-        return false;
+        return status == GameStatus.FINISHED || currentRoundNumber >= MAX_ROUNDS;
     }
 
     public void nextEra() {
-        // TODO: move to next era
+        switch (currentEra) {
+            case I -> currentEra = Era.II;
+            case II -> currentEra = Era.III;
+            case III -> throw new IllegalStateException("cannot adavnce beyond Era III");
+            default -> throw new IllegalStateException("Uknown era: " + currentEra);
+        }
     }
 
     public void endEra() {
-        // TODO: era cleanup logic
+        if (currentEra == Era.III) {
+            return;
+        }
+
+        if (currentEra == Era.II) {
+            currentRound.discardLowerBuildings();
+        }
+
+        currentRound.moveUpperBuildingsToLower();
+
+        nextEra();
+
+        List<BuildingCard> newEraBuildings = getBuildingsForEra(currentEra);
+        currentRound.revealBuildingsForEra(newEraBuildings);
+        newEraBuildings.clear();
     }
 
     public void nextRound() {
-        // TODO: advance round
+        if (isGameOver()) {
+            end();
+            return;
+        }
+
+        if (currentRoundNumber >= MAX_ROUNDS) {
+            end();
+            return;
+        }
+
+        currentRoundNumber++;
+        currentRound = currentRound.createNextRound(currentRoundNumber);
     }
 
     public void endRound() {
-        // TODO: end round logic
+        if (status != GameStatus.IN_PROGRESS) {
+            throw new IllegalStateException("Cannot end round if game is not running");
+        }
+
+        currentRound.execute();
+
+        if (isGameOver()) {
+            end();
+        } else {
+            nextRound();
+        }
     }
+
+    public List<BuildingCard> getBuildingsForEra(Era era) {
+        return switch (era) {
+            case I -> era1BuildingDeck;
+            case II -> era2BuildingDeck;
+            case III -> era3BuildingDeck;
+        };
+    }
+    public void startNewEra(){}
 
     public Round getCurrentRound() {
         return currentRound;
     }
 
-    public List<Object> getPlayers() {
+    public List<Player> getPlayers() {
         return players;
     }
 
@@ -78,10 +175,20 @@ public class Game {
     }
 
     public int getRemainingTributeDeck() {
-        return remainingCard;
+        return tributeDeck.size();
     }
 
     public int getRemainingBuildingDeck() {
-        return remainingCard;
+        return era1BuildingDeck.size()
+                + era2BuildingDeck.size()
+                + era3BuildingDeck.size();
+    }
+
+    public List<Card> getTributeDeck() {
+        return tributeDeck;
+    }
+
+    public Board getBoard() {
+        return board;
     }
 }
