@@ -6,6 +6,7 @@ import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.GameStatus;
 import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.board.Board;
+import it.polimi.ingsw.model.Totem;
 
 
 import java.time.LocalDateTime;
@@ -88,6 +89,13 @@ public class Game {
         currentRound.setupInitialRows();
         currentRound.setupInitialBuildings(era1BuildingDeck);
         era1BuildingDeck.clear();
+
+        // Assign a random initial turn order at game start
+        List<Totem> totems = new ArrayList<>();
+        for (Player p : players) {
+            totems.add(p.getTotem());
+        }
+        board.getTurnOrderTile().assignRandomTurnOrder(totems);
     }
 
 

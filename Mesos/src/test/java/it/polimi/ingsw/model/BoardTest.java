@@ -245,4 +245,36 @@ public class BoardTest {
             assertFalse(slot.isOccupied());
         }
     }
+
+    @Test
+    void testAssignRandomTurnOrderPlacesAllTotemsInSlots() {
+        List<Totem> totems = List.of(totem1, totem2, totem3);
+
+        turnOrderTile.assignRandomTurnOrder(totems);
+
+        List<Totem> order = turnOrderTile.getTurnOrder();
+
+        assertEquals(3, order.size());
+        assertTrue(order.contains(totem1));
+        assertTrue(order.contains(totem2));
+        assertTrue(order.contains(totem3));
+    }
+
+    @Test
+    void testAssignRandomTurnOrderResetsExistingSlots() {
+        turnOrderTile.getSlots().get(0).placeTotem(totem1);
+        turnOrderTile.getSlots().get(1).placeTotem(totem2);
+        turnOrderTile.getSlots().get(2).placeTotem(totem3);
+
+        // Reassign with only 2 totems — slot 3 must be empty after reset
+        List<Totem> totems = List.of(totem1, totem2);
+        turnOrderTile.assignRandomTurnOrder(totems);
+
+        List<Totem> order = turnOrderTile.getTurnOrder();
+
+        assertEquals(2, order.size());
+        assertTrue(order.contains(totem1));
+        assertTrue(order.contains(totem2));
+    }
+
 }

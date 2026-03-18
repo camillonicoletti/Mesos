@@ -5,6 +5,7 @@ import it.polimi.ingsw.model.Totem;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Collections;
 
 public class TurnOrderTile {
 
@@ -80,4 +81,17 @@ public class TurnOrderTile {
         }
         return order;
     }
+
+    public void assignRandomTurnOrder(List<Totem> totems) {
+        reset();
+        List<Totem> shuffled = new ArrayList<>(totems);
+        Collections.shuffle(shuffled);
+        List<TurnSlot> sortedSlots = new ArrayList<>(slots);
+        sortedSlots.sort(Comparator.comparingInt(TurnSlot::getPosition));
+        for (int i = 0; i < shuffled.size(); i++) {
+            // assigns each totem to a position
+            sortedSlots.get(i).placeTotem(shuffled.get(i));
+        }
+    }
+
 }

@@ -1,5 +1,4 @@
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/App.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/Event.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/Game.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/Player.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/Round.java
@@ -14,11 +13,16 @@
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/BuilderCard.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/BuildingCard.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/Card.java
+/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/CavePaintingsEventCard.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/CharacterCard.java
+/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/EventCard.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/GathererCard.java
+/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/HuntEventCard.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/HunterCard.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/InventorCard.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/ShamanCard.java
+/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/ShamanicRitualEventCard.java
+/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/SustenanceEventCard.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/effect/Effect.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/effect/EndBuilderPPEffect.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/effect/EndCharacterCountPPEffect.java
