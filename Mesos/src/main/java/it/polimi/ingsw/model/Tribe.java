@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Tribe {
     private List<CharacterCard> characterCards;
@@ -84,6 +86,24 @@ public class Tribe {
         }
         return totalStars;
     }
+
+    /**
+     * Counts how many different invention icons are present among the Inventor cards in the tribe.
+     * @return the number of distinct invention icons owned by the player
+     */
+    public int countDistinctInventorIcons() {
+        Set<InventorIcons> distinctIcons = new HashSet<>();
+
+        for (CharacterCard card : characterCards) {
+            if (card instanceof InventorCard inventor) {
+                distinctIcons.add(inventor.getInventionIcon());
+            }
+        }
+
+        return distinctIcons.size();
+    }
+
+
 
     // Method used for InventorPairFoodEffect
     public int countInventorPairs() {
