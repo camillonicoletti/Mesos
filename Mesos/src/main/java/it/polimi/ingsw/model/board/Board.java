@@ -19,4 +19,9 @@ public class Board {
     public TurnOrderTile getTurnOrderTile() {
         return turnOrderTile;
     }
+
+    public void setTurnOrderTile(TurnOrderTile turnOrderTile) {
+        this.turnOrderTile = turnOrderTile;
+    }
+
 }

@@ -252,4 +252,83 @@ public class RoundTest {
         assertEquals(0, round.getUpperTributeRowSize());
     }
 
+    // -------------------------------------------------------
+// placeTotemOrder — slot effects
+// -------------------------------------------------------
+
+    @Test
+    void testPlaceTotemOrderNoneEffectDoesNotChangeFood() {
+        // setUp uses NONE for both slots → food must not change
+        tileA.placeTotem(player1.getTotem());
+        tileB.placeTotem(player2.getTotem());
+
+        int food1Before = player1.getFood();
+        int food2Before = player2.getFood();
+
+        round.placeTotemOrder();
+
+        assertEquals(food1Before, player1.getFood());
+        assertEquals(food2Before, player2.getFood());
+    }
+
+    @Test
+    void testPlaceTotemOrderGainFoodAppliedToFirstPlayer() {
+        // Replace TurnOrderTile with one that has GAIN_FOOD on slot 1
+        List<TurnSlot> effectSlots = new ArrayList<>();
+        effectSlots.add(new TurnSlot(1, SlotEffect.GAIN_FOOD, 2, 0));
+        effectSlots.add(new TurnSlot(2, SlotEffect.NONE, 0, 0));
+        board.setTurnOrderTile(new TurnOrderTile(2, effectSlots));
+
+        // player1 takes tileA (A < B → slot 1 → GAIN_FOOD 2)
+        tileA.placeTotem(player1.getTotem());
+
+        round.placeTotemOrder();
+
+        assertEquals(2, player1.getFood());
+    }
+
+    @Test
+    void testPlaceTotemOrderPayFoodAppliedToLastPlayer() {
+        List<TurnSlot> effectSlots = new ArrayList<>();
+        effectSlots.add(new TurnSlot(1, SlotEffect.NONE, 0, 0));
+        effectSlots.add(new TurnSlot(2, SlotEffect.PAY_FOOD, 1, 0));
+        board.setTurnOrderTile(new TurnOrderTile(2, effectSlots));
+
+        player2.addFood(5);
+
+        tileA.placeTotem(player1.getTotem()); // slot 1 → NONE
+        tileB.placeTotem(player2.getTotem()); // slot 2 → PAY_FOOD 1
+
+        round.placeTotemOrder();
+
+        assertEquals(4, player2.getFood()); // 5 - 1
+    }
+
+    @Test
+    void testPlaceTotemOrderBothEffectsAppliedCorrectly() {
+        List<TurnSlot> effectSlots = new ArrayList<>();
+        effectSlots.add(new TurnSlot(1, SlotEffect.GAIN_FOOD, 3, 0));
+        effectSlots.add(new TurnSlot(2, SlotEffect.PAY_FOOD,  2, 0));
+        board.setTurnOrderTile(new TurnOrderTile(2, effectSlots));
+
+        player2.addFood(5);
+
+        tileA.placeTotem(player1.getTotem()); // slot 1 → GAIN_FOOD 3
+        tileB.placeTotem(player2.getTotem()); // slot 2 → PAY_FOOD 2
+
+        round.placeTotemOrder();
+
+        assertEquals(3, player1.getFood()); // 0 + 3
+        assertEquals(3, player2.getFood()); // 5 - 2
+    }
+
+    @Test
+    void testPlaceTotemOrderWithNoOccupiedTilesDoesNotThrow() {
+        // No totems placed → no effects applied → must not throw
+        assertDoesNotThrow(() -> round.placeTotemOrder());
+        assertEquals(0, player1.getFood());
+        assertEquals(0, player2.getFood());
+    }
+
+
 }

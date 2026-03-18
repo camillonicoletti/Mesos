@@ -8,8 +8,10 @@ import it.polimi.ingsw.model.enums.TotemPosition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Comparator;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -288,6 +290,83 @@ public class BoardTest {
             assertFalse(slot.isOccupied());
         }
     }
+
+    // =========================================================
+// TESTS FOR createForPlayers()
+// =========================================================
+
+    @Test
+    void testCreateForPlayersReturnsCorrectNumberOfSlotsFor2Players() {
+        TurnOrderTile tile = TurnOrderTile.createForPlayers(2);
+        assertEquals(2, tile.getSlots().size());
+    }
+
+    @Test
+    void testCreateForPlayersReturnsCorrectNumberOfSlotsFor3Players() {
+        TurnOrderTile tile = TurnOrderTile.createForPlayers(3);
+        assertEquals(3, tile.getSlots().size());
+    }
+
+    @Test
+    void testCreateForPlayersReturnsCorrectNumberOfSlotsFor4Players() {
+        TurnOrderTile tile = TurnOrderTile.createForPlayers(4);
+        assertEquals(4, tile.getSlots().size());
+    }
+
+    @Test
+    void testCreateForPlayersReturnsCorrectNumberOfSlotsFor5Players() {
+        TurnOrderTile tile = TurnOrderTile.createForPlayers(5);
+        assertEquals(5, tile.getSlots().size());
+    }
+
+    @Test
+    void testCreateForPlayersFirstSlotIsAlwaysGainFood() {
+        for (int n = 2; n <= 5; n++) {
+            TurnOrderTile tile = TurnOrderTile.createForPlayers(n);
+            TurnSlot first = tile.getSlots().stream()
+                    .min(Comparator.comparingInt(TurnSlot::getPosition))
+                    .orElseThrow();
+            assertEquals(SlotEffect.GAIN_FOOD, first.getEffect(),
+                    "First slot should be GAIN_FOOD for " + n + " players");
+        }
+    }
+
+    @Test
+    void testCreateForPlayersLastSlotIsAlwaysPayFood() {
+        for (int n = 2; n <= 5; n++) {
+            TurnOrderTile tile = TurnOrderTile.createForPlayers(n);
+            TurnSlot last = tile.getSlots().stream()
+                    .max(Comparator.comparingInt(TurnSlot::getPosition))
+                    .orElseThrow();
+            assertEquals(SlotEffect.PAY_FOOD, last.getEffect(),
+                    "Last slot should be PAY_FOOD for " + n + " players");
+        }
+    }
+
+    @Test
+    void testCreateForPlayersAllSlotsHaveUniquePositions() {
+        TurnOrderTile tile = TurnOrderTile.createForPlayers(4);
+        long distinctPositions = tile.getSlots().stream()
+                .map(TurnSlot::getPosition)
+                .distinct()
+                .count();
+        assertEquals(tile.getSlots().size(), distinctPositions);
+    }
+
+    @Test
+    void testCreateForPlayersThrowsForUnsupportedPlayerCount() {
+        assertThrows(IllegalArgumentException.class, () -> TurnOrderTile.createForPlayers(1));
+        assertThrows(IllegalArgumentException.class, () -> TurnOrderTile.createForPlayers(6));
+    }
+
+    @Test
+    void testCreateForPlayersAllSlotsStartUnoccupied() {
+        TurnOrderTile tile = TurnOrderTile.createForPlayers(3);
+        for (TurnSlot slot : tile.getSlots()) {
+            assertFalse(slot.isOccupied());
+        }
+    }
+
 
 
 }

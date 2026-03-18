@@ -3,6 +3,7 @@ package it.polimi.ingsw.model;
 import it.polimi.ingsw.model.board.ActionSlot;
 import it.polimi.ingsw.model.board.Board;
 import it.polimi.ingsw.model.board.OfferTile;
+import it.polimi.ingsw.model.board.TurnSlot;
 import it.polimi.ingsw.model.card.CharacterCard;
 import it.polimi.ingsw.model.card.BuildingCard;
 import it.polimi.ingsw.model.card.Card;
@@ -11,10 +12,7 @@ import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.enums.SlotType;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 
 public class Round {
@@ -193,7 +191,28 @@ public class Round {
     public void placeTotemOrder() {
         Board board = game.getBoard();
         board.getTurnOrderTile().assignTurnOrder(board);
+
+        // Build a map Totem → Player to find the owner of each occupied slot
+        Map<Totem, Player> totemOwner = new HashMap<>();
+        for (Player p : game.getPlayers()) {
+            totemOwner.put(p.getTotem(), p);
+        }
+
+        // Apply the effect of each occupied TurnSlot to its owner
+        for (TurnSlot slot : board.getTurnOrderTile().getSlots()) {
+            if (!slot.isOccupied()) continue;
+            Player owner = totemOwner.get(slot.getOccupiedBy());
+            if (owner == null) continue;
+
+            switch (slot.getEffect()) {
+                case GAIN_FOOD -> owner.addFood(slot.getEffectValue());
+                case PAY_FOOD  -> owner.spendFood(slot.getEffectValue());
+                case NONE      -> {}
+            }
+            // TODO: implements the logic of points
+        }
     }
+
 
 
     public List<EventCard> collectEvent() {

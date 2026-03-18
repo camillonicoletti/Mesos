@@ -1,5 +1,6 @@
 package it.polimi.ingsw.model;
 
+import it.polimi.ingsw.model.board.TurnOrderTile;
 import it.polimi.ingsw.model.card.BuildingCard;
 import it.polimi.ingsw.model.card.Card;
 import it.polimi.ingsw.model.enums.Era;
@@ -89,6 +90,9 @@ public class Game {
         currentRound.setupInitialRows();
         currentRound.setupInitialBuildings(era1BuildingDeck);
         era1BuildingDeck.clear();
+
+
+        board.setTurnOrderTile(TurnOrderTile.createForPlayers(players.size()));
 
         // Assign a random initial turn order at game start
         List<Totem> totems = new ArrayList<>();

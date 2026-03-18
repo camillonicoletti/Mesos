@@ -33,6 +33,7 @@ it/polimi/ingsw/model/Player.class
 it/polimi/ingsw/model/card/effect/RockPaintingsEffect.class
 it/polimi/ingsw/model/card/effect/FullSetFoodEffect.class
 it/polimi/ingsw/model/enums/RoundPhase.class
+it/polimi/ingsw/model/Round$1.class
 it/polimi/ingsw/model/board/OfferTile.class
 it/polimi/ingsw/model/card/ArtistCard.class
 it/polimi/ingsw/model/card/effect/EndFullSetPPEffect.class

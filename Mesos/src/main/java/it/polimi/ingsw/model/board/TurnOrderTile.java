@@ -1,6 +1,7 @@
 package it.polimi.ingsw.model.board;
 
 import it.polimi.ingsw.model.Totem;
+import it.polimi.ingsw.model.enums.SlotEffect;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -93,5 +94,41 @@ public class TurnOrderTile {
             sortedSlots.get(i).placeTotem(shuffled.get(i));
         }
     }
+
+    /**
+     TODO: see real values
+     */
+    public static TurnOrderTile createForPlayers(int numPlayers) {
+        List<TurnSlot> slots = new ArrayList<>();
+
+        switch (numPlayers) {
+            case 2 -> {
+                slots.add(new TurnSlot(1, SlotEffect.GAIN_FOOD, 2, 0));
+                slots.add(new TurnSlot(2, SlotEffect.PAY_FOOD,  1, 2));
+            }
+            case 3 -> {
+                slots.add(new TurnSlot(1, SlotEffect.GAIN_FOOD, 2, 0));
+                slots.add(new TurnSlot(2, SlotEffect.NONE,      0, 0));
+                slots.add(new TurnSlot(3, SlotEffect.PAY_FOOD,  1, 2));
+            }
+            case 4 -> {
+                slots.add(new TurnSlot(1, SlotEffect.GAIN_FOOD, 2, 0));
+                slots.add(new TurnSlot(2, SlotEffect.GAIN_FOOD, 1, 0));
+                slots.add(new TurnSlot(3, SlotEffect.NONE,      0, 0));
+                slots.add(new TurnSlot(4, SlotEffect.PAY_FOOD,  1, 2));
+            }
+            case 5 -> {
+                slots.add(new TurnSlot(1, SlotEffect.GAIN_FOOD, 2, 0));
+                slots.add(new TurnSlot(2, SlotEffect.GAIN_FOOD, 1, 0));
+                slots.add(new TurnSlot(3, SlotEffect.NONE,      0, 0));
+                slots.add(new TurnSlot(4, SlotEffect.NONE,      0, 0));
+                slots.add(new TurnSlot(5, SlotEffect.PAY_FOOD,  1, 2));
+            }
+            default -> throw new IllegalArgumentException("Unsupported number of players: " + numPlayers);
+        }
+
+        return new TurnOrderTile(numPlayers, slots);
+    }
+
 
 }
