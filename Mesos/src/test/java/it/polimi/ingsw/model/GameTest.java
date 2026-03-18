@@ -373,4 +373,81 @@ public class GameTest {
 
         assertTrue(nearEndGame.isGameOver());
     }
+
+    @Test
+    void testNextRoundAtMaxRoundsEndsGame() {
+        // nextRound() called directly when already at round 10 must call end()
+        Game maxGame = new Game(
+                List.of(player1, player2),
+                10, null, Era.I, null,
+                board, new ArrayList<>(tributeDeck),
+                new ArrayList<>(), new ArrayList<>(), new ArrayList<>(),
+                GameStatus.IN_PROGRESS
+        );
+        Round maxRound = new Round(10, maxGame, RoundPhase.TOTEM_PLACEMENT, Era.I,
+                new ArrayList<>(), new ArrayList<>(),
+                new ArrayList<>(), new ArrayList<>(),
+                new ArrayList<>(), new ArrayList<>()
+        );
+        maxGame.setCurrentRound(maxRound);
+
+        maxGame.nextRound();
+
+        assertTrue(maxGame.isGameOver());
+    }
+
+    @Test
+    void testEndEraFromIIDiscardsLowerAndMovesUpperBuildings() {
+        // from Era II: endEra must discard lower buildings and move upper to lower
+        game.nextEra(); // now Era II
+
+        List<BuildingCard> lower = new ArrayList<>(List.of(new BuildingCard(1, noEffect, Era.I)));
+        List<BuildingCard> upper = new ArrayList<>(List.of(new BuildingCard(2, noEffect, Era.II)));
+
+        Round eraIIRound = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.II,
+                new ArrayList<>(), new ArrayList<>(),
+                new ArrayList<>(), new ArrayList<>(),
+                lower, upper
+        );
+        game.setCurrentRound(eraIIRound);
+
+        game.endEra(); // Era II → discards lower, moves upper to lower, advances to III
+
+        assertEquals(Era.III, game.getCurrentEra());
+        // after endEra from II: old lower is gone, upper has moved to lower
+        assertEquals(1, eraIIRound.getLowerRowBuildings().size());
+    }
+
+    @Test
+    void testGetBuildingsForEraReturnsEmptyListNotNull() {
+        // even with empty decks, getBuildingsForEra must return empty list (not null)
+        Game emptyGame = new Game(
+                List.of(player1, player2),
+                1, null, Era.I, null,
+                board, new ArrayList<>(),
+                new ArrayList<>(), new ArrayList<>(), new ArrayList<>(),
+                GameStatus.IN_PROGRESS
+        );
+
+        assertNotNull(emptyGame.getBuildingsForEra(Era.I));
+        assertNotNull(emptyGame.getBuildingsForEra(Era.II));
+        assertNotNull(emptyGame.getBuildingsForEra(Era.III));
+        assertTrue(emptyGame.getBuildingsForEra(Era.I).isEmpty());
+    }
+
+    @Test
+    void testIsGameOverTrueWhenFinishedButRoundLow() {
+        // isGameOver must be true if status = FINISHED even if round < MAX_ROUNDS
+        game.end();
+        assertTrue(game.isGameOver());
+    }
+
+    @Test
+    void testEndCalledTwiceDoesNotThrow() {
+        // calling end() twice must not throw
+        game.end();
+        assertDoesNotThrow(() -> game.end());
+        assertTrue(game.isGameOver());
+    }
+
 }

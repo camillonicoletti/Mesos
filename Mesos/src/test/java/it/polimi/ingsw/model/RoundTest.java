@@ -167,4 +167,89 @@ public class RoundTest {
         round.checkEraTransition();
         assertEquals(Era.I, game.getCurrentEra());
     }
+
+    @Test
+    void testExecuteWithNoPlayerChoicesDoesNotThrow() {
+        // execute() with no placements must run all phases without crashing
+        assertDoesNotThrow(() -> round.execute());
+    }
+
+    @Test
+    void testPlaceTotemOfferSamePlayerTwiceOverwritesChoice() {
+        // if the same player places totem twice (different tiles), the second choice wins
+        round.placeTotemOffer(player1, tileA);
+        tileA.removeTotem(); // free tileA to avoid "occupied" block
+        round.placeTotemOffer(player1, tileB);
+        round.execute();
+
+        // player1 chose tileB (FOOD 3), must have 3 food and 0 cards
+        assertEquals(3, player1.getFood());
+        assertEquals(0, player1.getTribe().getCharacterCards().size());
+    }
+
+    @Test
+    void testResolveOfferActionWithEmptyUpperRowDoesNotThrow() {
+        // resolveOfferAction on an UPPER_ROW tile with empty row must not throw
+        Round emptyRound = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
+                new ArrayList<>(), new ArrayList<>(),
+                new ArrayList<>(), new ArrayList<>(), // upper tribute empty
+                new ArrayList<>(), new ArrayList<>()
+        );
+        game.setCurrentRound(emptyRound);
+
+        assertDoesNotThrow(() -> emptyRound.resolveOfferAction(player1, tileA));
+        assertEquals(0, player1.getTribe().getCharacterCards().size());
+    }
+
+    @Test
+    void testCreateNextRoundHasIndependentLists() {
+        // modifying round1's lists must not affect round2
+        Round round2 = round.createNextRound(2);
+
+        round.getUpperRowTribute().clear();
+        round.getLowerRowTribute().clear();
+
+        // round2 must still have its own copies
+        assertNotSame(round.getUpperRowTribute(), round2.getUpperRowTribute());
+        assertNotSame(round.getLowerRowTribute(), round2.getLowerRowTribute());
+    }
+
+    @Test
+    void testRefillUpperRowStopsWhenTributeDeckIsEmpty() {
+        // empty the tribute deck: refillUpperRow must not throw
+        game.getTributeDeck().clear();
+
+        assertDoesNotThrow(() -> round.refillUpperRow());
+    }
+
+    @Test
+    void testCheckEraTransitionInEraIIIDoesNothing() {
+        // in Era III checkEraTransition must not call endEra or throw
+        game.nextEra();
+        game.nextEra(); // now Era III
+
+        Round eraIIIRound = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.III,
+                new ArrayList<>(), new ArrayList<>(),
+                new ArrayList<>(), new ArrayList<>(),
+                new ArrayList<>(), new ArrayList<>()
+        );
+        game.setCurrentRound(eraIIIRound);
+
+        assertDoesNotThrow(() -> eraIIIRound.checkEraTransition());
+        assertEquals(Era.III, game.getCurrentEra()); // era must stay III
+    }
+
+    @Test
+    void testShiftUpperToLowerRowClearsPreviousLowerRow() {
+        // after shiftUpperToLowerRow, the old lower row content is gone
+        int upperSizeBefore = round.getUpperTributeRowSize();
+
+        round.shiftUpperToLowerRow();
+
+        // new lower row = old upper row
+        assertEquals(upperSizeBefore, round.getLowerTributeRowSize());
+        // upper row is now empty
+        assertEquals(0, round.getUpperTributeRowSize());
+    }
+
 }

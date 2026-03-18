@@ -277,4 +277,17 @@ public class BoardTest {
         assertTrue(order.contains(totem2));
     }
 
+    @Test
+    void testAssignRandomTurnOrderWithEmptyListLeavesAllSlotsFree() {
+        // assignRandomTurnOrder with empty list must leave all slots empty
+        turnOrderTile.assignRandomTurnOrder(new ArrayList<>());
+
+        List<Totem> order = turnOrderTile.getTurnOrder();
+        assertTrue(order.isEmpty());
+        for (TurnSlot slot : turnOrderTile.getSlots()) {
+            assertFalse(slot.isOccupied());
+        }
+    }
+
+
 }
