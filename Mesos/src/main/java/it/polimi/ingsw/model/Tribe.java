@@ -12,6 +12,7 @@ public class Tribe {
     private List<CharacterCard> characterCards;
     private List<BuildingCard> buildingCards;
 
+
     public Tribe() {
         this.characterCards = new ArrayList<>();
         this.buildingCards = new ArrayList<>();
@@ -72,8 +73,19 @@ public class Tribe {
         return sets;
 
     }
+
+    // Method for ShamanicRitualEvent
+    public int countShamanStars() {
+        int totalStars = 0;
+        for (CharacterCard card : characterCards) {
+            if (card instanceof ShamanCard shaman) {
+                totalStars += shaman.getStars();
+            }
+        }
+        return totalStars;
+    }
+
     // Method used for InventorPairFoodEffect
-    // TODO : Refactor this method for counting pp for inventors at the end of the game
     public int countInventorPairs() {
         Map<InventorIcons, Integer> iconCounts = new HashMap<>();
 

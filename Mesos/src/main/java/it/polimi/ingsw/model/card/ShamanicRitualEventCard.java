@@ -38,7 +38,7 @@ public class ShamanicRitualEventCard extends EventCard {
         int minStars = Integer.MAX_VALUE;
 
         for (Player player : players) {
-            int stars = countShamanStars(player);
+            int stars = player.getTribe().countShamanStars();
             maxStars = Math.max(maxStars, stars);
             minStars = Math.min(minStars, stars);
         }
@@ -47,7 +47,7 @@ public class ShamanicRitualEventCard extends EventCard {
         List<Player> playersWithLeastStars = new ArrayList<>();
 
         for (Player player : players) {
-            int stars = countShamanStars(player);
+            int stars = player.getTribe().countShamanStars();
 
             if (stars == maxStars) {
                 playersWithMostStars.add(player);
@@ -67,15 +67,5 @@ public class ShamanicRitualEventCard extends EventCard {
         }
     }
 
-    private int countShamanStars(Player player) {
-        int totalStars = 0;
 
-        for (CharacterCard card : player.getTribe().getCharacterCards()) {
-            if (card instanceof ShamanCard shamanCard) {
-                totalStars += shamanCard.getStars();
-            }
-        }
-
-        return totalStars;
-    }
 }
