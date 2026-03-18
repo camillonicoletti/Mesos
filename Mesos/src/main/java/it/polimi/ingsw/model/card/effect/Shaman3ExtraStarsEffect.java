@@ -4,14 +4,13 @@ import it.polimi.ingsw.model.Player;
 
 public class Shaman3ExtraStarsEffect implements Effect {
 
-    private final int extraStars = 3;
-
     public int getExtraStars() {
-        return extraStars;
+        return 3;
     }
 
     @Override
     public void apply(Player player) {
-        // Passive effect managed in Game
+        // Passive effect managed in ShamanicRitual
+        // by doing stars += effect.getExtraStars()
     }
 }
