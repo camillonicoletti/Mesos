@@ -117,6 +117,25 @@ public class Round {
         );
     }
 
+    public void setupInitialRows() {
+        List<Card> tributeDeck = game.getTributeDeck();
+
+        int upperTarget = game.getPlayers().size() + 4;
+        int lowerTarget = game.getPlayers().size() + 1;
+
+        while (getUpperTributeRowSize() < upperTarget && !tributeDeck.isEmpty()) {
+            drawCardToUpperRow(tributeDeck);
+        }
+
+        while (getLowerTributeRowSize() < lowerTarget && !tributeDeck.isEmpty()) {
+            drawCardToLowerRow(tributeDeck);
+        }
+    }
+
+    public void setupInitialBuildings(List<BuildingCard> buildings) {
+        upperRowBuildings = new ArrayList<>(buildings);
+    }
+
     private void drawCardToUpperRow(List<Card> deck) {
         Card drawn = deck.remove(0);
 
@@ -141,20 +160,6 @@ public class Round {
         }
     }
 
-    public void setupInitialRows() {
-        List<Card> tributeDeck = game.getTributeDeck();
-
-        int upperTarget = game.getPlayers().size() + 4;
-        int lowerTarget = game.getPlayers().size() + 1;
-
-        while (getUpperTributeRowSize() < upperTarget && !tributeDeck.isEmpty()) {
-            drawCardToUpperRow(tributeDeck);
-        }
-
-        while (getLowerTributeRowSize() < lowerTarget && !tributeDeck.isEmpty()) {
-            drawCardToLowerRow(tributeDeck);
-        }
-    }
 
     public boolean placeTotemOffer(Player player, OfferTile chosenTile) {
         int numPlayers = game.getPlayers().size();
@@ -226,7 +231,7 @@ public class Round {
         List<EventCard> eventCards = collectEvent();
 
         for (EventCard eventCard : eventCards){
-            eventCard.apply(game);
+            eventCard.resolve(game);
         }
     }
 
@@ -310,9 +315,6 @@ public class Round {
         }
     }
 
-    public void setupInitialBuildings(List<BuildingCard> buildings) {
-        upperRowBuildings = new ArrayList<>(buildings);
-    }
     public void moveUpperBuildingsToLower() {
         lowerRowBuildings = upperRowBuildings;
         upperRowBuildings = new ArrayList<>();

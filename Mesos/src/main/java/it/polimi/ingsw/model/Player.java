@@ -81,7 +81,7 @@ public class Player {
         tribe.addBuildingCard(card);
 
         // TODO: check building food cost
-        // TODO: apply Builder discount
+        // TODO: resolve Builder discount
         // TODO: prevent purchase if the player cannot afford it
     }
 }

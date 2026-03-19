@@ -3,6 +3,7 @@ package it.polimi.ingsw.model.card;
 import it.polimi.ingsw.model.Game;
 import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.enums.Era;
+import it.polimi.ingsw.model.enums.EventType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +15,7 @@ public class ShamanicRitualEventCard extends EventCard {
 
     public ShamanicRitualEventCard(Era era, boolean closeEvent, int priorityValue,
                                    int prestigePointsForMost, int prestigePointsLostForLeast) {
-        super(era, closeEvent, priorityValue);
+        super(era, closeEvent, priorityValue, EventType.SHAMANIC_RITUAL);
         this.prestigePointsForMost = prestigePointsForMost;
         this.prestigePointsLostForLeast = prestigePointsLostForLeast;
     }
@@ -28,8 +29,9 @@ public class ShamanicRitualEventCard extends EventCard {
     }
 
     @Override
-    public void apply(Game game) {
+    public void resolve(Game game) {
         List<Player> players = game.getPlayers();
+
         if (players == null || players.isEmpty()) {
             return;
         }
@@ -66,6 +68,4 @@ public class ShamanicRitualEventCard extends EventCard {
             player.removePrestigePoints(prestigePointsLostForLeast);
         }
     }
-
-
 }
