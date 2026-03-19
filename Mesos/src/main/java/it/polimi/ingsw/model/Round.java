@@ -8,6 +8,7 @@ import it.polimi.ingsw.model.card.CharacterCard;
 import it.polimi.ingsw.model.card.BuildingCard;
 import it.polimi.ingsw.model.card.Card;
 import it.polimi.ingsw.model.card.EventCard;
+import it.polimi.ingsw.model.enums.EventType;
 import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.enums.SlotType;
@@ -118,17 +119,29 @@ public class Round {
     }
 
     public void setupInitialRows() {
-        List<Card> tributeDeck = game.getTributeDeck();
-
-        int upperTarget = game.getPlayers().size() + 4;
         int lowerTarget = game.getPlayers().size() + 1;
+        int upperTarget = game.getPlayers().size() + 4;
 
-        while (getUpperTributeRowSize() < upperTarget && !tributeDeck.isEmpty()) {
-            drawCardToUpperRow(tributeDeck);
+        // 1. riempi la fila inferiore
+        while (getLowerTributeRowSize() < lowerTarget) {
+            Card drawnCard = game.drawTribeCard();
+
+            if (drawnCard instanceof EventCard eventCard) {
+                upperRowEventCards.add(eventCard);
+            } else if (drawnCard instanceof CharacterCard characterCard) {
+                lowerRowTribute.add(characterCard);
+            }
         }
 
-        while (getLowerTributeRowSize() < lowerTarget && !tributeDeck.isEmpty()) {
-            drawCardToLowerRow(tributeDeck);
+        // 2. riempi la fila superiore
+        while (getUpperTributeRowSize() < upperTarget) {
+            Card drawnCard = game.drawTribeCard();
+
+            if (drawnCard instanceof EventCard eventCard) {
+                upperRowEventCards.add(eventCard);
+            } else if (drawnCard instanceof CharacterCard characterCard) {
+                upperRowTribute.add(characterCard);
+            }
         }
     }
 
@@ -218,19 +231,46 @@ public class Round {
         }
     }
 
+    private List<EventCard> getOrderedEventsForResolution(boolean includeUpperRow) {
+        List<EventCard> eventsToResolve = new ArrayList<>();
 
+        // 1. prendo eventi lower
+        eventsToResolve.addAll(lowerRowEventCards);
 
-    public List<EventCard> collectEvent() {
-        List<EventCard> eventCards = new ArrayList<>();
-        eventCards.addAll(lowerRowEventCards);
-        eventCards.addAll(upperRowEventCards);
-        return eventCards;
+        // 2. eventualmente aggiungo upper
+        if (includeUpperRow) {
+            eventsToResolve.addAll(upperRowEventCards);
+        }
+
+        // 3. separo sustenance dagli altri
+        List<EventCard> normalEvents = new ArrayList<>();
+        List<EventCard> sustenanceEvents = new ArrayList<>();
+
+        for (EventCard e : eventsToResolve) {
+            if (e.getEventType() == EventType.SUSTENANCE) {
+                sustenanceEvents.add(e);
+            } else {
+                normalEvents.add(e);
+            }
+        }
+
+        // 4. ordino per era
+        normalEvents.sort(Comparator.comparing(EventCard::getEra));
+        sustenanceEvents.sort(Comparator.comparing(EventCard::getEra));
+
+        // 5. ricompongo: prima normali, poi sustenance
+        List<EventCard> ordered = new ArrayList<>();
+        ordered.addAll(normalEvents);
+        ordered.addAll(sustenanceEvents);
+
+        return ordered;
     }
 
     public void resolveEvent() {
-        List<EventCard> eventCards = collectEvent();
+        boolean includeUpperRow = game.isGameOver();
+        List<EventCard> eventCards = getOrderedEventsForResolution(includeUpperRow);
 
-        for (EventCard eventCard : eventCards){
+        for (EventCard eventCard : eventCards) {
             eventCard.resolve(game);
         }
     }
@@ -257,11 +297,11 @@ public class Round {
     }
 
     public void shiftUpperToLowerRow() {
-        lowerRowEventCards = upperRowEventCards;
-        lowerRowTribute = upperRowTribute;
+        lowerRowEventCards = new ArrayList<>(upperRowEventCards);
+        lowerRowTribute = new ArrayList<>(upperRowTribute);
 
-        upperRowEventCards = new ArrayList<>();
-        upperRowTribute = new ArrayList<>();
+        upperRowEventCards.clear();
+        upperRowTribute.clear();
     }
 
     public int getUpperTributeRowSize() {

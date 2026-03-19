@@ -108,7 +108,7 @@ public class Game {
     }
 
     public boolean isGameOver() {
-        return status == GameStatus.FINISHED || currentRoundNumber >= MAX_ROUNDS;
+        return status == GameStatus.FINISHED || currentRoundNumber > MAX_ROUNDS;
     }
 
     public void nextEra() {
@@ -174,6 +174,15 @@ public class Game {
             case III -> era3BuildingDeck;
         };
     }
+
+    public Card drawTribeCard() {
+        if (tributeDeck == null || tributeDeck.isEmpty()) {
+            return null;
+        }
+
+        return tributeDeck.remove(0);
+    }
+
     public void startNewEra(){}
 
     public Round getCurrentRound() {
