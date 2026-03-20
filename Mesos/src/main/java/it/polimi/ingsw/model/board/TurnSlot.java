@@ -2,6 +2,7 @@ package it.polimi.ingsw.model.board;
 
 import it.polimi.ingsw.model.Totem;
 import it.polimi.ingsw.model.enums.SlotEffect;
+import it.polimi.ingsw.model.enums.TotemPosition;
 
 public class TurnSlot {
 
@@ -45,11 +46,14 @@ public class TurnSlot {
 
     public void placeTotem(Totem t) {
         this.occupiedBy = t;
+        t.setPosition(TotemPosition.TURN_ORDER);
     }
 
     public Totem removeTotem() {
         Totem removed = this.occupiedBy;
         this.occupiedBy = null;
+        if (removed != null) removed.setPosition(TotemPosition.OFFER_TRACK);
         return removed;
     }
+
 }

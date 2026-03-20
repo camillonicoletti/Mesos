@@ -1,6 +1,7 @@
 package it.polimi.ingsw.model.board;
 
 import it.polimi.ingsw.model.Totem;
+import it.polimi.ingsw.model.enums.TotemPosition;
 
 import java.util.List;
 
@@ -17,24 +18,12 @@ public class OfferTile {
         this.slots = slots;
     }
 
-
     public boolean isAvailableFor(int numPlayers) {
         return numPlayers >= minPlayers;
     }
 
-
     public boolean isOccupied() {
         return totemSlot != null;
-    }
-
-    public void placeTotem(Totem totem) {
-        this.totemSlot = totem;
-    }
-
-    public Totem removeTotem() {
-        Totem removed = this.totemSlot;
-        this.totemSlot = null;
-        return removed;
     }
 
     public char getLetter() {
@@ -51,6 +40,17 @@ public class OfferTile {
 
     public Totem getTotemSlot() {
         return totemSlot;
+    }
+
+    public void placeTotem(Totem totem) {
+        this.totemSlot = totem;
+        totem.setPosition(TotemPosition.OFFER_TRACK);
+    }
+
+    public Totem removeTotem() {
+        Totem removed = this.totemSlot;
+        this.totemSlot = null;
+        return removed;
     }
 
 

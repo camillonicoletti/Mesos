@@ -31,7 +31,7 @@ public class Game {
     private Round currentRound;
     private Era currentEra;
     private final LocalDateTime date;
-    private final Board board;
+    private Board board;
     private List<Card> tributeDeck;
     private List<BuildingCard> era1BuildingDeck;
     private List<BuildingCard> era2BuildingDeck;
@@ -93,6 +93,15 @@ public class Game {
         currentEra = Era.I;
         status = GameStatus.IN_PROGRESS;
 
+        // Create the board FIRST — setupInitialRows() and setupInitialBuildings() may need it
+        this.board = BoardFactory.createBoard(players.size());
+
+        List<Totem> totems = new ArrayList<>();
+        for (Player p : players) {
+            totems.add(p.getTotem());
+        }
+        board.getTurnOrderTile().assignRandomTurnOrder(totems);
+
         if (currentRound == null) {
             currentRound = new Round(currentRoundNumber, this, RoundPhase.TOTEM_PLACEMENT, Era.I, null, null, null, null, null, null);
         }
@@ -100,16 +109,6 @@ public class Game {
         currentRound.setupInitialRows();
         currentRound.setupInitialBuildings(era1BuildingDeck);
         era1BuildingDeck.clear();
-
-        // Create the board with the right offer tiles and turn order tile for this number of players
-        this.board = BoardFactory.createBoard(players.size());
-
-
-        List<Totem> totems = new ArrayList<>();
-        for (Player p : players) {
-            totems.add(p.getTotem());
-        }
-        board.getTurnOrderTile().assignRandomTurnOrder(totems);
         distributeInitialFood();
 
     }

@@ -31,48 +31,56 @@ public class BoardFactoryTest {
     // =========================================================
 
     @Test
-    void testCreateBoardWith2PlayersHas2OfferTiles() {
-        // A (min2) and B (min2) must be included; C (min3) must be excluded
+    void testCreateBoardWith2PlayersHas4OfferTiles() {
+        // B(min2), C(min2), E(min2), F(min2) must be included
         Board board = BoardFactory.createBoard(2);
-        assertEquals(2, board.getOfferTiles().size());
+        assertEquals(4, board.getOfferTiles().size());
     }
 
     @Test
-    void testCreateBoardWith3PlayersHas3OfferTiles() {
-        // A (min2), B (min2), C (min3) — all three tiles must be present
+    void testCreateBoardWith3PlayersHas5OfferTiles() {
+        // B(min2), C(min2), D(min3), E(min2), F(min2) must be present
         Board board = BoardFactory.createBoard(3);
-        assertEquals(3, board.getOfferTiles().size());
+        assertEquals(5, board.getOfferTiles().size());
     }
 
     @Test
-    void testCreateBoardWith4PlayersHas3OfferTiles() {
-        // same tiles as 3 players — C is the most restrictive (min3)
+    void testCreateBoardWith4PlayersHas6OfferTiles() {
+        // B(min2), C(min2), D(min3), E(min2), F(min2), G(min4) must be present
         Board board = BoardFactory.createBoard(4);
-        assertEquals(3, board.getOfferTiles().size());
+        assertEquals(6, board.getOfferTiles().size());
     }
 
     @Test
     void testCreateBoardTileLettersCorrectFor2Players() {
-        // with 2 players only A and B must be present; C must be absent
+        // with 2 players: B, C, E, F present; A(min5), D(min3), G(min4) absent
         Board board = BoardFactory.createBoard(2);
         List<Character> letters = board.getOfferTiles().stream()
                 .map(OfferTile::getLetter)
                 .toList();
-        assertTrue(letters.contains('A'));
         assertTrue(letters.contains('B'));
-        assertFalse(letters.contains('C'));
+        assertTrue(letters.contains('C'));
+        assertTrue(letters.contains('E'));
+        assertTrue(letters.contains('F'));
+        assertFalse(letters.contains('A'));
+        assertFalse(letters.contains('D'));
+        assertFalse(letters.contains('G'));
     }
 
     @Test
     void testCreateBoardTileLettersCorrectFor3Players() {
-        // with 3 players A, B and C must all be present
+        // with 3 players: B, C, D, E, F present; A(min5), G(min4) absent
         Board board = BoardFactory.createBoard(3);
         List<Character> letters = board.getOfferTiles().stream()
                 .map(OfferTile::getLetter)
                 .toList();
-        assertTrue(letters.contains('A'));
         assertTrue(letters.contains('B'));
         assertTrue(letters.contains('C'));
+        assertTrue(letters.contains('D'));
+        assertTrue(letters.contains('E'));
+        assertTrue(letters.contains('F'));
+        assertFalse(letters.contains('A'));
+        assertFalse(letters.contains('G'));
     }
 
     @Test

@@ -1,5 +1,7 @@
 it/polimi/ingsw/AppTest.class
 it/polimi/ingsw/model/BoardFactoryTest.class
+it/polimi/ingsw/model/OfferTileTest.class
+it/polimi/ingsw/model/TurnSlotTest.class
 it/polimi/ingsw/model/GameTest.class
 it/polimi/ingsw/model/BoardTest.class
 it/polimi/ingsw/model/PlayerTest.class

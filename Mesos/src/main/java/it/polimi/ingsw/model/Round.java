@@ -86,11 +86,14 @@ public class Round {
     public void execute() {
 
         // playerChoices maps each player to the OfferTile they selected during TOTEM_PLACEMENT,
-        // allowing execute() to resolve the correct action for each player
+        // allowing execute() to resolve the correct action for each player;
+        // chosenCards is empty until the controller is implemented —
+        // the controller will pass the actual cards chosen by the player
         phase = RoundPhase.ACTION_RESOLUTION;
         for (Map.Entry<Player, OfferTile> entry : playerChoices.entrySet()) {
-            resolveOfferAction(entry.getKey(), entry.getValue());
+            resolveOfferAction(entry.getKey(), entry.getValue(), new ArrayList<>());
         }
+
         phase = RoundPhase.TURN_ORDER;
         placeTotemOrder();
         phase = RoundPhase.EVENT_RESOLUTION;
@@ -100,7 +103,10 @@ public class Round {
         shiftUpperToLowerRow();
         refillUpperRow();
         checkEraTransition();
+        // remove all totems from offer tiles for the next round
+        game.getBoard().resetOfferTiles();
     }
+
 
 
     public Round createNextRound(int nextRoundNumber) {
@@ -189,21 +195,49 @@ public class Round {
 
 
 
-    public void resolveOfferAction(Player player, OfferTile chosenTile) {
+    public void resolveOfferAction(Player player, OfferTile chosenTile, List<Card> chosenCards) {
         for (ActionSlot slot : chosenTile.getSlots()) {
             SlotType type = slot.getType();
-            if (type == SlotType.UPPER_ROW || type == SlotType.LOWER_ROW) {
-                int amount = slot.getAmount();
-                // Select the correct row and draw the first `amount` cards, giving each one to the player
-                List<CharacterCard> row = (type == SlotType.UPPER_ROW) ? upperRowTribute : lowerRowTribute;
-                for (int i = 0; i < amount && !row.isEmpty(); i++) {
-                    player.addCharacterCard(row.remove(0));
-                }
-            } else if (type == SlotType.FOOD) {
+
+            if (type == SlotType.FOOD) {
+                // give the player the food indicated on the slot
                 player.addFood(slot.getAmount());
+
+            } else if (type == SlotType.UPPER_ROW || type == SlotType.LOWER_ROW) {
+                List<CharacterCard> tributeRow = (type == SlotType.UPPER_ROW) ? upperRowTribute : lowerRowTribute;
+                List<BuildingCard> buildingRow = (type == SlotType.UPPER_ROW) ? upperRowBuildings : lowerRowBuildings;
+
+                int amount = slot.getAmount();
+                int taken = 0;
+
+                // iterate over the cards chosen by the player, stopping once the slot limit is reached
+                for (Card chosen : chosenCards) {
+                    if (taken >= amount) break;
+
+
+                    if (chosen instanceof CharacterCard cc && tributeRow.contains(cc)) {
+                        // character card: free, just add to tribe
+                        tributeRow.remove(cc);
+                        player.addCharacterCard(cc);
+                        taken++;
+
+                    } else if (chosen instanceof BuildingCard bc && buildingRow.contains(bc)) {
+                        // building card: pay food cost minus builder discount
+                        int actualCost = Math.max(0, bc.getFoodCost() - player.getTribe().getBuildingDiscount());
+                        if (player.canAfford(actualCost)) {
+                            player.spendFood(actualCost);
+                            buildingRow.remove(bc);
+                            player.addBuildingCard(bc);
+                            //bc.getEffect().apply(player); // apply immediate building effect
+                            taken++;
+                        }
+                        // if cannot afford, skip silently — controller should validate before calling
+                    }
+                }
             }
         }
     }
+
 
 
     public void placeTotemOrder() {
@@ -224,10 +258,9 @@ public class Round {
 
             switch (slot.getEffect()) {
                 case GAIN_FOOD -> owner.addFood(slot.getEffectValue());
-                case PAY_FOOD  -> owner.spendFood(slot.getEffectValue());
+                case PAY_FOOD  -> owner.applyTurnPenalty(slot.getEffectValue(), slot.getPenaltyPoints());
                 case NONE      -> {}
             }
-            // TODO: implements the logic of points
         }
     }
 

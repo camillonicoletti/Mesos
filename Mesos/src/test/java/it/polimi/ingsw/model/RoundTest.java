@@ -1,6 +1,7 @@
 package it.polimi.ingsw.model;
 
 import it.polimi.ingsw.model.board.*;
+import it.polimi.ingsw.model.card.BuildingCard;
 import it.polimi.ingsw.model.card.HunterCard;
 import it.polimi.ingsw.model.card.Card;
 import it.polimi.ingsw.model.enums.*;
@@ -121,9 +122,11 @@ public class RoundTest {
 
     @Test
     void testExecuteGivesUpperRowCardsToPlayer() {
+        // with the new API, cards are only given when the controller passes chosenCards
+        // execute() passes empty list → player gets 0 cards
         round.placeTotemOffer(player1, tileA);
         round.execute();
-        assertEquals(2, player1.getTribe().getCharacterCards().size());
+        assertEquals(0, player1.getTribe().getCharacterCards().size()); // empty chosenCards
     }
 
     @Test
@@ -145,10 +148,10 @@ public class RoundTest {
 
     @Test
     void testExecuteShiftsUpperToLower() {
-        int upperSizeBefore = round.getUpperTributeRowSize();
+        // no cards taken (chosenCards empty) → upper row shifts to lower intact
         round.placeTotemOffer(player1, tileA);
         round.execute();
-        assertEquals(upperSizeBefore - 2, round.getLowerTributeRowSize());
+        assertEquals(5, round.getLowerTributeRowSize()); // full upper row shifted
     }
 
     // -------------------------------------------------------
@@ -197,7 +200,7 @@ public class RoundTest {
         );
         game.setCurrentRound(emptyRound);
 
-        assertDoesNotThrow(() -> emptyRound.resolveOfferAction(player1, tileA));
+        emptyRound.resolveOfferAction(player1, tileA, new ArrayList<>());
         assertEquals(0, player1.getTribe().getCharacterCards().size());
     }
 
@@ -328,6 +331,54 @@ public class RoundTest {
         assertDoesNotThrow(() -> round.placeTotemOrder());
         assertEquals(0, player1.getFood());
         assertEquals(0, player2.getFood());
+    }
+
+    // -------------------------------------------------------
+// resolveOfferAction — building purchase
+// -------------------------------------------------------
+
+    @Test
+    void testResolveOfferActionPurchasesBuildingWhenAffordable() {
+        // player has enough food to buy the building
+        player1.addFood(5);
+
+        BuildingCard building = new BuildingCard(2, p -> {}, Era.I, 3);
+        OfferTile buildingTile = new OfferTile('C', 2,
+                List.of(new ActionSlot(SlotType.UPPER_ROW, 1)));
+
+        Round buildingRound = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
+                new ArrayList<>(), new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(List.of(building)) // building in upper row
+        );
+
+        buildingRound.resolveOfferAction(player1, buildingTile, List.of(building));
+
+        assertEquals(1, player1.getTribe().getBuildingCards().size());
+        assertEquals(3, player1.getFood()); // 5 - 2
+    }
+
+    @Test
+    void testResolveOfferActionDoesNotPurchaseBuildingWhenNotAffordable() {
+        // player has no food → cannot buy the building
+        BuildingCard building = new BuildingCard(3, p -> {}, Era.I, 2);
+        OfferTile buildingTile = new OfferTile('C', 2,
+                List.of(new ActionSlot(SlotType.UPPER_ROW, 1)));
+
+        Round buildingRound = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
+                new ArrayList<>(), new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(List.of(building))
+        );
+
+        buildingRound.resolveOfferAction(player1, buildingTile, List.of(building));
+
+        assertEquals(0, player1.getTribe().getBuildingCards().size());
+        assertEquals(0, player1.getFood()); // unchanged
     }
 
 

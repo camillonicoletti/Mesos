@@ -48,13 +48,14 @@ public class Player {
         // TODO: add validation if needed
     }
 
-    public boolean spendFood(int amount) {
-        if (food < amount) {
-            return false;
+    public void spendFood(int amount) {
+        if (food >= amount) {
+            food -= amount;
+        } else {
+            int missing = amount - food;
+            food = 0;
+            removePrestigePoints(missing);
         }
-
-        food -= amount;
-        return true;
     }
 
     public boolean canAfford(int cost) {
@@ -70,6 +71,19 @@ public class Player {
 
         // Prestige points can go below zero
     }
+
+    /**
+     * Applies a turn order penalty: spends foodCost food if affordable,
+     * otherwise removes prestigePenalty prestige points.
+     */
+    public void applyTurnPenalty(int foodCost, int prestigePenalty) {
+        if (canAfford(foodCost)) {
+            spendFood(foodCost);
+        } else {
+            removePrestigePoints(prestigePenalty);
+        }
+    }
+
 
     public void addCharacterCard(CharacterCard card) {
         tribe.addCharacterCard(card);

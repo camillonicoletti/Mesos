@@ -58,15 +58,15 @@ public class GameTest {
             tributeDeck.add(new HunterCard(false, Era.I));
         }
 
-        era1Deck = new ArrayList<>(List.of(new BuildingCard(2, noEffect, Era.,1));
+        era1Deck = new ArrayList<>(List.of(new BuildingCard(2, noEffect, Era.I, 1)));
         era2Deck = new ArrayList<>(List.of(
-                new BuildingCard(3, noEffect, Era.II,2),
-                new BuildingCard(4, noEffect, Era.II,3)
+                new BuildingCard(3, noEffect, Era.II, 2),
+                new BuildingCard(4, noEffect, Era.II, 3)
         ));
         era3Deck = new ArrayList<>(List.of(
-                new BuildingCard(5, noEffect, Era.III,1),
-                new BuildingCard(6, noEffect, Era.III,1),
-                new BuildingCard(7, noEffect, Era.III,1)
+                new BuildingCard(5, noEffect, Era.III, 1),
+                new BuildingCard(6, noEffect, Era.III, 1),
+                new BuildingCard(7, noEffect, Era.III, 1)
         ));
 
         game = new Game(
@@ -197,7 +197,7 @@ public class GameTest {
     // =========================================================
     // END / IS GAME OVER
     // end() sets status to FINISHED
-    // isGameOver() is true if FINISHED or round >= MAX_ROUNDS (10)
+    // isGameOver() is true if FINISHED or round > MAX_ROUNDS (10)
     // =========================================================
 
     @Test
@@ -215,10 +215,10 @@ public class GameTest {
 
     @Test
     void testIsGameOverTrueAtMaxRounds() {
-        // a game at round 10 (MAX_ROUNDS) is already over
+        // isGameOver() checks currentRoundNumber > MAX_ROUNDS(10), so 11 triggers it
         Game maxRoundGame = new Game(
                 List.of(player1, player2),
-                10, null, Era.I, null,
+                11, null, Era.I, null,
                 board, new ArrayList<>(tributeDeck),
                 new ArrayList<>(), new ArrayList<>(), new ArrayList<>(),
                 GameStatus.IN_PROGRESS
@@ -320,49 +320,45 @@ public class GameTest {
     @Test
     void testTwoCompleteRounds() {
         // --- Round 1 ---
-        // player1 picks tileA → takes 2 cards from the upper row
-        // player2 picks tileB → receives 3 food
+        // player1 picks tileA (UPPER_ROW) — no cards taken since chosenCards is empty (no controller yet)
+        // player2 picks tileB (FOOD 3) — receives 3 food
         round.placeTotemOffer(player1, tileA);
         round.placeTotemOffer(player2, tileB);
 
         game.endRound();
 
-        assertEquals(2, player1.getTribe().getCharacterCards().size());
+        assertEquals(0, player1.getTribe().getCharacterCards().size()); // empty chosenCards
         assertEquals(3, player2.getFood());
         assertEquals(2, game.getCurrentRound().getNumber());
 
         // --- Round 2 ---
         // roles are swapped:
-        // player2 picks tileA → takes cards
-        // player1 picks tileB → receives 3 food
+        // player2 picks tileA — no cards taken (no controller)
+        // player1 picks tileB — receives 3 food
         Round round2 = game.getCurrentRound();
-        tileA.removeTotem();
-        tileB.removeTotem();
 
         round2.placeTotemOffer(player2, tileA);
         round2.placeTotemOffer(player1, tileB);
 
         game.endRound();
 
-        // player1 now has 3 food accumulated from round 2
         assertEquals(3, player1.getFood());
-        // player2 has at least 2 cards from round 2
-        assertTrue(player2.getTribe().getCharacterCards().size() >= 2);
+        assertEquals(0, player2.getTribe().getCharacterCards().size()); // empty chosenCards
         assertEquals(3, game.getCurrentRound().getNumber());
     }
 
     @Test
     void testEndRoundEndsGameAtMaxRounds() {
-        // a game at round 9: endRound brings it to 10 = MAX_ROUNDS → game over
+        // game at round 10: endRound → nextRound sees 10 >= MAX_ROUNDS → calls end()
         Game nearEndGame = new Game(
                 List.of(player1, player2),
-                9, null, Era.I, null,
+                10, null, Era.I, null,
                 board, new ArrayList<>(tributeDeck),
                 new ArrayList<>(), new ArrayList<>(), new ArrayList<>(),
                 GameStatus.IN_PROGRESS
         );
 
-        Round nearEndRound = new Round(9, nearEndGame, RoundPhase.TOTEM_PLACEMENT, Era.I,
+        Round nearEndRound = new Round(10, nearEndGame, RoundPhase.TOTEM_PLACEMENT, Era.I,
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>()
@@ -401,8 +397,8 @@ public class GameTest {
         // from Era II: endEra must discard lower buildings and move upper to lower
         game.nextEra(); // now Era II
 
-        List<BuildingCard> lower = new ArrayList<>(List.of(new BuildingCard(1, noEffect, Era.I,2)));
-        List<BuildingCard> upper = new ArrayList<>(List.of(new BuildingCard(2, noEffect, Era.II,3)));
+        List<BuildingCard> lower = new ArrayList<>(List.of(new BuildingCard(1, noEffect, Era.I, 2)));
+        List<BuildingCard> upper = new ArrayList<>(List.of(new BuildingCard(2, noEffect, Era.II, 3)));
 
         Round eraIIRound = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.II,
                 new ArrayList<>(), new ArrayList<>(),
@@ -449,5 +445,4 @@ public class GameTest {
         assertDoesNotThrow(() -> game.end());
         assertTrue(game.isGameOver());
     }
-
 }
