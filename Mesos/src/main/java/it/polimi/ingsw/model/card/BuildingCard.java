@@ -6,11 +6,13 @@ import it.polimi.ingsw.model.enums.Era;
 public class BuildingCard extends Card{
     private final int foodCost;
     private final Effect effect;
+    private final int pointsEndOfMatch;
 
-    public BuildingCard(int foodCost,Effect effect, Era era) {
+    public BuildingCard(int foodCost, Effect effect, Era era, int pointsEndOfMatch) {
         super(era);
         this.foodCost = foodCost;
         this.effect = effect;
+        this.pointsEndOfMatch = pointsEndOfMatch;
     }
 
     public int getFoodCost() {
@@ -19,6 +21,10 @@ public class BuildingCard extends Card{
 
     public Effect getEffect() {
         return effect;
+    }
+
+    public int getPointsEndOfMatch() {
+        return pointsEndOfMatch;
     }
 
 }

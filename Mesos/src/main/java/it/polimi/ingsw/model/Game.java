@@ -228,7 +228,7 @@ public class Game {
         int points = 0;
 
         for (BuildingCard building : player.getTribe().getBuildingCards()) {
-            points += building.getVictoryPoints();
+            points += building.getPointsEndOfMatch();
         }
 
         return points;

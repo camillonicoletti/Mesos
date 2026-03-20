@@ -10,6 +10,7 @@ public class SustenanceFoodDiscountEffect implements Effect{
         this.targetType = targetType;
     }
 
+    // Adding food before removing it during Sustenance Event
     @Override
     public void apply(Player player) {
         int count = player.getTribe().countCharactersByType(targetType);

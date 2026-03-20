@@ -58,15 +58,15 @@ public class GameTest {
             tributeDeck.add(new HunterCard(false, Era.I));
         }
 
-        era1Deck = new ArrayList<>(List.of(new BuildingCard(2, noEffect, Era.I)));
+        era1Deck = new ArrayList<>(List.of(new BuildingCard(2, noEffect, Era.,1));
         era2Deck = new ArrayList<>(List.of(
-                new BuildingCard(3, noEffect, Era.II),
-                new BuildingCard(4, noEffect, Era.II)
+                new BuildingCard(3, noEffect, Era.II,2),
+                new BuildingCard(4, noEffect, Era.II,3)
         ));
         era3Deck = new ArrayList<>(List.of(
-                new BuildingCard(5, noEffect, Era.III),
-                new BuildingCard(6, noEffect, Era.III),
-                new BuildingCard(7, noEffect, Era.III)
+                new BuildingCard(5, noEffect, Era.III,1),
+                new BuildingCard(6, noEffect, Era.III,1),
+                new BuildingCard(7, noEffect, Era.III,1)
         ));
 
         game = new Game(
@@ -401,8 +401,8 @@ public class GameTest {
         // from Era II: endEra must discard lower buildings and move upper to lower
         game.nextEra(); // now Era II
 
-        List<BuildingCard> lower = new ArrayList<>(List.of(new BuildingCard(1, noEffect, Era.I)));
-        List<BuildingCard> upper = new ArrayList<>(List.of(new BuildingCard(2, noEffect, Era.II)));
+        List<BuildingCard> lower = new ArrayList<>(List.of(new BuildingCard(1, noEffect, Era.I,2)));
+        List<BuildingCard> upper = new ArrayList<>(List.of(new BuildingCard(2, noEffect, Era.II,3)));
 
         Round eraIIRound = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.II,
                 new ArrayList<>(), new ArrayList<>(),
