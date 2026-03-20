@@ -12,6 +12,7 @@ import it.polimi.ingsw.model.card.ArtistCard;
 import it.polimi.ingsw.model.card.BuilderCard;
 import it.polimi.ingsw.model.card.BuildingCard;
 import it.polimi.ingsw.model.card.InventorCard;
+import it.polimi.ingsw.model.board.TurnSlot;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -109,9 +110,40 @@ public class Game {
             totems.add(p.getTotem());
         }
         board.getTurnOrderTile().assignRandomTurnOrder(totems);
+        distributeInitialFood();
+
     }
 
+    private void distributeInitialFood() {
+        Map<Totem, Player> totemOwner = new HashMap<>();
+        for (Player player : players) {
+            totemOwner.put(player.getTotem(), player);
+        }
 
+        int position = 0;
+        for (TurnSlot slot : board.getTurnOrderTile().getSlots()) {
+            if (!slot.isOccupied()) {
+                continue;
+            }
+
+            Player owner = totemOwner.get(slot.getOccupiedBy());
+            if (owner == null) {
+                continue;
+            }
+
+            owner.addFood(getInitialFoodForPosition(position));
+            position++;
+        }
+    }
+
+    private int getInitialFoodForPosition(int positionIndex) {
+        return switch (positionIndex) {
+            case 0 -> 2;
+            case 1, 2 -> 3;
+            case 3, 4 -> 4;
+            default -> throw new IllegalArgumentException("Invalid turn order position: " + positionIndex);
+        };
+    }
 
     public void end() {
         calculateFinalScores();

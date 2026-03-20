@@ -7,13 +7,11 @@ import it.polimi.ingsw.model.enums.EventType;
 public abstract class EventCard extends Card {
 
     private final boolean closeEvent;
-    private final int priorityValue;
     private final EventType eventType;
 
-    public EventCard(Era era, boolean closeEvent, int priorityValue, EventType eventType) {
+    public EventCard(Era era, boolean closeEvent, EventType eventType) {
         super(era);
         this.closeEvent = closeEvent;
-        this.priorityValue = priorityValue;
         this.eventType = eventType;
     }
 
@@ -21,9 +19,6 @@ public abstract class EventCard extends Card {
         return closeEvent;
     }
 
-    public int getResolutionPriority() {
-        return priorityValue;
-    }
 
     public EventType getEventType() {
         return eventType;

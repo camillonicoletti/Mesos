@@ -13,9 +13,9 @@ public class ShamanicRitualEventCard extends EventCard {
     private final int prestigePointsForMost;
     private final int prestigePointsLostForLeast;
 
-    public ShamanicRitualEventCard(Era era, boolean closeEvent, int priorityValue,
+    public ShamanicRitualEventCard(Era era, boolean closeEvent,
                                    int prestigePointsForMost, int prestigePointsLostForLeast) {
-        super(era, closeEvent, priorityValue, EventType.SHAMANIC_RITUAL);
+        super(era, closeEvent, EventType.SHAMANIC_RITUAL);
         this.prestigePointsForMost = prestigePointsForMost;
         this.prestigePointsLostForLeast = prestigePointsLostForLeast;
     }
