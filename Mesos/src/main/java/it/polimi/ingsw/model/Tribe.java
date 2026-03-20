@@ -42,10 +42,7 @@ public class Tribe {
             return count;
     }
 
-    public int getBuildingDiscount() {
-        // TODO
-        return 0;
-    }
+
 
     public List<CharacterCard> getCharacterCards() {
         return characterCards;
@@ -101,6 +98,23 @@ public class Tribe {
         }
 
         return distinctIcons.size();
+    }
+
+    public int countArtistPairs() {
+        return countCharactersByType(ArtistCard.class) / 2;
+    }
+
+    //@return the sum of the food discounts provided by all Builder cards
+    public int getBuildingDiscount() {
+        int discount = 0;
+
+        for (CharacterCard card : characterCards) {
+            if (card instanceof BuilderCard builder) {
+                discount += builder.getFoodDiscount();
+            }
+        }
+
+        return discount;
     }
 
 

@@ -31,7 +31,7 @@ public class Game {
     private Round currentRound;
     private Era currentEra;
     private final LocalDateTime date;
-    private final Board board;
+    private  Board board;
     private List<Card> tributeDeck;
     private List<BuildingCard> era1BuildingDeck;
     private List<BuildingCard> era2BuildingDeck;

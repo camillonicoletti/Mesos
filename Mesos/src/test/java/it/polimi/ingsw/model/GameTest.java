@@ -58,7 +58,7 @@ public class GameTest {
             tributeDeck.add(new HunterCard(false, Era.I));
         }
 
-        era1Deck = new ArrayList<>(List.of(new BuildingCard(2, noEffect, Era.,1));
+        era1Deck = new ArrayList<>(List.of(new BuildingCard(2, noEffect, Era.I,1)));
         era2Deck = new ArrayList<>(List.of(
                 new BuildingCard(3, noEffect, Era.II,2),
                 new BuildingCard(4, noEffect, Era.II,3)
