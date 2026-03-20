@@ -7,12 +7,19 @@ import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.GameStatus;
 import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.board.Board;
-import it.polimi.ingsw.model.Totem;
-
+import it.polimi.ingsw.model.card.BuilderCard;
+import it.polimi.ingsw.model.card.ArtistCard;
+import it.polimi.ingsw.model.card.BuilderCard;
+import it.polimi.ingsw.model.card.BuildingCard;
+import it.polimi.ingsw.model.card.InventorCard;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+
 
 public class Game {
 
@@ -22,13 +29,15 @@ public class Game {
     private int currentRoundNumber;
     private Round currentRound;
     private Era currentEra;
-    private LocalDateTime date;
-    private Board board;
+    private final LocalDateTime date;
+    private final Board board;
     private List<Card> tributeDeck;
     private List<BuildingCard> era1BuildingDeck;
     private List<BuildingCard> era2BuildingDeck;
     private List<BuildingCard> era3BuildingDeck;
     private GameStatus status;
+    private final Map<Player, Integer> finalScores = new HashMap<>();
+    private boolean finalScoresCalculated = false;
     private int getBuildingCountForEra(Era era) {
         int playersCount = players.size();
 
@@ -105,6 +114,7 @@ public class Game {
 
 
     public void end() {
+        calculateFinalScores();
         status = GameStatus.FINISHED;
     }
 
@@ -168,6 +178,63 @@ public class Game {
         }
     }
 
+    public void calculateFinalScores() {
+        if (finalScoresCalculated) {
+            return;
+        }
+
+        finalScores.clear();
+
+        for (Player player : players) {
+            int finalScore = player.getPrestigePoints();
+
+            // 1) punti dovuti ai costruttori
+            finalScore += calculateBuilderPoints(player);
+
+            // 2) punti dovuti agli inventori
+            finalScore += calculateInventorPoints(player);
+
+            // 3) 10 punti per ogni coppia di artisti
+            finalScore += calculateArtistPoints(player);
+
+            // 4) punti dovuti agli edifici
+            finalScore += calculateBuildingPoints(player);
+
+            finalScores.put(player, finalScore);
+        }
+
+        finalScoresCalculated = true;
+    }
+
+    private int calculateBuilderPoints(Player player) {
+        int builders = player.getTribe().countCharactersByType(BuilderCard.class);
+        return builders;
+    }
+
+    private int calculateInventorPoints(Player player) {
+        int inventors = player.getTribe().countCharactersByType(InventorCard.class);
+        int differentIcons = player.getTribe().countDistinctInventorIcons();
+
+        return inventors * differentIcons;
+    }
+
+    private int calculateArtistPoints(Player player) {
+        int artists = player.getTribe().countCharactersByType(ArtistCard.class);
+        int pairs = artists / 2;
+        return pairs * 10;
+    }
+
+    private int calculateBuildingPoints(Player player) {
+        int points = 0;
+
+        for (BuildingCard building : player.getTribe().getBuildingCards()) {
+            points += building.getVictoryPoints();
+        }
+
+        return points;
+    }
+
+
     public List<BuildingCard> getBuildingsForEra(Era era) {
         return switch (era) {
             case I -> era1BuildingDeck;
@@ -219,5 +286,31 @@ public class Game {
 
     public Board getBoard() {
         return board;
+    }
+
+    public int getFinalScore(Player player) {
+        if (!finalScoresCalculated) {
+            calculateFinalScores();
+        }
+
+        return finalScores.getOrDefault(player, player.getPrestigePoints());
+    }
+
+    public Map<Player, Integer> getFinalScores() {
+        if (!finalScoresCalculated) {
+            calculateFinalScores();
+        }
+
+        return new HashMap<>(finalScores);
+    }
+
+    public Player getWinner() {
+        if (!finalScoresCalculated) {
+            calculateFinalScores();
+        }
+
+        return players.stream()
+                .max(Comparator.comparingInt(this::getFinalScore))
+                .orElse(null);
     }
 }
