@@ -6,6 +6,7 @@
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/Tribe.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/board/ActionSlot.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/board/Board.java
+/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/board/BoardFactory.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/board/OfferTile.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/board/TurnOrderTile.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/board/TurnSlot.java
@@ -32,6 +33,9 @@
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/effect/HuntEffect.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/effect/InventorPairFoodEffect.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/effect/RockPaintingsEffect.java
+/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/effect/Shaman3ExtraStarsEffect.java
+/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/effect/ShamanicRitualDoublePPEffect.java
+/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/effect/ShamanicRitualImmunityEffect.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/effect/SustenanceFoodDiscountEffect.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/enums/Era.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/enums/EventType.java

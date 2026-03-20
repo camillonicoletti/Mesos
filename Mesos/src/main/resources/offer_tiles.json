@@ -1,0 +1,23 @@
+[
+  {
+    "letter": "A",
+    "minPlayers": 2,
+    "slots": [
+      { "type": "FOOD", "amount": 3 }
+    ]
+  },
+  {
+    "letter": "B",
+    "minPlayers": 2,
+    "slots": [
+      { "type": "UPPER_ROW", "amount": 1 }
+    ]
+  },
+  {
+    "letter": "C",
+    "minPlayers": 3,
+    "slots": [
+      { "type": "LOWER_ROW", "amount": 2 }
+    ]
+  }
+]
