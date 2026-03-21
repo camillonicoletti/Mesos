@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="it.polimi.ingsw.model.RoundTest" time="0.035" tests="21" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="it.polimi.ingsw.model.RoundTest" time="0.046" tests="23" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="25"/>
     <property name="sun.jnu.encoding" value="UTF-8"/>
-    <property name="java.class.path" value="/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/target/test-classes:/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/target/classes:/Users/admin/.m2/repository/org/openjfx/javafx-controls/23.0.2/javafx-controls-23.0.2.jar:/Users/admin/.m2/repository/org/openjfx/javafx-controls/23.0.2/javafx-controls-23.0.2-mac.jar:/Users/admin/.m2/repository/org/openjfx/javafx-graphics/23.0.2/javafx-graphics-23.0.2.jar:/Users/admin/.m2/repository/org/openjfx/javafx-graphics/23.0.2/javafx-graphics-23.0.2-mac.jar:/Users/admin/.m2/repository/org/openjfx/javafx-base/23.0.2/javafx-base-23.0.2.jar:/Users/admin/.m2/repository/org/openjfx/javafx-base/23.0.2/javafx-base-23.0.2-mac.jar:/Users/admin/.m2/repository/org/openjfx/javafx-fxml/23.0.2/javafx-fxml-23.0.2.jar:/Users/admin/.m2/repository/org/openjfx/javafx-fxml/23.0.2/javafx-fxml-23.0.2-mac.jar:/Users/admin/.m2/repository/org/controlsfx/controlsfx/11.2.1/controlsfx-11.2.1.jar:/Users/admin/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.10.2/junit-jupiter-api-5.10.2.jar:/Users/admin/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/Users/admin/.m2/repository/org/junit/platform/junit-platform-commons/1.10.2/junit-platform-commons-1.10.2.jar:/Users/admin/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/Users/admin/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.10.2/junit-jupiter-engine-5.10.2.jar:/Users/admin/.m2/repository/org/junit/platform/junit-platform-engine/1.10.2/junit-platform-engine-1.10.2.jar:"/>
+    <property name="java.class.path" value="/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/target/test-classes:/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/target/classes:/Users/admin/.m2/repository/org/openjfx/javafx-controls/23.0.2/javafx-controls-23.0.2.jar:/Users/admin/.m2/repository/org/openjfx/javafx-controls/23.0.2/javafx-controls-23.0.2-mac.jar:/Users/admin/.m2/repository/org/openjfx/javafx-graphics/23.0.2/javafx-graphics-23.0.2.jar:/Users/admin/.m2/repository/org/openjfx/javafx-graphics/23.0.2/javafx-graphics-23.0.2-mac.jar:/Users/admin/.m2/repository/org/openjfx/javafx-base/23.0.2/javafx-base-23.0.2.jar:/Users/admin/.m2/repository/org/openjfx/javafx-base/23.0.2/javafx-base-23.0.2-mac.jar:/Users/admin/.m2/repository/org/openjfx/javafx-fxml/23.0.2/javafx-fxml-23.0.2.jar:/Users/admin/.m2/repository/org/openjfx/javafx-fxml/23.0.2/javafx-fxml-23.0.2-mac.jar:/Users/admin/.m2/repository/org/controlsfx/controlsfx/11.2.1/controlsfx-11.2.1.jar:/Users/admin/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.10.2/junit-jupiter-api-5.10.2.jar:/Users/admin/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/Users/admin/.m2/repository/org/junit/platform/junit-platform-commons/1.10.2/junit-platform-commons-1.10.2.jar:/Users/admin/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/Users/admin/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.10.2/junit-jupiter-engine-5.10.2.jar:/Users/admin/.m2/repository/org/junit/platform/junit-platform-engine/1.10.2/junit-platform-engine-1.10.2.jar:/Users/admin/.m2/repository/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar:"/>
     <property name="java.vm.vendor" value="Homebrew"/>
     <property name="sun.arch.data.model" value="64"/>
     <property name="java.vendor.url" value="https://github.com/Homebrew/homebrew-core/issues"/>
@@ -12,10 +12,10 @@
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="user.country" value="IT"/>
     <property name="sun.boot.library.path" value="/usr/local/Cellar/openjdk/25.0.2/libexec/openjdk.jdk/Contents/Home/lib"/>
-    <property name="sun.java.command" value="/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/target/surefire/surefirebooter-20260318024134102_3.jar /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/target/surefire 2026-03-18T02-41-33_978-jvmRun1 surefire-20260318024134102_1tmp surefire_0-20260318024134102_2tmp"/>
+    <property name="sun.java.command" value="/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/target/surefire/surefirebooter-20260320212056528_3.jar /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/target/surefire 2026-03-20T21-20-56_406-jvmRun1 surefire-20260320212056528_1tmp surefire_0-20260320212056528_2tmp"/>
     <property name="http.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
     <property name="jdk.debug" value="release"/>
-    <property name="surefire.test.class.path" value="/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/target/test-classes:/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/target/classes:/Users/admin/.m2/repository/org/openjfx/javafx-controls/23.0.2/javafx-controls-23.0.2.jar:/Users/admin/.m2/repository/org/openjfx/javafx-controls/23.0.2/javafx-controls-23.0.2-mac.jar:/Users/admin/.m2/repository/org/openjfx/javafx-graphics/23.0.2/javafx-graphics-23.0.2.jar:/Users/admin/.m2/repository/org/openjfx/javafx-graphics/23.0.2/javafx-graphics-23.0.2-mac.jar:/Users/admin/.m2/repository/org/openjfx/javafx-base/23.0.2/javafx-base-23.0.2.jar:/Users/admin/.m2/repository/org/openjfx/javafx-base/23.0.2/javafx-base-23.0.2-mac.jar:/Users/admin/.m2/repository/org/openjfx/javafx-fxml/23.0.2/javafx-fxml-23.0.2.jar:/Users/admin/.m2/repository/org/openjfx/javafx-fxml/23.0.2/javafx-fxml-23.0.2-mac.jar:/Users/admin/.m2/repository/org/controlsfx/controlsfx/11.2.1/controlsfx-11.2.1.jar:/Users/admin/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.10.2/junit-jupiter-api-5.10.2.jar:/Users/admin/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/Users/admin/.m2/repository/org/junit/platform/junit-platform-commons/1.10.2/junit-platform-commons-1.10.2.jar:/Users/admin/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/Users/admin/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.10.2/junit-jupiter-engine-5.10.2.jar:/Users/admin/.m2/repository/org/junit/platform/junit-platform-engine/1.10.2/junit-platform-engine-1.10.2.jar:"/>
+    <property name="surefire.test.class.path" value="/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/target/test-classes:/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/target/classes:/Users/admin/.m2/repository/org/openjfx/javafx-controls/23.0.2/javafx-controls-23.0.2.jar:/Users/admin/.m2/repository/org/openjfx/javafx-controls/23.0.2/javafx-controls-23.0.2-mac.jar:/Users/admin/.m2/repository/org/openjfx/javafx-graphics/23.0.2/javafx-graphics-23.0.2.jar:/Users/admin/.m2/repository/org/openjfx/javafx-graphics/23.0.2/javafx-graphics-23.0.2-mac.jar:/Users/admin/.m2/repository/org/openjfx/javafx-base/23.0.2/javafx-base-23.0.2.jar:/Users/admin/.m2/repository/org/openjfx/javafx-base/23.0.2/javafx-base-23.0.2-mac.jar:/Users/admin/.m2/repository/org/openjfx/javafx-fxml/23.0.2/javafx-fxml-23.0.2.jar:/Users/admin/.m2/repository/org/openjfx/javafx-fxml/23.0.2/javafx-fxml-23.0.2-mac.jar:/Users/admin/.m2/repository/org/controlsfx/controlsfx/11.2.1/controlsfx-11.2.1.jar:/Users/admin/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.10.2/junit-jupiter-api-5.10.2.jar:/Users/admin/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/Users/admin/.m2/repository/org/junit/platform/junit-platform-commons/1.10.2/junit-platform-commons-1.10.2.jar:/Users/admin/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/Users/admin/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.10.2/junit-jupiter-engine-5.10.2.jar:/Users/admin/.m2/repository/org/junit/platform/junit-platform-engine/1.10.2/junit-platform-engine-1.10.2.jar:/Users/admin/.m2/repository/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar:"/>
     <property name="sun.cpu.endian" value="little"/>
     <property name="user.home" value="/Users/admin"/>
     <property name="user.language" value="it"/>
@@ -29,7 +29,7 @@
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
     <property name="apple.awt.application.name" value="ForkedBooter"/>
-    <property name="surefire.real.class.path" value="/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/target/surefire/surefirebooter-20260318024134102_3.jar"/>
+    <property name="surefire.real.class.path" value="/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/target/surefire/surefirebooter-20260320212056528_3.jar"/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="ftp.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
     <property name="java.runtime.version" value="25.0.2"/>
@@ -59,25 +59,27 @@
     <property name="socksNonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
     <property name="java.class.version" value="69.0"/>
   </properties>
-  <testcase name="testShiftUpperToLowerRowClearsPreviousLowerRow" classname="it.polimi.ingsw.model.RoundTest" time="0.002"/>
-  <testcase name="testDiscardLowerRowClearsIt" classname="it.polimi.ingsw.model.RoundTest" time="0.001"/>
+  <testcase name="testResolveOfferActionDoesNotPurchaseBuildingWhenNotAffordable" classname="it.polimi.ingsw.model.RoundTest" time="0.001"/>
+  <testcase name="testShiftUpperToLowerRowClearsPreviousLowerRow" classname="it.polimi.ingsw.model.RoundTest" time="0.001"/>
+  <testcase name="testDiscardLowerRowClearsIt" classname="it.polimi.ingsw.model.RoundTest" time="0.0"/>
   <testcase name="testExecuteGivesUpperRowCardsToPlayer" classname="it.polimi.ingsw.model.RoundTest" time="0.001"/>
-  <testcase name="testExecuteWithNoPlayerChoicesDoesNotThrow" classname="it.polimi.ingsw.model.RoundTest" time="0.001"/>
-  <testcase name="testPlaceTotemOrderBothEffectsAppliedCorrectly" classname="it.polimi.ingsw.model.RoundTest" time="0.0"/>
+  <testcase name="testExecuteWithNoPlayerChoicesDoesNotThrow" classname="it.polimi.ingsw.model.RoundTest" time="0.007"/>
+  <testcase name="testPlaceTotemOrderBothEffectsAppliedCorrectly" classname="it.polimi.ingsw.model.RoundTest" time="0.001"/>
   <testcase name="testPlaceTotemOrderWithNoOccupiedTilesDoesNotThrow" classname="it.polimi.ingsw.model.RoundTest" time="0.001"/>
   <testcase name="testPlaceTotemOfferSamePlayerTwiceOverwritesChoice" classname="it.polimi.ingsw.model.RoundTest" time="0.001"/>
-  <testcase name="testPlaceTotemOfferFailsIfTileOccupied" classname="it.polimi.ingsw.model.RoundTest" time="0.0"/>
-  <testcase name="testPlaceTotemOfferSucceeds" classname="it.polimi.ingsw.model.RoundTest" time="0.0"/>
+  <testcase name="testPlaceTotemOfferFailsIfTileOccupied" classname="it.polimi.ingsw.model.RoundTest" time="0.001"/>
+  <testcase name="testPlaceTotemOfferSucceeds" classname="it.polimi.ingsw.model.RoundTest" time="0.001"/>
   <testcase name="testExecuteShiftsUpperToLower" classname="it.polimi.ingsw.model.RoundTest" time="0.001"/>
   <testcase name="testResolveOfferActionWithEmptyUpperRowDoesNotThrow" classname="it.polimi.ingsw.model.RoundTest" time="0.0"/>
-  <testcase name="testPlaceTotemOrderPayFoodAppliedToLastPlayer" classname="it.polimi.ingsw.model.RoundTest" time="0.0"/>
-  <testcase name="testPlaceTotemOrderNoneEffectDoesNotChangeFood" classname="it.polimi.ingsw.model.RoundTest" time="0.001"/>
-  <testcase name="testCheckEraTransitionInEraIIIDoesNothing" classname="it.polimi.ingsw.model.RoundTest" time="0.009"/>
-  <testcase name="testRefillUpperRowStopsWhenTributeDeckIsEmpty" classname="it.polimi.ingsw.model.RoundTest" time="0.001"/>
+  <testcase name="testPlaceTotemOrderPayFoodAppliedToLastPlayer" classname="it.polimi.ingsw.model.RoundTest" time="0.002"/>
+  <testcase name="testResolveOfferActionPurchasesBuildingWhenAffordable" classname="it.polimi.ingsw.model.RoundTest" time="0.001"/>
+  <testcase name="testPlaceTotemOrderNoneEffectDoesNotChangeFood" classname="it.polimi.ingsw.model.RoundTest" time="0.0"/>
+  <testcase name="testCheckEraTransitionInEraIIIDoesNothing" classname="it.polimi.ingsw.model.RoundTest" time="0.0"/>
+  <testcase name="testRefillUpperRowStopsWhenTributeDeckIsEmpty" classname="it.polimi.ingsw.model.RoundTest" time="0.0"/>
   <testcase name="testCheckEraTransitionDoesNotAdvanceIfNoEraIICard" classname="it.polimi.ingsw.model.RoundTest" time="0.001"/>
   <testcase name="testCreateNextRoundHasIndependentLists" classname="it.polimi.ingsw.model.RoundTest" time="0.001"/>
-  <testcase name="testPlaceTotemOfferFailsIfNotEnoughPlayers" classname="it.polimi.ingsw.model.RoundTest" time="0.0"/>
-  <testcase name="testCheckEraTransitionAdvancesToEraII" classname="it.polimi.ingsw.model.RoundTest" time="0.0"/>
-  <testcase name="testExecuteGivesFoodToPlayer" classname="it.polimi.ingsw.model.RoundTest" time="0.002"/>
+  <testcase name="testPlaceTotemOfferFailsIfNotEnoughPlayers" classname="it.polimi.ingsw.model.RoundTest" time="0.004"/>
+  <testcase name="testCheckEraTransitionAdvancesToEraII" classname="it.polimi.ingsw.model.RoundTest" time="0.002"/>
+  <testcase name="testExecuteGivesFoodToPlayer" classname="it.polimi.ingsw.model.RoundTest" time="0.001"/>
   <testcase name="testPlaceTotemOrderGainFoodAppliedToFirstPlayer" classname="it.polimi.ingsw.model.RoundTest" time="0.001"/>
 </testsuite>

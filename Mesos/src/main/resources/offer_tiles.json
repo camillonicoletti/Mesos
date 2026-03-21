@@ -1,7 +1,7 @@
 [
   {
     "letter": "A",
-    "minPlayers": 2,
+    "minPlayers": 5,
     "slots": [
       { "type": "FOOD", "amount": 3 }
     ]
@@ -10,14 +10,45 @@
     "letter": "B",
     "minPlayers": 2,
     "slots": [
-      { "type": "UPPER_ROW", "amount": 1 }
+      { "type": "LOWER_ROW", "amount": 1 }
     ]
   },
   {
     "letter": "C",
+    "minPlayers": 2,
+    "slots": [
+      { "type": "UPPER_ROW", "amount": 1 }
+    ]
+  },
+  {
+    "letter": "D",
     "minPlayers": 3,
     "slots": [
       { "type": "LOWER_ROW", "amount": 2 }
+    ]
+  },
+  {
+    "letter": "E",
+    "minPlayers": 2,
+    "slots": [
+      { "type": "LOWER_ROW", "amount": 1 },
+      { "type": "UPPER_ROW", "amount": 1 }
+    ]
+  },
+
+  {
+    "letter": "F",
+    "minPlayers": 2,
+    "slots": [
+      { "type": "UPPER_ROW", "amount": 2 }
+    ]
+  },
+  {
+    "letter": "G",
+    "minPlayers": 4,
+    "slots": [
+      { "type": "LOWER_ROW", "amount": 1 },
+      { "type": "UPPER_ROW", "amount": 2 }
     ]
   }
 ]

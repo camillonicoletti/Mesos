@@ -9,9 +9,10 @@ import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.board.Board;
 import it.polimi.ingsw.model.card.BuilderCard;
 import it.polimi.ingsw.model.card.ArtistCard;
-import it.polimi.ingsw.model.card.BuilderCard;
+import it.polimi.ingsw.model.card.CharacterCard;
 import it.polimi.ingsw.model.card.BuildingCard;
 import it.polimi.ingsw.model.card.InventorCard;
+import it.polimi.ingsw.model.board.TurnSlot;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,7 +31,7 @@ public class Game {
     private Round currentRound;
     private Era currentEra;
     private final LocalDateTime date;
-    private final Board board;
+    private Board board;
     private List<Card> tributeDeck;
     private List<BuildingCard> era1BuildingDeck;
     private List<BuildingCard> era2BuildingDeck;
@@ -92,6 +93,15 @@ public class Game {
         currentEra = Era.I;
         status = GameStatus.IN_PROGRESS;
 
+        // Create the board FIRST — setupInitialRows() and setupInitialBuildings() may need it
+        this.board = BoardFactory.createBoard(players.size());
+
+        List<Totem> totems = new ArrayList<>();
+        for (Player p : players) {
+            totems.add(p.getTotem());
+        }
+        board.getTurnOrderTile().assignRandomTurnOrder(totems);
+
         if (currentRound == null) {
             currentRound = new Round(currentRoundNumber, this, RoundPhase.TOTEM_PLACEMENT, Era.I, null, null, null, null, null, null);
         }
@@ -99,19 +109,40 @@ public class Game {
         currentRound.setupInitialRows();
         currentRound.setupInitialBuildings(era1BuildingDeck);
         era1BuildingDeck.clear();
+        distributeInitialFood();
 
-        // Create the board with the right offer tiles and turn order tile for this number of players
-        this.board = BoardFactory.createBoard(players.size());
-
-
-        List<Totem> totems = new ArrayList<>();
-        for (Player p : players) {
-            totems.add(p.getTotem());
-        }
-        board.getTurnOrderTile().assignRandomTurnOrder(totems);
     }
 
+    private void distributeInitialFood() {
+        Map<Totem, Player> totemOwner = new HashMap<>();
+        for (Player player : players) {
+            totemOwner.put(player.getTotem(), player);
+        }
 
+        int position = 0;
+        for (TurnSlot slot : board.getTurnOrderTile().getSlots()) {
+            if (!slot.isOccupied()) {
+                continue;
+            }
+
+            Player owner = totemOwner.get(slot.getOccupiedBy());
+            if (owner == null) {
+                continue;
+            }
+
+            owner.addFood(getInitialFoodForPosition(position));
+            position++;
+        }
+    }
+
+    private int getInitialFoodForPosition(int positionIndex) {
+        return switch (positionIndex) {
+            case 0 -> 2;
+            case 1, 2 -> 3;
+            case 3, 4 -> 4;
+            default -> throw new IllegalArgumentException("Invalid turn order position: " + positionIndex);
+        };
+    }
 
     public void end() {
         calculateFinalScores();
@@ -207,8 +238,13 @@ public class Game {
     }
 
     private int calculateBuilderPoints(Player player) {
-        int builders = player.getTribe().countCharactersByType(BuilderCard.class);
-        return builders;
+        int points = 0;
+        for (CharacterCard card : player.getTribe().getCharacterCards()) {
+            if (card instanceof BuilderCard builder) {
+                points += builder.getPointsEndOfMatch();
+            }
+        }
+        return points;
     }
 
     private int calculateInventorPoints(Player player) {

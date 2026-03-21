@@ -24,4 +24,11 @@ public class Board {
         this.turnOrderTile = turnOrderTile;
     }
 
+    public void resetOfferTiles() {
+        for (OfferTile tile : offerTiles) {
+            tile.removeTotem();
+        }
+    }
+
+
 }

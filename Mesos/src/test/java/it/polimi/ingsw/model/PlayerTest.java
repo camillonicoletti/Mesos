@@ -64,37 +64,37 @@ public class PlayerTest {
     }
 
     @Test
-    void spendFoodShouldReturnTrueAndDecreaseFoodWhenAffordable() {
+    void spendFoodShouldDecreaseFoodWhenAffordable() {
         Player player = new Player("Luca", new Totem(TotemColor.RED, TotemPosition.TURN_ORDER));
         player.addFood(5);
 
-        boolean result = player.spendFood(3);
+        player.spendFood(3);
 
-        assertTrue(result);
         assertEquals(2, player.getFood());
     }
 
     @Test
-    void spendFoodShouldReturnTrueAndKeepFoodAtZeroWhenSpendingAllFood() {
+    void spendFoodShouldKeepFoodAtZeroWhenSpendingAllFood() {
         Player player = new Player("Luca", new Totem(TotemColor.RED, TotemPosition.TURN_ORDER));
         player.addFood(5);
 
-        boolean result = player.spendFood(5);
+        player.spendFood(5);
 
-        assertTrue(result);
         assertEquals(0, player.getFood());
     }
 
     @Test
-    void spendFoodShouldReturnFalseAndNotChangeFoodWhenNotAffordable() {
+    void spendFoodShouldDeductPrestigeWhenNotAffordable() {
+        // if food is insufficient, the missing amount is taken from prestige points
         Player player = new Player("Luca", new Totem(TotemColor.PURPLE, TotemPosition.TURN_ORDER));
         player.addFood(2);
 
-        boolean result = player.spendFood(5);
+        player.spendFood(5);
 
-        assertFalse(result);
-        assertEquals(2, player.getFood());
+        assertEquals(0, player.getFood());
+        assertEquals(-3, player.getPrestigePoints()); // 5 - 2 = 3 missing
     }
+
 
     @Test
     void addPrestigePointsShouldIncreasePrestigePoints() {
@@ -151,4 +151,43 @@ public class PlayerTest {
 
         assertSame(totem, player.getTotem());
     }
+    // -------------------------------------------------------
+// applyTurnPenalty
+// -------------------------------------------------------
+
+    @Test
+    void applyTurnPenaltyShouldSpendFoodWhenAffordable() {
+        // player has enough food → spends food, prestige unchanged
+        Player player = new Player("Luca", new Totem(TotemColor.RED, TotemPosition.TURN_ORDER));
+        player.addFood(3);
+
+        player.applyTurnPenalty(1, 2);
+
+        assertEquals(2, player.getFood());
+        assertEquals(0, player.getPrestigePoints());
+    }
+
+    @Test
+    void applyTurnPenaltyShouldRemovePrestigeWhenFoodInsufficient() {
+        // player has no food → loses prestige points, food stays at 0
+        Player player = new Player("Luca", new Totem(TotemColor.RED, TotemPosition.TURN_ORDER));
+
+        player.applyTurnPenalty(1, 2);
+
+        assertEquals(0, player.getFood());
+        assertEquals(-2, player.getPrestigePoints());
+    }
+
+    @Test
+    void applyTurnPenaltyShouldSpendFoodWhenExactlyAffordable() {
+        // player has exactly 1 food → spends it, no prestige lost
+        Player player = new Player("Luca", new Totem(TotemColor.RED, TotemPosition.TURN_ORDER));
+        player.addFood(1);
+
+        player.applyTurnPenalty(1, 2);
+
+        assertEquals(0, player.getFood());
+        assertEquals(0, player.getPrestigePoints());
+    }
+
 }
