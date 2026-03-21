@@ -4,7 +4,7 @@ import it.polimi.ingsw.model.Player;
 
 import it.polimi.ingsw.model.card.CharacterCard;
 
-public class EndCharacterCountPPEffect implements Effect {
+public class EndCharacterCountPPEffect implements EndGameEffect {
 
     private final Class<? extends CharacterCard> targetType;
 

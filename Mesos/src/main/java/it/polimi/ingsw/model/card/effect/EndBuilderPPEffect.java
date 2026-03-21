@@ -4,7 +4,7 @@ import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.card.BuilderCard;
 import it.polimi.ingsw.model.card.CharacterCard;
 
-public class EndBuilderPPEffect implements Effect{
+public class EndBuilderPPEffect implements EndGameEffect{
 
     @Override
     public void apply(Player player){
@@ -16,3 +16,4 @@ public class EndBuilderPPEffect implements Effect{
         }
     }
 }
+
