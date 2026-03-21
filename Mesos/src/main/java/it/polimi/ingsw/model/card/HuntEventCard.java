@@ -10,7 +10,7 @@ public class HuntEventCard extends EventCard {
     private final int foodPerHunter;
     private final int ppPerHunter;
 
-    public HuntEventCard(int id, Era era, boolean closeEvent, int priorityValue,
+    public HuntEventCard(int id, Era era, boolean closeEvent,
                          int foodPerHunter, int ppPerHunter, int minPlayers) {
         super(id, era, closeEvent, EventType.HUNT, minPlayers);
         this.foodPerHunter = foodPerHunter;
