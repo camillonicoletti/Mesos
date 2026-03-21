@@ -12,6 +12,7 @@ import it.polimi.ingsw.model.enums.EventType;
 import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.enums.SlotType;
+import it.polimi.ingsw.model.Totem;
 
 import java.util.*;
 
@@ -90,7 +91,7 @@ public class Round {
         // chosenCards is empty until the controller is implemented —
         // the controller will pass the actual cards chosen by the player
         phase = RoundPhase.ACTION_RESOLUTION;
-        for (Map.Entry<Player, OfferTile> entry : playerChoices.entrySet()) {
+        for (Map.Entry<Player, OfferTile> entry : getOfferResolutionOrder()) {
             resolveOfferAction(entry.getKey(), entry.getValue(), new ArrayList<>());
         }
 
@@ -262,6 +263,33 @@ public class Round {
                 case NONE      -> {}
             }
         }
+    }
+
+    private List<Map.Entry<Player, OfferTile>> getOfferResolutionOrder() {
+        Board board = game.getBoard();
+
+        Map<Totem, Player> totemOwner = new HashMap<>();
+        for (Player player : game.getPlayers()) {
+            totemOwner.put(player.getTotem(), player);
+        }
+
+        List<Map.Entry<Player, OfferTile>> orderedChoices = new ArrayList<>();
+
+        List<OfferTile> orderedTiles = new ArrayList<>(board.getOfferTiles());
+        orderedTiles.sort(Comparator.comparing(OfferTile::getLetter));
+
+        for (OfferTile tile : orderedTiles) {
+            if (!tile.isOccupied()) {
+                continue;
+            }
+
+            Player owner = totemOwner.get(tile.getTotemSlot());
+            if (owner != null) {
+                orderedChoices.add(Map.entry(owner, tile));
+            }
+        }
+
+        return orderedChoices;
     }
 
     private List<EventCard> getOrderedEventsForResolution(boolean includeUpperRow) {

@@ -10,7 +10,7 @@ import it.polimi.ingsw.model.board.Board;
 import it.polimi.ingsw.model.card.BuilderCard;
 import it.polimi.ingsw.model.card.ArtistCard;
 import it.polimi.ingsw.model.card.CharacterCard;
-import it.polimi.ingsw.model.card.BuildingCard;
+import it.polimi.ingsw.model.card.HunterCard;
 import it.polimi.ingsw.model.card.InventorCard;
 import it.polimi.ingsw.model.board.TurnSlot;
 
@@ -271,6 +271,8 @@ public class Game {
     }
 
 
+
+
     public List<BuildingCard> getBuildingsForEra(Era era) {
         return switch (era) {
             case I -> era1BuildingDeck;
@@ -285,6 +287,64 @@ public class Game {
         }
 
         return tributeDeck.remove(0);
+    }
+
+    public void takeCharacterCard(Player player, List<CharacterCard> row, CharacterCard chosenCard) {
+        if (player == null) {
+            throw new IllegalArgumentException("Player cannot be null");
+        }
+        if (row == null) {
+            throw new IllegalArgumentException("Row cannot be null");
+        }
+        if (chosenCard == null) {
+            throw new IllegalArgumentException("Chosen card cannot be null");
+        }
+        if (!row.contains(chosenCard)) {
+            throw new IllegalArgumentException("Chosen character card is not in the selected row");
+        }
+
+        row.remove(chosenCard);
+        player.addCharacterCard(chosenCard);
+
+        applyCharacterImmediateEffects(player, chosenCard);
+    }
+
+    private void applyCharacterImmediateEffects(Player player, CharacterCard card) {
+        if (card instanceof HunterCard hunter && hunter.hasFoodIcon()) {
+            int huntersInTribe = player.getTribe().countCharactersByType(HunterCard.class);
+            player.addFood(huntersInTribe);
+        }
+    }
+
+    public void takeBuildingCard(Player player, List<BuildingCard> row, BuildingCard chosenCard) {
+        if (player == null) {
+            throw new IllegalArgumentException("Player cannot be null");
+        }
+        if (row == null) {
+            throw new IllegalArgumentException("Row cannot be null");
+        }
+        if (chosenCard == null) {
+            throw new IllegalArgumentException("Chosen card cannot be null");
+        }
+        if (!row.contains(chosenCard)) {
+            throw new IllegalArgumentException("Chosen building card is not in the selected row");
+        }
+
+        int baseCost = chosenCard.getFoodCost();
+        int discount = getBuildingDiscount(player);
+        int finalCost = Math.max(0, baseCost - discount);
+
+        if (player.getFood() < finalCost) {
+            throw new IllegalStateException("Player does not have enough food to take this building");
+        }
+
+        player.spendFood(finalCost);
+        row.remove(chosenCard);
+        player.addBuildingCard(chosenCard);
+    }
+
+    private int getBuildingDiscount(Player player) {
+        return player.getTribe().countCharactersByType(BuilderCard.class);
     }
 
     public void startNewEra(){}
