@@ -1,4 +1,7 @@
 package it.polimi.ingsw.model.card.effect;
 
-public interface EndGameEffect extends Effect{
+import it.polimi.ingsw.model.Player;
+
+public interface EndGameEffect extends Effect {
+    int calculatePoints(Player player);
 }

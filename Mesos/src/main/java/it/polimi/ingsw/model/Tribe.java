@@ -43,9 +43,15 @@ public class Tribe {
     }
 
     public int getBuildingDiscount() {
-        // TODO
-        return 0;
+        int discount = 0;
+        for (CharacterCard card : characterCards) {
+            if (card instanceof BuilderCard builder) {
+                discount += builder.getFoodDiscount();
+            }
+        }
+        return discount;
     }
+
 
     public List<CharacterCard> getCharacterCards() {
         return characterCards;

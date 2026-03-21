@@ -3,6 +3,10 @@ package it.polimi.ingsw.model;
 import it.polimi.ingsw.model.board.BoardFactory;
 import it.polimi.ingsw.model.card.BuildingCard;
 import it.polimi.ingsw.model.card.Card;
+import it.polimi.ingsw.model.card.effect.EndBuilderPPEffect;
+import it.polimi.ingsw.model.card.effect.EndCharacterCountPPEffect;
+import it.polimi.ingsw.model.card.effect.EndFullSetPPEffect;
+import it.polimi.ingsw.model.card.effect.EndGameEffect;
 import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.GameStatus;
 import it.polimi.ingsw.model.enums.RoundPhase;
@@ -209,6 +213,13 @@ public class Game {
         }
     }
 
+    /**
+     * Calculates the final score for each player.
+     * Building effects that trigger at end of game implement EndGameEffect,
+     * which exposes calculatePoints() — this returns the points as a value
+     * instead of calling apply() directly on the player, avoiding double counting
+     * with the prestige points already accumulated during the game.
+     */
     public void calculateFinalScores() {
         if (finalScoresCalculated) {
             return;
@@ -219,23 +230,29 @@ public class Game {
         for (Player player : players) {
             int finalScore = player.getPrestigePoints();
 
-            // 1) punti dovuti ai costruttori
-            finalScore += calculateBuilderPoints(player);
-
-            // 2) punti dovuti agli inventori
+            // inventor points — inventors * distinct icons
             finalScore += calculateInventorPoints(player);
 
-            // 3) 10 punti per ogni coppia di artisti
+            // artist points — 10 PP per pair of artists
             finalScore += calculateArtistPoints(player);
 
-            // 4) punti dovuti agli edifici
-            finalScore += calculateBuildingPoints(player);
+            // base builder points — always counted
+            finalScore += calculateBuilderPoints(player);
+
+            // end-of-game building effects: all BuildingCards implementing EndGameEffect
+            // use calculatePoints() to avoid modifying player state and double counting
+            for (BuildingCard building : player.getTribe().getBuildingCards()) {
+                if (building.getEffect() instanceof EndGameEffect endEffect) {
+                    finalScore += endEffect.calculatePoints(player);
+                }
+            }
 
             finalScores.put(player, finalScore);
         }
 
         finalScoresCalculated = true;
     }
+
 
     private int calculateBuilderPoints(Player player) {
         int points = 0;
@@ -250,7 +267,6 @@ public class Game {
     private int calculateInventorPoints(Player player) {
         int inventors = player.getTribe().countCharactersByType(InventorCard.class);
         int differentIcons = player.getTribe().countDistinctInventorIcons();
-
         return inventors * differentIcons;
     }
 
@@ -259,20 +275,6 @@ public class Game {
         int pairs = artists / 2;
         return pairs * 10;
     }
-
-    private int calculateBuildingPoints(Player player) {
-        int points = 0;
-
-        for (BuildingCard building : player.getTribe().getBuildingCards()) {
-            points += building.getPointsEndOfMatch();
-        }
-
-        return points;
-    }
-
-
-
-
     public List<BuildingCard> getBuildingsForEra(Era era) {
         return switch (era) {
             case I -> era1BuildingDeck;
@@ -344,8 +346,9 @@ public class Game {
     }
 
     private int getBuildingDiscount(Player player) {
-        return player.getTribe().countCharactersByType(BuilderCard.class);
+        return player.getTribe().getBuildingDiscount();
     }
+
 
     public void startNewEra(){}
 

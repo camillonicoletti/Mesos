@@ -1,5 +1,9 @@
 package it.polimi.ingsw.model;
 
+import it.polimi.ingsw.model.card.*;
+import it.polimi.ingsw.model.card.effect.InventorPairFoodEffect;
+import it.polimi.ingsw.model.enums.Era;
+import it.polimi.ingsw.model.enums.InventorIcons;
 import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.model.enums.TotemPosition;
 import org.junit.jupiter.api.Test;
@@ -189,5 +193,66 @@ public class PlayerTest {
         assertEquals(0, player.getFood());
         assertEquals(0, player.getPrestigePoints());
     }
+
+    // -------------------------------------------------------
+// addCharacterCard — building effect triggers
+// -------------------------------------------------------
+
+    @Test
+    void addCharacterCardTriggerFullSetFoodEffectWhenSetCompleted() {
+        Player player = new Player("Test", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        player.addBuildingCard(new BuildingCard(1, new FullSetFoodEffect(), Era.I, 0));
+
+        player.addCharacterCard(new ArtistCard(1, Era.I, 2));
+        player.addCharacterCard(new BuilderCard(2, 1, 1, Era.I, 2));
+        player.addCharacterCard(new GathererCard(3, Era.I, 2));
+        player.addCharacterCard(new HunterCard(4, false, Era.I, 2));
+        player.addCharacterCard(new InventorCard(5, Era.I, InventorIcons.ICON_1, 2));
+        player.addCharacterCard(new ShamanCard(6, Era.I, 1, 2)); // completes the set
+
+        assertEquals(5, player.getFood()); // +5 food for completing 1 set
+    }
+
+    @Test
+    void addCharacterCardDoesNotTriggerFullSetFoodEffectWithoutBuilding() {
+        Player player = new Player("Test", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+
+        player.addCharacterCard(new ArtistCard(1, Era.I, 2));
+        player.addCharacterCard(new BuilderCard(2, 1, 1, Era.I, 2));
+        player.addCharacterCard(new GathererCard(3, Era.I, 2));
+        player.addCharacterCard(new HunterCard(4, false, Era.I, 2));
+        player.addCharacterCard(new InventorCard(5, Era.I, InventorIcons.ICON_1, 2));
+        player.addCharacterCard(new ShamanCard(6, Era.I, 1, 2));
+
+        assertEquals(0, player.getFood()); // no building → no food
+    }
+
+    @Test
+    void addCharacterCardTriggerInventorPairFoodEffect() {
+        Player player = new Player("Test", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        player.addBuildingCard(new BuildingCard(1, new InventorPairFoodEffect(), Era.I, 0));
+
+        player.addCharacterCard(new InventorCard(1, Era.I, InventorIcons.ICON_1, 2));
+        player.addCharacterCard(new InventorCard(2, Era.I, InventorIcons.ICON_1, 2)); // pair!
+
+        assertEquals(3, player.getFood()); // +3 food for 1 pair
+    }
+
+    @Test
+    void addCharacterCardDoesNotRewardAlreadyExistingPairs() {
+        Player player = new Player("Test", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+
+        player.addCharacterCard(new InventorCard(1, Era.I, InventorIcons.ICON_1, 2));
+        player.addCharacterCard(new InventorCard(2, Era.I, InventorIcons.ICON_1, 2));
+
+        // building added AFTER the pair exists
+        player.addBuildingCard(new BuildingCard(3, new InventorPairFoodEffect(), Era.I, 0));
+
+        // adding a third inventor of same type — no new pair formed
+        player.addCharacterCard(new InventorCard(4, Era.I, InventorIcons.ICON_1, 2));
+
+        assertEquals(0, player.getFood());
+    }
+
 
 }

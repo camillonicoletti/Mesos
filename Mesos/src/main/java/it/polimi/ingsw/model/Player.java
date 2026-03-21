@@ -2,6 +2,8 @@ package it.polimi.ingsw.model;
 
 import it.polimi.ingsw.model.card.BuildingCard;
 import it.polimi.ingsw.model.card.CharacterCard;
+import it.polimi.ingsw.model.card.effect.FullSetFoodEffect;
+import it.polimi.ingsw.model.card.effect.InventorPairFoodEffect;
 
 public class Player {
 
@@ -88,8 +90,15 @@ public class Player {
     public void addCharacterCard(CharacterCard card) {
         tribe.addCharacterCard(card);
 
-        // TODO: handle immediate character effects if needed
+        // trigger building effects that activate when a character card is added
+        for (BuildingCard building : tribe.getBuildingCards()) {
+            if (building.getEffect() instanceof FullSetFoodEffect ||
+                    building.getEffect() instanceof InventorPairFoodEffect) {
+                building.getEffect().apply(this);
+            }
+        }
     }
+
 
     public void addBuildingCard(BuildingCard card) {
         tribe.addBuildingCard(card);

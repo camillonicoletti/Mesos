@@ -1,5 +1,6 @@
 package it.polimi.ingsw.model;
 
+import it.polimi.ingsw.model.card.BuilderCard;
 import it.polimi.ingsw.model.card.InventorCard;
 import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.InventorIcons;
@@ -57,4 +58,23 @@ public class TribeTest {
 
         assertEquals(4, result);
     }
+
+    // -------------------------------------------------------
+// getBuildingDiscount
+// -------------------------------------------------------
+
+    @Test
+    void getBuildingDiscountReturnsZeroWithNoBuilders() {
+        Tribe tribe = new Tribe();
+        assertEquals(0, tribe.getBuildingDiscount());
+    }
+
+    @Test
+    void getBuildingDiscountSumsFoodDiscountOfAllBuilders() {
+        Tribe tribe = new Tribe();
+        tribe.addCharacterCard(new BuilderCard(1, 2, 1, Era.I, 2)); // discount 1
+        tribe.addCharacterCard(new BuilderCard(2, 3, 2, Era.I, 2)); // discount 2
+        assertEquals(3, tribe.getBuildingDiscount()); // 1 + 2
+    }
+
 }
