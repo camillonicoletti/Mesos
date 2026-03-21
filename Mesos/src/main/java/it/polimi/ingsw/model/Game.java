@@ -9,7 +9,7 @@ import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.board.Board;
 import it.polimi.ingsw.model.card.BuilderCard;
 import it.polimi.ingsw.model.card.ArtistCard;
-import it.polimi.ingsw.model.card.BuilderCard;
+import it.polimi.ingsw.model.card.CharacterCard;
 import it.polimi.ingsw.model.card.BuildingCard;
 import it.polimi.ingsw.model.card.InventorCard;
 import it.polimi.ingsw.model.board.TurnSlot;
@@ -238,8 +238,13 @@ public class Game {
     }
 
     private int calculateBuilderPoints(Player player) {
-        int builders = player.getTribe().countCharactersByType(BuilderCard.class);
-        return builders;
+        int points = 0;
+        for (CharacterCard card : player.getTribe().getCharacterCards()) {
+            if (card instanceof BuilderCard builder) {
+                points += builder.getPointsEndOfMatch();
+            }
+        }
+        return points;
     }
 
     private int calculateInventorPoints(Player player) {
