@@ -10,8 +10,9 @@ public abstract class EventCard extends Card {
     private final int priorityValue;
     private final EventType eventType;
 
-    public EventCard(Era era, boolean closeEvent, int priorityValue, EventType eventType) {
-        super(era);
+    public EventCard(int id, Era era, boolean closeEvent, int priorityValue,
+                     EventType eventType, int minPlayers) {
+        super(id, era, minPlayers);
         this.closeEvent = closeEvent;
         this.priorityValue = priorityValue;
         this.eventType = eventType;

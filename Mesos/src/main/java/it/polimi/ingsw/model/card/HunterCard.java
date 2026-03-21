@@ -5,9 +5,9 @@ import it.polimi.ingsw.model.enums.Era;
 public class HunterCard extends CharacterCard{
     private final boolean foodIcon;
 
-    public HunterCard(boolean foodIcon, Era era) {
+    public HunterCard(int id, boolean foodIcon, Era era, int minPlayers) {
 
-        super(era);
+        super(id, era, minPlayers);
         this.foodIcon = foodIcon;
 
     }

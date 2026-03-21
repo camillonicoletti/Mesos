@@ -11,8 +11,9 @@ public class SustenanceEventCard extends EventCard {
 
     private final int prestigePointsLostPerUnfedCharacter;
 
-    public SustenanceEventCard(Era era, boolean closeEvent, int priorityValue, int prestigePointsLostPerUnfedCharacter) {
-        super(era, closeEvent, priorityValue, EventType.SUSTENANCE);
+    public SustenanceEventCard(int id, Era era, boolean closeEvent, int priorityValue,
+                               int prestigePointsLostPerUnfedCharacter, int minPlayers) {
+        super(id, era, closeEvent, priorityValue, EventType.SUSTENANCE, minPlayers);
         this.prestigePointsLostPerUnfedCharacter = prestigePointsLostPerUnfedCharacter;
     }
 

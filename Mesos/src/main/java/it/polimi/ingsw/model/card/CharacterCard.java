@@ -4,8 +4,8 @@ import it.polimi.ingsw.model.enums.Era;
 
 public abstract class CharacterCard extends Card {
 
-    public CharacterCard(Era era) {
-        super(era);
+    public CharacterCard(int id, Era era, int minPlayers) {
+        super(id, era, minPlayers);
     }
 
 }

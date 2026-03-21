@@ -11,11 +11,11 @@ public class CavePaintingsEventCard extends EventCard {
     private final int prestigePointsLostIfBelow;
     private final int prestigePointsPerArtistIfAbove;
 
-    public CavePaintingsEventCard(Era era, boolean closeEvent, int priorityValue,
+    public CavePaintingsEventCard(int id, Era era, boolean closeEvent, int priorityValue,
                                   int minimumArtistsRequired,
                                   int prestigePointsLostIfBelow,
-                                  int prestigePointsPerArtistIfAbove) {
-        super(era, closeEvent, priorityValue, EventType.ROCK_PAINTINGS);
+                                  int prestigePointsPerArtistIfAbove, int minPlayers) {
+        super(id, era, closeEvent, priorityValue, EventType.ROCK_PAINTINGS, minPlayers);
         this.minimumArtistsRequired = minimumArtistsRequired;
         this.prestigePointsLostIfBelow = prestigePointsLostIfBelow;
         this.prestigePointsPerArtistIfAbove = prestigePointsPerArtistIfAbove;

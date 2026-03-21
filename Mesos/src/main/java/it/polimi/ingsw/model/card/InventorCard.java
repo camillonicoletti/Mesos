@@ -6,9 +6,9 @@ import it.polimi.ingsw.model.enums.InventorIcons;
 public class InventorCard extends CharacterCard{
     private final InventorIcons inventionIcon;
 
-    public InventorCard(InventorIcons inventionIcon, Era era) {
+    public InventorCard(int id, InventorIcons inventionIcon, Era era, int minPlayers) {
 
-        super(era);
+        super(id, era, minPlayers);
         this.inventionIcon = inventionIcon;
 
     }

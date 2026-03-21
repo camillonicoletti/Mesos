@@ -10,10 +10,13 @@ public class SustenanceFoodDiscountEffect implements Effect{
         this.targetType = targetType;
     }
 
-    // Adding food before removing it during Sustenance Event
+    public Class<? extends CharacterCard> getTargetType() {
+        return targetType;
+    }
+
     @Override
     public void apply(Player player) {
-        int count = player.getTribe().countCharactersByType(targetType);
-        player.addFood(count);
+        // Managed in SustenanceEventCard by adding sum of targetType
+        // to foodDiscount
     }
 }
