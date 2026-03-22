@@ -29,6 +29,7 @@
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/effect/EndBuilderPPEffect.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/effect/EndCharacterCountPPEffect.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/effect/EndFullSetPPEffect.java
+/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/effect/EndGameEffect.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/effect/EndPPEffect.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/effect/ExtraCardUpperRowEffect.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/effect/FullSetFoodEffect.java

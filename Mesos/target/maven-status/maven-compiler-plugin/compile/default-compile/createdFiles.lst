@@ -33,6 +33,7 @@ it/polimi/ingsw/model/card/effect/EndBuilderPPEffect.class
 it/polimi/ingsw/model/card/BuilderCard.class
 it/polimi/ingsw/model/card/ShamanicRitualEventCard.class
 it/polimi/ingsw/model/card/effect/ShamanicRitualDoublePPEffect.class
+it/polimi/ingsw/model/card/effect/EndGameEffect.class
 it/polimi/ingsw/model/Tribe.class
 it/polimi/ingsw/model/card/CharacterCard.class
 it/polimi/ingsw/model/Totem.class

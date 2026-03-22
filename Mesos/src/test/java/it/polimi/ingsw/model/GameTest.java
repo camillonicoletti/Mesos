@@ -14,19 +14,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Tests for Game.java — covers all public methods:
- *
- * Getters: getPlayers, getBoard, getCurrentEra, getTributeDeck,
- *          getRemainingTributeDeck, getRemainingBuildingDeck,
- *          getCurrentRound, setCurrentRound, getBuildingsForEra
- *
- * Lifecycle: start, end, isGameOver
- *
- * Era management: nextEra, endEra
- *
- * Round management: nextRound, endRound (multi-round simulation)
- */
 public class GameTest {
 
     private Game game;
@@ -55,18 +42,20 @@ public class GameTest {
 
         tributeDeck = new ArrayList<>();
         for (int i = 0; i < 30; i++) {
-            tributeDeck.add(new HunterCard(false, Era.I));
+            tributeDeck.add(new HunterCard(i, false, Era.I, 2));
         }
 
-        era1Deck = new ArrayList<>(List.of(new BuildingCard(2, noEffect, Era.I, 1)));
+        era1Deck = new ArrayList<>(List.of(
+                new BuildingCard(2, 0, noEffect, Era.I, 0, 2)
+        ));
         era2Deck = new ArrayList<>(List.of(
-                new BuildingCard(3, noEffect, Era.II, 2),
-                new BuildingCard(4, noEffect, Era.II, 3)
+                new BuildingCard(3, 0, noEffect, Era.II, 0, 2),
+                new BuildingCard(4, 0, noEffect, Era.II, 0, 2)
         ));
         era3Deck = new ArrayList<>(List.of(
-                new BuildingCard(5, noEffect, Era.III, 1),
-                new BuildingCard(6, noEffect, Era.III, 1),
-                new BuildingCard(7, noEffect, Era.III, 1)
+                new BuildingCard(5, 0, noEffect, Era.III, 0, 2),
+                new BuildingCard(6, 0, noEffect, Era.III, 0, 2),
+                new BuildingCard(7, 0, noEffect, Era.III, 0, 2)
         ));
 
         game = new Game(
@@ -80,16 +69,16 @@ public class GameTest {
         round = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(List.of(
-                        new HunterCard(false, Era.I),
-                        new HunterCard(false, Era.I),
-                        new HunterCard(false, Era.I)
+                        new HunterCard(30, false, Era.I, 2),
+                        new HunterCard(31, false, Era.I, 2),
+                        new HunterCard(32, false, Era.I, 2)
                 )),
                 new ArrayList<>(List.of(
-                        new HunterCard(false, Era.I),
-                        new HunterCard(false, Era.I),
-                        new HunterCard(false, Era.I),
-                        new HunterCard(false, Era.I),
-                        new HunterCard(false, Era.I)
+                        new HunterCard(33, false, Era.I, 2),
+                        new HunterCard(34, false, Era.I, 2),
+                        new HunterCard(35, false, Era.I, 2),
+                        new HunterCard(36, false, Era.I, 2),
+                        new HunterCard(37, false, Era.I, 2)
                 )),
                 new ArrayList<>(), new ArrayList<>()
         );
@@ -99,13 +88,10 @@ public class GameTest {
 
     // =========================================================
     // GETTERS
-    // Verifies that all getters return the values passed to the
-    // constructor or set via setter
     // =========================================================
 
     @Test
     void testGetPlayers() {
-        // must return exactly the 2 players created in setUp
         assertEquals(2, game.getPlayers().size());
         assertTrue(game.getPlayers().contains(player1));
         assertTrue(game.getPlayers().contains(player2));
@@ -113,37 +99,31 @@ public class GameTest {
 
     @Test
     void testGetBoard() {
-        // must return the same board object passed to the constructor
         assertEquals(board, game.getBoard());
     }
 
     @Test
     void testGetCurrentEra() {
-        // game starts at Era.I
         assertEquals(Era.I, game.getCurrentEra());
     }
 
     @Test
     void testGetTributeDeck() {
-        // must return the same reference to the tribute deck
         assertEquals(tributeDeck, game.getTributeDeck());
     }
 
     @Test
     void testGetRemainingTributeDeck() {
-        // tribute deck was created with 30 cards
         assertEquals(30, game.getRemainingTributeDeck());
     }
 
     @Test
     void testGetRemainingBuildingDeck() {
-        // era1=1, era2=2, era3=3 → total 6
         assertEquals(6, game.getRemainingBuildingDeck());
     }
 
     @Test
     void testGetCurrentRoundAndSetCurrentRound() {
-        // getCurrentRound must return the round set via setCurrentRound
         assertEquals(round, game.getCurrentRound());
 
         Round newRound = new Round(2, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
@@ -157,7 +137,6 @@ public class GameTest {
 
     @Test
     void testGetBuildingsForEra() {
-        // each era must return its own building deck
         assertEquals(era1Deck, game.getBuildingsForEra(Era.I));
         assertEquals(era2Deck, game.getBuildingsForEra(Era.II));
         assertEquals(era3Deck, game.getBuildingsForEra(Era.III));
@@ -165,13 +144,10 @@ public class GameTest {
 
     // =========================================================
     // START
-    // start() can only be called on a game in WAITING status:
-    // correctly sets era, round and status
     // =========================================================
 
     @Test
     void testStartSetsStatusAndEraAndRound() {
-        // create a fresh game in WAITING status
         Game freshGame = new Game(
                 List.of(player1, player2),
                 0, null, null, null,
@@ -182,7 +158,6 @@ public class GameTest {
 
         freshGame.start();
 
-        // after start: era = I, round created, game is not over
         assertEquals(Era.I, freshGame.getCurrentEra());
         assertNotNull(freshGame.getCurrentRound());
         assertFalse(freshGame.isGameOver());
@@ -190,32 +165,26 @@ public class GameTest {
 
     @Test
     void testStartThrowsIfNotWaiting() {
-        // game is already IN_PROGRESS → start() must throw
         assertThrows(IllegalStateException.class, () -> game.start());
     }
 
     // =========================================================
     // END / IS GAME OVER
-    // end() sets status to FINISHED
-    // isGameOver() is true if FINISHED or round > MAX_ROUNDS (10)
     // =========================================================
 
     @Test
     void testIsGameOverFalseAtStart() {
-        // at round 1 the game is not over
         assertFalse(game.isGameOver());
     }
 
     @Test
     void testEndSetsGameOver() {
-        // after end() the game must be over
         game.end();
         assertTrue(game.isGameOver());
     }
 
     @Test
     void testIsGameOverTrueAtMaxRounds() {
-        // isGameOver() checks currentRoundNumber > MAX_ROUNDS(10), so 11 triggers it
         Game maxRoundGame = new Game(
                 List.of(player1, player2),
                 11, null, Era.I, null,
@@ -228,8 +197,6 @@ public class GameTest {
 
     // =========================================================
     // NEXT ERA / END ERA
-    // nextEra() advances the current era (I→II→III, throws beyond that)
-    // endEra() manages buildings and calls nextEra()
     // =========================================================
 
     @Test
@@ -247,7 +214,6 @@ public class GameTest {
 
     @Test
     void testNextEraFromIIIThrows() {
-        // cannot advance beyond Era III
         game.nextEra();
         game.nextEra();
         assertThrows(IllegalStateException.class, () -> game.nextEra());
@@ -255,14 +221,12 @@ public class GameTest {
 
     @Test
     void testEndEraFromIAdvancesToII() {
-        // endEra() moves buildings and advances the era
         game.endEra();
         assertEquals(Era.II, game.getCurrentEra());
     }
 
     @Test
     void testEndEraFromIIAdvancesToIII() {
-        // force Era II without touching buildings, then endEra
         game.nextEra();
         game.endEra();
         assertEquals(Era.III, game.getCurrentEra());
@@ -270,7 +234,6 @@ public class GameTest {
 
     @Test
     void testEndEraFromIIIDoesNothing() {
-        // from Era III endEra() returns immediately without any changes
         game.nextEra();
         game.nextEra();
         game.endEra();
@@ -278,14 +241,11 @@ public class GameTest {
     }
 
     // =========================================================
-    // NEXT ROUND / END ROUND — multi-round simulation
-    // nextRound() creates the next round incrementing the number
-    // endRound() executes the current round then calls nextRound()
+    // NEXT ROUND / END ROUND
     // =========================================================
 
     @Test
     void testNextRoundIncrementsNumber() {
-        // round number must increase by 1
         int before = game.getCurrentRound().getNumber();
         game.nextRound();
         assertEquals(before + 1, game.getCurrentRound().getNumber());
@@ -293,7 +253,6 @@ public class GameTest {
 
     @Test
     void testNextRoundCreatesNewRound() {
-        // must be a different Round object from the previous one
         Round oldRound = game.getCurrentRound();
         game.nextRound();
         assertNotSame(oldRound, game.getCurrentRound());
@@ -301,14 +260,12 @@ public class GameTest {
 
     @Test
     void testEndRoundThrowsIfNotInProgress() {
-        // endRound() cannot be called if the game is over
         game.end();
         assertThrows(IllegalStateException.class, () -> game.endRound());
     }
 
     @Test
     void testEndRoundAdvancesToRound2() {
-        // after endRound the game must be at round 2
         round.placeTotemOffer(player1, tileA);
         round.placeTotemOffer(player2, tileB);
 
@@ -319,37 +276,28 @@ public class GameTest {
 
     @Test
     void testTwoCompleteRounds() {
-        // --- Round 1 ---
-        // player1 picks tileA (UPPER_ROW) — no cards taken since chosenCards is empty (no controller yet)
-        // player2 picks tileB (FOOD 3) — receives 3 food
         round.placeTotemOffer(player1, tileA);
         round.placeTotemOffer(player2, tileB);
 
         game.endRound();
 
-        assertEquals(0, player1.getTribe().getCharacterCards().size()); // empty chosenCards
+        assertEquals(0, player1.getTribe().getCharacterCards().size());
         assertEquals(3, player2.getFood());
         assertEquals(2, game.getCurrentRound().getNumber());
 
-        // --- Round 2 ---
-        // roles are swapped:
-        // player2 picks tileA — no cards taken (no controller)
-        // player1 picks tileB — receives 3 food
         Round round2 = game.getCurrentRound();
-
         round2.placeTotemOffer(player2, tileA);
         round2.placeTotemOffer(player1, tileB);
 
         game.endRound();
 
         assertEquals(3, player1.getFood());
-        assertEquals(0, player2.getTribe().getCharacterCards().size()); // empty chosenCards
+        assertEquals(0, player2.getTribe().getCharacterCards().size());
         assertEquals(3, game.getCurrentRound().getNumber());
     }
 
     @Test
     void testEndRoundEndsGameAtMaxRounds() {
-        // game at round 10: endRound → nextRound sees 10 >= MAX_ROUNDS → calls end()
         Game nearEndGame = new Game(
                 List.of(player1, player2),
                 10, null, Era.I, null,
@@ -372,7 +320,6 @@ public class GameTest {
 
     @Test
     void testNextRoundAtMaxRoundsEndsGame() {
-        // nextRound() called directly when already at round 10 must call end()
         Game maxGame = new Game(
                 List.of(player1, player2),
                 10, null, Era.I, null,
@@ -394,11 +341,14 @@ public class GameTest {
 
     @Test
     void testEndEraFromIIDiscardsLowerAndMovesUpperBuildings() {
-        // from Era II: endEra must discard lower buildings and move upper to lower
-        game.nextEra(); // now Era II
+        game.nextEra();
 
-        List<BuildingCard> lower = new ArrayList<>(List.of(new BuildingCard(1, noEffect, Era.I, 2)));
-        List<BuildingCard> upper = new ArrayList<>(List.of(new BuildingCard(2, noEffect, Era.II, 3)));
+        List<BuildingCard> lower = new ArrayList<>(List.of(
+                new BuildingCard(1, 0, noEffect, Era.I, 0, 2)
+        ));
+        List<BuildingCard> upper = new ArrayList<>(List.of(
+                new BuildingCard(2, 0, noEffect, Era.II, 0, 2)
+        ));
 
         Round eraIIRound = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.II,
                 new ArrayList<>(), new ArrayList<>(),
@@ -407,16 +357,14 @@ public class GameTest {
         );
         game.setCurrentRound(eraIIRound);
 
-        game.endEra(); // Era II → discards lower, moves upper to lower, advances to III
+        game.endEra();
 
         assertEquals(Era.III, game.getCurrentEra());
-        // after endEra from II: old lower is gone, upper has moved to lower
         assertEquals(1, eraIIRound.getLowerRowBuildings().size());
     }
 
     @Test
     void testGetBuildingsForEraReturnsEmptyListNotNull() {
-        // even with empty decks, getBuildingsForEra must return empty list (not null)
         Game emptyGame = new Game(
                 List.of(player1, player2),
                 1, null, Era.I, null,
@@ -433,14 +381,12 @@ public class GameTest {
 
     @Test
     void testIsGameOverTrueWhenFinishedButRoundLow() {
-        // isGameOver must be true if status = FINISHED even if round < MAX_ROUNDS
         game.end();
         assertTrue(game.isGameOver());
     }
 
     @Test
     void testEndCalledTwiceDoesNotThrow() {
-        // calling end() twice must not throw
         game.end();
         assertDoesNotThrow(() -> game.end());
         assertTrue(game.isGameOver());

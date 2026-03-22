@@ -1,6 +1,7 @@
 package it.polimi.ingsw.model;
 
 import it.polimi.ingsw.model.card.*;
+import it.polimi.ingsw.model.card.effect.FullSetFoodEffect;
 import it.polimi.ingsw.model.card.effect.InventorPairFoodEffect;
 import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.InventorIcons;
@@ -89,7 +90,6 @@ public class PlayerTest {
 
     @Test
     void spendFoodShouldDeductPrestigeWhenNotAffordable() {
-        // if food is insufficient, the missing amount is taken from prestige points
         Player player = new Player("Luca", new Totem(TotemColor.PURPLE, TotemPosition.TURN_ORDER));
         player.addFood(2);
 
@@ -98,7 +98,6 @@ public class PlayerTest {
         assertEquals(0, player.getFood());
         assertEquals(-3, player.getPrestigePoints()); // 5 - 2 = 3 missing
     }
-
 
     @Test
     void addPrestigePointsShouldIncreasePrestigePoints() {
@@ -155,13 +154,13 @@ public class PlayerTest {
 
         assertSame(totem, player.getTotem());
     }
+
     // -------------------------------------------------------
-// applyTurnPenalty
-// -------------------------------------------------------
+    // applyTurnPenalty
+    // -------------------------------------------------------
 
     @Test
     void applyTurnPenaltyShouldSpendFoodWhenAffordable() {
-        // player has enough food → spends food, prestige unchanged
         Player player = new Player("Luca", new Totem(TotemColor.RED, TotemPosition.TURN_ORDER));
         player.addFood(3);
 
@@ -173,7 +172,6 @@ public class PlayerTest {
 
     @Test
     void applyTurnPenaltyShouldRemovePrestigeWhenFoodInsufficient() {
-        // player has no food → loses prestige points, food stays at 0
         Player player = new Player("Luca", new Totem(TotemColor.RED, TotemPosition.TURN_ORDER));
 
         player.applyTurnPenalty(1, 2);
@@ -184,7 +182,6 @@ public class PlayerTest {
 
     @Test
     void applyTurnPenaltyShouldSpendFoodWhenExactlyAffordable() {
-        // player has exactly 1 food → spends it, no prestige lost
         Player player = new Player("Luca", new Totem(TotemColor.RED, TotemPosition.TURN_ORDER));
         player.addFood(1);
 
@@ -195,19 +192,19 @@ public class PlayerTest {
     }
 
     // -------------------------------------------------------
-// addCharacterCard — building effect triggers
-// -------------------------------------------------------
+    // addCharacterCard — building effect triggers
+    // -------------------------------------------------------
 
     @Test
     void addCharacterCardTriggerFullSetFoodEffectWhenSetCompleted() {
         Player player = new Player("Test", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
-        player.addBuildingCard(new BuildingCard(1, new FullSetFoodEffect(), Era.I, 0));
+        player.addBuildingCard(new BuildingCard(1, 0, new FullSetFoodEffect(), Era.I, 0, 2));
 
         player.addCharacterCard(new ArtistCard(1, Era.I, 2));
         player.addCharacterCard(new BuilderCard(2, 1, 1, Era.I, 2));
         player.addCharacterCard(new GathererCard(3, Era.I, 2));
         player.addCharacterCard(new HunterCard(4, false, Era.I, 2));
-        player.addCharacterCard(new InventorCard(5, Era.I, InventorIcons.ICON_1, 2));
+        player.addCharacterCard(new InventorCard(5, InventorIcons.INVENTION_1, Era.I, 2));
         player.addCharacterCard(new ShamanCard(6, Era.I, 1, 2)); // completes the set
 
         assertEquals(5, player.getFood()); // +5 food for completing 1 set
@@ -221,7 +218,7 @@ public class PlayerTest {
         player.addCharacterCard(new BuilderCard(2, 1, 1, Era.I, 2));
         player.addCharacterCard(new GathererCard(3, Era.I, 2));
         player.addCharacterCard(new HunterCard(4, false, Era.I, 2));
-        player.addCharacterCard(new InventorCard(5, Era.I, InventorIcons.ICON_1, 2));
+        player.addCharacterCard(new InventorCard(5, InventorIcons.INVENTION_1, Era.I, 2));
         player.addCharacterCard(new ShamanCard(6, Era.I, 1, 2));
 
         assertEquals(0, player.getFood()); // no building → no food
@@ -230,29 +227,68 @@ public class PlayerTest {
     @Test
     void addCharacterCardTriggerInventorPairFoodEffect() {
         Player player = new Player("Test", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
-        player.addBuildingCard(new BuildingCard(1, new InventorPairFoodEffect(), Era.I, 0));
+        player.addBuildingCard(new BuildingCard(1, 0, new InventorPairFoodEffect(), Era.I, 0, 2));
 
-        player.addCharacterCard(new InventorCard(1, Era.I, InventorIcons.ICON_1, 2));
-        player.addCharacterCard(new InventorCard(2, Era.I, InventorIcons.ICON_1, 2)); // pair!
+        player.addCharacterCard(new InventorCard(1, InventorIcons.INVENTION_1, Era.I, 2));
+        player.addCharacterCard(new InventorCard(2, InventorIcons.INVENTION_1, Era.I, 2)); // pair!
 
         assertEquals(3, player.getFood()); // +3 food for 1 pair
     }
 
     @Test
-    void addCharacterCardDoesNotRewardAlreadyExistingPairs() {
+    void addCharacterCardDoesNotRewardPairsFormedBeforeBuildingWasAcquired() {
         Player player = new Player("Test", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
 
-        player.addCharacterCard(new InventorCard(1, Era.I, InventorIcons.ICON_1, 2));
-        player.addCharacterCard(new InventorCard(2, Era.I, InventorIcons.ICON_1, 2));
+        // pair formed before building → effect not triggered
+        player.addCharacterCard(new InventorCard(1, InventorIcons.INVENTION_1, Era.I, 2));
+        player.addCharacterCard(new InventorCard(2, InventorIcons.INVENTION_1, Era.I, 2));
 
-        // building added AFTER the pair exists
-        player.addBuildingCard(new BuildingCard(3, new InventorPairFoodEffect(), Era.I, 0));
+        // building added after the pair exists → no addCharacterCard called → no trigger
+        player.addBuildingCard(new BuildingCard(3, 0, new InventorPairFoodEffect(), Era.I, 0, 2));
 
-        // adding a third inventor of same type — no new pair formed
-        player.addCharacterCard(new InventorCard(4, Era.I, InventorIcons.ICON_1, 2));
+        assertEquals(0, player.getFood()); // no food because effect was never triggered
+    }
 
-        assertEquals(0, player.getFood());
+    @Test
+    void testFullSetFoodEffectRewardsTwoSetsIndependently() {
+        Player player = new Player("Test", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        player.addBuildingCard(new BuildingCard(1, 0, new FullSetFoodEffect(), Era.I, 0, 2));
+
+        // primo set
+        player.addCharacterCard(new ArtistCard(1, Era.I, 2));
+        player.addCharacterCard(new BuilderCard(2, 1, 0, Era.I, 2));
+        player.addCharacterCard(new GathererCard(3, Era.I, 2));
+        player.addCharacterCard(new HunterCard(4, false, Era.I, 2));
+        player.addCharacterCard(new InventorCard(5, InventorIcons.INVENTION_1, Era.I, 2));
+        player.addCharacterCard(new ShamanCard(6, Era.I, 1, 2)); // completa set 1 → +5
+
+        assertEquals(5, player.getFood());
+
+        // secondo set
+        player.addCharacterCard(new ArtistCard(7, Era.I, 2));
+        player.addCharacterCard(new BuilderCard(8, 1, 0, Era.I, 2));
+        player.addCharacterCard(new GathererCard(9, Era.I, 2));
+        player.addCharacterCard(new HunterCard(10, false, Era.I, 2));
+        player.addCharacterCard(new InventorCard(11, InventorIcons.INVENTION_2, Era.I, 2));
+        player.addCharacterCard(new ShamanCard(12, Era.I, 1, 2)); // completa set 2 → +5
+
+        assertEquals(10, player.getFood()); // 5 + 5
+    }
+
+    @Test
+    void testInventorPairFoodEffectWithTwoDifferentIconPairs() {
+        Player player = new Player("Test", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        player.addBuildingCard(new BuildingCard(1, 0, new InventorPairFoodEffect(), Era.I, 0, 2));
+
+        player.addCharacterCard(new InventorCard(1, InventorIcons.INVENTION_1, Era.I, 2));
+        player.addCharacterCard(new InventorCard(2, InventorIcons.INVENTION_1, Era.I, 2)); // coppia 1 → +3
+        player.addCharacterCard(new InventorCard(3, InventorIcons.INVENTION_2, Era.I, 2));
+        player.addCharacterCard(new InventorCard(4, InventorIcons.INVENTION_2, Era.I, 2)); // coppia 2 → +3
+
+        assertEquals(6, player.getFood()); // 3 + 3
     }
 
 
+
 }
+

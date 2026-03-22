@@ -1,4 +1,6 @@
+it/polimi/ingsw/model/GameScoringTest.class
 it/polimi/ingsw/AppTest.class
+it/polimi/ingsw/model/ShamanicRitualEventCardTest.class
 it/polimi/ingsw/model/BoardFactoryTest.class
 it/polimi/ingsw/model/OfferTileTest.class
 it/polimi/ingsw/model/TurnSlotTest.class

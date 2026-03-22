@@ -269,7 +269,7 @@ public class Round {
 
 
 
-    private void placeTotemOrderForPlayer(Player player) {
+    public void placeTotemOrderForPlayer(Player player) {
         Board board = game.getBoard();
         TurnOrderTile turnOrderTile = board.getTurnOrderTile();
 
