@@ -8,9 +8,8 @@ public class BuildingCard extends Card{
     private final Effect effect;
     private final int pointsEndOfMatch;
 
-    public BuildingCard(int id, int foodCost, Effect effect, Era era, int pointsEndOfMatch,
-                        int minPlayers) {
-        super(id, era, minPlayers);
+    public BuildingCard(int id, Era era, int foodCost, Effect effect, int pointsEndOfMatch) {
+        super(id, era);
         this.foodCost = foodCost;
         this.effect = effect;
         this.pointsEndOfMatch = pointsEndOfMatch;

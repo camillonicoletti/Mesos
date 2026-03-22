@@ -9,4 +9,5 @@ public class GathererCard extends CharacterCard{
         super(id, era, minPlayers);
 
     }
+
 }

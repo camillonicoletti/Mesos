@@ -9,9 +9,8 @@ public abstract class EventCard extends Card {
     private final boolean closeEvent;
     private final EventType eventType;
 
-    public EventCard(int id, Era era, boolean closeEvent, EventType eventType,
-                     int minPlayers) {
-        super(id, era, minPlayers);
+    public EventCard(int id, Era era, boolean closeEvent, EventType eventType) {
+        super(id, era);
         this.closeEvent = closeEvent;
         this.eventType = eventType;
     }

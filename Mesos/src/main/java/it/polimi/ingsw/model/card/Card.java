@@ -6,12 +6,10 @@ public abstract class Card {
 
     private final int id;
     private final Era era;
-    private final int minPlayers;
 
-    public Card(int id, Era era, int minPlayers) {
+    public Card(int id, Era era) {
         this.id = id;
         this.era = era;
-        this.minPlayers = minPlayers;
     }
 
     public int getId() {
@@ -20,10 +18,6 @@ public abstract class Card {
 
     public Era getEra() {
         return era;
-    }
-
-    public int getMinPlayers() {
-        return minPlayers;
     }
 
 }
