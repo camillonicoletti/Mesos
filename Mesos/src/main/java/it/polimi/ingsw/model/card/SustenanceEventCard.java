@@ -2,6 +2,7 @@ package it.polimi.ingsw.model.card;
 
 import it.polimi.ingsw.model.Game;
 import it.polimi.ingsw.model.Player;
+import it.polimi.ingsw.model.card.effect.SustenanceFoodDiscountEffect;
 import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.EventType;
 
@@ -28,6 +29,15 @@ public class SustenanceEventCard extends EventCard {
             int gatherers = player.getTribe().countCharactersByType(GathererCard.class);
 
             int foodDiscount = gatherers * FOOD_DISCOUNT_PER_GATHERER;
+
+            //building effect
+            for (BuildingCard building : player.getTribe().getBuildingCards()) {
+                if (building.getEffect() instanceof SustenanceFoodDiscountEffect effect) {
+                    int count = player.getTribe().countCharactersByType(effect.getTargetType());
+                    foodDiscount += count;
+                }
+            }
+
             int foodRequired = Math.max(0, totalCharacters - foodDiscount);
 
             int availableFood = player.getFood();
@@ -44,4 +54,5 @@ public class SustenanceEventCard extends EventCard {
             }
         }
     }
+
 }

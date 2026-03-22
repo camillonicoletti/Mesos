@@ -2,6 +2,7 @@ package it.polimi.ingsw.model.card;
 
 import it.polimi.ingsw.model.Game;
 import it.polimi.ingsw.model.Player;
+import it.polimi.ingsw.model.card.effect.CavePaintingsFoodEffect;
 import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.EventType;
 
@@ -44,6 +45,13 @@ public class CavePaintingsEventCard extends EventCard {
                 player.removePrestigePoints(prestigePointsLostIfBelow);
             } else {
                 player.addPrestigePoints(artists * prestigePointsPerArtistIfAbove);
+
+                //add building effect
+                for (BuildingCard building : player.getTribe().getBuildingCards()) {
+                    if (building.getEffect() instanceof CavePaintingsFoodEffect effect) {
+                        effect.apply(player);
+                    }
+                }
             }
         }
     }
