@@ -7,5 +7,6 @@ it/polimi/ingsw/model/TurnSlotTest.class
 it/polimi/ingsw/model/GameTest.class
 it/polimi/ingsw/model/BoardTest.class
 it/polimi/ingsw/model/PlayerTest.class
+it/polimi/ingsw/model/BuildingEffectsTest.class
 it/polimi/ingsw/model/TribeTest.class
 it/polimi/ingsw/model/RoundTest.class
