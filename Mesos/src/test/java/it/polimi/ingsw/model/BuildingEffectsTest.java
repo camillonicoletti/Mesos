@@ -201,7 +201,7 @@ public class BuildingEffectsTest {
     }
 
     @Test
-    void cavePaintingsFoodEffectDoesNotTriggerWhenBelowMinimum() {
+    void cavePaintingsFoodEffectTriggersEvenWhenBelowMinimum() {
         Player player = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
         player.addCharacterCard(new ArtistCard(1, Era.I, 2)); // 1, minimo è 2
         player.addBuildingCard(new BuildingCard(1, 0, new CavePaintingsFoodEffect(), Era.I, 0, 2));
@@ -209,9 +209,10 @@ public class BuildingEffectsTest {
         Game game = buildGame(List.of(player));
         new CavePaintingsEventCard(1, Era.I, false, 2, 3, 1, 2).resolve(game);
 
-        assertEquals(0, player.getFood());
-        assertEquals(-3, player.getPrestigePoints());
+        assertEquals(1, player.getFood());        // 1 artista × 1 food, anche sotto soglia
+        assertEquals(-3, player.getPrestigePoints()); // sotto soglia → perde PP
     }
+
 
     // -------------------------------------------------------
     // SustenanceFoodDiscountEffect

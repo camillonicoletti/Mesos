@@ -45,14 +45,15 @@ public class CavePaintingsEventCard extends EventCard {
                 player.removePrestigePoints(prestigePointsLostIfBelow);
             } else {
                 player.addPrestigePoints(artists * prestigePointsPerArtistIfAbove);
+            }
 
-                //add building effect
-                for (BuildingCard building : player.getTribe().getBuildingCards()) {
-                    if (building.getEffect() instanceof CavePaintingsFoodEffect effect) {
-                        effect.apply(player);
-                    }
+            //building effect
+            for (BuildingCard building : player.getTribe().getBuildingCards()) {
+                if (building.getEffect() instanceof CavePaintingsFoodEffect effect) {
+                    effect.apply(player);
                 }
             }
         }
     }
+
 }
