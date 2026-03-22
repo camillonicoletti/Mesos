@@ -340,7 +340,7 @@ public class Round {
     }
 
     public void resolveEvent() {
-        boolean includeUpperRow = game.isGameOver();
+        boolean includeUpperRow = game.isLastRound();
         List<EventCard> eventCards = getOrderedEventsForResolution(includeUpperRow);
 
         for (EventCard eventCard : eventCards) {

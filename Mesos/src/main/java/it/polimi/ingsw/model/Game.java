@@ -154,7 +154,7 @@ public class Game {
     }
 
     public boolean isGameOver() {
-        return status == GameStatus.FINISHED || currentRoundNumber > MAX_ROUNDS;
+        return status == GameStatus.FINISHED;
     }
 
     public void nextEra() {
@@ -185,8 +185,7 @@ public class Game {
     }
 
     public void nextRound() {
-        if (isGameOver()) {
-            end();
+        if (status == GameStatus.FINISHED) {
             return;
         }
 
@@ -206,7 +205,7 @@ public class Game {
 
         currentRound.execute();
 
-        if (isGameOver()) {
+        if (isLastRound()) {
             end();
         } else {
             nextRound();
@@ -343,6 +342,10 @@ public class Game {
         player.spendFood(finalCost);
         row.remove(chosenCard);
         player.addBuildingCard(chosenCard);
+    }
+
+    public boolean isLastRound() {
+        return currentRoundNumber == MAX_ROUNDS;
     }
 
     private int getBuildingDiscount(Player player) {
