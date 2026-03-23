@@ -4,35 +4,35 @@ import it.polimi.ingsw.model.Game;
 import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.card.effect.CavePaintingsFoodEffect;
 import it.polimi.ingsw.model.enums.Era;
-import it.polimi.ingsw.model.enums.EventType;
+
 
 public class CavePaintingsEventCard extends EventCard {
 
-    private final int minimumArtistsRequired;
-    private final int prestigePointsLostIfBelow;
-    private final int prestigePointsPerArtistIfAbove;
+    private final int minArtists;
+    private final int ppPenalty;
+    private final int ppPerArtist;
 
     public CavePaintingsEventCard(int id, Era era, boolean closeEvent,
-                                  int minimumArtistsRequired,
-                                  int prestigePointsLostIfBelow,
-                                  int prestigePointsPerArtistIfAbove) {
-        super(id, era, closeEvent, EventType.ROCK_PAINTINGS);
+                                  int minArtists,
+                                  int ppPenalty,
+                                  int ppPerArtist) {
+        super(id, era, closeEvent);
 
-        this.minimumArtistsRequired = minimumArtistsRequired;
-        this.prestigePointsLostIfBelow = prestigePointsLostIfBelow;
-        this.prestigePointsPerArtistIfAbove = prestigePointsPerArtistIfAbove;
+        this.minArtists = minArtists;
+        this.ppPenalty = ppPenalty;
+        this.ppPerArtist = ppPerArtist;
     }
 
-    public int getMinimumArtistsRequired() {
-        return minimumArtistsRequired;
+    public int getMinArtists() {
+        return minArtists;
     }
 
-    public int getPrestigePointsLostIfBelow() {
-        return prestigePointsLostIfBelow;
+    public int getPpPenalty() {
+        return ppPenalty;
     }
 
-    public int getPrestigePointsPerArtistIfAbove() {
-        return prestigePointsPerArtistIfAbove;
+    public int getPpPerArtists() {
+        return ppPerArtist;
     }
 
     @Override
@@ -40,10 +40,10 @@ public class CavePaintingsEventCard extends EventCard {
         for (Player player : game.getPlayers()) {
             int artists = player.getTribe().countCharactersByType(ArtistCard.class);
 
-            if (artists < minimumArtistsRequired) {
-                player.removePrestigePoints(prestigePointsLostIfBelow);
+            if (artists < minArtists) {
+                player.removePrestigePoints(ppPenalty);
             } else {
-                player.addPrestigePoints(artists * prestigePointsPerArtistIfAbove);
+                player.addPrestigePoints(artists * ppPerArtist);
             }
 
             //building effect

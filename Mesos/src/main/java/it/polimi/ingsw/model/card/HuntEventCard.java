@@ -4,7 +4,7 @@ import it.polimi.ingsw.model.Game;
 import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.card.effect.Hunt1Food1PPEffect;
 import it.polimi.ingsw.model.enums.Era;
-import it.polimi.ingsw.model.enums.EventType;
+
 
 public class HuntEventCard extends EventCard {
 
@@ -13,7 +13,7 @@ public class HuntEventCard extends EventCard {
 
     public HuntEventCard(int id, Era era, boolean closeEvent,
                          int foodPerHunter, int ppPerHunter) {
-        super(id, era, closeEvent, EventType.HUNT);
+        super(id, era, closeEvent);
         this.foodPerHunter = foodPerHunter;
         this.ppPerHunter = ppPerHunter;
     }

@@ -1,13 +1,9 @@
 package it.polimi.ingsw.model;
 
 import it.polimi.ingsw.model.board.*;
-import it.polimi.ingsw.model.card.CharacterCard;
-import it.polimi.ingsw.model.card.BuildingCard;
-import it.polimi.ingsw.model.card.Card;
-import it.polimi.ingsw.model.card.EventCard;
+import it.polimi.ingsw.model.card.*;
 import it.polimi.ingsw.model.card.effect.ExtraCardUpperRowEffect;
 import it.polimi.ingsw.model.card.effect.TotemSlotFoodBonusEffect;
-import it.polimi.ingsw.model.enums.EventType;
 import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.enums.SlotType;
@@ -323,7 +319,7 @@ public class Round {
         List<EventCard> sustenanceEvents = new ArrayList<>();
 
         for (EventCard e : eventsToResolve) {
-            if (e.getEventType() == EventType.SUSTENANCE) {
+            if (e instanceof SustenanceEventCard) {
                 sustenanceEvents.add(e);
             } else {
                 normalEvents.add(e);

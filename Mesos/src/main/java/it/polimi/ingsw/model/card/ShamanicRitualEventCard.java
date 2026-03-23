@@ -6,29 +6,29 @@ import it.polimi.ingsw.model.card.effect.Shaman3ExtraStarsEffect;
 import it.polimi.ingsw.model.card.effect.ShamanicRitualDoublePPEffect;
 import it.polimi.ingsw.model.card.effect.ShamanicRitualImmunityEffect;
 import it.polimi.ingsw.model.enums.Era;
-import it.polimi.ingsw.model.enums.EventType;
+
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ShamanicRitualEventCard extends EventCard {
 
-    private final int prestigePointsForMost;
-    private final int prestigePointsLostForLeast;
+    private final int ppGain;
+    private final int ppLoss;
 
     public ShamanicRitualEventCard(int id, Era era, boolean closeEvent,
-                                   int prestigePointsForMost, int prestigePointsLostForLeast) {
-        super(id, era, closeEvent, EventType.SHAMANIC_RITUAL);
-        this.prestigePointsForMost = prestigePointsForMost;
-        this.prestigePointsLostForLeast = prestigePointsLostForLeast;
+                                   int ppGain, int ppLoss) {
+        super(id, era, closeEvent);
+        this.ppGain = ppGain;
+        this.ppLoss = ppLoss;
     }
 
-    public int getPrestigePointsForMost() {
-        return prestigePointsForMost;
+    public int getPpGain() {
+        return ppGain;
     }
 
-    public int getPrestigePointsLostForLeast() {
-        return prestigePointsLostForLeast;
+    public int getPpLoss() {
+        return ppLoss;
     }
 
     // counts shaman stars for a player, adding 3 extra if they have Shaman3ExtraStarsEffect
@@ -71,7 +71,7 @@ public class ShamanicRitualEventCard extends EventCard {
 
         // award PP to players with most stars — doubled if they have ShamanicRitualDoublePPEffect
         for (Player player : playersWithMostStars) {
-            int pp = prestigePointsForMost;
+            int pp = ppGain;
             for (BuildingCard building : player.getTribe().getBuildingCards()) {
                 if (building.getEffect() instanceof ShamanicRitualDoublePPEffect) {
                     pp *= 2;
@@ -90,7 +90,7 @@ public class ShamanicRitualEventCard extends EventCard {
                 }
             }
             if (!immune) {
-                player.removePrestigePoints(prestigePointsLostForLeast);
+                player.removePrestigePoints(ppLoss);
             }
         }
     }
