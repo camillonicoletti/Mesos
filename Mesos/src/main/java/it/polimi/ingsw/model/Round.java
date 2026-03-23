@@ -85,6 +85,8 @@ public class Round {
 
     public void execute() {
 
+        game.getBoard().getTurnOrderTile().reset();
+
         // sort players by their chosen tile letter (A < B < C)
         // so each player resolves their action and moves their totem in the correct order
         phase = RoundPhase.ACTION_RESOLUTION;

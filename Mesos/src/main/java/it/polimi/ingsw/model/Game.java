@@ -236,9 +236,12 @@ public class Game {
             finalScore += calculateArtistPoints(player);
 
             // base builder points — always counted
-            //TODO: check Builder Point, then modify test
             finalScore += calculateBuilderPoints(player);
 
+            // base points printed on each building card
+            for (BuildingCard building : player.getTribe().getBuildingCards()) {
+                finalScore += building.getPointsEndOfMatch();
+            }
             // end-of-game building effects: all BuildingCards implementing EndGameEffect
             // use calculatePoints() to avoid modifying player state and double counting
             for (BuildingCard building : player.getTribe().getBuildingCards()) {
@@ -413,7 +416,9 @@ public class Game {
         }
 
         return players.stream()
-                .max(Comparator.comparingInt(this::getFinalScore))
+                .max(Comparator.comparingInt(this::getFinalScore)
+                        .thenComparingInt(Player::getFood))
                 .orElse(null);
     }
+
 }
