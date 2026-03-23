@@ -27,7 +27,7 @@ public class Player {
     public String getNickname() {
         return nickname;
     }
-    // TODO : give initial food based on number of players
+
     public int getFood() {
         return food;
     }
@@ -102,10 +102,7 @@ public class Player {
 
     public void addBuildingCard(BuildingCard card) {
         tribe.addBuildingCard(card);
-
-        // TODO: check building food cost
-        // TODO: resolve Builder discount
-        // TODO: prevent purchase if the player cannot afford it
+        
     }
 }
 
