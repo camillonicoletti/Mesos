@@ -121,6 +121,12 @@ public class Round {
         phase = RoundPhase.EVENT_RESOLUTION;
         resolveEvent();
 
+        if (game.isLastRound()) {
+            phase = RoundPhase.ROUND_CLEANUP;
+            game.getBoard().resetOfferTiles();
+            return;
+        }
+
         phase = RoundPhase.ROUND_CLEANUP;
         discardLowerRow();
         shiftUpperToLowerRow();
