@@ -159,6 +159,9 @@ public class Round {
         // 1. riempi la fila inferiore
         while (getLowerTributeRowSize() < lowerTarget) {
             Card drawnCard = game.drawTribeCard();
+            if (drawnCard == null) {
+                throw new IllegalStateException("Tribute deck is empty during initial setup");
+            }
 
             if (drawnCard instanceof EventCard eventCard) {
                 upperRowEventCards.add(eventCard);
