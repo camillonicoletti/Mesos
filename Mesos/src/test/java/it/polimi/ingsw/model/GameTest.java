@@ -8,6 +8,8 @@ import it.polimi.ingsw.model.card.effect.Effect;
 import it.polimi.ingsw.model.enums.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import it.polimi.ingsw.model.card.*;
+import it.polimi.ingsw.model.enums.Era;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -398,5 +400,161 @@ public class GameTest {
         game.end();
         assertDoesNotThrow(() -> game.end());
         assertTrue(game.isGameOver());
+    }
+
+// =========================================================
+// TAKE CHARACTER CARD
+// =========================================================
+
+    @Test
+    void testTakeCharacterCardAddsCardToPlayerTribe() {
+        HunterCard card = new HunterCard(99, Era.I, 2, false);
+        List<CharacterCard> row = new ArrayList<>(List.of(card));
+
+        game.takeCharacterCard(player1, row, card);
+
+        assertEquals(1, player1.getTribe().getCharacterCards().size());
+        assertTrue(player1.getTribe().getCharacterCards().contains(card));
+    }
+
+    @Test
+    void testTakeCharacterCardRemovesCardFromRow() {
+        HunterCard card = new HunterCard(99, Era.I, 2, false);
+        List<CharacterCard> row = new ArrayList<>(List.of(card));
+
+        game.takeCharacterCard(player1, row, card);
+
+        assertTrue(row.isEmpty());
+    }
+
+    @Test
+    void testTakeCharacterCardThrowsWhenCardNotInRow() {
+        HunterCard card = new HunterCard(99, Era.I, 2, false);
+        List<CharacterCard> emptyRow = new ArrayList<>();
+
+        assertThrows(IllegalArgumentException.class,
+                () -> game.takeCharacterCard(player1, emptyRow, card));
+    }
+
+    @Test
+    void testTakeCharacterCardHunterWithFoodIconGivesFoodEqualToHunterCount() {
+        // aggiunge un cacciatore con foodIcon=true → food = numero di cacciatori nella tribù
+        HunterCard hunter = new HunterCard(99, Era.I, 2, true);
+        List<CharacterCard> row = new ArrayList<>(List.of(hunter));
+
+        game.takeCharacterCard(player1, row, hunter);
+
+        assertEquals(1, player1.getFood()); // 1 cacciatore in tribù → +1 cibo
+    }
+
+    @Test
+    void testTakeCharacterCardHunterWithFoodIconCountsAllHuntersInTribe() {
+        // player1 ha già 2 cacciatori, ne prende un terzo con foodIcon=true
+        player1.addCharacterCard(new HunterCard(10, Era.I, 2, false));
+        player1.addCharacterCard(new HunterCard(11, Era.I, 2, false));
+
+        HunterCard newHunter = new HunterCard(99, Era.I, 2, true);
+        List<CharacterCard> row = new ArrayList<>(List.of(newHunter));
+
+        game.takeCharacterCard(player1, row, newHunter);
+
+        assertEquals(3, player1.getFood()); // 3 cacciatori in tribù → +3 cibo
+    }
+
+    @Test
+    void testTakeCharacterCardHunterWithoutFoodIconGivesNoFood() {
+        HunterCard hunter = new HunterCard(99, Era.I, 2, false);
+        List<CharacterCard> row = new ArrayList<>(List.of(hunter));
+
+        game.takeCharacterCard(player1, row, hunter);
+
+        assertEquals(0, player1.getFood());
+    }
+
+// =========================================================
+// TAKE BUILDING CARD
+// =========================================================
+
+    @Test
+    void testTakeBuildingCardSpendsCorrectFood() {
+        player1.addFood(5);
+        BuildingCard building = new BuildingCard(99, Era.I, 3, p -> {}, 0); // costo 3
+        List<BuildingCard> row = new ArrayList<>(List.of(building));
+
+        game.takeBuildingCard(player1, row, building);
+
+        assertEquals(1, player1.getTribe().getBuildingCards().size());
+        assertEquals(2, player1.getFood()); // 5 - 3
+    }
+
+    @Test
+    void testTakeBuildingCardRemovesCardFromRow() {
+        player1.addFood(5);
+        BuildingCard building = new BuildingCard(99, Era.I, 3, p -> {}, 0);
+        List<BuildingCard> row = new ArrayList<>(List.of(building));
+
+        game.takeBuildingCard(player1, row, building);
+
+        assertTrue(row.isEmpty());
+    }
+
+    @Test
+    void testTakeBuildingCardThrowsWhenNotAffordable() {
+        BuildingCard building = new BuildingCard(99, Era.I, 3, p -> {}, 0); // player ha 0 cibo
+        List<BuildingCard> row = new ArrayList<>(List.of(building));
+
+        assertThrows(IllegalStateException.class,
+                () -> game.takeBuildingCard(player1, row, building));
+    }
+
+    @Test
+    void testTakeBuildingCardAppliesBuilderDiscount() {
+        player1.addFood(3);
+        player1.addCharacterCard(new BuilderCard(10, Era.I, 2, 0, 2)); // sconto 2
+        BuildingCard building = new BuildingCard(99, Era.I, 3, p -> {}, 0); // costo 3
+        List<BuildingCard> row = new ArrayList<>(List.of(building));
+
+        game.takeBuildingCard(player1, row, building);
+
+        assertEquals(2, player1.getFood()); // 3 - (3 - 2) = 2
+    }
+
+    @Test
+    void testTakeBuildingCardDiscountCannotMakeCostNegative() {
+        player1.addFood(3);
+        player1.addCharacterCard(new BuilderCard(10, Era.I, 2, 0, 5)); // sconto 5 > costo
+        BuildingCard building = new BuildingCard(99, Era.I, 2, p -> {}, 0); // costo 2
+        List<BuildingCard> row = new ArrayList<>(List.of(building));
+
+        game.takeBuildingCard(player1, row, building); // costo finale = max(0, 2-5) = 0
+
+        assertEquals(3, player1.getFood()); // non paga nulla
+    }
+
+    @Test
+    void testTakeBuildingCardThrowsWhenCardNotInRow() {
+        player1.addFood(5);
+        BuildingCard building = new BuildingCard(99, Era.I, 3, p -> {}, 0);
+        List<BuildingCard> emptyRow = new ArrayList<>();
+
+        assertThrows(IllegalArgumentException.class,
+                () -> game.takeBuildingCard(player1, emptyRow, building));
+    }
+
+// =========================================================
+// DRAW TRIBE CARD
+// =========================================================
+
+    @Test
+    void testDrawTribeCardRemovesCardFromDeck() {
+        int before = game.getRemainingTributeDeck();
+        game.drawTribeCard();
+        assertEquals(before - 1, game.getRemainingTributeDeck());
+    }
+
+    @Test
+    void testDrawTribeCardReturnsNullWhenDeckIsEmpty() {
+        game.getTributeDeck().clear();
+        assertNull(game.drawTribeCard());
     }
 }

@@ -8,6 +8,9 @@ import it.polimi.ingsw.model.enums.TotemPosition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import it.polimi.ingsw.model.board.ActionSlot;
+import it.polimi.ingsw.model.enums.SlotType;
+
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -101,4 +104,42 @@ public class OfferTileTest {
     void testIsAvailableForReturnsFalseWhenFewerThanMinPlayers() {
         assertFalse(tile.isAvailableFor(1));
     }
+
+
+
+// -------------------------------------------------------
+// ActionSlot getters
+// -------------------------------------------------------
+
+    @Test
+    void testActionSlotGetType() {
+        ActionSlot slot = new ActionSlot(SlotType.FOOD, 3);
+        assertEquals(SlotType.FOOD, slot.getType());
+    }
+
+    @Test
+    void testActionSlotGetAmount() {
+        ActionSlot slot = new ActionSlot(SlotType.UPPER_ROW, 2);
+        assertEquals(2, slot.getAmount());
+    }
+
+// -------------------------------------------------------
+// OfferTile getters
+// -------------------------------------------------------
+
+    @Test
+    void testOfferTileGetLetter() {
+        OfferTile t = new OfferTile('C', 2, List.of());
+        assertEquals('C', t.getLetter());
+    }
+
+    @Test
+    void testOfferTileGetSlots() {
+        ActionSlot slot = new ActionSlot(SlotType.FOOD, 2);
+        OfferTile t = new OfferTile('A', 2, List.of(slot));
+        assertEquals(1, t.getSlots().size());
+        assertEquals(SlotType.FOOD, t.getSlots().get(0).getType());
+        assertEquals(2, t.getSlots().get(0).getAmount());
+    }
+
 }

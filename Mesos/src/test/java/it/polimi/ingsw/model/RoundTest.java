@@ -1,9 +1,7 @@
 package it.polimi.ingsw.model;
 
 import it.polimi.ingsw.model.board.*;
-import it.polimi.ingsw.model.card.BuildingCard;
-import it.polimi.ingsw.model.card.HunterCard;
-import it.polimi.ingsw.model.card.Card;
+import it.polimi.ingsw.model.card.*;
 import it.polimi.ingsw.model.card.effect.TotemSlotFoodBonusEffect;
 import it.polimi.ingsw.model.enums.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -361,4 +359,155 @@ public class RoundTest {
         assertFalse(tileA.isOccupied());
         assertFalse(tileB.isOccupied());
     }
+
+    // -------------------------------------------------------
+// resolveOfferAction — LOWER_ROW
+// -------------------------------------------------------
+
+    @Test
+    void testResolveOfferActionPicksCardFromLowerRow() {
+        HunterCard card = new HunterCard(99, Era.I, 2, false);
+
+        Round testRound = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
+                new ArrayList<>(), new ArrayList<>(),
+                new ArrayList<>(List.of(card)), // lowerRowTribute
+                new ArrayList<>(),
+                new ArrayList<>(), new ArrayList<>()
+        );
+
+        OfferTile lowerTile = new OfferTile('D', 2,
+                List.of(new ActionSlot(SlotType.LOWER_ROW, 1)));
+
+        testRound.resolveOfferAction(player1, lowerTile, List.of(card));
+
+        assertEquals(1, player1.getTribe().getCharacterCards().size());
+        assertEquals(0, testRound.getLowerRowTribute().size());
+    }
+
+// -------------------------------------------------------
+// resolveOfferAction — più carte dalla riga superiore
+// -------------------------------------------------------
+
+    @Test
+    void testResolveOfferActionPicksMultipleCardsFromUpperRow() {
+        HunterCard card1 = new HunterCard(99,  Era.I, 2, false);
+        HunterCard card2 = new HunterCard(100, Era.I, 2, false);
+
+        Round testRound = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
+                new ArrayList<>(), new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(List.of(card1, card2)), // upperRowTribute
+                new ArrayList<>(), new ArrayList<>()
+        );
+
+        OfferTile multiTile = new OfferTile('E', 2,
+                List.of(new ActionSlot(SlotType.UPPER_ROW, 2)));
+
+        testRound.resolveOfferAction(player1, multiTile, List.of(card1, card2));
+
+        assertEquals(2, player1.getTribe().getCharacterCards().size());
+        assertEquals(0, testRound.getUpperRowTribute().size());
+    }
+
+    @Test
+    void testResolveOfferActionDoesNotExceedSlotLimit() {
+        HunterCard card1 = new HunterCard(99,  Era.I, 2, false);
+        HunterCard card2 = new HunterCard(100, Era.I, 2, false);
+        HunterCard card3 = new HunterCard(101, Era.I, 2, false);
+
+        Round testRound = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
+                new ArrayList<>(), new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(List.of(card1, card2, card3)),
+                new ArrayList<>(), new ArrayList<>()
+        );
+
+        // slot permette solo 1 carta
+        OfferTile singleTile = new OfferTile('F', 2,
+                List.of(new ActionSlot(SlotType.UPPER_ROW, 1)));
+
+        testRound.resolveOfferAction(player1, singleTile, List.of(card1, card2, card3));
+
+        assertEquals(1, player1.getTribe().getCharacterCards().size());
+    }
+
+// -------------------------------------------------------
+// resolveOfferAction — sconto costruttori sull'edificio
+// -------------------------------------------------------
+
+    @Test
+    void testResolveOfferActionAppliesBuildingDiscountFromBuilder() {
+        player1.addFood(5);
+        player1.addCharacterCard(new BuilderCard(99, Era.I, 2, 0, 2)); // sconto 2
+
+        BuildingCard building = new BuildingCard(50, Era.I, 3, p -> {}, 0); // costo 3
+        Round testRound = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
+                new ArrayList<>(), new ArrayList<>(),
+                new ArrayList<>(), new ArrayList<>(),
+                new ArrayList<>(), new ArrayList<>(List.of(building))
+        );
+
+        OfferTile buildingTile = new OfferTile('G', 2,
+                List.of(new ActionSlot(SlotType.UPPER_ROW, 1)));
+
+        testRound.resolveOfferAction(player1, buildingTile, List.of(building));
+
+        assertEquals(1, player1.getTribe().getBuildingCards().size());
+        assertEquals(4, player1.getFood()); // 5 - (3 - 2) = 4
+    }
+
+// -------------------------------------------------------
+// placeTotemOrderForPlayer — PAY_FOOD senza cibo sufficiente
+// -------------------------------------------------------
+
+    @Test
+    void testPlaceTotemOrderPayFoodWithInsufficientFoodDeductsPP() {
+        List<TurnSlot> effectSlots = new ArrayList<>();
+        effectSlots.add(new TurnSlot(1, SlotEffect.PAY_FOOD, 1, 2)); // paga 1 cibo, o 2 PP
+        effectSlots.add(new TurnSlot(2, SlotEffect.NONE, 0, 0));
+        board.setTurnOrderTile(new TurnOrderTile(2, effectSlots));
+
+        // player1 ha 0 cibo → non può pagare → perde 2 PP
+        round.placeTotemOrderForPlayer(player1);
+
+        assertEquals(0, player1.getFood());
+        assertEquals(-2, player1.getPrestigePoints());
+    }
+
+// -------------------------------------------------------
+// resolveEvent — carte evento nella riga inferiore
+// -------------------------------------------------------
+
+    @Test
+    void testResolveEventExecutesLowerRowEventCards() {
+        player1.addCharacterCard(new HunterCard(50, Era.I, 2, false));
+        player1.addCharacterCard(new HunterCard(51, Era.I, 2, false));
+
+        Round eventRound = new Round(1, game, RoundPhase.EVENT_RESOLUTION, Era.I,
+                new ArrayList<>(List.of(new HuntEventCard(1, Era.I, false, 2, 3))),
+                new ArrayList<>(),
+                new ArrayList<>(), new ArrayList<>(),
+                new ArrayList<>(), new ArrayList<>()
+        );
+        game.setCurrentRound(eventRound);
+
+        eventRound.resolveEvent();
+
+        assertEquals(4, player1.getFood());           // 2 cacciatori × 2 cibo
+        assertEquals(6, player1.getPrestigePoints()); // 2 cacciatori × 3 PP
+    }
+
+    @Test
+    void testResolveEventDoesNothingWhenNoEventCards() {
+        Round emptyEventRound = new Round(1, game, RoundPhase.EVENT_RESOLUTION, Era.I,
+                new ArrayList<>(), new ArrayList<>(),
+                new ArrayList<>(), new ArrayList<>(),
+                new ArrayList<>(), new ArrayList<>()
+        );
+        game.setCurrentRound(emptyEventRound);
+
+        assertDoesNotThrow(() -> emptyEventRound.resolveEvent());
+        assertEquals(0, player1.getPrestigePoints());
+    }
+
 }

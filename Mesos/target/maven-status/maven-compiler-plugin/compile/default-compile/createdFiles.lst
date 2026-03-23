@@ -11,7 +11,6 @@ it/polimi/ingsw/model/enums/TotemColor.class
 it/polimi/ingsw/model/enums/InventorIcons.class
 it/polimi/ingsw/model/card/effect/InventorPairFoodEffect.class
 it/polimi/ingsw/model/card/effect/Hunt1Food1PPEffect.class
-it/polimi/ingsw/model/enums/EventType.class
 it/polimi/ingsw/model/card/EventCard.class
 it/polimi/ingsw/model/card/ShamanCard.class
 it/polimi/ingsw/model/enums/Era.class

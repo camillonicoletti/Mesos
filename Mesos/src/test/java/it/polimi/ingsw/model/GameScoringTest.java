@@ -261,4 +261,42 @@ public class GameScoringTest {
         assertEquals(40, scores.get(player1)); // 15 + 25
         assertEquals(5,  scores.get(player2));
     }
+
+    // -------------------------------------------------------
+// getWinner
+// -------------------------------------------------------
+
+    @Test
+    void testGetWinnerReturnsPlayerWithHighestScore() {
+        player1.addPrestigePoints(20);
+        player2.addPrestigePoints(10);
+
+        assertEquals(player1, game.getWinner());
+    }
+
+    @Test
+    void testGetWinnerReturnsNotNullEvenWithTiedScores() {
+        player1.addPrestigePoints(10);
+        player2.addPrestigePoints(10);
+
+        Player winner = game.getWinner();
+        assertNotNull(winner);
+        assertTrue(winner == player1 || winner == player2);
+    }
+
+    @Test
+    void testGetFinalScoreForSinglePlayer() {
+        player1.addPrestigePoints(7);
+
+        assertEquals(7, game.getFinalScore(player1));
+    }
+
+    @Test
+    void testGetWinnerWithOnlyBuildingEffects() {
+        // player1 ha EndPPEffect (+25), player2 niente
+        player1.addBuildingCard(new BuildingCard(1, Era.I, 0, new EndPPEffect(), 0));
+
+        assertEquals(player1, game.getWinner());
+    }
+
 }
