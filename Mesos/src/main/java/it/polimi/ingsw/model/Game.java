@@ -236,6 +236,7 @@ public class Game {
             finalScore += calculateArtistPoints(player);
 
             // base builder points — always counted
+            //TODO: check Builder Point, then modify test
             finalScore += calculateBuilderPoints(player);
 
             // end-of-game building effects: all BuildingCards implementing EndGameEffect

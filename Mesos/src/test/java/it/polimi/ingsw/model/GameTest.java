@@ -42,20 +42,20 @@ public class GameTest {
 
         tributeDeck = new ArrayList<>();
         for (int i = 0; i < 30; i++) {
-            tributeDeck.add(new HunterCard(i, false, Era.I, 2));
+            tributeDeck.add(new HunterCard(i, Era.I, 2, false));
         }
 
         era1Deck = new ArrayList<>(List.of(
-                new BuildingCard(2, 0, noEffect, Era.I, 0, 2)
+                new BuildingCard(2, Era.I, 0, noEffect, 0)
         ));
         era2Deck = new ArrayList<>(List.of(
-                new BuildingCard(3, 0, noEffect, Era.II, 0, 2),
-                new BuildingCard(4, 0, noEffect, Era.II, 0, 2)
+                new BuildingCard(3, Era.II, 0, noEffect, 0),
+                new BuildingCard(4, Era.II, 0, noEffect, 0)
         ));
         era3Deck = new ArrayList<>(List.of(
-                new BuildingCard(5, 0, noEffect, Era.III, 0, 2),
-                new BuildingCard(6, 0, noEffect, Era.III, 0, 2),
-                new BuildingCard(7, 0, noEffect, Era.III, 0, 2)
+                new BuildingCard(5, Era.III, 0, noEffect, 0),
+                new BuildingCard(6, Era.III, 0, noEffect, 0),
+                new BuildingCard(7, Era.III, 0, noEffect, 0)
         ));
 
         game = new Game(
@@ -69,16 +69,16 @@ public class GameTest {
         round = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(List.of(
-                        new HunterCard(30, false, Era.I, 2),
-                        new HunterCard(31, false, Era.I, 2),
-                        new HunterCard(32, false, Era.I, 2)
+                        new HunterCard(30, Era.I, 2, false),
+                        new HunterCard(31, Era.I, 2, false),
+                        new HunterCard(32, Era.I, 2, false)
                 )),
                 new ArrayList<>(List.of(
-                        new HunterCard(33, false, Era.I, 2),
-                        new HunterCard(34, false, Era.I, 2),
-                        new HunterCard(35, false, Era.I, 2),
-                        new HunterCard(36, false, Era.I, 2),
-                        new HunterCard(37, false, Era.I, 2)
+                        new HunterCard(33, Era.I, 2, false),
+                        new HunterCard(34, Era.I, 2, false),
+                        new HunterCard(35, Era.I, 2, false),
+                        new HunterCard(36, Era.I, 2, false),
+                        new HunterCard(37, Era.I, 2, false)
                 )),
                 new ArrayList<>(), new ArrayList<>()
         );
@@ -187,13 +187,21 @@ public class GameTest {
     void testIsGameOverTrueAtMaxRounds() {
         Game maxRoundGame = new Game(
                 List.of(player1, player2),
-                11, null, Era.I, null,
+                10, null, Era.I, null,
                 board, new ArrayList<>(tributeDeck),
                 new ArrayList<>(), new ArrayList<>(), new ArrayList<>(),
                 GameStatus.IN_PROGRESS
         );
+        Round maxRound = new Round(10, maxRoundGame, RoundPhase.TOTEM_PLACEMENT, Era.I,
+                new ArrayList<>(), new ArrayList<>(),
+                new ArrayList<>(), new ArrayList<>(),
+                new ArrayList<>(), new ArrayList<>()
+        );
+        maxRoundGame.setCurrentRound(maxRound);
+        maxRoundGame.nextRound(); // a round 10 (MAX_ROUNDS), nextRound() chiama end()
         assertTrue(maxRoundGame.isGameOver());
     }
+
 
     // =========================================================
     // NEXT ERA / END ERA
@@ -344,10 +352,10 @@ public class GameTest {
         game.nextEra();
 
         List<BuildingCard> lower = new ArrayList<>(List.of(
-                new BuildingCard(1, 0, noEffect, Era.I, 0, 2)
+                new BuildingCard(1, Era.I, 0, noEffect, 0)
         ));
         List<BuildingCard> upper = new ArrayList<>(List.of(
-                new BuildingCard(2, 0, noEffect, Era.II, 0, 2)
+                new BuildingCard(2, Era.II, 0, noEffect, 0)
         ));
 
         Round eraIIRound = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.II,

@@ -41,7 +41,7 @@ public class RoundTest {
 
         List<Card> tributeDeck = new ArrayList<>();
         for (int i = 1; i <= 6; i++) {
-            tributeDeck.add(new HunterCard(i, false, Era.I, 2));
+            tributeDeck.add(new HunterCard(i, Era.I, 2, false));
         }
 
         game = new Game(
@@ -56,16 +56,16 @@ public class RoundTest {
         round = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(List.of(
-                        new HunterCard(7,  false, Era.I, 2),
-                        new HunterCard(8,  false, Era.I, 2),
-                        new HunterCard(9,  false, Era.I, 2)
+                        new HunterCard(7,  Era.I, 2, false),
+                        new HunterCard(8,  Era.I, 2, false),
+                        new HunterCard(9,  Era.I, 2, false)
                 )),
                 new ArrayList<>(List.of(
-                        new HunterCard(10, false, Era.I, 2),
-                        new HunterCard(11, false, Era.I, 2),
-                        new HunterCard(12, false, Era.I, 2),
-                        new HunterCard(13, false, Era.I, 2),
-                        new HunterCard(14, false, Era.I, 2)
+                        new HunterCard(10, Era.I, 2, false),
+                        new HunterCard(11, Era.I, 2, false),
+                        new HunterCard(12, Era.I, 2, false),
+                        new HunterCard(13, Era.I, 2, false),
+                        new HunterCard(14, Era.I, 2, false)
                 )),
                 new ArrayList<>(), new ArrayList<>()
         );
@@ -137,7 +137,7 @@ public class RoundTest {
 
     @Test
     void testCheckEraTransitionAdvancesToEraII() {
-        round.getUpperRowTribute().add(new HunterCard(99, false, Era.II, 2));
+        round.getUpperRowTribute().add(new HunterCard(99, Era.II, 2, false));
         round.checkEraTransition();
         assertEquals(Era.II, game.getCurrentEra());
     }
@@ -290,7 +290,7 @@ public class RoundTest {
     void testResolveOfferActionPurchasesBuildingWhenAffordable() {
         player1.addFood(5);
 
-        BuildingCard building = new BuildingCard(2, 2, p -> {}, Era.I, 0, 2);
+        BuildingCard building = new BuildingCard(2, Era.I, 2, p -> {}, 0);
         OfferTile buildingTile = new OfferTile('C', 2,
                 List.of(new ActionSlot(SlotType.UPPER_ROW, 1)));
 
@@ -309,7 +309,7 @@ public class RoundTest {
 
     @Test
     void testResolveOfferActionDoesNotPurchaseBuildingWhenNotAffordable() {
-        BuildingCard building = new BuildingCard(3, 2, p -> {}, Era.I, 0, 2);
+        BuildingCard building = new BuildingCard(3, Era.I, 2, p -> {}, 0);
         OfferTile buildingTile = new OfferTile('C', 2,
                 List.of(new ActionSlot(SlotType.UPPER_ROW, 1)));
 
@@ -328,14 +328,12 @@ public class RoundTest {
 
     @Test
     void testPlaceTotemOrderForPlayerWithTotemSlotFoodBonusEffect() {
-        // player1 ha il building TotemSlotFoodBonusEffect
-        // quando atterra su GAIN_FOOD 2 → prende 2 + 1 = 3 food
         List<TurnSlot> effectSlots = new ArrayList<>();
         effectSlots.add(new TurnSlot(1, SlotEffect.GAIN_FOOD, 2, 0));
         effectSlots.add(new TurnSlot(2, SlotEffect.NONE, 0, 0));
         board.setTurnOrderTile(new TurnOrderTile(2, effectSlots));
 
-        player1.addBuildingCard(new BuildingCard(1, 0, new TotemSlotFoodBonusEffect(), Era.I, 0, 2));
+        player1.addBuildingCard(new BuildingCard(1, Era.I, 0, new TotemSlotFoodBonusEffect(), 0));
 
         round.placeTotemOrderForPlayer(player1);
 
@@ -345,7 +343,7 @@ public class RoundTest {
     @Test
     void testPlaceTotemOrderForPlayerWithTotemSlotFoodBonusEffectOnNoneSlot() {
         // TotemSlotFoodBonusEffect non si attiva su NONE
-        player1.addBuildingCard(new BuildingCard(1, 0, new TotemSlotFoodBonusEffect(), Era.I, 0, 2));
+        player1.addBuildingCard(new BuildingCard(1, Era.I, 0, new TotemSlotFoodBonusEffect(), 0));
 
         round.placeTotemOrderForPlayer(player1); // slot 1 → NONE
 
@@ -363,8 +361,4 @@ public class RoundTest {
         assertFalse(tileA.isOccupied());
         assertFalse(tileB.isOccupied());
     }
-
-
-
-
 }

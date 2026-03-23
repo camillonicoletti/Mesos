@@ -27,7 +27,7 @@ public class ShamanicRitualEventCardTest {
     }
 
     private ShamanicRitualEventCard buildCard() {
-        return new ShamanicRitualEventCard(1, Era.I, false, 4, 2, 2);
+        return new ShamanicRitualEventCard(1, Era.I, false, 4, 2);
     }
 
     // -------------------------------------------------------
@@ -39,8 +39,8 @@ public class ShamanicRitualEventCardTest {
         Player p1 = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
         Player p2 = new Player("Bob", new Totem(TotemColor.BLUE, TotemPosition.OFFER_TRACK));
 
-        p1.addCharacterCard(new ShamanCard(1, Era.I, 3, 2)); // 3 stars
-        p2.addCharacterCard(new ShamanCard(2, Era.I, 1, 2)); // 1 star
+        p1.addCharacterCard(new ShamanCard(1, Era.I, 2, 3)); // 3 stars
+        p2.addCharacterCard(new ShamanCard(2, Era.I, 2, 1)); // 1 star
 
         Game game = buildGame(List.of(p1, p2));
         buildCard().resolve(game);
@@ -59,10 +59,10 @@ public class ShamanicRitualEventCardTest {
         Player p2 = new Player("Bob", new Totem(TotemColor.BLUE, TotemPosition.OFFER_TRACK));
 
         // p1 has 0 real stars but +3 from building → 3 total
-        p1.addBuildingCard(new BuildingCard(1, 0, new Shaman3ExtraStarsEffect(), Era.I, 0, 2));
+        p1.addBuildingCard(new BuildingCard(1, Era.I, 0, new Shaman3ExtraStarsEffect(), 0));
 
         // p2 has 1 real star
-        p2.addCharacterCard(new ShamanCard(2, Era.I, 1, 2));
+        p2.addCharacterCard(new ShamanCard(2, Era.I, 2, 1));
 
         // p1 has 3 virtual stars > p2's 1 real star → p1 wins
         Game game = buildGame(List.of(p1, p2));
@@ -81,9 +81,9 @@ public class ShamanicRitualEventCardTest {
         Player p1 = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
         Player p2 = new Player("Bob", new Totem(TotemColor.BLUE, TotemPosition.OFFER_TRACK));
 
-        p1.addCharacterCard(new ShamanCard(1, Era.I, 3, 2));
-        p1.addBuildingCard(new BuildingCard(2, 0, new ShamanicRitualDoublePPEffect(), Era.I, 0, 2));
-        p2.addCharacterCard(new ShamanCard(3, Era.I, 1, 2));
+        p1.addCharacterCard(new ShamanCard(1, Era.I, 2, 3)); // 3 stars
+        p1.addBuildingCard(new BuildingCard(2, Era.I, 0, new ShamanicRitualDoublePPEffect(), 0));
+        p2.addCharacterCard(new ShamanCard(3, Era.I, 2, 1)); // 1 star
 
         Game game = buildGame(List.of(p1, p2));
         buildCard().resolve(game); // card gives 4 PP to winner
@@ -101,8 +101,8 @@ public class ShamanicRitualEventCardTest {
         Player p1 = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
         Player p2 = new Player("Bob", new Totem(TotemColor.BLUE, TotemPosition.OFFER_TRACK));
 
-        p1.addCharacterCard(new ShamanCard(1, Era.I, 3, 2));
-        p2.addBuildingCard(new BuildingCard(2, 0, new ShamanicRitualImmunityEffect(), Era.I, 0, 2));
+        p1.addCharacterCard(new ShamanCard(1, Era.I, 2, 3)); // 3 stars
+        p2.addBuildingCard(new BuildingCard(2, Era.I, 0, new ShamanicRitualImmunityEffect(), 0));
 
         Game game = buildGame(List.of(p1, p2));
         buildCard().resolve(game);

@@ -23,7 +23,7 @@ public class TribeTest {
     void countDistinctInventorIcons_shouldReturnOne_whenThereIsOneInventor() {
         Tribe tribe = new Tribe();
 
-        tribe.addCharacterCard(new InventorCard(1, InventorIcons.INVENTION_1, Era.I, 2));
+        tribe.addCharacterCard(new InventorCard(1, Era.I, 2, InventorIcons.INVENTION_1));
 
         int result = tribe.countDistinctInventorIcons();
 
@@ -34,11 +34,11 @@ public class TribeTest {
     void countDistinctInventorIcons_shouldCountOnlyDifferentIcons() {
         Tribe tribe = new Tribe();
 
-        tribe.addCharacterCard(new InventorCard(1, InventorIcons.INVENTION_1, Era.I, 2));
-        tribe.addCharacterCard(new InventorCard(2, InventorIcons.INVENTION_1, Era.I, 2));
-        tribe.addCharacterCard(new InventorCard(3, InventorIcons.INVENTION_3, Era.II, 2));
-        tribe.addCharacterCard(new InventorCard(4, InventorIcons.INVENTION_5, Era.III, 2));
-        tribe.addCharacterCard(new InventorCard(5, InventorIcons.INVENTION_5, Era.III, 2));
+        tribe.addCharacterCard(new InventorCard(1, Era.I, 2, InventorIcons.INVENTION_1));
+        tribe.addCharacterCard(new InventorCard(2, Era.I, 2, InventorIcons.INVENTION_1));
+        tribe.addCharacterCard(new InventorCard(3, Era.II, 2, InventorIcons.INVENTION_3));
+        tribe.addCharacterCard(new InventorCard(4, Era.III, 2, InventorIcons.INVENTION_5));
+        tribe.addCharacterCard(new InventorCard(5, Era.III, 2, InventorIcons.INVENTION_5));
 
         int result = tribe.countDistinctInventorIcons();
 
@@ -49,10 +49,10 @@ public class TribeTest {
     void countDistinctInventorIcons_shouldCountAllDifferentIcons() {
         Tribe tribe = new Tribe();
 
-        tribe.addCharacterCard(new InventorCard(1, InventorIcons.INVENTION_1, Era.I, 2));
-        tribe.addCharacterCard(new InventorCard(2, InventorIcons.INVENTION_2, Era.I, 2));
-        tribe.addCharacterCard(new InventorCard(3, InventorIcons.INVENTION_3, Era.II, 2));
-        tribe.addCharacterCard(new InventorCard(4, InventorIcons.INVENTION_4, Era.III, 2));
+        tribe.addCharacterCard(new InventorCard(1, Era.I, 2, InventorIcons.INVENTION_1));
+        tribe.addCharacterCard(new InventorCard(2, Era.I, 2, InventorIcons.INVENTION_2));
+        tribe.addCharacterCard(new InventorCard(3, Era.II, 2, InventorIcons.INVENTION_3));
+        tribe.addCharacterCard(new InventorCard(4, Era.III, 2, InventorIcons.INVENTION_4));
 
         int result = tribe.countDistinctInventorIcons();
 
@@ -72,8 +72,8 @@ public class TribeTest {
     @Test
     void getBuildingDiscountSumsFoodDiscountOfAllBuilders() {
         Tribe tribe = new Tribe();
-        tribe.addCharacterCard(new BuilderCard(1, 2, 1, Era.I, 2)); // foodDiscount = 1
-        tribe.addCharacterCard(new BuilderCard(2, 3, 2, Era.I, 2)); // foodDiscount = 2
+        tribe.addCharacterCard(new BuilderCard(1, Era.I, 2, 2, 1)); // foodDiscount = 1
+        tribe.addCharacterCard(new BuilderCard(2, Era.I, 2, 3, 2)); // foodDiscount = 2
         assertEquals(3, tribe.getBuildingDiscount()); // 1 + 2
     }
 }
