@@ -117,7 +117,7 @@ public class Tribe {
         return discount;
     }
 
- 
+
 
     // Method used for InventorPairFoodEffect
     public int countInventorPairs() {
