@@ -2,6 +2,8 @@ package it.polimi.ingsw.model;
 
 import it.polimi.ingsw.model.card.BuildingCard;
 import it.polimi.ingsw.model.card.CharacterCard;
+import it.polimi.ingsw.model.card.effect.FullSetFoodEffect;
+import it.polimi.ingsw.model.card.effect.InventorPairFoodEffect;
 
 public class Player {
 
@@ -25,7 +27,7 @@ public class Player {
     public String getNickname() {
         return nickname;
     }
-    // TODO : give initial food based on number of players
+
     public int getFood() {
         return food;
     }
@@ -48,13 +50,14 @@ public class Player {
         // TODO: add validation if needed
     }
 
-    public boolean spendFood(int amount) {
-        if (food < amount) {
-            return false;
+    public void spendFood(int amount) {
+        if (food >= amount) {
+            food -= amount;
+        } else {
+            int missing = amount - food;
+            food = 0;
+            removePrestigePoints(missing);
         }
-
-        food -= amount;
-        return true;
     }
 
     public boolean canAfford(int cost) {
@@ -71,18 +74,35 @@ public class Player {
         // Prestige points can go below zero
     }
 
+    /**
+     * Applies a turn order penalty: spends foodCost food if affordable,
+     * otherwise removes prestigePenalty prestige points.
+     */
+    public void applyTurnPenalty(int foodCost, int prestigePenalty) {
+        if (canAfford(foodCost)) {
+            spendFood(foodCost);
+        } else {
+            removePrestigePoints(prestigePenalty);
+        }
+    }
+
+
     public void addCharacterCard(CharacterCard card) {
         tribe.addCharacterCard(card);
 
-        // TODO: handle immediate character effects if needed
+        // trigger building effects that activate when a character card is added
+        for (BuildingCard building : tribe.getBuildingCards()) {
+            if (building.getEffect() instanceof FullSetFoodEffect ||
+                    building.getEffect() instanceof InventorPairFoodEffect) {
+                building.getEffect().apply(this);
+            }
+        }
     }
+
 
     public void addBuildingCard(BuildingCard card) {
         tribe.addBuildingCard(card);
-
-        // TODO: check building food cost
-        // TODO: resolve Builder discount
-        // TODO: prevent purchase if the player cannot afford it
+        
     }
 }
 

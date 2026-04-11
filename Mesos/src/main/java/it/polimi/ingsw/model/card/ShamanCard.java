@@ -5,9 +5,9 @@ import it.polimi.ingsw.model.enums.Era;
 public class ShamanCard extends CharacterCard{
     private final int stars;
 
-    public ShamanCard(int stars, Era era) {
+    public ShamanCard(int id,  Era era, int minPlayers, int stars) {
 
-        super(era);
+        super(id, era, minPlayers);
         this.stars = stars;
 
     }

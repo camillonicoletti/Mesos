@@ -366,6 +366,65 @@ public class BoardTest {
             assertFalse(slot.isOccupied());
         }
     }
+    // -------------------------------------------------------
+// resetOfferTiles
+// -------------------------------------------------------
+
+    @Test
+    void testResetOfferTilesClearsAllTotems() {
+        // place totems on all offer tiles, then reset — all must be free
+        offerTiles.get(0).placeTotem(totem1);
+        offerTiles.get(1).placeTotem(totem2);
+
+        board.resetOfferTiles();
+
+        for (OfferTile tile : board.getOfferTiles()) {
+            assertFalse(tile.isOccupied());
+        }
+    }
+
+    @Test
+    void testResetOfferTilesOnEmptyBoardDoesNotThrow() {
+        assertDoesNotThrow(() -> board.resetOfferTiles());
+    }
+
+    @Test
+    void testResetOfferTilesOnlyOnOccupiedTiles() {
+        // only one tile occupied — after reset all must be free
+        offerTiles.get(0).placeTotem(totem1);
+
+        board.resetOfferTiles();
+
+        assertFalse(offerTiles.get(0).isOccupied());
+        assertFalse(offerTiles.get(1).isOccupied());
+    }
+
+// -------------------------------------------------------
+// TotemPosition updates via OfferTile and TurnSlot
+// -------------------------------------------------------
+
+    @Test
+    void testPlaceTotemOnOfferTileSetsPositionToOfferTrack() {
+        Totem t = new Totem(TotemColor.RED, TotemPosition.TURN_ORDER);
+        offerTiles.get(0).placeTotem(t);
+        assertEquals(TotemPosition.OFFER_TRACK, t.getPosition());
+    }
+
+    @Test
+    void testPlaceTotemOnTurnSlotSetsPositionToTurnOrder() {
+        Totem t = new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK);
+        turnOrderTile.getSlots().get(0).placeTotem(t);
+        assertEquals(TotemPosition.TURN_ORDER, t.getPosition());
+    }
+
+    @Test
+    void testRemoveTotemFromTurnSlotResetsPositionToOfferTrack() {
+        Totem t = new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK);
+        turnOrderTile.getSlots().get(0).placeTotem(t);
+        turnOrderTile.getSlots().get(0).removeTotem();
+        assertEquals(TotemPosition.OFFER_TRACK, t.getPosition());
+    }
+
 
 
 

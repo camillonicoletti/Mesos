@@ -2,13 +2,15 @@ package it.polimi.ingsw.model.card.effect;
 
 import it.polimi.ingsw.model.Player;
 
-public class EndFullSetPPEffect implements Effect{
+public class EndFullSetPPEffect implements EndGameEffect {
+
+    @Override
+    public int calculatePoints(Player player) {
+        return player.getTribe().countFullSets() * 6;
+    }
 
     @Override
     public void apply(Player player) {
-
-        int sets = player.getTribe().countFullSets();
-        player.addPrestigePoints(sets * 6);
-
+        player.addPrestigePoints(calculatePoints(player));
     }
 }

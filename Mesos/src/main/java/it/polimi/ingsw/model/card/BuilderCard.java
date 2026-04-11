@@ -6,8 +6,9 @@ public class BuilderCard extends CharacterCard{
     private final int foodDiscount;
     private final int pointsEndOfMatch;
 
-    public BuilderCard(int pointsEndOfMatch, int foodDiscount, Era era) {
-        super(era);
+    public BuilderCard(int id, Era era, int minPlayers,
+                       int pointsEndOfMatch, int foodDiscount) {
+        super(id, era, minPlayers);
         this.foodDiscount = foodDiscount;
         this.pointsEndOfMatch = pointsEndOfMatch;
     }

@@ -1,17 +1,13 @@
 package it.polimi.ingsw.model;
 
-import it.polimi.ingsw.model.board.ActionSlot;
-import it.polimi.ingsw.model.board.Board;
-import it.polimi.ingsw.model.board.OfferTile;
-import it.polimi.ingsw.model.board.TurnSlot;
-import it.polimi.ingsw.model.card.CharacterCard;
-import it.polimi.ingsw.model.card.BuildingCard;
-import it.polimi.ingsw.model.card.Card;
-import it.polimi.ingsw.model.card.EventCard;
-import it.polimi.ingsw.model.enums.EventType;
+import it.polimi.ingsw.model.board.*;
+import it.polimi.ingsw.model.card.*;
+import it.polimi.ingsw.model.card.effect.ExtraCardUpperRowEffect;
+import it.polimi.ingsw.model.card.effect.TotemSlotFoodBonusEffect;
 import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.enums.SlotType;
+import it.polimi.ingsw.model.Totem;
 
 import java.util.*;
 
@@ -83,24 +79,66 @@ public class Round {
 
     public List<BuildingCard> getLowerRowBuildings(){return lowerRowBuildings;}
 
+    // execute() currently handles the round flow correctly for all automatic actions;
+    // once the controller is implemented, it will be refactored to delegate
+    // player choices (card selection, extra card from upper row) to the controller
+
     public void execute() {
 
-        // playerChoices maps each player to the OfferTile they selected during TOTEM_PLACEMENT,
-        // allowing execute() to resolve the correct action for each player
+        game.getBoard().getTurnOrderTile().reset();
+
+        // sort players by their chosen tile letter (A < B < C)
+        // so each player resolves their action and moves their totem in the correct order
         phase = RoundPhase.ACTION_RESOLUTION;
-        for (Map.Entry<Player, OfferTile> entry : playerChoices.entrySet()) {
-            resolveOfferAction(entry.getKey(), entry.getValue());
+        List<Map.Entry<Player, OfferTile>> orderedChoices = playerChoices.entrySet()
+                .stream()
+                .sorted(Comparator.comparingInt(e -> (int) e.getValue().getLetter()))
+                .toList();
+
+        for (Map.Entry<Player, OfferTile> entry : orderedChoices) {
+            Player player = entry.getKey();
+            OfferTile tile = entry.getValue();
+
+            // resolve the player's offer action
+            // chosenCards is empty until the controller is implemented —
+            // the controller will pass the actual cards chosen by the player
+            resolveOfferAction(player, tile, new ArrayList<>());
+
+            // 2. move totem to TurnOrderTile and apply slot effect immediately
+            placeTotemOrderForPlayer(player);
         }
+
+        // after all totems are on the TurnOrderTile, players with ExtraCardUpperRowEffect
+        // can take 1 extra card from the upper row before the event resolution
         phase = RoundPhase.TURN_ORDER;
-        placeTotemOrder();
+        for (Player player : game.getPlayers()) {
+            for (BuildingCard building : player.getTribe().getBuildingCards()) {
+                if (building.getEffect() instanceof ExtraCardUpperRowEffect) {
+                    // TODO: controller must provide the chosen card —
+                    // building.getEffect().apply(player) will be called with the chosen card
+                }
+            }
+        }
+
         phase = RoundPhase.EVENT_RESOLUTION;
         resolveEvent();
+
+        if (game.isLastRound()) {
+            phase = RoundPhase.ROUND_CLEANUP;
+            game.getBoard().resetOfferTiles();
+            return;
+        }
+
         phase = RoundPhase.ROUND_CLEANUP;
         discardLowerRow();
         shiftUpperToLowerRow();
         refillUpperRow();
         checkEraTransition();
+        // remove all totems from offer tiles for the next round
+        game.getBoard().resetOfferTiles();
     }
+
+
 
 
     public Round createNextRound(int nextRoundNumber) {
@@ -125,6 +163,9 @@ public class Round {
         // 1. riempi la fila inferiore
         while (getLowerTributeRowSize() < lowerTarget) {
             Card drawnCard = game.drawTribeCard();
+            if (drawnCard == null) {
+                throw new IllegalStateException("Tribute deck is empty during initial setup");
+            }
 
             if (drawnCard instanceof EventCard eventCard) {
                 upperRowEventCards.add(eventCard);
@@ -189,47 +230,86 @@ public class Round {
 
 
 
-    public void resolveOfferAction(Player player, OfferTile chosenTile) {
+    public void resolveOfferAction(Player player, OfferTile chosenTile, List<Card> chosenCards) {
         for (ActionSlot slot : chosenTile.getSlots()) {
             SlotType type = slot.getType();
-            if (type == SlotType.UPPER_ROW || type == SlotType.LOWER_ROW) {
-                int amount = slot.getAmount();
-                // Select the correct row and draw the first `amount` cards, giving each one to the player
-                List<CharacterCard> row = (type == SlotType.UPPER_ROW) ? upperRowTribute : lowerRowTribute;
-                for (int i = 0; i < amount && !row.isEmpty(); i++) {
-                    player.addCharacterCard(row.remove(0));
-                }
-            } else if (type == SlotType.FOOD) {
+
+            if (type == SlotType.FOOD) {
+                // give the player the food indicated on the slot
                 player.addFood(slot.getAmount());
+
+            } else if (type == SlotType.UPPER_ROW || type == SlotType.LOWER_ROW) {
+                List<CharacterCard> tributeRow = (type == SlotType.UPPER_ROW) ? upperRowTribute : lowerRowTribute;
+                List<BuildingCard> buildingRow = (type == SlotType.UPPER_ROW) ? upperRowBuildings : lowerRowBuildings;
+
+                int amount = slot.getAmount();
+                int taken = 0;
+
+                //TODO: WAITING CONTROLER TO POPULATE "CHOSENS CARD"
+
+                // iterate over the cards chosen by the player, stopping once the slot limit is reached
+                for (Card chosen : chosenCards) {
+                    if (taken >= amount) break;
+
+
+                    if (chosen instanceof CharacterCard cc && tributeRow.contains(cc)) {
+                        // character card: free, just add to tribe
+                        tributeRow.remove(cc);
+                        player.addCharacterCard(cc);
+                        taken++;
+
+                    } else if (chosen instanceof BuildingCard bc && buildingRow.contains(bc)) {
+                        // building card: pay food cost minus builder discount
+                        int actualCost = Math.max(0, bc.getFoodCost() - player.getTribe().getBuildingDiscount());
+                        if (player.canAfford(actualCost)) {
+                            player.spendFood(actualCost);
+                            buildingRow.remove(bc);
+                            player.addBuildingCard(bc);
+                            taken++;
+                        }
+                        // if cannot afford, skip silently — controller should validate before calling
+                    }
+                }
             }
         }
     }
 
 
-    public void placeTotemOrder() {
+
+    public void placeTotemOrderForPlayer(Player player) {
         Board board = game.getBoard();
-        board.getTurnOrderTile().assignTurnOrder(board);
+        TurnOrderTile turnOrderTile = board.getTurnOrderTile();
 
-        // Build a map Totem → Player to find the owner of each occupied slot
-        Map<Totem, Player> totemOwner = new HashMap<>();
-        for (Player p : game.getPlayers()) {
-            totemOwner.put(p.getTotem(), p);
-        }
-
-        // Apply the effect of each occupied TurnSlot to its owner
-        for (TurnSlot slot : board.getTurnOrderTile().getSlots()) {
-            if (!slot.isOccupied()) continue;
-            Player owner = totemOwner.get(slot.getOccupiedBy());
-            if (owner == null) continue;
-
-            switch (slot.getEffect()) {
-                case GAIN_FOOD -> owner.addFood(slot.getEffectValue());
-                case PAY_FOOD  -> owner.spendFood(slot.getEffectValue());
-                case NONE      -> {}
+        // find the first free slot on the TurnOrderTile
+        TurnSlot targetSlot = null;
+        for (TurnSlot slot : turnOrderTile.getSlots()) {
+            if (!slot.isOccupied()) {
+                targetSlot = slot;
+                break;
             }
-            // TODO: implements the logic of points
+        }
+        if (targetSlot == null) return;
+
+        // move totem from OfferTile to TurnOrderTile
+        targetSlot.placeTotem(player.getTotem());
+
+        // apply slot effect immediately
+        switch (targetSlot.getEffect()) {
+            case GAIN_FOOD -> {
+                player.addFood(targetSlot.getEffectValue());
+                // if the player has TotemSlotFoodBonusEffect, give 1 extra food
+                for (BuildingCard building : player.getTribe().getBuildingCards()) {
+                    if (building.getEffect() instanceof TotemSlotFoodBonusEffect) {
+                        building.getEffect().apply(player);
+                    }
+                }
+            }
+            case PAY_FOOD -> player.applyTurnPenalty(targetSlot.getEffectValue(), targetSlot.getPenaltyPoints());
+            case NONE     -> {}
         }
     }
+
+
 
     private List<EventCard> getOrderedEventsForResolution(boolean includeUpperRow) {
         List<EventCard> eventsToResolve = new ArrayList<>();
@@ -247,7 +327,7 @@ public class Round {
         List<EventCard> sustenanceEvents = new ArrayList<>();
 
         for (EventCard e : eventsToResolve) {
-            if (e.getEventType() == EventType.SUSTENANCE) {
+            if (e instanceof SustenanceEventCard) {
                 sustenanceEvents.add(e);
             } else {
                 normalEvents.add(e);
@@ -267,7 +347,7 @@ public class Round {
     }
 
     public void resolveEvent() {
-        boolean includeUpperRow = game.isGameOver();
+        boolean includeUpperRow = game.isLastRound();
         List<EventCard> eventCards = getOrderedEventsForResolution(includeUpperRow);
 
         for (EventCard eventCard : eventCards) {

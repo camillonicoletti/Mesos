@@ -2,22 +2,24 @@ package it.polimi.ingsw.model.card;
 
 import it.polimi.ingsw.model.Game;
 import it.polimi.ingsw.model.Player;
+import it.polimi.ingsw.model.card.effect.SustenanceFoodDiscountEffect;
 import it.polimi.ingsw.model.enums.Era;
-import it.polimi.ingsw.model.enums.EventType;
+
 
 public class SustenanceEventCard extends EventCard {
 
     private static final int FOOD_DISCOUNT_PER_GATHERER = 3;
 
-    private final int prestigePointsLostPerUnfedCharacter;
+    private final int ppPenaltyPerUnfed;
 
-    public SustenanceEventCard(Era era, boolean closeEvent, int prestigePointsLostPerUnfedCharacter) {
-        super(era, closeEvent, EventType.SUSTENANCE);
-        this.prestigePointsLostPerUnfedCharacter = prestigePointsLostPerUnfedCharacter;
+    public SustenanceEventCard(int id, Era era, boolean closeEvent,
+                               int ppPenaltyPerUnfed) {
+        super(id, era, closeEvent);
+        this.ppPenaltyPerUnfed = ppPenaltyPerUnfed;
     }
 
-    public int getPrestigePointsLostPerUnfedCharacter() {
-        return prestigePointsLostPerUnfedCharacter;
+    public int getPpPenaltyPerUnfed() {
+        return ppPenaltyPerUnfed;
     }
 
     @Override
@@ -27,6 +29,15 @@ public class SustenanceEventCard extends EventCard {
             int gatherers = player.getTribe().countCharactersByType(GathererCard.class);
 
             int foodDiscount = gatherers * FOOD_DISCOUNT_PER_GATHERER;
+
+            //building effect
+            for (BuildingCard building : player.getTribe().getBuildingCards()) {
+                if (building.getEffect() instanceof SustenanceFoodDiscountEffect effect) {
+                    int count = player.getTribe().countCharactersByType(effect.getTargetType());
+                    foodDiscount += count;
+                }
+            }
+
             int foodRequired = Math.max(0, totalCharacters - foodDiscount);
 
             int availableFood = player.getFood();
@@ -39,8 +50,9 @@ public class SustenanceEventCard extends EventCard {
             int missingFood = foodRequired - foodPaid;
 
             if (missingFood > 0) {
-                player.removePrestigePoints(missingFood * prestigePointsLostPerUnfedCharacter);
+                player.removePrestigePoints(missingFood * ppPenaltyPerUnfed);
             }
         }
     }
+
 }

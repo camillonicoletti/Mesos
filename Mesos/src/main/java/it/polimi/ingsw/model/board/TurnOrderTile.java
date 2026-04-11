@@ -103,7 +103,7 @@ public class TurnOrderTile {
 
         switch (numPlayers) {
             case 2 -> {
-                slots.add(new TurnSlot(1, SlotEffect.GAIN_FOOD, 2, 0));
+                slots.add(new TurnSlot(1, SlotEffect.GAIN_FOOD, 1, 0));
                 slots.add(new TurnSlot(2, SlotEffect.PAY_FOOD,  1, 2));
             }
             case 3 -> {
@@ -118,7 +118,7 @@ public class TurnOrderTile {
                 slots.add(new TurnSlot(4, SlotEffect.PAY_FOOD,  1, 2));
             }
             case 5 -> {
-                slots.add(new TurnSlot(1, SlotEffect.GAIN_FOOD, 2, 0));
+                slots.add(new TurnSlot(1, SlotEffect.GAIN_FOOD, 3, 0));
                 slots.add(new TurnSlot(2, SlotEffect.GAIN_FOOD, 1, 0));
                 slots.add(new TurnSlot(3, SlotEffect.NONE,      0, 0));
                 slots.add(new TurnSlot(4, SlotEffect.NONE,      0, 0));

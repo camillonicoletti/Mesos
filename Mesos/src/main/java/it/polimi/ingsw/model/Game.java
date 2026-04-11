@@ -3,14 +3,18 @@ package it.polimi.ingsw.model;
 import it.polimi.ingsw.model.board.BoardFactory;
 import it.polimi.ingsw.model.card.BuildingCard;
 import it.polimi.ingsw.model.card.Card;
+import it.polimi.ingsw.model.card.effect.EndBuilderPPEffect;
+import it.polimi.ingsw.model.card.effect.EndCharacterCountPPEffect;
+import it.polimi.ingsw.model.card.effect.EndFullSetPPEffect;
+import it.polimi.ingsw.model.card.effect.EndGameEffect;
 import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.GameStatus;
 import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.board.Board;
 import it.polimi.ingsw.model.card.BuilderCard;
 import it.polimi.ingsw.model.card.ArtistCard;
-import it.polimi.ingsw.model.card.BuilderCard;
-import it.polimi.ingsw.model.card.BuildingCard;
+import it.polimi.ingsw.model.card.CharacterCard;
+import it.polimi.ingsw.model.card.HunterCard;
 import it.polimi.ingsw.model.card.InventorCard;
 import it.polimi.ingsw.model.board.TurnSlot;
 
@@ -31,7 +35,7 @@ public class Game {
     private Round currentRound;
     private Era currentEra;
     private final LocalDateTime date;
-    private  Board board;
+    private Board board;
     private List<Card> tributeDeck;
     private List<BuildingCard> era1BuildingDeck;
     private List<BuildingCard> era2BuildingDeck;
@@ -93,6 +97,15 @@ public class Game {
         currentEra = Era.I;
         status = GameStatus.IN_PROGRESS;
 
+        // Create the board FIRST — setupInitialRows() and setupInitialBuildings() may need it
+        this.board = BoardFactory.createBoard(players.size());
+
+        List<Totem> totems = new ArrayList<>();
+        for (Player p : players) {
+            totems.add(p.getTotem());
+        }
+        board.getTurnOrderTile().assignRandomTurnOrder(totems);
+
         if (currentRound == null) {
             currentRound = new Round(currentRoundNumber, this, RoundPhase.TOTEM_PLACEMENT, Era.I, null, null, null, null, null, null);
         }
@@ -100,16 +113,6 @@ public class Game {
         currentRound.setupInitialRows();
         currentRound.setupInitialBuildings(era1BuildingDeck);
         era1BuildingDeck.clear();
-
-        // Create the board with the right offer tiles and turn order tile for this number of players
-        this.board = BoardFactory.createBoard(players.size());
-
-
-        List<Totem> totems = new ArrayList<>();
-        for (Player p : players) {
-            totems.add(p.getTotem());
-        }
-        board.getTurnOrderTile().assignRandomTurnOrder(totems);
         distributeInitialFood();
 
     }
@@ -151,7 +154,7 @@ public class Game {
     }
 
     public boolean isGameOver() {
-        return status == GameStatus.FINISHED || currentRoundNumber > MAX_ROUNDS;
+        return status == GameStatus.FINISHED;
     }
 
     public void nextEra() {
@@ -182,8 +185,7 @@ public class Game {
     }
 
     public void nextRound() {
-        if (isGameOver()) {
-            end();
+        if (status == GameStatus.FINISHED) {
             return;
         }
 
@@ -203,13 +205,20 @@ public class Game {
 
         currentRound.execute();
 
-        if (isGameOver()) {
+        if (isLastRound()) {
             end();
         } else {
             nextRound();
         }
     }
 
+    /**
+     * Calculates the final score for each player.
+     * Building effects that trigger at end of game implement EndGameEffect,
+     * which exposes calculatePoints() — this returns the points as a value
+     * instead of calling apply() directly on the player, avoiding double counting
+     * with the prestige points already accumulated during the game.
+     */
     public void calculateFinalScores() {
         if (finalScoresCalculated) {
             return;
@@ -220,17 +229,26 @@ public class Game {
         for (Player player : players) {
             int finalScore = player.getPrestigePoints();
 
-            // 1) punti dovuti ai costruttori
-            finalScore += calculateBuilderPoints(player);
-
-            // 2) punti dovuti agli inventori
+            // inventor points — inventors * distinct icons
             finalScore += calculateInventorPoints(player);
 
-            // 3) 10 punti per ogni coppia di artisti
+            // artist points — 10 PP per pair of artists
             finalScore += calculateArtistPoints(player);
 
-            // 4) punti dovuti agli edifici
-            finalScore += calculateBuildingPoints(player);
+            // base builder points — always counted
+            finalScore += calculateBuilderPoints(player);
+
+            // base points printed on each building card
+            for (BuildingCard building : player.getTribe().getBuildingCards()) {
+                finalScore += building.getPointsEndOfMatch();
+            }
+            // end-of-game building effects: all BuildingCards implementing EndGameEffect
+            // use calculatePoints() to avoid modifying player state and double counting
+            for (BuildingCard building : player.getTribe().getBuildingCards()) {
+                if (building.getEffect() instanceof EndGameEffect endEffect) {
+                    finalScore += endEffect.calculatePoints(player);
+                }
+            }
 
             finalScores.put(player, finalScore);
         }
@@ -238,15 +256,20 @@ public class Game {
         finalScoresCalculated = true;
     }
 
+
     private int calculateBuilderPoints(Player player) {
-        int builders = player.getTribe().countCharactersByType(BuilderCard.class);
-        return builders;
+        int points = 0;
+        for (CharacterCard card : player.getTribe().getCharacterCards()) {
+            if (card instanceof BuilderCard builder) {
+                points += builder.getPointsEndOfMatch();
+            }
+        }
+        return points;
     }
 
     private int calculateInventorPoints(Player player) {
         int inventors = player.getTribe().countCharactersByType(InventorCard.class);
         int differentIcons = player.getTribe().countDistinctInventorIcons();
-
         return inventors * differentIcons;
     }
 
@@ -255,18 +278,6 @@ public class Game {
         int pairs = artists / 2;
         return pairs * 10;
     }
-
-    private int calculateBuildingPoints(Player player) {
-        int points = 0;
-
-        for (BuildingCard building : player.getTribe().getBuildingCards()) {
-            points += building.getPointsEndOfMatch();
-        }
-
-        return points;
-    }
-
-
     public List<BuildingCard> getBuildingsForEra(Era era) {
         return switch (era) {
             case I -> era1BuildingDeck;
@@ -282,6 +293,69 @@ public class Game {
 
         return tributeDeck.remove(0);
     }
+
+    public void takeCharacterCard(Player player, List<CharacterCard> row, CharacterCard chosenCard) {
+        if (player == null) {
+            throw new IllegalArgumentException("Player cannot be null");
+        }
+        if (row == null) {
+            throw new IllegalArgumentException("Row cannot be null");
+        }
+        if (chosenCard == null) {
+            throw new IllegalArgumentException("Chosen card cannot be null");
+        }
+        if (!row.contains(chosenCard)) {
+            throw new IllegalArgumentException("Chosen character card is not in the selected row");
+        }
+
+        row.remove(chosenCard);
+        player.addCharacterCard(chosenCard);
+
+        applyCharacterImmediateEffects(player, chosenCard);
+    }
+
+    private void applyCharacterImmediateEffects(Player player, CharacterCard card) {
+        if (card instanceof HunterCard hunter && hunter.hasFoodIcon()) {
+            int huntersInTribe = player.getTribe().countCharactersByType(HunterCard.class);
+            player.addFood(huntersInTribe);
+        }
+    }
+
+    public void takeBuildingCard(Player player, List<BuildingCard> row, BuildingCard chosenCard) {
+        if (player == null) {
+            throw new IllegalArgumentException("Player cannot be null");
+        }
+        if (row == null) {
+            throw new IllegalArgumentException("Row cannot be null");
+        }
+        if (chosenCard == null) {
+            throw new IllegalArgumentException("Chosen card cannot be null");
+        }
+        if (!row.contains(chosenCard)) {
+            throw new IllegalArgumentException("Chosen building card is not in the selected row");
+        }
+
+        int baseCost = chosenCard.getFoodCost();
+        int discount = getBuildingDiscount(player);
+        int finalCost = Math.max(0, baseCost - discount);
+
+        if (player.getFood() < finalCost) {
+            throw new IllegalStateException("Player does not have enough food to take this building");
+        }
+
+        player.spendFood(finalCost);
+        row.remove(chosenCard);
+        player.addBuildingCard(chosenCard);
+    }
+
+    public boolean isLastRound() {
+        return currentRoundNumber == MAX_ROUNDS;
+    }
+
+    private int getBuildingDiscount(Player player) {
+        return player.getTribe().getBuildingDiscount();
+    }
+
 
     public void startNewEra(){}
 
@@ -342,7 +416,9 @@ public class Game {
         }
 
         return players.stream()
-                .max(Comparator.comparingInt(this::getFinalScore))
+                .max(Comparator.comparingInt(this::getFinalScore)
+                        .thenComparingInt(Player::getFood))
                 .orElse(null);
     }
+
 }
