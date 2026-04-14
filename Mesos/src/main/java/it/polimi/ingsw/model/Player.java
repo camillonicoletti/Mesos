@@ -102,7 +102,6 @@ public class Player {
 
     public void addBuildingCard(BuildingCard card) {
         tribe.addBuildingCard(card);
-        
     }
 }
 
