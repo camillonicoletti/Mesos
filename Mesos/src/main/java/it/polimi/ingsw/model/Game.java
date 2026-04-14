@@ -3,12 +3,8 @@ package it.polimi.ingsw.model;
 import it.polimi.ingsw.model.board.BoardFactory;
 import it.polimi.ingsw.model.card.BuildingCard;
 import it.polimi.ingsw.model.card.Card;
-import it.polimi.ingsw.model.card.effect.EndBuilderPPEffect;
-import it.polimi.ingsw.model.card.effect.EndCharacterCountPPEffect;
-import it.polimi.ingsw.model.card.effect.EndFullSetPPEffect;
 import it.polimi.ingsw.model.card.effect.EndGameEffect;
 import it.polimi.ingsw.model.enums.Era;
-import it.polimi.ingsw.model.enums.GameStatus;
 import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.board.Board;
 import it.polimi.ingsw.model.card.BuilderCard;
@@ -40,9 +36,9 @@ public class Game {
     private List<BuildingCard> era1BuildingDeck;
     private List<BuildingCard> era2BuildingDeck;
     private List<BuildingCard> era3BuildingDeck;
-    private GameStatus status;
     private final Map<Player, Integer> finalScores = new HashMap<>();
     private boolean finalScoresCalculated = false;
+    private boolean gameEnded = false;
     private int getBuildingCountForEra(Era era) {
         int playersCount = players.size();
 
@@ -73,7 +69,7 @@ public class Game {
 
     public Game(List<Player> players, int currentRoundNumber, Round currentRound,
                 Era currentEra, LocalDateTime date,
-                Board board, List<Card> tributeDeck, List<BuildingCard> era1BuildingDeck, List<BuildingCard> era2BuildingDeck, List<BuildingCard> era3BuildingDeck, GameStatus status) {
+                Board board, List<Card> tributeDeck, List<BuildingCard> era1BuildingDeck, List<BuildingCard> era2BuildingDeck, List<BuildingCard> era3BuildingDeck) {
 
         this.players = players;
         this.currentRoundNumber = currentRoundNumber;
@@ -85,17 +81,12 @@ public class Game {
         this.era1BuildingDeck = era1BuildingDeck != null ? era1BuildingDeck : new ArrayList<>();
         this.era2BuildingDeck = era2BuildingDeck != null ? era2BuildingDeck : new ArrayList<>();
         this.era3BuildingDeck = era3BuildingDeck != null ? era3BuildingDeck : new ArrayList<>();
-        this.status = status;
     }
 
     public void start() {
-        if (status != GameStatus.WAITING) {
-            throw new IllegalStateException("Game cannot start from status: " + status);
-        }
 
         currentRoundNumber = 1;
         currentEra = Era.I;
-        status = GameStatus.IN_PROGRESS;
 
         // Create the board FIRST — setupInitialRows() and setupInitialBuildings() may need it
         this.board = BoardFactory.createBoard(players.size());
@@ -150,11 +141,11 @@ public class Game {
 
     public void end() {
         calculateFinalScores();
-        status = GameStatus.FINISHED;
+        gameEnded = true;
     }
 
     public boolean isGameOver() {
-        return status == GameStatus.FINISHED;
+        return gameEnded;
     }
 
     public void nextEra() {
@@ -185,7 +176,7 @@ public class Game {
     }
 
     public void nextRound() {
-        if (status == GameStatus.FINISHED) {
+        if (isGameOver()) {
             return;
         }
 
@@ -199,7 +190,7 @@ public class Game {
     }
 
     public void endRound() {
-        if (status != GameStatus.IN_PROGRESS) {
+        if (isGameOver()) {
             throw new IllegalStateException("Cannot end round if game is not running");
         }
 
