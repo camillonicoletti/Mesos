@@ -16,8 +16,6 @@ public class EndRoundState implements GameState {
         Game game = ctx.getGame();
         Round round = game.getCurrentRound();
 
-        game.getBoard().resetOfferTiles();
-
         if (game.isLastRound()) {
             ctx.changeState(new EndGameState());
         } else {
