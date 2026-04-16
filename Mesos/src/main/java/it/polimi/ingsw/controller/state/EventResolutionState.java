@@ -6,7 +6,7 @@ import it.polimi.ingsw.model.Round;
 
 import java.io.Serial;
 
-public class EventResolutionState implements GameState {
+public class EventResolutionState extends AbstractGameState {
     @Serial
     private static final long serialVersionUID = 1L;
 
@@ -18,8 +18,9 @@ public class EventResolutionState implements GameState {
     }
 
     @Override
-    public void handleAction(GameController ctx, String playerNickname, GameAction action) { }
+    public void handleAction(GameController ctx, String playerNickname, GameAction action) {
+        rejectAction(action);
+    }
 
-    @Override
-    public void onExit(GameController ctx) { }
+
 }
