@@ -11,7 +11,6 @@ import it.polimi.ingsw.model.board.ActionSlot;
 import it.polimi.ingsw.model.board.OfferTile;
 import it.polimi.ingsw.model.card.BuildingCard;
 import it.polimi.ingsw.model.card.CharacterCard;
-import it.polimi.ingsw.model.enums.SlotType;
 
 import java.util.*;
 
@@ -32,7 +31,7 @@ public class ActionResolutionState implements GameState {
         Round round = ctx.getGame().getCurrentRound();
         Map<Player, OfferTile> playerChoices = round.getPlayerChoices();
 
-        // trasformo mappa in lista e ordino i giocatori per lettera tile: A < B < C
+        // ordina i giocatori per lettera tile: A < B < C
         orderedPlayers = new ArrayList<>(playerChoices.entrySet());
         orderedPlayers.sort(Comparator.comparingInt(e -> (int) e.getValue().getLetter()));
 
@@ -40,24 +39,16 @@ public class ActionResolutionState implements GameState {
         prepareCurrentPlayer(ctx);
     }
 
-    /**2
-     * Prepara il turno del giocatore corrente:
-     * - dà il cibo automaticamente dagli slot FOOD
-     * - calcola quante carte può ancora prendere
-     * - se non ha carte da prendere, avanza automaticamente
-     */
     private void prepareCurrentPlayer(GameController ctx) {
-        // tutti i giocatori hanno risolto → passa a TurnOrderState
+        // tutti i giocatori hanno risolto → passa a EventResolutionState
         if (currentIndex >= orderedPlayers.size()) {
-
-
             ctx.changeState(new EventResolutionState());
-
             return;
         }
 
         Player player = orderedPlayers.get(currentIndex).getKey();
         OfferTile tile = orderedPlayers.get(currentIndex).getValue();
+        Round round = ctx.getGame().getCurrentRound();
 
         remainingUpperPicks = 0;
         remainingLowerPicks = 0;
@@ -70,8 +61,9 @@ public class ActionResolutionState implements GameState {
             }
         }
 
-        // se non ha carte da prendere, avanza automaticamente al prossimo
+        // se non ha carte da prendere → spostalo sul TurnOrderTile e avanza
         if (remainingUpperPicks == 0 && remainingLowerPicks == 0) {
+            round.placeTotemOrderForPlayer(player);
             currentIndex++;
             prepareCurrentPlayer(ctx);
         }
@@ -95,13 +87,11 @@ public class ActionResolutionState implements GameState {
             case "PICK_CARD" -> {
                 PickCardAction pickCard = (PickCardAction) action;
 
-                // verifica che abbia ancora pick disponibili per quella riga
                 if (pickCard.isFromUpperRow() && remainingUpperPicks <= 0)
                     throw new IllegalStateException("Non puoi prendere altre carte dalla riga superiore");
                 if (!pickCard.isFromUpperRow() && remainingLowerPicks <= 0)
                     throw new IllegalStateException("Non puoi prendere altre carte dalla riga inferiore");
 
-                // trova la carta nella riga giusta
                 List<CharacterCard> row = pickCard.isFromUpperRow()
                         ? round.getUpperRowTribute()
                         : round.getLowerRowTribute();
@@ -141,8 +131,9 @@ public class ActionResolutionState implements GameState {
             default -> throw new IllegalStateException("Azione non valida in questa fase: " + action.getType());
         }
 
-        // se il giocatore ha finito tutti i suoi pick → avanza al prossimo
+        // giocatore ha finito tutti i pick → spostalo sul TurnOrderTile e avanza
         if (remainingUpperPicks == 0 && remainingLowerPicks == 0) {
+            round.placeTotemOrderForPlayer(currentPlayer);
             currentIndex++;
             prepareCurrentPlayer(ctx);
         }
