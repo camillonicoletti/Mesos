@@ -448,4 +448,8 @@ public class Round {
     public Board getBoard() {
         return game.getBoard();
     }
+
+    public Map<Player, OfferTile> getPlayerChoices() {
+        return playerChoices;
+    }
 }
