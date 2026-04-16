@@ -47,8 +47,7 @@ public class LobbyState extends AbstractGameState {
         ctx.addLobbyPlayer(player);
 
         if (ctx.hasChosenPlayersCount() && ctx.isLobbyFull()) {
-            // Next step:
-            // ctx.changeState(new StartGameState());
+            ctx.changeState(new StartGameState());
         }
     }
 
@@ -75,8 +74,7 @@ public class LobbyState extends AbstractGameState {
         ctx.setChosenPlayersCount(action.getPlayersCount());
 
         if (ctx.isLobbyFull()) {
-            // Next step:
-            // ctx.changeState(new StartGameState());
+            ctx.changeState(new StartGameState());
         }
     }
 }
