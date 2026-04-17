@@ -1,19 +1,24 @@
 package it.polimi.ingsw.controller;
 
 import it.polimi.ingsw.controller.action.GameAction;
+import it.polimi.ingsw.controller.listener.GameListener;
 import it.polimi.ingsw.controller.state.GameState;
 import it.polimi.ingsw.controller.state.LobbyState;
 import it.polimi.ingsw.model.Game;
 import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.Totem;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Consumer;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 /**
  * Main controller context of the application.
  * It stores the current controller state and the data needed
@@ -31,6 +36,9 @@ public class GameController implements Serializable {
 
     private final Set<String> readyPlayers;
 
+    // LISTENER
+    private transient List<GameListener> listeners = new ArrayList<>();
+
     public GameController() {
         this.game = null;
         this.currentState = new LobbyState();
@@ -45,7 +53,7 @@ public class GameController implements Serializable {
      * Receives an action from a player and delegates it to the current state.
      *
      * @param playerNickname the nickname of the player who sent the action
-     * @param action the received action
+     * @param action         the received action
      */
     public void onMessageReceived(String playerNickname, GameAction action) {
         if (playerNickname == null || playerNickname.isBlank()) {
@@ -141,6 +149,7 @@ public class GameController implements Serializable {
         return !lobbyPlayers.isEmpty() &&
                 lobbyPlayers.get(0).getNickname().equals(nickname);
     }
+
     public void markPlayerReady(String nickname) {
         if (nickname == null || nickname.isBlank()) {
             throw new IllegalArgumentException("Nickname cannot be null or blank");
@@ -180,5 +189,37 @@ public class GameController implements Serializable {
     private boolean containsLobbyPlayer(String nickname) {
         return lobbyPlayers.stream()
                 .anyMatch(player -> player.getNickname().equals(nickname));
+    }
+
+    // LISTENER
+    public void addListener(GameListener listener) {
+        if (listener == null) {
+            throw new IllegalArgumentException("Listener cannot be null");
+        }
+        listeners.add(listener);
+    }
+
+    public void removeListener(GameListener listener) {
+        if (listener == null) {
+            throw new IllegalArgumentException("Listener cannot be null");
+        }
+        listeners.remove(listener);
+    }
+
+    public void notifyListeners(Consumer<GameListener> event) {
+        for (GameListener listener : listeners) {
+            try {
+                event.accept(listener);
+            } catch (Exception e) {
+                System.err.println("Listener error: " + e.getMessage());
+            }
+        }
+    }
+
+    @Serial
+    private void readObject(ObjectInputStream in) throws IOException,
+            ClassNotFoundException {
+        in.defaultReadObject();
+        listeners = new ArrayList<>();
     }
 }
