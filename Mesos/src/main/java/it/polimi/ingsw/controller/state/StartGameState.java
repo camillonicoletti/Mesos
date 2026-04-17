@@ -27,6 +27,10 @@ public class StartGameState extends AbstractGameState {
             throw new IllegalStateException("Cannot start the game before the lobby is full");
         }
 
+        if (!ctx.areAllPlayersReady()) {
+            throw new IllegalStateException("Cannot start the game until all players are ready");
+        }
+
         List<Player> players = new ArrayList<>(ctx.getLobbyPlayers());
 
         Game game = new Game(

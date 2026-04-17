@@ -11,6 +11,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Main controller context of the application.
@@ -27,11 +29,14 @@ public class GameController implements Serializable {
     private final List<Player> lobbyPlayers;
     private int chosenPlayersCount;
 
+    private final Set<String> readyPlayers;
+
     public GameController() {
         this.game = null;
         this.currentState = new LobbyState();
         this.lobbyPlayers = new ArrayList<>();
         this.chosenPlayersCount = -1;
+        this.readyPlayers = new HashSet<>();
 
         currentState.onEnter(this);
     }
@@ -135,5 +140,45 @@ public class GameController implements Serializable {
 
         return !lobbyPlayers.isEmpty() &&
                 lobbyPlayers.get(0).getNickname().equals(nickname);
+    }
+    public void markPlayerReady(String nickname) {
+        if (nickname == null || nickname.isBlank()) {
+            throw new IllegalArgumentException("Nickname cannot be null or blank");
+        }
+
+        if (!containsLobbyPlayer(nickname)) {
+            throw new IllegalArgumentException("Player is not in the lobby");
+        }
+
+        readyPlayers.add(nickname);
+    }
+
+    public void markPlayerNotReady(String nickname) {
+        if (nickname == null || nickname.isBlank()) {
+            throw new IllegalArgumentException("Nickname cannot be null or blank");
+        }
+
+        readyPlayers.remove(nickname);
+    }
+
+    public boolean isPlayerReady(String nickname) {
+        if (nickname == null || nickname.isBlank()) {
+            return false;
+        }
+
+        return readyPlayers.contains(nickname);
+    }
+
+    public void resetReadyPlayers() {
+        readyPlayers.clear();
+    }
+
+    public boolean areAllPlayersReady() {
+        return isLobbyFull() && readyPlayers.size() == lobbyPlayers.size();
+    }
+
+    private boolean containsLobbyPlayer(String nickname) {
+        return lobbyPlayers.stream()
+                .anyMatch(player -> player.getNickname().equals(nickname));
     }
 }
