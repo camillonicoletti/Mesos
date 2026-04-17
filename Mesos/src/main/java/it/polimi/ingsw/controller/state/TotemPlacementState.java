@@ -9,7 +9,7 @@ import it.polimi.ingsw.model.board.OfferTile;
 import java.util.HashSet;
 import java.util.Set;
 
-public class TotemPlacementState implements GameState {
+public class TotemPlacementState extends AbstractGameState {
 
     private static final long serialVersionUID = 1L;
 
@@ -60,11 +60,6 @@ public class TotemPlacementState implements GameState {
         if (playersWhoPlaced.size() == ctx.getGame().getPlayers().size()) {
             ctx.changeState(new ActionResolutionState());
         }
-    }
-
-    @Override
-    public void onExit(GameController ctx) {
-        // niente da fare
     }
 
     // ── HELPERS ──────────────────────────────────────────────────────

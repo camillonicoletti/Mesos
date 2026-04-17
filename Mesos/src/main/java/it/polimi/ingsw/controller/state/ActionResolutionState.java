@@ -14,7 +14,7 @@ import it.polimi.ingsw.model.card.CharacterCard;
 
 import java.util.*;
 
-public class ActionResolutionState implements GameState {
+public class ActionResolutionState extends AbstractGameState {
 
     private static final long serialVersionUID = 1L;
 
@@ -71,7 +71,7 @@ public class ActionResolutionState implements GameState {
 
     @Override
     public void handleAction(GameController ctx, String playerNickname, GameAction action) {
-        if (currentIndex >= orderedPlayers.size()) return;
+        if (currentIndex >= orderedPlayers.size()) rejectAction(action);
 
         Player currentPlayer = orderedPlayers.get(currentIndex).getKey();
         Game game = ctx.getGame();
@@ -138,12 +138,6 @@ public class ActionResolutionState implements GameState {
             prepareCurrentPlayer(ctx);
         }
     }
-
-    @Override
-    public void onExit(GameController ctx) {
-        // niente da fare
-    }
-
     // ── HELPERS ──────────────────────────────────────────────────────
 
     private CharacterCard findCharacterCard(List<CharacterCard> row, String cardId) {
