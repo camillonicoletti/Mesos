@@ -79,6 +79,8 @@ public class GameController implements Serializable {
         currentState.onExit(this);
         currentState = newState;
         currentState.onEnter(this);
+        // Notify listener
+        notifyListeners(l -> l.onStateChanged(newState));
     }
 
     public Game getGame() {

@@ -45,7 +45,8 @@ public class LobbyState extends AbstractGameState {
 
         Player player = new Player(playerNickname, action.getTotem());
         ctx.addLobbyPlayer(player);
-
+        // Notify Listener
+        ctx.notifyListeners(l -> l.onPlayerJoined(playerNickname));
         if (ctx.hasChosenPlayersCount() && ctx.isLobbyFull()) {
             ctx.changeState(new ReadyCheckState());
         }
