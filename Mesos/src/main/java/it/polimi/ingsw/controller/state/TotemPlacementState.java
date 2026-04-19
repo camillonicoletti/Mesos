@@ -55,6 +55,8 @@ public class TotemPlacementState extends AbstractGameState {
         }
 
         playersWhoPlaced.add(playerNickname);
+        //listener
+        ctx.notifyListeners(l -> l.onTotemPlaced(playerNickname, placeTotem.getTileId()));
 
         // se tutti hanno piazzato → passa ad ActionResolutionState
         if (playersWhoPlaced.size() == ctx.getGame().getPlayers().size()) {

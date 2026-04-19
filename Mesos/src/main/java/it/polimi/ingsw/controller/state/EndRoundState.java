@@ -19,11 +19,13 @@ public class EndRoundState extends AbstractGameState {
         if (game.isLastRound()) {
             ctx.changeState(new EndGameState());
         } else {
+            int finishedRound = game.getCurrentRound().getNumber();
             round.discardLowerRow();
             round.shiftUpperToLowerRow();
             round.refillUpperRow();
             round.checkEraTransition();
             game.nextRound();
+            ctx.notifyListeners(l -> l.onRoundEnded(finishedRound));
             ctx.changeState(new TotemPlacementState());
         }
     }

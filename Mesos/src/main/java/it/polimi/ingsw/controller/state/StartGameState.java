@@ -48,6 +48,8 @@ public class StartGameState extends AbstractGameState {
 
         game.start();
         ctx.setGame(game);
+        //listener
+        ctx.notifyListeners(l -> l.onGameStarted());
 
         ctx.changeState(new TotemPlacementState());
     }

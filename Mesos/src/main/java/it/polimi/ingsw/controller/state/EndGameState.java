@@ -3,8 +3,10 @@ package it.polimi.ingsw.controller.state;
 import it.polimi.ingsw.controller.GameController;
 import it.polimi.ingsw.controller.action.GameAction;
 import it.polimi.ingsw.model.Game;
+import it.polimi.ingsw.model.Player;
 
 import java.io.Serial;
+import java.util.Map;
 
 public class EndGameState extends AbstractGameState {
     @Serial
@@ -14,7 +16,9 @@ public class EndGameState extends AbstractGameState {
     public void onEnter(GameController ctx) {
         Game game = ctx.getGame();
         game.calculateFinalScores();
-        // TODO : Notify winner
+        Player winner = game.getWinner();
+        Map<Player, Integer> scores = game.getFinalScores();
+        ctx.notifyListeners(l -> l.onGameEnded(winner, scores));
         game.end();
     }
 

@@ -73,6 +73,8 @@ public class LobbyState extends AbstractGameState {
         }
 
         ctx.setChosenPlayersCount(action.getPlayersCount());
+        // listener
+        ctx.notifyListeners(l -> l.onPlayersCountSet(action.getPlayersCount()));
 
         if (ctx.isLobbyFull()) {
             ctx.changeState(new ReadyCheckState());
