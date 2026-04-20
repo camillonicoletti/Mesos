@@ -35,7 +35,7 @@ public class BuildingEffectsTest {
 
     @Test
     void fullSetFoodEffectGivesFoodWhenSetCompleted() {
-        Player player = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addBuildingCard(new BuildingCard(1, Era.I, 0, new FullSetFoodEffect(), 0));
 
         player.addCharacterCard(new ArtistCard(1, Era.I, 2));
@@ -50,7 +50,7 @@ public class BuildingEffectsTest {
 
     @Test
     void fullSetFoodEffectDoesNotTriggerWithoutBuilding() {
-        Player player = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
 
         player.addCharacterCard(new ArtistCard(1, Era.I, 2));
         player.addCharacterCard(new BuilderCard(2, Era.I, 2, 0, 0));
@@ -69,7 +69,7 @@ public class BuildingEffectsTest {
 
     @Test
     void inventorPairFoodEffectGivesFoodWhenPairFormed() {
-        Player player = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addBuildingCard(new BuildingCard(1, Era.I, 0, new InventorPairFoodEffect(), 0));
 
         player.addCharacterCard(new InventorCard(1, Era.I, 2, InventorIcons.INVENTION_1));
@@ -80,7 +80,7 @@ public class BuildingEffectsTest {
 
     @Test
     void inventorPairFoodEffectDoesNotTriggerWithDifferentIcons() {
-        Player player = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addBuildingCard(new BuildingCard(1, Era.I, 0, new InventorPairFoodEffect(), 0));
 
         player.addCharacterCard(new InventorCard(1, Era.I, 2, InventorIcons.INVENTION_1));
@@ -96,7 +96,7 @@ public class BuildingEffectsTest {
 
     @Test
     void totemSlotFoodBonusEffectGivesFoodOnGainFoodSlot() {
-        Player player = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addBuildingCard(new BuildingCard(1, Era.I, 0, new TotemSlotFoodBonusEffect(), 0));
 
         List<TurnSlot> slots = new ArrayList<>();
@@ -120,7 +120,7 @@ public class BuildingEffectsTest {
 
     @Test
     void totemSlotFoodBonusEffectDoesNotTriggerOnPayFoodSlot() {
-        Player player = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addFood(5);
         player.addBuildingCard(new BuildingCard(1, Era.I, 0, new TotemSlotFoodBonusEffect(), 0));
 
@@ -145,7 +145,7 @@ public class BuildingEffectsTest {
 
     @Test
     void totemSlotFoodBonusEffectDoesNotTriggerWithoutBuilding() {
-        Player player = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
 
         List<TurnSlot> slots = new ArrayList<>();
         slots.add(new TurnSlot(1, new GainFoodSlotEffect(2)));
@@ -173,7 +173,7 @@ public class BuildingEffectsTest {
 
     @Test
     void hunt1Food1PPEffectAddsExtraFoodAndPPPerHunter() {
-        Player player = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addCharacterCard(new HunterCard(1, Era.I, 2, true));
         player.addCharacterCard(new HunterCard(2, Era.I, 2, true));
         player.addBuildingCard(new BuildingCard(1, Era.I, 0, new Hunt1Food1PPEffect(), 0));
@@ -189,7 +189,7 @@ public class BuildingEffectsTest {
 
     @Test
     void hunt1Food1PPEffectDoesNotTriggerWithoutBuilding() {
-        Player player = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addCharacterCard(new HunterCard(1, Era.I, 2, true));
         player.addCharacterCard(new HunterCard(2, Era.I, 2, true));
 
@@ -207,7 +207,7 @@ public class BuildingEffectsTest {
 
     @Test
     void cavePaintingsFoodEffectAddsOneFoodPerArtist() {
-        Player player = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addCharacterCard(new ArtistCard(1, Era.I, 2));
         player.addCharacterCard(new ArtistCard(2, Era.I, 2));
         player.addCharacterCard(new ArtistCard(3, Era.I, 2));
@@ -224,7 +224,7 @@ public class BuildingEffectsTest {
 
     @Test
     void cavePaintingsFoodEffectTriggersEvenWhenBelowMinimum() {
-        Player player = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addCharacterCard(new ArtistCard(1, Era.I, 2)); // 1, minimo è 2
         player.addBuildingCard(new BuildingCard(1, Era.I, 0, new CavePaintingsFoodEffect(), 0));
 
@@ -242,7 +242,7 @@ public class BuildingEffectsTest {
 
     @Test
     void sustenanceFoodDiscountEffectReducesFoodRequired() {
-        Player player = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addFood(10);
 
         player.addCharacterCard(new ArtistCard(1, Era.I, 2));
@@ -263,7 +263,7 @@ public class BuildingEffectsTest {
 
     @Test
     void sustenanceFoodDiscountEffectDoesNotTriggerWithoutBuilding() {
-        Player player = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addFood(2);
 
         player.addCharacterCard(new ArtistCard(1, Era.I, 2));
@@ -288,8 +288,8 @@ public class BuildingEffectsTest {
 
     @Test
     void shaman3ExtraStarsEffectMakesPlayerWin() {
-        Player p1 = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
-        Player p2 = new Player("Bob", new Totem(TotemColor.BLUE, TotemPosition.OFFER_TRACK));
+        Player p1 = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
+        Player p2 = new Player("Bob", new Totem(TotemColor.BLUE, "OFFER_TRACK"));
 
         // p1 ha 0 stelle reali ma +3 dall'edificio → vince su p2 con 1 stella
         p1.addBuildingCard(new BuildingCard(1, Era.I, 0, new Shaman3ExtraStarsEffect(), 0));
@@ -304,8 +304,8 @@ public class BuildingEffectsTest {
 
     @Test
     void shamanicRitualDoublePPEffectDoublesPPForWinner() {
-        Player p1 = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
-        Player p2 = new Player("Bob", new Totem(TotemColor.BLUE, TotemPosition.OFFER_TRACK));
+        Player p1 = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
+        Player p2 = new Player("Bob", new Totem(TotemColor.BLUE, "OFFER_TRACK"));
 
         p1.addCharacterCard(new ShamanCard(1, Era.I, 2, 3)); // 3 stars
         p1.addBuildingCard(new BuildingCard(2, Era.I, 0, new ShamanicRitualDoublePPEffect(), 0));
@@ -320,8 +320,8 @@ public class BuildingEffectsTest {
 
     @Test
     void shamanicRitualImmunityEffectProtectsLoser() {
-        Player p1 = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
-        Player p2 = new Player("Bob", new Totem(TotemColor.BLUE, TotemPosition.OFFER_TRACK));
+        Player p1 = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
+        Player p2 = new Player("Bob", new Totem(TotemColor.BLUE, "OFFER_TRACK"));
 
         p1.addCharacterCard(new ShamanCard(1, Era.I, 2, 3)); // 3 stars
         p2.addBuildingCard(new BuildingCard(2, Era.I, 0, new ShamanicRitualImmunityEffect(), 0));
@@ -343,7 +343,7 @@ public class BuildingEffectsTest {
 
     @Test
     void endPPEffectAdds25PPAtEndOfGame() {
-        Player player = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addBuildingCard(new BuildingCard(1, Era.I, 0, new EndPPEffect(), 0));
 
         Game game = buildGame(List.of(player));
@@ -355,7 +355,7 @@ public class BuildingEffectsTest {
     @Test
     void endBuilderPPEffectAddsBuilderPointsAtEndOfGame() {
         // TODO: known double counting bug — calculateBuilderPoints() + EndBuilderPPEffect both add points
-        Player player = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addCharacterCard(new BuilderCard(1, Era.I, 2, 3, 0)); // pointsEndOfMatch=3
         player.addBuildingCard(new BuildingCard(2, Era.I, 0, new EndBuilderPPEffect(), 0));
 
@@ -368,7 +368,7 @@ public class BuildingEffectsTest {
 
     @Test
     void endFullSetPPEffectAdds6PPPerFullSet() {
-        Player player = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addCharacterCard(new ArtistCard(1, Era.I, 2));
         player.addCharacterCard(new BuilderCard(2, Era.I, 2, 0, 0));
         player.addCharacterCard(new GathererCard(3, Era.I, 2));
@@ -385,7 +385,7 @@ public class BuildingEffectsTest {
 
     @Test
     void endCharacterCountPPEffectAddsPointsPerCard() {
-        Player player = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addCharacterCard(new ArtistCard(1, Era.I, 2));
         player.addCharacterCard(new ArtistCard(2, Era.I, 2));
         player.addCharacterCard(new ArtistCard(3, Era.I, 2)); // 3 artisti → 2 PP ciascuno

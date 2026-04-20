@@ -36,8 +36,8 @@ public class GameScoringTest {
 
     @BeforeEach
     void setUp() {
-        player1 = new Player("Alice", new Totem(TotemColor.RED,  TotemPosition.OFFER_TRACK));
-        player2 = new Player("Bob",   new Totem(TotemColor.BLUE, TotemPosition.OFFER_TRACK));
+        player1 = new Player("Alice", new Totem(TotemColor.RED,  "OFFER_TRACK"));
+        player2 = new Player("Bob",   new Totem(TotemColor.BLUE, "OFFER_TRACK"));
         game = buildGame(List.of(player1, player2));
     }
 

@@ -22,7 +22,7 @@ public class EventCardTest {
 
     @Test
     void huntEventCard_givesCorrectFoodAndPPPerHunter() {
-        Player player = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addCharacterCard(new HunterCard(1, Era.I, 2, false));
         player.addCharacterCard(new HunterCard(2, Era.I, 2, false));
 
@@ -35,7 +35,7 @@ public class EventCardTest {
 
     @Test
     void huntEventCard_givesNothingWhenNoHunters() {
-        Player player = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addCharacterCard(new ArtistCard(1, Era.I, 2));
 
         Game game = buildGame(List.of(player));
@@ -47,8 +47,8 @@ public class EventCardTest {
 
     @Test
     void huntEventCard_appliesToAllPlayers() {
-        Player p1 = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
-        Player p2 = new Player("Bob",   new Totem(TotemColor.BLUE, TotemPosition.OFFER_TRACK));
+        Player p1 = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
+        Player p2 = new Player("Bob",   new Totem(TotemColor.BLUE, "OFFER_TRACK"));
         p1.addCharacterCard(new HunterCard(1, Era.I, 2, false));
         p2.addCharacterCard(new HunterCard(2, Era.I, 2, false));
         p2.addCharacterCard(new HunterCard(3, Era.I, 2, false));
@@ -66,7 +66,7 @@ public class EventCardTest {
 
     @Test
     void cavePaintingsEventCard_exactlyAtMinimum_gainsPP() {
-        Player player = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addCharacterCard(new ArtistCard(1, Era.I, 2));
         player.addCharacterCard(new ArtistCard(2, Era.I, 2)); // esattamente 2, minimo 2
 
@@ -79,7 +79,7 @@ public class EventCardTest {
 
     @Test
     void cavePaintingsEventCard_noArtists_losesPrestigePoints() {
-        Player player = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         // nessun artista
 
         Game game = buildGame(List.of(player));
@@ -94,7 +94,7 @@ public class EventCardTest {
 
     @Test
     void sustenanceEventCard_gathererReducesFoodRequiredBy3() {
-        Player player = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addFood(10);
         // 2 gatherer + 2 artisti = 4 personaggi → 4 cibo richiesto
         // sconto: 2 gatherer × 3 = 6 → cibo richiesto = max(0, 4-6) = 0
@@ -112,7 +112,7 @@ public class EventCardTest {
 
     @Test
     void sustenanceEventCard_exactFoodAvailable_noPPLost() {
-        Player player = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addFood(3);
         player.addCharacterCard(new ArtistCard(1, Era.I, 2));
         player.addCharacterCard(new ArtistCard(2, Era.I, 2));
@@ -127,7 +127,7 @@ public class EventCardTest {
 
     @Test
     void sustenanceEventCard_moreFoodThanNeeded_noRefund() {
-        Player player = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addFood(10);
         player.addCharacterCard(new ArtistCard(1, Era.I, 2)); // 1 personaggio, 1 cibo
 
@@ -144,9 +144,9 @@ public class EventCardTest {
 
     @Test
     void shamanicRitualEventCard_tieForMaxStars_allWinnersGetPP() {
-        Player p1 = new Player("Alice", new Totem(TotemColor.RED,    TotemPosition.OFFER_TRACK));
-        Player p2 = new Player("Bob",   new Totem(TotemColor.BLUE,   TotemPosition.OFFER_TRACK));
-        Player p3 = new Player("Carol", new Totem(TotemColor.PURPLE, TotemPosition.OFFER_TRACK));
+        Player p1 = new Player("Alice", new Totem(TotemColor.RED,    "OFFER_TRACK"));
+        Player p2 = new Player("Bob",   new Totem(TotemColor.BLUE,   "OFFER_TRACK"));
+        Player p3 = new Player("Carol", new Totem(TotemColor.PURPLE, "OFFER_TRACK"));
 
         p1.addCharacterCard(new ShamanCard(1, Era.I, 2, 2)); // 2 stelle
         p2.addCharacterCard(new ShamanCard(2, Era.I, 2, 2)); // 2 stelle (parità per il max)
@@ -162,9 +162,9 @@ public class EventCardTest {
 
     @Test
     void shamanicRitualEventCard_tieForMinStars_allLosersLosePP() {
-        Player p1 = new Player("Alice", new Totem(TotemColor.RED,    TotemPosition.OFFER_TRACK));
-        Player p2 = new Player("Bob",   new Totem(TotemColor.BLUE,   TotemPosition.OFFER_TRACK));
-        Player p3 = new Player("Carol", new Totem(TotemColor.PURPLE, TotemPosition.OFFER_TRACK));
+        Player p1 = new Player("Alice", new Totem(TotemColor.RED,    "OFFER_TRACK"));
+        Player p2 = new Player("Bob",   new Totem(TotemColor.BLUE,   "OFFER_TRACK"));
+        Player p3 = new Player("Carol", new Totem(TotemColor.PURPLE, "OFFER_TRACK"));
 
         p1.addCharacterCard(new ShamanCard(1, Era.I, 2, 3)); // 3 stelle → vincitore
         // p2 e p3 hanno 0 stelle → parità per il min
@@ -180,8 +180,8 @@ public class EventCardTest {
     @Test
     void shamanicRitualEventCard_allPlayersHaveSameStars_allGetPPAndLosePP() {
         // tutti con stesse stelle → tutti sono sia massimo che minimo
-        Player p1 = new Player("Alice", new Totem(TotemColor.RED,  TotemPosition.OFFER_TRACK));
-        Player p2 = new Player("Bob",   new Totem(TotemColor.BLUE, TotemPosition.OFFER_TRACK));
+        Player p1 = new Player("Alice", new Totem(TotemColor.RED,  "OFFER_TRACK"));
+        Player p2 = new Player("Bob",   new Totem(TotemColor.BLUE, "OFFER_TRACK"));
 
         p1.addCharacterCard(new ShamanCard(1, Era.I, 2, 2));
         p2.addCharacterCard(new ShamanCard(2, Era.I, 2, 2));

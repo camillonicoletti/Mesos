@@ -5,7 +5,6 @@ import it.polimi.ingsw.model.board.NoSlotEffect;
 import it.polimi.ingsw.model.board.PayFoodSlotEffect;
 import it.polimi.ingsw.model.board.TurnSlot;
 import it.polimi.ingsw.model.enums.TotemColor;
-import it.polimi.ingsw.model.enums.TotemPosition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -19,7 +18,7 @@ public class TurnSlotTest {
     @BeforeEach
     void setUp() {
         slot = new TurnSlot(1, new GainFoodSlotEffect(2));
-        totem = new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK);
+        totem = new Totem(TotemColor.RED, "OFFER_TRACK");
     }
 
     @Test
@@ -31,7 +30,7 @@ public class TurnSlotTest {
     @Test
     void testPlaceTotemUpdatesTotemPositionToTurnOrder() {
         slot.placeTotem(totem);
-        assertEquals(TotemPosition.TURN_ORDER, totem.getPosition());
+        assertEquals("TURN_ORDER", totem.getPosition());
     }
 
     @Test
@@ -58,7 +57,7 @@ public class TurnSlotTest {
     void testRemoveTotemResetsPositionToOfferTrack() {
         slot.placeTotem(totem);
         slot.removeTotem();
-        assertEquals(TotemPosition.OFFER_TRACK, totem.getPosition());
+        assertEquals("OFFER_TRACK", totem.getPosition());
     }
 
     @Test

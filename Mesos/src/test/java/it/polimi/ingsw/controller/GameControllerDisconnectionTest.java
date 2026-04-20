@@ -137,6 +137,6 @@ public class GameControllerDisconnectionTest {
     }
 
     private Totem createTotem(TotemColor color) {
-        return new Totem(color, TotemPosition.OFFER_TRACK);
+        return new Totem(color, "OFFER_TRACK");
     }
 }

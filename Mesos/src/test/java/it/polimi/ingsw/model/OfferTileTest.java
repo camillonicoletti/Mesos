@@ -3,7 +3,6 @@ package it.polimi.ingsw.model;
 import it.polimi.ingsw.model.board.ActionSlot;
 import it.polimi.ingsw.model.board.OfferTile;
 import it.polimi.ingsw.model.enums.TotemColor;
-import it.polimi.ingsw.model.enums.TotemPosition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +27,7 @@ public class OfferTileTest {
     @BeforeEach
     void setUp() {
         tile = new OfferTile('A', 2, List.of(new ActionSlot("FOOD", 1)));
-        totem = new Totem(TotemColor.RED, TotemPosition.TURN_ORDER);
+        totem = new Totem(TotemColor.RED, "TURN_ORDER");
     }
 
     // -------------------------------------------------------
@@ -45,7 +44,7 @@ public class OfferTileTest {
     void testPlaceTotemUpdatesTotemPositionToOfferTrack() {
         // totem starts in TURN_ORDER — after placing on OfferTile it must be OFFER_TRACK
         tile.placeTotem(totem);
-        assertEquals(TotemPosition.OFFER_TRACK, totem.getPosition());
+        assertEquals("OFFER_TRACK", totem.getPosition());
     }
 
     @Test

@@ -42,8 +42,8 @@ public class ShamanicRitualEventCardTest {
 
     @Test
     void mostStarsPlayerGainsPP() {
-        Player p1 = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
-        Player p2 = new Player("Bob", new Totem(TotemColor.BLUE, TotemPosition.OFFER_TRACK));
+        Player p1 = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
+        Player p2 = new Player("Bob", new Totem(TotemColor.BLUE, "OFFER_TRACK"));
 
         p1.addCharacterCard(new ShamanCard(1, Era.I, 2, 3)); // 3 stars
         p2.addCharacterCard(new ShamanCard(2, Era.I, 2, 1)); // 1 star
@@ -61,8 +61,8 @@ public class ShamanicRitualEventCardTest {
 
     @Test
     void shaman3ExtraStarsEffectAddsVirtualStars() {
-        Player p1 = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
-        Player p2 = new Player("Bob", new Totem(TotemColor.BLUE, TotemPosition.OFFER_TRACK));
+        Player p1 = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
+        Player p2 = new Player("Bob", new Totem(TotemColor.BLUE, "OFFER_TRACK"));
 
         // p1 has 0 real stars but +3 from building → 3 total
         p1.addBuildingCard(new BuildingCard(1, Era.I, 0, new Shaman3ExtraStarsEffect(), 0));
@@ -84,8 +84,8 @@ public class ShamanicRitualEventCardTest {
 
     @Test
     void shamanicRitualDoublePPEffectDoublesPPForWinner() {
-        Player p1 = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
-        Player p2 = new Player("Bob", new Totem(TotemColor.BLUE, TotemPosition.OFFER_TRACK));
+        Player p1 = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
+        Player p2 = new Player("Bob", new Totem(TotemColor.BLUE, "OFFER_TRACK"));
 
         p1.addCharacterCard(new ShamanCard(1, Era.I, 2, 3)); // 3 stars
         p1.addBuildingCard(new BuildingCard(2, Era.I, 0, new ShamanicRitualDoublePPEffect(), 0));
@@ -104,8 +104,8 @@ public class ShamanicRitualEventCardTest {
 
     @Test
     void shamanicRitualImmunityEffectProtectsLoser() {
-        Player p1 = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
-        Player p2 = new Player("Bob", new Totem(TotemColor.BLUE, TotemPosition.OFFER_TRACK));
+        Player p1 = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
+        Player p2 = new Player("Bob", new Totem(TotemColor.BLUE, "OFFER_TRACK"));
 
         p1.addCharacterCard(new ShamanCard(1, Era.I, 2, 3)); // 3 stars
         p2.addBuildingCard(new BuildingCard(2, Era.I, 0, new ShamanicRitualImmunityEffect(), 0));

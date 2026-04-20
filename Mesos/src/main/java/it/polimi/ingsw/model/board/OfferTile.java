@@ -1,7 +1,6 @@
 package it.polimi.ingsw.model.board;
 
 import it.polimi.ingsw.model.Totem;
-import it.polimi.ingsw.model.enums.TotemPosition;
 
 import java.util.List;
 
@@ -44,7 +43,7 @@ public class OfferTile {
 
     public void placeTotem(Totem totem) {
         this.totemSlot = totem;
-        totem.setPosition(TotemPosition.OFFER_TRACK);
+        totem.setPosition("OFFER_TRACK");
     }
 
     public Totem removeTotem() {

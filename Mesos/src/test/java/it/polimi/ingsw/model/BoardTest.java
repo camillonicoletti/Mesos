@@ -2,7 +2,6 @@ package it.polimi.ingsw.model;
 
 import it.polimi.ingsw.model.board.*;
 import it.polimi.ingsw.model.enums.TotemColor;
-import it.polimi.ingsw.model.enums.TotemPosition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -22,9 +21,9 @@ public class BoardTest {
 
     @BeforeEach
     void setUp() {
-        totem1 = new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK);
-        totem2 = new Totem(TotemColor.BLUE, TotemPosition.OFFER_TRACK);
-        totem3 = new Totem(TotemColor.PURPLE, TotemPosition.OFFER_TRACK);
+        totem1 = new Totem(TotemColor.RED, "OFFER_TRACK");
+        totem2 = new Totem(TotemColor.BLUE, "OFFER_TRACK");
+        totem3 = new Totem(TotemColor.PURPLE, "OFFER_TRACK");
 
         List<ActionSlot> slotsA = List.of(new ActionSlot("UPPER_ROW", 2));
         List<ActionSlot> slotsC = List.of(new ActionSlot("LOWER_ROW", 3));
@@ -404,24 +403,24 @@ public class BoardTest {
 
     @Test
     void testPlaceTotemOnOfferTileSetsPositionToOfferTrack() {
-        Totem t = new Totem(TotemColor.RED, TotemPosition.TURN_ORDER);
+        Totem t = new Totem(TotemColor.RED, "TURN_ORDER");
         offerTiles.get(0).placeTotem(t);
-        assertEquals(TotemPosition.OFFER_TRACK, t.getPosition());
+        assertEquals("OFFER_TRACK", t.getPosition());
     }
 
     @Test
     void testPlaceTotemOnTurnSlotSetsPositionToTurnOrder() {
-        Totem t = new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK);
+        Totem t = new Totem(TotemColor.RED, "OFFER_TRACK");
         turnOrderTile.getSlots().get(0).placeTotem(t);
-        assertEquals(TotemPosition.TURN_ORDER, t.getPosition());
+        assertEquals("TURN_ORDER", t.getPosition());
     }
 
     @Test
     void testRemoveTotemFromTurnSlotResetsPositionToOfferTrack() {
-        Totem t = new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK);
+        Totem t = new Totem(TotemColor.RED, "OFFER_TRACK");
         turnOrderTile.getSlots().get(0).placeTotem(t);
         turnOrderTile.getSlots().get(0).removeTotem();
-        assertEquals(TotemPosition.OFFER_TRACK, t.getPosition());
+        assertEquals("OFFER_TRACK", t.getPosition());
     }
 
 

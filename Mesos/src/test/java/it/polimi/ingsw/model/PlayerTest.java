@@ -6,7 +6,7 @@ import it.polimi.ingsw.model.card.effect.InventorPairFoodEffect;
 import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.InventorIcons;
 import it.polimi.ingsw.model.enums.TotemColor;
-import it.polimi.ingsw.model.enums.TotemPosition;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -15,7 +15,7 @@ public class PlayerTest {
 
     @Test
     void constructorShouldInitializePlayerCorrectly() {
-        Totem totem = new Totem(TotemColor.RED, TotemPosition.TURN_ORDER);
+        Totem totem = new Totem(TotemColor.RED, "TURN_ORDER");
         Player player = new Player("Luca", totem);
 
         assertEquals("Luca", player.getNickname());
@@ -27,7 +27,7 @@ public class PlayerTest {
 
     @Test
     void addFoodShouldIncreaseFood() {
-        Player player = new Player("Luca", new Totem(TotemColor.BLUE, TotemPosition.TURN_ORDER));
+        Player player = new Player("Luca", new Totem(TotemColor.BLUE, "TURN_ORDER"));
 
         player.addFood(5);
 
@@ -36,7 +36,7 @@ public class PlayerTest {
 
     @Test
     void addFoodShouldAccumulateFood() {
-        Player player = new Player("Luca", new Totem(TotemColor.BLUE, TotemPosition.TURN_ORDER));
+        Player player = new Player("Luca", new Totem(TotemColor.BLUE, "TURN_ORDER"));
 
         player.addFood(2);
         player.addFood(3);
@@ -46,7 +46,7 @@ public class PlayerTest {
 
     @Test
     void canAffordShouldReturnTrueWhenPlayerHasExactFood() {
-        Player player = new Player("Luca", new Totem(TotemColor.YELLOW, TotemPosition.TURN_ORDER));
+        Player player = new Player("Luca", new Totem(TotemColor.YELLOW, "TURN_ORDER"));
         player.addFood(4);
 
         assertTrue(player.canAfford(4));
@@ -54,7 +54,7 @@ public class PlayerTest {
 
     @Test
     void canAffordShouldReturnTrueWhenPlayerHasMoreThanRequiredFood() {
-        Player player = new Player("Luca", new Totem(TotemColor.YELLOW, TotemPosition.TURN_ORDER));
+        Player player = new Player("Luca", new Totem(TotemColor.YELLOW, "TURN_ORDER"));
         player.addFood(6);
 
         assertTrue(player.canAfford(4));
@@ -62,7 +62,7 @@ public class PlayerTest {
 
     @Test
     void canAffordShouldReturnFalseWhenPlayerHasNotEnoughFood() {
-        Player player = new Player("Luca", new Totem(TotemColor.WHITE, TotemPosition.TURN_ORDER));
+        Player player = new Player("Luca", new Totem(TotemColor.WHITE, "TURN_ORDER"));
         player.addFood(2);
 
         assertFalse(player.canAfford(3));
@@ -70,7 +70,7 @@ public class PlayerTest {
 
     @Test
     void spendFoodShouldDecreaseFoodWhenAffordable() {
-        Player player = new Player("Luca", new Totem(TotemColor.RED, TotemPosition.TURN_ORDER));
+        Player player = new Player("Luca", new Totem(TotemColor.RED, "TURN_ORDER"));
         player.addFood(5);
 
         player.spendFood(3);
@@ -80,7 +80,7 @@ public class PlayerTest {
 
     @Test
     void spendFoodShouldKeepFoodAtZeroWhenSpendingAllFood() {
-        Player player = new Player("Luca", new Totem(TotemColor.RED, TotemPosition.TURN_ORDER));
+        Player player = new Player("Luca", new Totem(TotemColor.RED, "TURN_ORDER"));
         player.addFood(5);
 
         player.spendFood(5);
@@ -90,7 +90,7 @@ public class PlayerTest {
 
     @Test
     void spendFoodShouldDeductPrestigeWhenNotAffordable() {
-        Player player = new Player("Luca", new Totem(TotemColor.PURPLE, TotemPosition.TURN_ORDER));
+        Player player = new Player("Luca", new Totem(TotemColor.PURPLE, "TURN_ORDER"));
         player.addFood(2);
 
         player.spendFood(5);
@@ -101,7 +101,7 @@ public class PlayerTest {
 
     @Test
     void addPrestigePointsShouldIncreasePrestigePoints() {
-        Player player = new Player("Luca", new Totem(TotemColor.BLUE, TotemPosition.TURN_ORDER));
+        Player player = new Player("Luca", new Totem(TotemColor.BLUE, "TURN_ORDER"));
 
         player.addPrestigePoints(7);
 
@@ -110,7 +110,7 @@ public class PlayerTest {
 
     @Test
     void addPrestigePointsShouldAccumulatePrestigePoints() {
-        Player player = new Player("Luca", new Totem(TotemColor.BLUE, TotemPosition.TURN_ORDER));
+        Player player = new Player("Luca", new Totem(TotemColor.BLUE, "TURN_ORDER"));
 
         player.addPrestigePoints(4);
         player.addPrestigePoints(6);
@@ -120,7 +120,7 @@ public class PlayerTest {
 
     @Test
     void removePrestigePointsShouldDecreasePrestigePoints() {
-        Player player = new Player("Luca", new Totem(TotemColor.WHITE, TotemPosition.TURN_ORDER));
+        Player player = new Player("Luca", new Totem(TotemColor.WHITE, "TURN_ORDER"));
         player.addPrestigePoints(8);
 
         player.removePrestigePoints(3);
@@ -130,7 +130,7 @@ public class PlayerTest {
 
     @Test
     void removePrestigePointsShouldAllowNegativePrestigePoints() {
-        Player player = new Player("Luca", new Totem(TotemColor.WHITE, TotemPosition.TURN_ORDER));
+        Player player = new Player("Luca", new Totem(TotemColor.WHITE, "TURN_ORDER"));
 
         player.removePrestigePoints(4);
 
@@ -139,7 +139,7 @@ public class PlayerTest {
 
     @Test
     void getTribeShouldAlwaysReturnTheSameTribeInstance() {
-        Player player = new Player("Luca", new Totem(TotemColor.YELLOW, TotemPosition.TURN_ORDER));
+        Player player = new Player("Luca", new Totem(TotemColor.YELLOW, "TURN_ORDER"));
 
         Tribe tribe1 = player.getTribe();
         Tribe tribe2 = player.getTribe();
@@ -149,7 +149,7 @@ public class PlayerTest {
 
     @Test
     void getTotemShouldReturnTheSameTotemPassedToConstructor() {
-        Totem totem = new Totem(TotemColor.RED, TotemPosition.TURN_ORDER);
+        Totem totem = new Totem(TotemColor.RED, "TURN_ORDER");
         Player player = new Player("Luca", totem);
 
         assertSame(totem, player.getTotem());
@@ -161,7 +161,7 @@ public class PlayerTest {
 
     @Test
     void applyTurnPenaltyShouldSpendFoodWhenAffordable() {
-        Player player = new Player("Luca", new Totem(TotemColor.RED, TotemPosition.TURN_ORDER));
+        Player player = new Player("Luca", new Totem(TotemColor.RED, "TURN_ORDER"));
         player.addFood(3);
 
         player.applyTurnPenalty(1, 2);
@@ -172,7 +172,7 @@ public class PlayerTest {
 
     @Test
     void applyTurnPenaltyShouldRemovePrestigeWhenFoodInsufficient() {
-        Player player = new Player("Luca", new Totem(TotemColor.RED, TotemPosition.TURN_ORDER));
+        Player player = new Player("Luca", new Totem(TotemColor.RED, "TURN_ORDER"));
 
         player.applyTurnPenalty(1, 2);
 
@@ -182,7 +182,7 @@ public class PlayerTest {
 
     @Test
     void applyTurnPenaltyShouldSpendFoodWhenExactlyAffordable() {
-        Player player = new Player("Luca", new Totem(TotemColor.RED, TotemPosition.TURN_ORDER));
+        Player player = new Player("Luca", new Totem(TotemColor.RED, "TURN_ORDER"));
         player.addFood(1);
 
         player.applyTurnPenalty(1, 2);
@@ -197,7 +197,7 @@ public class PlayerTest {
 
     @Test
     void addCharacterCardTriggerFullSetFoodEffectWhenSetCompleted() {
-        Player player = new Player("Test", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Test", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addBuildingCard(new BuildingCard(1, Era.I, 0, new FullSetFoodEffect(), 0));
 
         player.addCharacterCard(new ArtistCard(1, Era.I, 2));
@@ -212,7 +212,7 @@ public class PlayerTest {
 
     @Test
     void addCharacterCardDoesNotTriggerFullSetFoodEffectWithoutBuilding() {
-        Player player = new Player("Test", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Test", new Totem(TotemColor.RED, "OFFER_TRACK"));
 
         player.addCharacterCard(new ArtistCard(1, Era.I, 2));
         player.addCharacterCard(new BuilderCard(2, Era.I, 2, 1, 1));
@@ -226,7 +226,7 @@ public class PlayerTest {
 
     @Test
     void addCharacterCardTriggerInventorPairFoodEffect() {
-        Player player = new Player("Test", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Test", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addBuildingCard(new BuildingCard(1, Era.I, 0, new InventorPairFoodEffect(), 0));
 
         player.addCharacterCard(new InventorCard(1, Era.I, 2, InventorIcons.INVENTION_1));
@@ -237,7 +237,7 @@ public class PlayerTest {
 
     @Test
     void addCharacterCardDoesNotRewardPairsFormedBeforeBuildingWasAcquired() {
-        Player player = new Player("Test", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Test", new Totem(TotemColor.RED, "OFFER_TRACK"));
 
         // pair formed before building → effect not triggered
         player.addCharacterCard(new InventorCard(1, Era.I, 2, InventorIcons.INVENTION_1));
@@ -251,7 +251,7 @@ public class PlayerTest {
 
     @Test
     void testFullSetFoodEffectRewardsTwoSetsIndependently() {
-        Player player = new Player("Test", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Test", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addBuildingCard(new BuildingCard(1, Era.I, 0, new FullSetFoodEffect(), 0));
 
         // primo set
@@ -277,7 +277,7 @@ public class PlayerTest {
 
     @Test
     void testInventorPairFoodEffectWithTwoDifferentIconPairs() {
-        Player player = new Player("Test", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
+        Player player = new Player("Test", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addBuildingCard(new BuildingCard(1, Era.I, 0, new InventorPairFoodEffect(), 0));
 
         player.addCharacterCard(new InventorCard(1, Era.I, 2, InventorIcons.INVENTION_1));
