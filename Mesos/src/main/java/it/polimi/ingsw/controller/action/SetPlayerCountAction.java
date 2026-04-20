@@ -16,9 +16,4 @@ public class SetPlayerCountAction implements GameAction {
     public int getPlayersCount() {
         return playersCount;
     }
-
-    @Override
-    public String getType() {
-        return "";
-    }
 }

@@ -96,10 +96,9 @@ public class ActionResolutionState extends AbstractGameState {
             if (card == null)
                 throw new IllegalArgumentException("Carta personaggio non trovata: " + pickCard.getCardId());
 
-                game.takeCharacterCard(currentPlayer, row, card);
-                // listener
-                ctx.notifyListeners(l -> l.onCharacterCardTaken(
-                        playerNickname, pickCard.getCardId(), pickCard.isFromUpperRow()));
+            game.takeCharacterCard(currentPlayer, row, card);
+            ctx.notifyListeners(l -> l.onCharacterCardTaken(
+                    playerNickname, pickCard.getCardId(), pickCard.isFromUpperRow()));
 
             if (pickCard.isFromUpperRow()) remainingUpperPicks--;
             else remainingLowerPicks--;
@@ -117,11 +116,9 @@ public class ActionResolutionState extends AbstractGameState {
             if (card == null)
                 throw new IllegalArgumentException("Edificio non trovato: " + pickBuilding.getCardId());
 
-                game.takeBuildingCard(currentPlayer, row, card);
-                // listener
-                ctx.notifyListeners(l -> l.onBuildingCardTaken(
-                        playerNickname, pickBuilding.getCardId(), pickBuilding.isFromUpperRow()));
             game.takeBuildingCard(currentPlayer, row, card);
+            ctx.notifyListeners(l -> l.onBuildingCardTaken(
+                    playerNickname, pickBuilding.getCardId(), pickBuilding.isFromUpperRow()));
 
             if (pickBuilding.isFromUpperRow()) remainingUpperPicks--;
             else remainingLowerPicks--;

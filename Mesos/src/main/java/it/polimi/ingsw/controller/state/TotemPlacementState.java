@@ -23,18 +23,15 @@ public class TotemPlacementState extends AbstractGameState {
 
     @Override
     public void handleAction(GameController ctx, String playerNickname, GameAction action) {
-
-        // accetta solo PLACE_TOTEM
-        if (!action.getType().equals("PLACE_TOTEM")) {
-            throw new IllegalStateException("Azione non valida in questa fase: " + action.getType());
+        if (!(action instanceof PlaceTotemAction)) {
+            rejectAction(action);
         }
+        PlaceTotemAction placeTotem = (PlaceTotemAction) action;
 
         // verifica che il giocatore non abbia già piazzato
         if (playersWhoPlaced.contains(playerNickname)) {
             throw new IllegalStateException(playerNickname + " ha già piazzato il totem");
         }
-
-        PlaceTotemAction placeTotem = (PlaceTotemAction) action;
 
         // trova il giocatore nel model
         Player player = findPlayer(ctx, playerNickname);
