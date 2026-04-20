@@ -15,8 +15,11 @@ public class EndRoundState extends AbstractGameState {
     public void onEnter(GameController ctx) {
         Game game = ctx.getGame();
         Round round = game.getCurrentRound();
+        game.getBoard().resetOfferTiles();
+        game.getBoard().getTurnOrderTile().reset();
 
         if (game.isLastRound()) {
+            game.end();
             ctx.changeState(new EndGameState());
         } else {
             int finishedRound = game.getCurrentRound().getNumber();

@@ -4,6 +4,10 @@ import it.polimi.ingsw.controller.GameController;
 import it.polimi.ingsw.controller.action.GameAction;
 import it.polimi.ingsw.model.Game;
 import it.polimi.ingsw.model.Player;
+import it.polimi.ingsw.model.card.BuildingCard;
+import it.polimi.ingsw.model.card.Card;
+import it.polimi.ingsw.model.card.CardFactory;
+import it.polimi.ingsw.model.enums.Era;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -19,10 +23,6 @@ public class StartGameState extends AbstractGameState {
             throw new IllegalArgumentException("Controller context cannot be null");
         }
 
-        if (!ctx.hasChosenPlayersCount()) {
-            throw new IllegalStateException("Cannot start the game before choosing the players count");
-        }
-
         if (!ctx.isLobbyFull()) {
             throw new IllegalStateException("Cannot start the game before the lobby is full");
         }
@@ -32,6 +32,10 @@ public class StartGameState extends AbstractGameState {
         }
 
         List<Player> players = new ArrayList<>(ctx.getLobbyPlayers());
+        List<Card> tributeDeck = CardFactory.createTribeDeck(players.size());
+        List<BuildingCard> era1BuildingDeck = CardFactory.createBuildingCards(Era.I, players.size());
+        List<BuildingCard> era2BuildingDeck = CardFactory.createBuildingCards(Era.II, players.size());
+        List<BuildingCard> era3BuildingDeck = CardFactory.createBuildingCards(Era.III, players.size());
 
         Game game = new Game(
                 players,
@@ -40,10 +44,10 @@ public class StartGameState extends AbstractGameState {
                 null,
                 LocalDateTime.now(),
                 null,
-                null,
-                null,
-                null,
-                null
+                tributeDeck,
+                era1BuildingDeck,
+                era2BuildingDeck,
+                era3BuildingDeck
         );
 
         game.start();

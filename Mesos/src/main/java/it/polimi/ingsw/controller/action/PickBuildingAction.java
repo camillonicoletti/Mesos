@@ -12,11 +12,6 @@ public class PickBuildingAction implements GameAction, Serializable {
         this.fromUpperRow = fromUpperRow;
     }
 
-    @Override
-    public String getType() {
-        return "PICK_BUILDING";
-    }
-
     public String getCardId() {
         return cardId;
     }

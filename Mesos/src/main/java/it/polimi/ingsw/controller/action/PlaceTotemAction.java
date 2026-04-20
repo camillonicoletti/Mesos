@@ -10,11 +10,6 @@ public class PlaceTotemAction implements GameAction, Serializable {
         this.tileId = tileId;
     }
 
-    @Override
-    public String getType() {
-        return "PLACE_TOTEM";
-    }
-
     public char getTileId() {
         return tileId;
     }

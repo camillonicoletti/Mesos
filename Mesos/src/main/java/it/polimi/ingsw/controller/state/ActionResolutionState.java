@@ -71,7 +71,7 @@ public class ActionResolutionState extends AbstractGameState {
 
     @Override
     public void handleAction(GameController ctx, String playerNickname, GameAction action) {
-        if (currentIndex >= orderedPlayers.size()) rejectAction(action);
+        if (currentIndex >= orderedPlayers.size()) return;
 
         Player currentPlayer = orderedPlayers.get(currentIndex).getKey();
         Game game = ctx.getGame();
@@ -82,59 +82,51 @@ public class ActionResolutionState extends AbstractGameState {
             throw new IllegalStateException("Non è il turno di " + playerNickname);
         }
 
-        switch (action.getType()) {
+        if (action instanceof PickCardAction pickCard) {
+            if (pickCard.isFromUpperRow() && remainingUpperPicks <= 0)
+                throw new IllegalStateException("Non puoi prendere altre carte dalla riga superiore");
+            if (!pickCard.isFromUpperRow() && remainingLowerPicks <= 0)
+                throw new IllegalStateException("Non puoi prendere altre carte dalla riga inferiore");
 
-            case "PICK_CARD" -> {
-                PickCardAction pickCard = (PickCardAction) action;
+            List<CharacterCard> row = pickCard.isFromUpperRow()
+                    ? round.getUpperRowTribute()
+                    : round.getLowerRowTribute();
 
-                if (pickCard.isFromUpperRow() && remainingUpperPicks <= 0)
-                    throw new IllegalStateException("Non puoi prendere altre carte dalla riga superiore");
-                if (!pickCard.isFromUpperRow() && remainingLowerPicks <= 0)
-                    throw new IllegalStateException("Non puoi prendere altre carte dalla riga inferiore");
-
-                List<CharacterCard> row = pickCard.isFromUpperRow()
-                        ? round.getUpperRowTribute()
-                        : round.getLowerRowTribute();
-
-                CharacterCard card = findCharacterCard(row, pickCard.getCardId());
-                if (card == null)
-                    throw new IllegalArgumentException("Carta personaggio non trovata: " + pickCard.getCardId());
+            CharacterCard card = findCharacterCard(row, pickCard.getCardId());
+            if (card == null)
+                throw new IllegalArgumentException("Carta personaggio non trovata: " + pickCard.getCardId());
 
                 game.takeCharacterCard(currentPlayer, row, card);
                 // listener
                 ctx.notifyListeners(l -> l.onCharacterCardTaken(
                         playerNickname, pickCard.getCardId(), pickCard.isFromUpperRow()));
 
-                if (pickCard.isFromUpperRow()) remainingUpperPicks--;
-                else remainingLowerPicks--;
-            }
+            if (pickCard.isFromUpperRow()) remainingUpperPicks--;
+            else remainingLowerPicks--;
+        } else if (action instanceof PickBuildingAction pickBuilding) {
+            if (pickBuilding.isFromUpperRow() && remainingUpperPicks <= 0)
+                throw new IllegalStateException("Non puoi prendere altri edifici dalla riga superiore");
+            if (!pickBuilding.isFromUpperRow() && remainingLowerPicks <= 0)
+                throw new IllegalStateException("Non puoi prendere altri edifici dalla riga inferiore");
 
-            case "PICK_BUILDING" -> {
-                PickBuildingAction pickBuilding = (PickBuildingAction) action;
+            List<BuildingCard> row = pickBuilding.isFromUpperRow()
+                    ? round.getUpperRowBuildings()
+                    : round.getLowerRowBuildings();
 
-                if (pickBuilding.isFromUpperRow() && remainingUpperPicks <= 0)
-                    throw new IllegalStateException("Non puoi prendere altri edifici dalla riga superiore");
-                if (!pickBuilding.isFromUpperRow() && remainingLowerPicks <= 0)
-                    throw new IllegalStateException("Non puoi prendere altri edifici dalla riga inferiore");
-
-                List<BuildingCard> row = pickBuilding.isFromUpperRow()
-                        ? round.getUpperRowBuildings()
-                        : round.getLowerRowBuildings();
-
-                BuildingCard card = findBuildingCard(row, pickBuilding.getCardId());
-                if (card == null)
-                    throw new IllegalArgumentException("Edificio non trovato: " + pickBuilding.getCardId());
+            BuildingCard card = findBuildingCard(row, pickBuilding.getCardId());
+            if (card == null)
+                throw new IllegalArgumentException("Edificio non trovato: " + pickBuilding.getCardId());
 
                 game.takeBuildingCard(currentPlayer, row, card);
                 // listener
                 ctx.notifyListeners(l -> l.onBuildingCardTaken(
                         playerNickname, pickBuilding.getCardId(), pickBuilding.isFromUpperRow()));
+            game.takeBuildingCard(currentPlayer, row, card);
 
-                if (pickBuilding.isFromUpperRow()) remainingUpperPicks--;
-                else remainingLowerPicks--;
-            }
-
-            default -> throw new IllegalStateException("Azione non valida in questa fase: " + action.getType());
+            if (pickBuilding.isFromUpperRow()) remainingUpperPicks--;
+            else remainingLowerPicks--;
+        } else {
+            rejectAction(action);
         }
 
         // giocatore ha finito tutti i pick → spostalo sul TurnOrderTile e avanza
