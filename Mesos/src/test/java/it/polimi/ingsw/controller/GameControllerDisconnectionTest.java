@@ -11,7 +11,6 @@ import it.polimi.ingsw.controller.state.TotemPlacementState;
 import it.polimi.ingsw.model.Game;
 import it.polimi.ingsw.model.Totem;
 import it.polimi.ingsw.model.enums.TotemColor;
-import it.polimi.ingsw.model.enums.TotemPosition;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
