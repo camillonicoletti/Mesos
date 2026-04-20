@@ -39,7 +39,7 @@ public class Tribe {
                 count++;
             }
         }
-            return count;
+        return count;
     }
 
     public int getBuildingDiscount() {
@@ -52,7 +52,6 @@ public class Tribe {
         return discount;
     }
 
-
     public List<CharacterCard> getCharacterCards() {
         return characterCards;
     }
@@ -63,7 +62,6 @@ public class Tribe {
 
     // Method used for FullSetFoodEffect and EndFullSetPPEffect
     public int countFullSets() {
-
         int[] counts = {
                 countCharactersByType(ArtistCard.class),
                 countCharactersByType(BuilderCard.class),
@@ -79,7 +77,6 @@ public class Tribe {
         }
 
         return sets;
-
     }
 
     // Method for ShamanicRitualEvent
@@ -109,8 +106,6 @@ public class Tribe {
         return distinctIcons.size();
     }
 
-
-
     // Method used for InventorPairFoodEffect
     public int countInventorPairs() {
         Map<InventorIcons, Integer> iconCounts = new HashMap<>();
@@ -127,5 +122,11 @@ public class Tribe {
             pairs += count / 2;
         }
         return pairs;
+    }
+
+    // Method used for Artist scoring (2 Artist cards = 1 pair → points)
+    public int countArtistPairs() {
+        int artists = countCharactersByType(ArtistCard.class);
+        return artists / 2;
     }
 }

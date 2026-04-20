@@ -83,6 +83,7 @@ public class Round {
     // once the controller is implemented, it will be refactored to delegate
     // player choices (card selection, extra card from upper row) to the controller
 
+    /*
     public void execute() {
 
         game.getBoard().getTurnOrderTile().reset();
@@ -137,6 +138,8 @@ public class Round {
         // remove all totems from offer tiles for the next round
         game.getBoard().resetOfferTiles();
     }
+
+     */
 
 
 
@@ -280,7 +283,6 @@ public class Round {
         Board board = game.getBoard();
         TurnOrderTile turnOrderTile = board.getTurnOrderTile();
 
-        // find the first free slot on the TurnOrderTile
         TurnSlot targetSlot = null;
         for (TurnSlot slot : turnOrderTile.getSlots()) {
             if (!slot.isOccupied()) {
@@ -290,22 +292,17 @@ public class Round {
         }
         if (targetSlot == null) return;
 
-        // move totem from OfferTile to TurnOrderTile
         targetSlot.placeTotem(player.getTotem());
 
-        // apply slot effect immediately
-        switch (targetSlot.getEffect()) {
-            case GAIN_FOOD -> {
-                player.addFood(targetSlot.getEffectValue());
-                // if the player has TotemSlotFoodBonusEffect, give 1 extra food
-                for (BuildingCard building : player.getTribe().getBuildingCards()) {
-                    if (building.getEffect() instanceof TotemSlotFoodBonusEffect) {
-                        building.getEffect().apply(player);
-                    }
+        targetSlot.getEffect().apply(player);
+
+        // building effect TotemSlotFoodBonusEffect
+        if (targetSlot.getEffect() instanceof GainFoodSlotEffect) {
+            for (BuildingCard building : player.getTribe().getBuildingCards()) {
+                if (building.getEffect() instanceof TotemSlotFoodBonusEffect) {
+                    building.getEffect().apply(player);
                 }
             }
-            case PAY_FOOD -> player.applyTurnPenalty(targetSlot.getEffectValue(), targetSlot.getPenaltyPoints());
-            case NONE     -> {}
         }
     }
 

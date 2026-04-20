@@ -10,6 +10,11 @@ public class ReadyAction implements GameAction {
         this.ready = ready;
     }
 
+    @Override
+    public String getType() {
+        return "READY";
+    }
+
     public boolean isReady() {
         return ready;
     }

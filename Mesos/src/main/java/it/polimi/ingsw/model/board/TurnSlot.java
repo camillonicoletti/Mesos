@@ -1,22 +1,17 @@
 package it.polimi.ingsw.model.board;
 
 import it.polimi.ingsw.model.Totem;
-import it.polimi.ingsw.model.enums.SlotEffect;
 import it.polimi.ingsw.model.enums.TotemPosition;
 
 public class TurnSlot {
 
-    private int position;
-    private SlotEffect effect;
-    private int effectValue;
-    private int penaltyPoints;
+    private final int position;
+    private final TurnSlotEffect effect;
     private Totem occupiedBy;
 
-    public TurnSlot(int position, SlotEffect effect, int effectValue, int penaltyPoints) {
+    public TurnSlot(int position, TurnSlotEffect effect) {
         this.position = position;
         this.effect = effect;
-        this.effectValue = effectValue;
-        this.penaltyPoints = penaltyPoints;
         this.occupiedBy = null;
     }
 
@@ -24,16 +19,8 @@ public class TurnSlot {
         return position;
     }
 
-    public SlotEffect getEffect() {
+    public TurnSlotEffect getEffect() {
         return effect;
-    }
-
-    public int getEffectValue() {
-        return effectValue;
-    }
-
-    public int getPenaltyPoints() {
-        return penaltyPoints;
     }
 
     public boolean isOccupied() {
@@ -55,5 +42,4 @@ public class TurnSlot {
         if (removed != null) removed.setPosition(TotemPosition.OFFER_TRACK);
         return removed;
     }
-
 }

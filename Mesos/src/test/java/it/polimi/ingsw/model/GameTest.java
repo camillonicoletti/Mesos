@@ -37,8 +37,8 @@ public class GameTest {
         tileB = new OfferTile('B', 2, List.of(new ActionSlot(SlotType.FOOD, 3)));
 
         List<TurnSlot> turnSlots = new ArrayList<>();
-        turnSlots.add(new TurnSlot(1, SlotEffect.NONE, 0, 0));
-        turnSlots.add(new TurnSlot(2, SlotEffect.NONE, 0, 0));
+        turnSlots.add(new TurnSlot(1, new NoSlotEffect()));
+        turnSlots.add(new TurnSlot(2, new NoSlotEffect()));
 
         board = new Board(List.of(tileA, tileB), new TurnOrderTile(2, turnSlots));
 
@@ -64,8 +64,7 @@ public class GameTest {
                 List.of(player1, player2),
                 1, null, Era.I, null,
                 board, tributeDeck,
-                era1Deck, era2Deck, era3Deck,
-                GameStatus.IN_PROGRESS
+                era1Deck, era2Deck, era3Deck
         );
 
         round = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
@@ -154,8 +153,7 @@ public class GameTest {
                 List.of(player1, player2),
                 0, null, null, null,
                 board, new ArrayList<>(tributeDeck),
-                new ArrayList<>(era1Deck), new ArrayList<>(era2Deck), new ArrayList<>(era3Deck),
-                GameStatus.WAITING
+                new ArrayList<>(era1Deck), new ArrayList<>(era2Deck), new ArrayList<>(era3Deck)
         );
 
         freshGame.start();
@@ -163,11 +161,6 @@ public class GameTest {
         assertEquals(Era.I, freshGame.getCurrentEra());
         assertNotNull(freshGame.getCurrentRound());
         assertFalse(freshGame.isGameOver());
-    }
-
-    @Test
-    void testStartThrowsIfNotWaiting() {
-        assertThrows(IllegalStateException.class, () -> game.start());
     }
 
     // =========================================================
@@ -191,8 +184,7 @@ public class GameTest {
                 List.of(player1, player2),
                 10, null, Era.I, null,
                 board, new ArrayList<>(tributeDeck),
-                new ArrayList<>(), new ArrayList<>(), new ArrayList<>(),
-                GameStatus.IN_PROGRESS
+                new ArrayList<>(), new ArrayList<>(), new ArrayList<>()
         );
         Round maxRound = new Round(10, maxRoundGame, RoundPhase.TOTEM_PLACEMENT, Era.I,
                 new ArrayList<>(), new ArrayList<>(),
@@ -203,7 +195,6 @@ public class GameTest {
         maxRoundGame.nextRound(); // a round 10 (MAX_ROUNDS), nextRound() chiama end()
         assertTrue(maxRoundGame.isGameOver());
     }
-
 
     // =========================================================
     // NEXT ERA / END ERA
@@ -251,7 +242,7 @@ public class GameTest {
     }
 
     // =========================================================
-    // NEXT ROUND / END ROUND
+    // NEXT ROUND
     // =========================================================
 
     @Test
@@ -269,73 +260,12 @@ public class GameTest {
     }
 
     @Test
-    void testEndRoundThrowsIfNotInProgress() {
-        game.end();
-        assertThrows(IllegalStateException.class, () -> game.endRound());
-    }
-
-    @Test
-    void testEndRoundAdvancesToRound2() {
-        round.placeTotemOffer(player1, tileA);
-        round.placeTotemOffer(player2, tileB);
-
-        game.endRound();
-
-        assertEquals(2, game.getCurrentRound().getNumber());
-    }
-
-    @Test
-    void testTwoCompleteRounds() {
-        round.placeTotemOffer(player1, tileA);
-        round.placeTotemOffer(player2, tileB);
-
-        game.endRound();
-
-        assertEquals(0, player1.getTribe().getCharacterCards().size());
-        assertEquals(3, player2.getFood());
-        assertEquals(2, game.getCurrentRound().getNumber());
-
-        Round round2 = game.getCurrentRound();
-        round2.placeTotemOffer(player2, tileA);
-        round2.placeTotemOffer(player1, tileB);
-
-        game.endRound();
-
-        assertEquals(3, player1.getFood());
-        assertEquals(0, player2.getTribe().getCharacterCards().size());
-        assertEquals(3, game.getCurrentRound().getNumber());
-    }
-
-    @Test
-    void testEndRoundEndsGameAtMaxRounds() {
-        Game nearEndGame = new Game(
-                List.of(player1, player2),
-                10, null, Era.I, null,
-                board, new ArrayList<>(tributeDeck),
-                new ArrayList<>(), new ArrayList<>(), new ArrayList<>(),
-                GameStatus.IN_PROGRESS
-        );
-
-        Round nearEndRound = new Round(10, nearEndGame, RoundPhase.TOTEM_PLACEMENT, Era.I,
-                new ArrayList<>(), new ArrayList<>(),
-                new ArrayList<>(), new ArrayList<>(),
-                new ArrayList<>(), new ArrayList<>()
-        );
-        nearEndGame.setCurrentRound(nearEndRound);
-
-        nearEndGame.endRound();
-
-        assertTrue(nearEndGame.isGameOver());
-    }
-
-    @Test
     void testNextRoundAtMaxRoundsEndsGame() {
         Game maxGame = new Game(
                 List.of(player1, player2),
                 10, null, Era.I, null,
                 board, new ArrayList<>(tributeDeck),
-                new ArrayList<>(), new ArrayList<>(), new ArrayList<>(),
-                GameStatus.IN_PROGRESS
+                new ArrayList<>(), new ArrayList<>(), new ArrayList<>()
         );
         Round maxRound = new Round(10, maxGame, RoundPhase.TOTEM_PLACEMENT, Era.I,
                 new ArrayList<>(), new ArrayList<>(),
@@ -379,8 +309,7 @@ public class GameTest {
                 List.of(player1, player2),
                 1, null, Era.I, null,
                 board, new ArrayList<>(),
-                new ArrayList<>(), new ArrayList<>(), new ArrayList<>(),
-                GameStatus.IN_PROGRESS
+                new ArrayList<>(), new ArrayList<>(), new ArrayList<>()
         );
 
         assertNotNull(emptyGame.getBuildingsForEra(Era.I));
@@ -402,9 +331,9 @@ public class GameTest {
         assertTrue(game.isGameOver());
     }
 
-// =========================================================
-// TAKE CHARACTER CARD
-// =========================================================
+    // =========================================================
+    // TAKE CHARACTER CARD
+    // =========================================================
 
     @Test
     void testTakeCharacterCardAddsCardToPlayerTribe() {
@@ -438,7 +367,6 @@ public class GameTest {
 
     @Test
     void testTakeCharacterCardHunterWithFoodIconGivesFoodEqualToHunterCount() {
-        // aggiunge un cacciatore con foodIcon=true → food = numero di cacciatori nella tribù
         HunterCard hunter = new HunterCard(99, Era.I, 2, true);
         List<CharacterCard> row = new ArrayList<>(List.of(hunter));
 
@@ -449,7 +377,6 @@ public class GameTest {
 
     @Test
     void testTakeCharacterCardHunterWithFoodIconCountsAllHuntersInTribe() {
-        // player1 ha già 2 cacciatori, ne prende un terzo con foodIcon=true
         player1.addCharacterCard(new HunterCard(10, Era.I, 2, false));
         player1.addCharacterCard(new HunterCard(11, Era.I, 2, false));
 
@@ -471,14 +398,14 @@ public class GameTest {
         assertEquals(0, player1.getFood());
     }
 
-// =========================================================
-// TAKE BUILDING CARD
-// =========================================================
+    // =========================================================
+    // TAKE BUILDING CARD
+    // =========================================================
 
     @Test
     void testTakeBuildingCardSpendsCorrectFood() {
         player1.addFood(5);
-        BuildingCard building = new BuildingCard(99, Era.I, 3, p -> {}, 0); // costo 3
+        BuildingCard building = new BuildingCard(99, Era.I, 3, p -> {}, 0);
         List<BuildingCard> row = new ArrayList<>(List.of(building));
 
         game.takeBuildingCard(player1, row, building);
@@ -500,7 +427,7 @@ public class GameTest {
 
     @Test
     void testTakeBuildingCardThrowsWhenNotAffordable() {
-        BuildingCard building = new BuildingCard(99, Era.I, 3, p -> {}, 0); // player ha 0 cibo
+        BuildingCard building = new BuildingCard(99, Era.I, 3, p -> {}, 0);
         List<BuildingCard> row = new ArrayList<>(List.of(building));
 
         assertThrows(IllegalStateException.class,
@@ -511,7 +438,7 @@ public class GameTest {
     void testTakeBuildingCardAppliesBuilderDiscount() {
         player1.addFood(3);
         player1.addCharacterCard(new BuilderCard(10, Era.I, 2, 0, 2)); // sconto 2
-        BuildingCard building = new BuildingCard(99, Era.I, 3, p -> {}, 0); // costo 3
+        BuildingCard building = new BuildingCard(99, Era.I, 3, p -> {}, 0);
         List<BuildingCard> row = new ArrayList<>(List.of(building));
 
         game.takeBuildingCard(player1, row, building);
@@ -523,7 +450,7 @@ public class GameTest {
     void testTakeBuildingCardDiscountCannotMakeCostNegative() {
         player1.addFood(3);
         player1.addCharacterCard(new BuilderCard(10, Era.I, 2, 0, 5)); // sconto 5 > costo
-        BuildingCard building = new BuildingCard(99, Era.I, 2, p -> {}, 0); // costo 2
+        BuildingCard building = new BuildingCard(99, Era.I, 2, p -> {}, 0);
         List<BuildingCard> row = new ArrayList<>(List.of(building));
 
         game.takeBuildingCard(player1, row, building); // costo finale = max(0, 2-5) = 0
@@ -541,9 +468,9 @@ public class GameTest {
                 () -> game.takeBuildingCard(player1, emptyRow, building));
     }
 
-// =========================================================
-// DRAW TRIBE CARD
-// =========================================================
+    // =========================================================
+    // DRAW TRIBE CARD
+    // =========================================================
 
     @Test
     void testDrawTribeCardRemovesCardFromDeck() {

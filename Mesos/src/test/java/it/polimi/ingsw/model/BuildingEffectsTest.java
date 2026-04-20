@@ -20,14 +20,12 @@ public class BuildingEffectsTest {
 
     private Game buildGame(List<Player> players) {
         return new Game(players, 1, null, Era.I, null, null,
-                new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>(),
-                GameStatus.IN_PROGRESS);
+                new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
     }
 
     private Game buildGameWithBoard(List<Player> players, Board board) {
         return new Game(players, 1, null, Era.I, null, board,
-                new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>(),
-                GameStatus.IN_PROGRESS);
+                new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
     }
 
     // -------------------------------------------------------
@@ -102,8 +100,8 @@ public class BuildingEffectsTest {
         player.addBuildingCard(new BuildingCard(1, Era.I, 0, new TotemSlotFoodBonusEffect(), 0));
 
         List<TurnSlot> slots = new ArrayList<>();
-        slots.add(new TurnSlot(1, SlotEffect.GAIN_FOOD, 2, 0));
-        slots.add(new TurnSlot(2, SlotEffect.NONE, 0, 0));
+        slots.add(new TurnSlot(1, new GainFoodSlotEffect(2)));
+        slots.add(new TurnSlot(2, new NoSlotEffect()));
 
         Board board = new Board(new ArrayList<>(), new TurnOrderTile(2, slots));
         Game game = buildGameWithBoard(List.of(player), board);
@@ -127,8 +125,8 @@ public class BuildingEffectsTest {
         player.addBuildingCard(new BuildingCard(1, Era.I, 0, new TotemSlotFoodBonusEffect(), 0));
 
         List<TurnSlot> slots = new ArrayList<>();
-        slots.add(new TurnSlot(1, SlotEffect.PAY_FOOD, 1, 2));
-        slots.add(new TurnSlot(2, SlotEffect.NONE, 0, 0));
+        slots.add(new TurnSlot(1, new PayFoodSlotEffect(1, 2)));
+        slots.add(new TurnSlot(2, new NoSlotEffect()));
 
         Board board = new Board(new ArrayList<>(), new TurnOrderTile(2, slots));
         Game game = buildGameWithBoard(List.of(player), board);
@@ -150,8 +148,8 @@ public class BuildingEffectsTest {
         Player player = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
 
         List<TurnSlot> slots = new ArrayList<>();
-        slots.add(new TurnSlot(1, SlotEffect.GAIN_FOOD, 2, 0));
-        slots.add(new TurnSlot(2, SlotEffect.NONE, 0, 0));
+        slots.add(new TurnSlot(1, new GainFoodSlotEffect(2)));
+        slots.add(new TurnSlot(2, new NoSlotEffect()));
 
         Board board = new Board(new ArrayList<>(), new TurnOrderTile(2, slots));
         Game game = buildGameWithBoard(List.of(player), board);

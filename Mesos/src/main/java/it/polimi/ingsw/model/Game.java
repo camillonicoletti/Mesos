@@ -189,6 +189,7 @@ public class Game {
         currentRound = currentRound.createNextRound(currentRoundNumber);
     }
 
+    /*
     public void endRound() {
         if (isGameOver()) {
             throw new IllegalStateException("Cannot end round if game is not running");
@@ -202,6 +203,8 @@ public class Game {
             nextRound();
         }
     }
+
+     */
 
     /**
      * Calculates the final score for each player.

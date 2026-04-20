@@ -1,7 +1,6 @@
 package it.polimi.ingsw.model;
 
 import it.polimi.ingsw.model.board.*;
-import it.polimi.ingsw.model.enums.SlotEffect;
 import it.polimi.ingsw.model.enums.SlotType;
 import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.model.enums.TotemPosition;
@@ -38,9 +37,9 @@ public class BoardTest {
         offerTiles.add(new OfferTile('E', 3, slotsE));
 
         List<TurnSlot> turnSlots = new ArrayList<>();
-        turnSlots.add(new TurnSlot(1, SlotEffect.GAIN_FOOD, 2, 0));
-        turnSlots.add(new TurnSlot(2, SlotEffect.NONE, 0, 0));
-        turnSlots.add(new TurnSlot(3, SlotEffect.PAY_FOOD, 1, 3));
+        turnSlots.add(new TurnSlot(1, new GainFoodSlotEffect(2)));
+        turnSlots.add(new TurnSlot(2, new NoSlotEffect()));
+        turnSlots.add(new TurnSlot(3, new PayFoodSlotEffect(1, 3)));
 
         turnOrderTile = new TurnOrderTile(3, turnSlots);
         board = new Board(offerTiles, turnOrderTile);
@@ -179,9 +178,9 @@ public class BoardTest {
 
     @Test
     void testGetTurnOrderShouldBeSortedByPositionEvenIfSlotsListIsUnordered() {
-        TurnSlot slot3 = new TurnSlot(3, SlotEffect.NONE, 0, 0);
-        TurnSlot slot1 = new TurnSlot(1, SlotEffect.NONE, 0, 0);
-        TurnSlot slot2 = new TurnSlot(2, SlotEffect.NONE, 0, 0);
+        TurnSlot slot3 = new TurnSlot(3, new NoSlotEffect());
+        TurnSlot slot1 = new TurnSlot(1, new NoSlotEffect());
+        TurnSlot slot2 = new TurnSlot(2, new NoSlotEffect());
 
         slot3.placeTotem(totem3);
         slot1.placeTotem(totem1);
@@ -222,9 +221,10 @@ public class BoardTest {
         unorderedOfferTiles.add(tileA);
 
         List<TurnSlot> slots = new ArrayList<>();
-        slots.add(new TurnSlot(1, SlotEffect.NONE, 0, 0));
-        slots.add(new TurnSlot(2, SlotEffect.NONE, 0, 0));
-        slots.add(new TurnSlot(3, SlotEffect.NONE, 0, 0));
+        // DOPO
+        slots.add(new TurnSlot(1, new NoSlotEffect()));
+        slots.add(new TurnSlot(2, new NoSlotEffect()));
+        slots.add(new TurnSlot(3, new NoSlotEffect()));
 
         TurnOrderTile localTurnOrderTile = new TurnOrderTile(3, slots);
         Board localBoard = new Board(unorderedOfferTiles, localTurnOrderTile);
@@ -326,8 +326,8 @@ public class BoardTest {
             TurnSlot first = tile.getSlots().stream()
                     .min(Comparator.comparingInt(TurnSlot::getPosition))
                     .orElseThrow();
-            assertEquals(SlotEffect.GAIN_FOOD, first.getEffect(),
-                    "First slot should be GAIN_FOOD for " + n + " players");
+            assertInstanceOf(GainFoodSlotEffect.class, first.getEffect(),
+                    "First slot should be GainFoodSlotEffect for " + n + " players");
         }
     }
 
@@ -338,8 +338,8 @@ public class BoardTest {
             TurnSlot last = tile.getSlots().stream()
                     .max(Comparator.comparingInt(TurnSlot::getPosition))
                     .orElseThrow();
-            assertEquals(SlotEffect.PAY_FOOD, last.getEffect(),
-                    "Last slot should be PAY_FOOD for " + n + " players");
+            assertInstanceOf(PayFoodSlotEffect.class, last.getEffect(),
+                    "Last slot should be PayFoodSlotEffect for " + n + " players");
         }
     }
 

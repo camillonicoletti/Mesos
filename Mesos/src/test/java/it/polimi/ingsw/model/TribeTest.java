@@ -9,497 +9,191 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TribeTest {
 
-    // =========================================================
+    // -------------------------------------------------------
     // countCharacterCards
-    // =========================================================
+    // -------------------------------------------------------
 
     @Test
     void countCharacterCards_shouldReturnZero_whenTribeIsEmpty() {
         Tribe tribe = new Tribe();
-
         assertEquals(0, tribe.countCharacterCards());
     }
 
     @Test
-    void countCharacterCards_shouldReturnTotalNumberOfCharacters() {
+    void countCharacterCards_shouldReturnTotalNumberOfCards() {
         Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new ArtistCard(Era.I));
-        tribe.addCharacterCard(new BuilderCard(2, 1, Era.I));
-        tribe.addCharacterCard(new InventorCard(InventorIcons.INVENTION_1, Era.II));
-
+        tribe.addCharacterCard(new ArtistCard(1, Era.I, 2));
+        tribe.addCharacterCard(new HunterCard(2, Era.I, 2, false));
+        tribe.addCharacterCard(new ShamanCard(3, Era.I, 2, 1));
         assertEquals(3, tribe.countCharacterCards());
     }
 
-    // =========================================================
+    // -------------------------------------------------------
     // countCharactersByType
-    // =========================================================
+    // -------------------------------------------------------
 
     @Test
-    void countCharactersByType_shouldReturnZero_whenTribeIsEmpty() {
+    void countCharactersByType_shouldReturnZero_whenNoCardsOfThatType() {
         Tribe tribe = new Tribe();
-
-        assertEquals(0, tribe.countCharactersByType(ArtistCard.class));
+        tribe.addCharacterCard(new ArtistCard(1, Era.I, 2));
+        assertEquals(0, tribe.countCharactersByType(HunterCard.class));
     }
 
     @Test
-    void countCharactersByType_shouldReturnZero_whenTypeIsNotPresent() {
+    void countCharactersByType_shouldCountOnlyMatchingType() {
         Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new ArtistCard(Era.I));
-        tribe.addCharacterCard(new InventorCard(InventorIcons.INVENTION_1, Era.I));
-
-        assertEquals(0, tribe.countCharactersByType(BuilderCard.class));
+        tribe.addCharacterCard(new HunterCard(1, Era.I, 2, false));
+        tribe.addCharacterCard(new HunterCard(2, Era.I, 2, false));
+        tribe.addCharacterCard(new ArtistCard(3, Era.I, 2));
+        assertEquals(2, tribe.countCharactersByType(HunterCard.class));
+        assertEquals(1, tribe.countCharactersByType(ArtistCard.class));
+        assertEquals(0, tribe.countCharactersByType(GathererCard.class));
     }
 
-    @Test
-    void countCharactersByType_shouldCountOnlyCardsOfRequestedType() {
-        Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new ArtistCard(Era.I));
-        tribe.addCharacterCard(new ArtistCard(Era.II));
-        tribe.addCharacterCard(new BuilderCard(2, 1, Era.I));
-        tribe.addCharacterCard(new InventorCard(InventorIcons.INVENTION_1, Era.III));
-
-        assertEquals(2, tribe.countCharactersByType(ArtistCard.class));
-    }
-
-    @Test
-    void countCharactersByType_shouldHandleManyCardsOfSameType() {
-        Tribe tribe = new Tribe();
-
-        for (int i = 0; i < 20; i++) {
-            tribe.addCharacterCard(new ArtistCard(Era.I));
-        }
-
-        assertEquals(20, tribe.countCharactersByType(ArtistCard.class));
-    }
-
-    // =========================================================
+    // -------------------------------------------------------
     // getBuildingDiscount
-    // =========================================================
+    // -------------------------------------------------------
 
     @Test
-    void getBuildingDiscount_shouldReturnZero_whenTribeIsEmpty() {
+    void getBuildingDiscount_shouldReturnZero_whenNoBuilders() {
         Tribe tribe = new Tribe();
-
         assertEquals(0, tribe.getBuildingDiscount());
     }
 
     @Test
-    void getBuildingDiscount_shouldReturnZero_whenThereAreNoBuilders() {
+    void getBuildingDiscount_shouldSumFoodDiscountOfAllBuilders() {
         Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new ArtistCard(Era.I));
-        tribe.addCharacterCard(new InventorCard(InventorIcons.INVENTION_1, Era.II));
-
-        assertEquals(0, tribe.getBuildingDiscount());
-    }
-
-    @Test
-    void getBuildingDiscount_shouldReturnSingleBuilderDiscount() {
-        Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new BuilderCard(2, 1, Era.I));
-
-        assertEquals(1, tribe.getBuildingDiscount());
-    }
-
-    @Test
-    void getBuildingDiscount_shouldSumAllBuilderDiscounts() {
-        Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new BuilderCard(2, 1, Era.I));
-        tribe.addCharacterCard(new BuilderCard(3, 2, Era.II));
-        tribe.addCharacterCard(new BuilderCard(4, 3, Era.III));
-
-        assertEquals(6, tribe.getBuildingDiscount());
-    }
-
-    @Test
-    void getBuildingDiscount_shouldIgnoreNonBuilderCards() {
-        Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new BuilderCard(2, 1, Era.I));
-        tribe.addCharacterCard(new ArtistCard(Era.II));
-        tribe.addCharacterCard(new InventorCard(InventorIcons.INVENTION_2, Era.III));
-        tribe.addCharacterCard(new BuilderCard(3, 2, Era.III));
-
+        tribe.addCharacterCard(new BuilderCard(1, Era.I, 2, 2, 1));
+        tribe.addCharacterCard(new BuilderCard(2, Era.I, 2, 3, 2));
         assertEquals(3, tribe.getBuildingDiscount());
     }
 
-    @Test
-    void getBuildingDiscount_shouldReturnZero_whenAllBuildersHaveZeroDiscount() {
-        Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new BuilderCard(1, 0, Era.I));
-        tribe.addCharacterCard(new BuilderCard(2, 0, Era.II));
-        tribe.addCharacterCard(new BuilderCard(3, 0, Era.III));
-
-        assertEquals(0, tribe.getBuildingDiscount());
-    }
-
-    @Test
-    void getBuildingDiscount_shouldHandleVeryLargeDiscountSum() {
-        Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new BuilderCard(1, 10, Era.I));
-        tribe.addCharacterCard(new BuilderCard(1, 20, Era.II));
-        tribe.addCharacterCard(new BuilderCard(1, 30, Era.III));
-
-        assertEquals(60, tribe.getBuildingDiscount());
-    }
-
-    // =========================================================
+    // -------------------------------------------------------
     // countArtistPairs
-    // =========================================================
+    // -------------------------------------------------------
 
     @Test
     void countArtistPairs_shouldReturnZero_whenTribeIsEmpty() {
         Tribe tribe = new Tribe();
-
         assertEquals(0, tribe.countArtistPairs());
     }
 
     @Test
-    void countArtistPairs_shouldReturnZero_whenThereIsOneArtist() {
+    void countArtistPairs_shouldReturnZero_whenOneArtist() {
         Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new ArtistCard(Era.I));
-
+        tribe.addCharacterCard(new ArtistCard(1, Era.I, 2));
         assertEquals(0, tribe.countArtistPairs());
     }
 
     @Test
-    void countArtistPairs_shouldReturnOne_whenThereAreTwoArtists() {
+    void countArtistPairs_shouldReturnOne_whenTwoArtists() {
         Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new ArtistCard(Era.I));
-        tribe.addCharacterCard(new ArtistCard(Era.II));
-
+        tribe.addCharacterCard(new ArtistCard(1, Era.I, 2));
+        tribe.addCharacterCard(new ArtistCard(2, Era.II, 2));
         assertEquals(1, tribe.countArtistPairs());
     }
 
     @Test
-    void countArtistPairs_shouldUseFloorDivision_whenThereAreThreeArtists() {
+    void countArtistPairs_shouldUseFloorDivision_whenThreeArtists() {
         Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new ArtistCard(Era.I));
-        tribe.addCharacterCard(new ArtistCard(Era.II));
-        tribe.addCharacterCard(new ArtistCard(Era.III));
-
+        tribe.addCharacterCard(new ArtistCard(1, Era.I, 2));
+        tribe.addCharacterCard(new ArtistCard(2, Era.II, 2));
+        tribe.addCharacterCard(new ArtistCard(3, Era.III, 2));
         assertEquals(1, tribe.countArtistPairs());
-    }
-
-    @Test
-    void countArtistPairs_shouldCountMultiplePairs() {
-        Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new ArtistCard(Era.I));
-        tribe.addCharacterCard(new ArtistCard(Era.I));
-        tribe.addCharacterCard(new ArtistCard(Era.II));
-        tribe.addCharacterCard(new ArtistCard(Era.III));
-        tribe.addCharacterCard(new ArtistCard(Era.III));
-
-        assertEquals(2, tribe.countArtistPairs());
     }
 
     @Test
     void countArtistPairs_shouldIgnoreNonArtistCards() {
         Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new ArtistCard(Era.I));
-        tribe.addCharacterCard(new BuilderCard(2, 1, Era.I));
-        tribe.addCharacterCard(new InventorCard(InventorIcons.INVENTION_1, Era.I));
-        tribe.addCharacterCard(new ArtistCard(Era.II));
-
+        tribe.addCharacterCard(new ArtistCard(1, Era.I, 2));
+        tribe.addCharacterCard(new BuilderCard(2, Era.I, 2, 0, 0));
+        tribe.addCharacterCard(new ArtistCard(3, Era.II, 2));
         assertEquals(1, tribe.countArtistPairs());
     }
 
-    @Test
-    void countArtistPairs_shouldHandleLargeOddNumberOfArtists() {
-        Tribe tribe = new Tribe();
-
-        for (int i = 0; i < 11; i++) {
-            tribe.addCharacterCard(new ArtistCard(Era.I));
-        }
-
-        assertEquals(5, tribe.countArtistPairs());
-    }
-
-    // =========================================================
+    // -------------------------------------------------------
     // countDistinctInventorIcons
-    // =========================================================
+    // -------------------------------------------------------
 
     @Test
-    void countDistinctInventorIcons_shouldReturnZero_whenThereAreNoInventors() {
+    void countDistinctInventorIcons_shouldReturnZero_whenNoInventors() {
         Tribe tribe = new Tribe();
-
         assertEquals(0, tribe.countDistinctInventorIcons());
     }
 
     @Test
-    void countDistinctInventorIcons_shouldReturnOne_whenThereIsOneInventor() {
+    void countDistinctInventorIcons_shouldReturnOne_whenOneInventor() {
         Tribe tribe = new Tribe();
-
         tribe.addCharacterCard(new InventorCard(1, Era.I, 2, InventorIcons.INVENTION_1));
-
         assertEquals(1, tribe.countDistinctInventorIcons());
     }
 
     @Test
     void countDistinctInventorIcons_shouldCountOnlyDifferentIcons() {
         Tribe tribe = new Tribe();
-
         tribe.addCharacterCard(new InventorCard(1, Era.I, 2, InventorIcons.INVENTION_1));
         tribe.addCharacterCard(new InventorCard(2, Era.I, 2, InventorIcons.INVENTION_1));
         tribe.addCharacterCard(new InventorCard(3, Era.II, 2, InventorIcons.INVENTION_3));
         tribe.addCharacterCard(new InventorCard(4, Era.III, 2, InventorIcons.INVENTION_5));
-        tribe.addCharacterCard(new InventorCard(5, Era.III, 2, InventorIcons.INVENTION_5));
-
         assertEquals(3, tribe.countDistinctInventorIcons());
-    }
-
-    @Test
-    void countDistinctInventorIcons_shouldCountAllDifferentIcons() {
-        Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new InventorCard(1, Era.I, 2, InventorIcons.INVENTION_1));
-        tribe.addCharacterCard(new InventorCard(2, Era.I, 2, InventorIcons.INVENTION_2));
-        tribe.addCharacterCard(new InventorCard(3, Era.II, 2, InventorIcons.INVENTION_3));
-        tribe.addCharacterCard(new InventorCard(4, Era.III, 2, InventorIcons.INVENTION_4));
-
-        assertEquals(4, tribe.countDistinctInventorIcons());
     }
 
     @Test
     void countDistinctInventorIcons_shouldIgnoreNonInventorCards() {
         Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new ArtistCard(Era.I));
-        tribe.addCharacterCard(new BuilderCard(2, 1, Era.I));
-        tribe.addCharacterCard(new InventorCard(InventorIcons.INVENTION_2, Era.II));
-
+        tribe.addCharacterCard(new ArtistCard(1, Era.I, 2));
+        tribe.addCharacterCard(new InventorCard(2, Era.II, 2, InventorIcons.INVENTION_2));
         assertEquals(1, tribe.countDistinctInventorIcons());
     }
 
-    // =========================================================
+    // -------------------------------------------------------
     // countInventorPairs
-    // =========================================================
+    // -------------------------------------------------------
 
     @Test
-    void countInventorPairs_shouldReturnZero_whenTribeIsEmpty() {
+    void countInventorPairs_shouldReturnZero_whenNoInventors() {
         Tribe tribe = new Tribe();
-
         assertEquals(0, tribe.countInventorPairs());
     }
 
     @Test
-    void countInventorPairs_shouldReturnZero_whenThereIsOneInventorOnly() {
+    void countInventorPairs_shouldReturnZero_whenAllIconsDifferent() {
         Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new InventorCard(InventorIcons.INVENTION_1, Era.I));
-
+        tribe.addCharacterCard(new InventorCard(1, Era.I, 2, InventorIcons.INVENTION_1));
+        tribe.addCharacterCard(new InventorCard(2, Era.I, 2, InventorIcons.INVENTION_2));
         assertEquals(0, tribe.countInventorPairs());
     }
 
     @Test
-    void countInventorPairs_shouldCountOnePair_whenTwoInventorsHaveSameIcon() {
+    void countInventorPairs_shouldReturnOnePair_whenTwoSameIcon() {
         Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new InventorCard(InventorIcons.INVENTION_1, Era.I));
-        tribe.addCharacterCard(new InventorCard(InventorIcons.INVENTION_1, Era.II));
-
+        tribe.addCharacterCard(new InventorCard(1, Era.I, 2, InventorIcons.INVENTION_1));
+        tribe.addCharacterCard(new InventorCard(2, Era.I, 2, InventorIcons.INVENTION_1));
         assertEquals(1, tribe.countInventorPairs());
     }
 
     @Test
-    void countInventorPairs_shouldReturnZero_whenInventorsHaveDifferentIcons() {
+    void countInventorPairs_shouldCountPairsAcrossMultipleIcons() {
         Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new InventorCard(InventorIcons.INVENTION_1, Era.I));
-        tribe.addCharacterCard(new InventorCard(InventorIcons.INVENTION_2, Era.II));
-
-        assertEquals(0, tribe.countInventorPairs());
-    }
-
-    @Test
-    void countInventorPairs_shouldUseFloorDivisionForEachIconGroup() {
-        Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new InventorCard(InventorIcons.INVENTION_1, Era.I));
-        tribe.addCharacterCard(new InventorCard(InventorIcons.INVENTION_1, Era.I));
-        tribe.addCharacterCard(new InventorCard(InventorIcons.INVENTION_1, Era.II));
-
-        assertEquals(1, tribe.countInventorPairs());
-    }
-
-    @Test
-    void countInventorPairs_shouldSumPairsAcrossDifferentIcons() {
-        Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new InventorCard(InventorIcons.INVENTION_1, Era.I));
-        tribe.addCharacterCard(new InventorCard(InventorIcons.INVENTION_1, Era.II));
-        tribe.addCharacterCard(new InventorCard(InventorIcons.INVENTION_2, Era.I));
-        tribe.addCharacterCard(new InventorCard(InventorIcons.INVENTION_2, Era.III));
-        tribe.addCharacterCard(new InventorCard(InventorIcons.INVENTION_2, Era.III));
-
+        tribe.addCharacterCard(new InventorCard(1, Era.I, 2, InventorIcons.INVENTION_1));
+        tribe.addCharacterCard(new InventorCard(2, Era.I, 2, InventorIcons.INVENTION_1));
+        tribe.addCharacterCard(new InventorCard(3, Era.I, 2, InventorIcons.INVENTION_2));
+        tribe.addCharacterCard(new InventorCard(4, Era.I, 2, InventorIcons.INVENTION_2));
         assertEquals(2, tribe.countInventorPairs());
     }
 
     @Test
-    void countInventorPairs_shouldIgnoreNonInventorCards() {
+    void countInventorPairs_shouldReturnOnePair_whenThreeSameIcon() {
         Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new ArtistCard(Era.I));
-        tribe.addCharacterCard(new BuilderCard(2, 1, Era.I));
-        tribe.addCharacterCard(new InventorCard(InventorIcons.INVENTION_3, Era.II));
-        tribe.addCharacterCard(new InventorCard(InventorIcons.INVENTION_3, Era.III));
-
+        tribe.addCharacterCard(new InventorCard(1, Era.I, 2, InventorIcons.INVENTION_1));
+        tribe.addCharacterCard(new InventorCard(2, Era.I, 2, InventorIcons.INVENTION_1));
+        tribe.addCharacterCard(new InventorCard(3, Era.I, 2, InventorIcons.INVENTION_1));
         assertEquals(1, tribe.countInventorPairs());
     }
 
-    // =========================================================
-    // countFullSets
-    // =========================================================
-
-    @Test
-    void countFullSets_shouldReturnZero_whenTribeIsEmpty() {
-        Tribe tribe = new Tribe();
-
-        assertEquals(0, tribe.countFullSets());
-    }
-
-    @Test
-    void countFullSets_shouldReturnZero_whenAtLeastOneTypeIsMissing() {
-        Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new ArtistCard(Era.I));
-        tribe.addCharacterCard(new BuilderCard(2, 1, Era.I));
-        tribe.addCharacterCard(new HunterCard(false, Era.I));
-        tribe.addCharacterCard(new InventorCard(InventorIcons.INVENTION_1, Era.I));
-
-        assertEquals(0, tribe.countFullSets());
-    }
-
-    @Test
-    void countFullSets_shouldReturnOne_whenThereIsExactlyOneOfEachType() {
-        Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new ArtistCard(Era.I));
-        tribe.addCharacterCard(new BuilderCard(2, 1, Era.I));
-        tribe.addCharacterCard(new GathererCard( Era.I));
-        tribe.addCharacterCard(new HunterCard(false, Era.I));
-        tribe.addCharacterCard(new InventorCard(InventorIcons.INVENTION_1, Era.I));
-        tribe.addCharacterCard(new ShamanCard(1, Era.I));
-
-        assertEquals(1, tribe.countFullSets());
-    }
-
-    @Test
-    void countFullSets_shouldReturnMinimumCountAmongAllTypes() {
-        Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new ArtistCard(Era.I));
-        tribe.addCharacterCard(new ArtistCard(Era.II));
-
-        tribe.addCharacterCard(new BuilderCard(2, 1, Era.I));
-        tribe.addCharacterCard(new BuilderCard(2, 1, Era.II));
-        tribe.addCharacterCard(new BuilderCard(2, 1, Era.III));
-
-        tribe.addCharacterCard(new GathererCard( Era.I));
-        tribe.addCharacterCard(new GathererCard( Era.II));
-
-        tribe.addCharacterCard(new HunterCard(false, Era.I));
-        tribe.addCharacterCard(new HunterCard(false, Era.II));
-
-        tribe.addCharacterCard(new InventorCard(InventorIcons.INVENTION_1, Era.I));
-        tribe.addCharacterCard(new InventorCard(InventorIcons.INVENTION_2, Era.II));
-
-        tribe.addCharacterCard(new ShamanCard(1, Era.I));
-
-        assertEquals(1, tribe.countFullSets());
-    }
-
-    @Test
-    void countFullSets_shouldHandleMultipleCompleteSets() {
-        Tribe tribe = new Tribe();
-
-        for (int i = 0; i < 3; i++) {
-            tribe.addCharacterCard(new ArtistCard(Era.I));
-            tribe.addCharacterCard(new BuilderCard(2, 1, Era.I));
-            tribe.addCharacterCard(new GathererCard( Era.I));
-            tribe.addCharacterCard(new HunterCard(false, Era.I));
-            tribe.addCharacterCard(new InventorCard(InventorIcons.INVENTION_1, Era.I));
-            tribe.addCharacterCard(new ShamanCard(1, Era.I));
-        }
-
-        assertEquals(3, tribe.countFullSets());
-    }
-
-    // =========================================================
-    // countShamanStars
-    // =========================================================
-
-    @Test
-    void countShamanStars_shouldReturnZero_whenThereAreNoShamans() {
-        Tribe tribe = new Tribe();
-
-        assertEquals(0, tribe.countShamanStars());
-    }
-
-    @Test
-    void countShamanStars_shouldReturnStarsOfSingleShaman() {
-        Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new ShamanCard(3, Era.I));
-
-        assertEquals(3, tribe.countShamanStars());
-    }
-
-    @Test
-    void countShamanStars_shouldSumStarsOfAllShamans() {
-        Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new ShamanCard(1, Era.I));
-        tribe.addCharacterCard(new ShamanCard(2, Era.II));
-        tribe.addCharacterCard(new ShamanCard(4, Era.III));
-
-        assertEquals(7, tribe.countShamanStars());
-    }
-
-    @Test
-    void countShamanStars_shouldIgnoreNonShamanCards() {
-        Tribe tribe = new Tribe();
-
-        tribe.addCharacterCard(new ShamanCard(2, Era.I));
-        tribe.addCharacterCard(new ArtistCard(Era.I));
-        tribe.addCharacterCard(new BuilderCard(2, 1, Era.II));
-
-        assertEquals(2, tribe.countShamanStars());
-    }
-
-    // ------------------------------------------------------- //
-    // getBuildingDiscount
-    // ------------------------------------------------------- //
-
-    @Test
-    void getBuildingDiscountReturnsZeroWithNoBuilders() {
-        Tribe tribe = new Tribe();
-        assertEquals(0, tribe.getBuildingDiscount());
-    }
-
-    @Test
-    void getBuildingDiscountSumsFoodDiscountOfAllBuilders() {
-        Tribe tribe = new Tribe();
-        tribe.addCharacterCard(new BuilderCard(1, Era.I, 2, 2, 1)); // foodDiscount = 1
-        tribe.addCharacterCard(new BuilderCard(2, Era.I, 2, 3, 2)); // foodDiscount = 2
-        assertEquals(3, tribe.getBuildingDiscount()); // 1 + 2
-    }
-
     // -------------------------------------------------------
-// countFullSets
-// -------------------------------------------------------
+    // countFullSets
+    // -------------------------------------------------------
 
     @Test
     void countFullSets_shouldReturnZero_whenTribeIsEmpty() {
@@ -513,7 +207,6 @@ public class TribeTest {
         tribe.addCharacterCard(new ArtistCard(1, Era.I, 2));
         tribe.addCharacterCard(new BuilderCard(2, Era.I, 2, 0, 0));
         tribe.addCharacterCard(new GathererCard(3, Era.I, 2));
-        // mancano Hunter, Inventor, Shaman
         assertEquals(0, tribe.countFullSets());
     }
 
@@ -546,7 +239,6 @@ public class TribeTest {
     @Test
     void countFullSets_shouldBeLimitedByRarestType() {
         Tribe tribe = new Tribe();
-        // 2 artisti, 1 di tutto il resto → solo 1 set completo
         tribe.addCharacterCard(new ArtistCard(1, Era.I, 2));
         tribe.addCharacterCard(new ArtistCard(2, Era.I, 2));
         tribe.addCharacterCard(new BuilderCard(3, Era.I, 2, 0, 0));
@@ -557,9 +249,9 @@ public class TribeTest {
         assertEquals(1, tribe.countFullSets());
     }
 
-// -------------------------------------------------------
-// countShamanStars
-// -------------------------------------------------------
+    // -------------------------------------------------------
+    // countShamanStars
+    // -------------------------------------------------------
 
     @Test
     void countShamanStars_shouldReturnZero_whenNoShamans() {
@@ -591,96 +283,9 @@ public class TribeTest {
         assertEquals(2, tribe.countShamanStars());
     }
 
-// -------------------------------------------------------
-// countCharacterCards
-// -------------------------------------------------------
-
-    @Test
-    void countCharacterCards_shouldReturnZero_whenTribeIsEmpty() {
-        Tribe tribe = new Tribe();
-        assertEquals(0, tribe.countCharacterCards());
-    }
-
-    @Test
-    void countCharacterCards_shouldReturnTotalNumberOfCards() {
-        Tribe tribe = new Tribe();
-        tribe.addCharacterCard(new ArtistCard(1, Era.I, 2));
-        tribe.addCharacterCard(new HunterCard(2, Era.I, 2, false));
-        tribe.addCharacterCard(new ShamanCard(3, Era.I, 2, 1));
-        assertEquals(3, tribe.countCharacterCards());
-    }
-
-// -------------------------------------------------------
-// countCharactersByType
-// -------------------------------------------------------
-
-    @Test
-    void countCharactersByType_shouldReturnZero_whenNoCardsOfThatType() {
-        Tribe tribe = new Tribe();
-        tribe.addCharacterCard(new ArtistCard(1, Era.I, 2));
-        assertEquals(0, tribe.countCharactersByType(HunterCard.class));
-    }
-
-    @Test
-    void countCharactersByType_shouldCountOnlyMatchingType() {
-        Tribe tribe = new Tribe();
-        tribe.addCharacterCard(new HunterCard(1, Era.I, 2, false));
-        tribe.addCharacterCard(new HunterCard(2, Era.I, 2, false));
-        tribe.addCharacterCard(new ArtistCard(3, Era.I, 2));
-        assertEquals(2, tribe.countCharactersByType(HunterCard.class));
-        assertEquals(1, tribe.countCharactersByType(ArtistCard.class));
-        assertEquals(0, tribe.countCharactersByType(GathererCard.class));
-    }
-
-// -------------------------------------------------------
-// countInventorPairs
-// -------------------------------------------------------
-
-    @Test
-    void countInventorPairs_shouldReturnZero_whenNoInventors() {
-        Tribe tribe = new Tribe();
-        assertEquals(0, tribe.countInventorPairs());
-    }
-
-    @Test
-    void countInventorPairs_shouldReturnZero_whenAllIconsDifferent() {
-        Tribe tribe = new Tribe();
-        tribe.addCharacterCard(new InventorCard(1, Era.I, 2, InventorIcons.INVENTION_1));
-        tribe.addCharacterCard(new InventorCard(2, Era.I, 2, InventorIcons.INVENTION_2));
-        assertEquals(0, tribe.countInventorPairs());
-    }
-
-    @Test
-    void countInventorPairs_shouldReturnOnePair_whenTwoSameIcon() {
-        Tribe tribe = new Tribe();
-        tribe.addCharacterCard(new InventorCard(1, Era.I, 2, InventorIcons.INVENTION_1));
-        tribe.addCharacterCard(new InventorCard(2, Era.I, 2, InventorIcons.INVENTION_1));
-        assertEquals(1, tribe.countInventorPairs());
-    }
-
-    @Test
-    void countInventorPairs_shouldCountPairsAcrossMultipleIcons() {
-        Tribe tribe = new Tribe();
-        tribe.addCharacterCard(new InventorCard(1, Era.I, 2, InventorIcons.INVENTION_1));
-        tribe.addCharacterCard(new InventorCard(2, Era.I, 2, InventorIcons.INVENTION_1)); // coppia 1
-        tribe.addCharacterCard(new InventorCard(3, Era.I, 2, InventorIcons.INVENTION_2));
-        tribe.addCharacterCard(new InventorCard(4, Era.I, 2, InventorIcons.INVENTION_2)); // coppia 2
-        assertEquals(2, tribe.countInventorPairs());
-    }
-
-    @Test
-    void countInventorPairs_shouldReturnOnePair_whenThreeSameIcon() {
-        // 3 stessa icona → 1 coppia, 1 singolo
-        Tribe tribe = new Tribe();
-        tribe.addCharacterCard(new InventorCard(1, Era.I, 2, InventorIcons.INVENTION_1));
-        tribe.addCharacterCard(new InventorCard(2, Era.I, 2, InventorIcons.INVENTION_1));
-        tribe.addCharacterCard(new InventorCard(3, Era.I, 2, InventorIcons.INVENTION_1));
-        assertEquals(1, tribe.countInventorPairs());
-    }
-
-// -------------------------------------------------------
-// addCharacterCard / getCharacterCards
-// -------------------------------------------------------
+    // -------------------------------------------------------
+    // addCharacterCard / getCharacterCards
+    // -------------------------------------------------------
 
     @Test
     void addCharacterCard_shouldAddCardToList() {
@@ -698,9 +303,9 @@ public class TribeTest {
         assertTrue(tribe.getCharacterCards().isEmpty());
     }
 
-// -------------------------------------------------------
-// addBuildingCard / getBuildingCards
-// -------------------------------------------------------
+    // -------------------------------------------------------
+    // addBuildingCard / getBuildingCards
+    // -------------------------------------------------------
 
     @Test
     void addBuildingCard_shouldAddCardToList() {

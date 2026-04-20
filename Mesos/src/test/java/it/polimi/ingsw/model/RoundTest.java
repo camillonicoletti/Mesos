@@ -32,8 +32,8 @@ public class RoundTest {
         tileB = new OfferTile('B', 2, slotsB);
 
         List<TurnSlot> turnSlots = new ArrayList<>();
-        turnSlots.add(new TurnSlot(1, SlotEffect.NONE, 0, 0));
-        turnSlots.add(new TurnSlot(2, SlotEffect.NONE, 0, 0));
+        turnSlots.add(new TurnSlot(1, new NoSlotEffect()));
+        turnSlots.add(new TurnSlot(2, new NoSlotEffect()));
 
         board = new Board(List.of(tileA, tileB), new TurnOrderTile(2, turnSlots));
 
@@ -41,14 +41,12 @@ public class RoundTest {
         for (int i = 1; i <= 6; i++) {
             tributeDeck.add(new HunterCard(i, Era.I, 2, false));
         }
-
         game = new Game(
                 List.of(player1, player2),
                 1, null,
                 Era.I, null,
                 board, tributeDeck,
-                new ArrayList<>(), new ArrayList<>(), new ArrayList<>(),
-                GameStatus.IN_PROGRESS
+                new ArrayList<>(), new ArrayList<>(), new ArrayList<>()
         );
 
         round = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
@@ -99,16 +97,14 @@ public class RoundTest {
 
     @Test
     void testExecuteGivesUpperRowCardsToPlayer() {
-        // chosenCards is empty → player gets 0 cards
         round.placeTotemOffer(player1, tileA);
-        round.execute();
+        round.resolveOfferAction(player1, tileA, new ArrayList<>());
         assertEquals(0, player1.getTribe().getCharacterCards().size());
     }
-
     @Test
     void testExecuteGivesFoodToPlayer() {
         round.placeTotemOffer(player2, tileB);
-        round.execute();
+        round.resolveOfferAction(player2, tileB, new ArrayList<>());
         assertEquals(3, player2.getFood());
     }
 
@@ -124,8 +120,8 @@ public class RoundTest {
 
     @Test
     void testExecuteShiftsUpperToLower() {
-        round.placeTotemOffer(player1, tileA);
-        round.execute();
+        round.discardLowerRow();
+        round.shiftUpperToLowerRow();
         assertEquals(5, round.getLowerTributeRowSize());
     }
 
@@ -147,8 +143,8 @@ public class RoundTest {
     }
 
     @Test
-    void testExecuteWithNoPlayerChoicesDoesNotThrow() {
-        assertDoesNotThrow(() -> round.execute());
+    void testResolveOfferActionWithNoChoicesDoesNotThrow() {
+        assertDoesNotThrow(() -> round.resolveOfferAction(player1, tileA, new ArrayList<>()));
     }
 
     @Test
@@ -156,7 +152,7 @@ public class RoundTest {
         round.placeTotemOffer(player1, tileA);
         tileA.removeTotem();
         round.placeTotemOffer(player1, tileB);
-        round.execute();
+        round.resolveOfferAction(player1, tileB, new ArrayList<>());
 
         assertEquals(3, player1.getFood());
         assertEquals(0, player1.getTribe().getCharacterCards().size());
@@ -234,8 +230,8 @@ public class RoundTest {
     @Test
     void testPlaceTotemOrderGainFoodAppliedToFirstPlayer() {
         List<TurnSlot> effectSlots = new ArrayList<>();
-        effectSlots.add(new TurnSlot(1, SlotEffect.GAIN_FOOD, 2, 0));
-        effectSlots.add(new TurnSlot(2, SlotEffect.NONE, 0, 0));
+        effectSlots.add(new TurnSlot(1, new GainFoodSlotEffect(2)));
+        effectSlots.add(new TurnSlot(2, new NoSlotEffect()));
         board.setTurnOrderTile(new TurnOrderTile(2, effectSlots));
 
         round.placeTotemOrderForPlayer(player1); // slot 1 → GAIN_FOOD 2
@@ -246,8 +242,8 @@ public class RoundTest {
     @Test
     void testPlaceTotemOrderPayFoodAppliedToLastPlayer() {
         List<TurnSlot> effectSlots = new ArrayList<>();
-        effectSlots.add(new TurnSlot(1, SlotEffect.NONE, 0, 0));
-        effectSlots.add(new TurnSlot(2, SlotEffect.PAY_FOOD, 1, 0));
+        effectSlots.add(new TurnSlot(1, new NoSlotEffect()));
+        effectSlots.add(new TurnSlot(2, new PayFoodSlotEffect(1, 0)));
         board.setTurnOrderTile(new TurnOrderTile(2, effectSlots));
 
         player2.addFood(5);
@@ -261,8 +257,8 @@ public class RoundTest {
     @Test
     void testPlaceTotemOrderBothEffectsAppliedCorrectly() {
         List<TurnSlot> effectSlots = new ArrayList<>();
-        effectSlots.add(new TurnSlot(1, SlotEffect.GAIN_FOOD, 3, 0));
-        effectSlots.add(new TurnSlot(2, SlotEffect.PAY_FOOD, 2, 0));
+        effectSlots.add(new TurnSlot(1, new GainFoodSlotEffect(3)));
+        effectSlots.add(new TurnSlot(2, new PayFoodSlotEffect(2, 0)));
         board.setTurnOrderTile(new TurnOrderTile(2, effectSlots));
 
         player2.addFood(5);
@@ -327,8 +323,8 @@ public class RoundTest {
     @Test
     void testPlaceTotemOrderForPlayerWithTotemSlotFoodBonusEffect() {
         List<TurnSlot> effectSlots = new ArrayList<>();
-        effectSlots.add(new TurnSlot(1, SlotEffect.GAIN_FOOD, 2, 0));
-        effectSlots.add(new TurnSlot(2, SlotEffect.NONE, 0, 0));
+        effectSlots.add(new TurnSlot(1, new GainFoodSlotEffect(2)));
+        effectSlots.add(new TurnSlot(2, new NoSlotEffect()));
         board.setTurnOrderTile(new TurnOrderTile(2, effectSlots));
 
         player1.addBuildingCard(new BuildingCard(1, Era.I, 0, new TotemSlotFoodBonusEffect(), 0));
@@ -348,17 +344,7 @@ public class RoundTest {
         assertEquals(0, player1.getFood()); // nessun bonus
     }
 
-    @Test
-    void testExecuteResetsOfferTilesAfterRound() {
-        round.placeTotemOffer(player1, tileA);
-        round.placeTotemOffer(player2, tileB);
 
-        round.execute();
-
-        // dopo execute() le tile devono essere libere per il round successivo
-        assertFalse(tileA.isOccupied());
-        assertFalse(tileB.isOccupied());
-    }
 
     // -------------------------------------------------------
 // resolveOfferAction — LOWER_ROW
@@ -463,8 +449,8 @@ public class RoundTest {
     @Test
     void testPlaceTotemOrderPayFoodWithInsufficientFoodDeductsPP() {
         List<TurnSlot> effectSlots = new ArrayList<>();
-        effectSlots.add(new TurnSlot(1, SlotEffect.PAY_FOOD, 1, 2)); // paga 1 cibo, o 2 PP
-        effectSlots.add(new TurnSlot(2, SlotEffect.NONE, 0, 0));
+        effectSlots.add(new TurnSlot(1, new PayFoodSlotEffect(1, 2)));
+        effectSlots.add(new TurnSlot(2, new NoSlotEffect()));
         board.setTurnOrderTile(new TurnOrderTile(2, effectSlots));
 
         // player1 ha 0 cibo → non può pagare → perde 2 PP

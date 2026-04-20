@@ -31,8 +31,7 @@ public class GameScoringTest {
     private Game buildGame(List<Player> players) {
         return new Game(players, 1, null, Era.I, null, null,
                 new ArrayList<>(),
-                new ArrayList<>(), new ArrayList<>(), new ArrayList<>(),
-                GameStatus.IN_PROGRESS);
+                new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
     }
 
     @BeforeEach

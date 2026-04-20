@@ -18,12 +18,18 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ShamanicRitualEventCardTest {
 
     private Game buildGame(List<Player> players) {
-        return new Game(players, 0, null, null, null, null,
+        return new Game(
+                players,
+                0,
+                null,
+                null,
+                null,
+                null,
                 new java.util.ArrayList<>(),
                 new java.util.ArrayList<>(),
                 new java.util.ArrayList<>(),
-                new java.util.ArrayList<>(),
-                GameStatus.IN_PROGRESS);
+                new java.util.ArrayList<>()
+        );
     }
 
     private ShamanicRitualEventCard buildCard() {
