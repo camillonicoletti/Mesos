@@ -20,7 +20,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
-
+import it.polimi.ingsw.controller.listener.GameListener;
+import java.util.function.Consumer;
 
 public class Game {
 
@@ -37,8 +38,10 @@ public class Game {
     private List<BuildingCard> era2BuildingDeck;
     private List<BuildingCard> era3BuildingDeck;
     private final Map<Player, Integer> finalScores = new HashMap<>();
+    private transient Consumer<Consumer<GameListener>> notifier;
     private boolean finalScoresCalculated = false;
     private boolean gameEnded = false;
+
     private int getBuildingCountForEra(Era era) {
         int playersCount = players.size();
 
@@ -90,6 +93,10 @@ public class Game {
 
         // Create the board FIRST — setupInitialRows() and setupInitialBuildings() may need it
         this.board = BoardFactory.createBoard(players.size());
+
+        for (Player p : players) {
+            p.setGame(this);
+        }
 
         List<Totem> totems = new ArrayList<>();
         for (Player p : players) {
@@ -414,5 +421,12 @@ public class Game {
                         .thenComparingInt(Player::getFood))
                 .orElse(null);
     }
+    // LISTENER
+    public void setNotifier(Consumer<Consumer<GameListener>> notifier) {
+        this.notifier = notifier;
+    }
 
+    public void notifyListeners(Consumer<GameListener> event) {
+        if (notifier != null) notifier.accept(event);
+    }
 }

@@ -407,29 +407,24 @@ public class Round {
     }
 
     public void checkEraTransition() {
-        Era currentEra = game.getCurrentEra();
+        Era before = game.getCurrentEra();
 
         for (CharacterCard card : upperRowTribute) {
-            if (currentEra == Era.I && card.getEra() == Era.II) {
-                game.endEra();
-                return;
-            }
-            if (currentEra == Era.II && card.getEra() == Era.III) {
-                game.endEra();
-                return;
-            }
+            if (before == Era.I && card.getEra() == Era.II)
+            { game.endEra(); notifyEra(before); return; }
+            if (before == Era.II && card.getEra() == Era.III)
+            { game.endEra(); notifyEra(before); return; }
         }
-
         for (EventCard eventCard : upperRowEventCards) {
-            if (currentEra == Era.I && eventCard.getEra() == Era.II) {
-                game.endEra();
-                return;
-            }
-            if (currentEra == Era.II && eventCard.getEra() == Era.III) {
-                game.endEra();
-                return;
-            }
+            if (before == Era.I && eventCard.getEra() == Era.II)
+            { game.endEra(); notifyEra(before); return; }
+            if (before == Era.II && eventCard.getEra() == Era.III)
+            { game.endEra(); notifyEra(before); return; }
         }
+    }
+    private void notifyEra(Era before) {
+        Era after = game.getCurrentEra();
+        if (after != before) game.notifyListeners(l -> l.onEraChanged(after));
     }
 
     public void moveUpperBuildingsToLower() {

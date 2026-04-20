@@ -12,6 +12,7 @@ public class Player {
     private int prestigePoints;
     private final Tribe tribe;
     private final Totem totem;
+    private transient Game game;
 
     public Player(String nickname, Totem totem) {
         this.nickname = nickname;
@@ -22,6 +23,9 @@ public class Player {
 
         // TODO: nickname uniqueness must be checked by the server/lobby
         // TODO: initial food assignment belongs to game setup, not to Player
+    }
+    public void setGame(Game game) {
+        this.game = game;
     }
 
     public String getNickname() {
@@ -45,19 +49,19 @@ public class Player {
     }
 
     public void addFood(int amount) {
+        if (amount == 0) return;
         food += amount;
-
-        // TODO: add validation if needed
+        if (game != null) game.notifyListeners
+                (l -> l.onFoodChanged(nickname, food, amount));
     }
 
     public void spendFood(int amount) {
-        if (food >= amount) {
-            food -= amount;
-        } else {
-            int missing = amount - food;
-            food = 0;
-            removePrestigePoints(missing);
-        }
+        if (amount == 0) return;
+        if (amount < 0) throw new IllegalArgumentException("Cannot spend negative food");
+        if (amount > food) throw new IllegalStateException("Not enough food");
+        food -= amount;
+        if (game != null) game.notifyListeners
+                (l -> l.onFoodChanged(nickname, food, -amount));
     }
 
     public boolean canAfford(int cost) {
@@ -65,13 +69,17 @@ public class Player {
     }
 
     public void addPrestigePoints(int amount) {
+        if (amount == 0) return;
         prestigePoints += amount;
+        if (game != null) game.notifyListeners
+                (l -> l.onPointsChanged(nickname, prestigePoints, amount));
     }
 
     public void removePrestigePoints(int amount) {
+        if (amount == 0) return;
         prestigePoints -= amount;
-
-        // Prestige points can go below zero
+        if (game != null) game.notifyListeners
+                (l -> l.onPointsChanged(nickname, prestigePoints, -amount));
     }
 
     /**

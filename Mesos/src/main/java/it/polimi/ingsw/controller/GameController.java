@@ -89,6 +89,9 @@ public class GameController implements Serializable {
 
     public void setGame(Game game) {
         this.game = game;
+        if (game != null) {
+            game.setNotifier(this::notifyListeners);
+        }
     }
 
     public GameState getCurrentState() {
