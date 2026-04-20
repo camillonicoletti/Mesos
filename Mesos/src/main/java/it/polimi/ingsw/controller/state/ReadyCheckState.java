@@ -31,6 +31,16 @@ public class ReadyCheckState extends AbstractGameState {
         rejectAction(action);
     }
 
+    @Override
+    public void onPlayerDisconnected(GameController ctx, String playerNickname) {
+        if (!ctx.containsLobbyPlayer(playerNickname)) {
+            return;
+        }
+
+        ctx.removePlayerFromLobby(playerNickname);
+        ctx.changeState(new LobbyState());
+    }
+
     private void handleReadyAction(GameController ctx, String playerNickname, ReadyAction action) {
         if (playerNickname == null || playerNickname.isBlank()) {
             throw new IllegalArgumentException("Player nickname cannot be null or blank");

@@ -50,6 +50,13 @@ public class ActionResolutionState extends AbstractGameState {
         OfferTile tile = orderedPlayers.get(currentIndex).getValue();
         Round round = ctx.getGame().getCurrentRound();
 
+        if (ctx.isPlayerDisconnected(player.getNickname())) {
+            round.placeTotemOrderForPlayer(player);
+            currentIndex++;
+            prepareCurrentPlayer(ctx);
+            return;
+        }
+
         remainingUpperPicks = 0;
         remainingLowerPicks = 0;
 
@@ -72,6 +79,9 @@ public class ActionResolutionState extends AbstractGameState {
     @Override
     public void handleAction(GameController ctx, String playerNickname, GameAction action) {
         if (currentIndex >= orderedPlayers.size()) return;
+        if (ctx.isPlayerDisconnected(playerNickname)) {
+            throw new IllegalStateException("Disconnected players cannot act");
+        }
 
         Player currentPlayer = orderedPlayers.get(currentIndex).getKey();
         Game game = ctx.getGame();
@@ -132,6 +142,23 @@ public class ActionResolutionState extends AbstractGameState {
             currentIndex++;
             prepareCurrentPlayer(ctx);
         }
+    }
+
+    @Override
+    public void onPlayerDisconnected(GameController ctx, String playerNickname) {
+        if (!ctx.containsGamePlayer(playerNickname)) {
+            return;
+        }
+
+        ctx.markPlayerDisconnected(playerNickname);
+        if (currentIndex < orderedPlayers.size()
+                && orderedPlayers.get(currentIndex).getKey().getNickname().equals(playerNickname)
+                && !ctx.isSuspended()) {
+            ctx.getGame().getCurrentRound().placeTotemOrderForPlayer(orderedPlayers.get(currentIndex).getKey());
+            currentIndex++;
+            prepareCurrentPlayer(ctx);
+        }
+        // TODO define gameplay policy for disconnected players during action resolution.
     }
     // ── HELPERS ──────────────────────────────────────────────────────
 

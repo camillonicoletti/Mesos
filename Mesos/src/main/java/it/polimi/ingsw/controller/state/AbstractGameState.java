@@ -21,6 +21,16 @@ public abstract class AbstractGameState implements GameState {
         // Default: do nothing
     }
 
+    @Override
+    public void onPlayerDisconnected(GameController ctx, String playerNickname) {
+        // Default: do nothing
+    }
+
+    @Override
+    public void onPlayerReconnected(GameController ctx, String playerNickname) {
+        // Default: do nothing
+    }
+
     /**
      * Rejects an action that is not valid in the current state.
      *

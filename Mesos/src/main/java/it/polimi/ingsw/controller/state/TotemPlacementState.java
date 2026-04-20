@@ -26,6 +26,9 @@ public class TotemPlacementState extends AbstractGameState {
         if (!(action instanceof PlaceTotemAction)) {
             rejectAction(action);
         }
+        if (ctx.isPlayerDisconnected(playerNickname)) {
+            throw new IllegalStateException("Disconnected players cannot act");
+        }
         PlaceTotemAction placeTotem = (PlaceTotemAction) action;
 
         // verifica che il giocatore non abbia già piazzato
@@ -56,9 +59,22 @@ public class TotemPlacementState extends AbstractGameState {
         ctx.notifyListeners(l -> l.onTotemPlaced(playerNickname, placeTotem.getTileId()));
 
         // se tutti hanno piazzato → passa ad ActionResolutionState
-        if (playersWhoPlaced.size() == ctx.getGame().getPlayers().size()) {
+        if (haveAllConnectedPlayersPlaced(ctx)) {
             ctx.changeState(new ActionResolutionState());
         }
+    }
+
+    @Override
+    public void onPlayerDisconnected(GameController ctx, String playerNickname) {
+        if (!ctx.containsGamePlayer(playerNickname)) {
+            return;
+        }
+
+        ctx.markPlayerDisconnected(playerNickname);
+        if (!ctx.isSuspended() && haveAllConnectedPlayersPlaced(ctx)) {
+            ctx.changeState(new ActionResolutionState());
+        }
+        // TODO define gameplay policy for disconnected players during totem placement.
     }
 
     // ── HELPERS ──────────────────────────────────────────────────────
@@ -75,5 +91,15 @@ public class TotemPlacementState extends AbstractGameState {
             if (tile.getLetter() == tileId) return tile;
         }
         return null;
+    }
+
+    private boolean haveAllConnectedPlayersPlaced(GameController ctx) {
+        for (Player player : ctx.getGame().getPlayers()) {
+            if (!ctx.isPlayerDisconnected(player.getNickname())
+                    && !playersWhoPlaced.contains(player.getNickname())) {
+                return false;
+            }
+        }
+        return true;
     }
 }

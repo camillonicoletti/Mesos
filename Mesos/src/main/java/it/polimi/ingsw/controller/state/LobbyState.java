@@ -30,6 +30,15 @@ public class LobbyState extends AbstractGameState {
         rejectAction(action);
     }
 
+    @Override
+    public void onPlayerDisconnected(GameController ctx, String playerNickname) {
+        if (!ctx.containsLobbyPlayer(playerNickname)) {
+            return;
+        }
+
+        ctx.removePlayerFromLobby(playerNickname);
+    }
+
     private void handleJoinGame(GameController ctx, String playerNickname, JoinGameAction action) {
         if (ctx.hasChosenPlayersCount() && ctx.isLobbyFull()) {
             throw new IllegalStateException("Lobby is already full");

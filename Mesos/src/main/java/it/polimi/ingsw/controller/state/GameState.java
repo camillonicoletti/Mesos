@@ -27,6 +27,22 @@ public interface GameState extends Serializable {
     void handleAction(GameController ctx, String playerNickname, GameAction action);
 
     /**
+     * Handles a player disconnection while the controller is in this state.
+     *
+     * @param ctx the game controller context
+     * @param playerNickname the nickname of the disconnected player
+     */
+    void onPlayerDisconnected(GameController ctx, String playerNickname);
+
+    /**
+     * Handles a player reconnection while the controller is in this state.
+     *
+     * @param ctx the game controller context
+     * @param playerNickname the nickname of the reconnected player
+     */
+    void onPlayerReconnected(GameController ctx, String playerNickname);
+
+    /**
      * Called when the controller exits this state.
      *
      * @param ctx the game controller context

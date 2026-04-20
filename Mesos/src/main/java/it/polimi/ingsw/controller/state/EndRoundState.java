@@ -40,4 +40,13 @@ public class EndRoundState extends AbstractGameState {
         rejectAction(action);
     }
 
+    @Override
+    public void onPlayerDisconnected(GameController ctx, String playerNickname) {
+        if (!ctx.containsGamePlayer(playerNickname)) {
+            return;
+        }
+
+        ctx.markPlayerDisconnected(playerNickname);
+    }
+
 }

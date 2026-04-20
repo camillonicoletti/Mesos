@@ -62,4 +62,10 @@ public class StartGameState extends AbstractGameState {
     public void handleAction(GameController ctx, String playerNickname, GameAction action) {
         rejectAction(action);
     }
+
+    @Override
+    public void onPlayerDisconnected(GameController ctx, String playerNickname) {
+        // StartGameState is transitory: by the time a disconnection is processed,
+        // the controller is expected to have already moved to the next state.
+    }
 }

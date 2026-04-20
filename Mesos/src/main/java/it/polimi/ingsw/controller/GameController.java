@@ -35,6 +35,8 @@ public class GameController implements Serializable {
     private int chosenPlayersCount;
 
     private final Set<String> readyPlayers;
+    private final Set<String> disconnectedPlayers;
+    private boolean suspended;
 
     // LISTENER
     private transient List<GameListener> listeners = new ArrayList<>();
@@ -45,6 +47,8 @@ public class GameController implements Serializable {
         this.lobbyPlayers = new ArrayList<>();
         this.chosenPlayersCount = -1;
         this.readyPlayers = new HashSet<>();
+        this.disconnectedPlayers = new HashSet<>();
+        this.suspended = false;
 
         currentState.onEnter(this);
     }
@@ -62,8 +66,33 @@ public class GameController implements Serializable {
         if (action == null) {
             throw new IllegalArgumentException("Action cannot be null");
         }
+        if (suspended) {
+            throw new IllegalStateException("Game is suspended while waiting for another player to reconnect");
+        }
 
         currentState.handleAction(this, playerNickname, action);
+    }
+
+    public void onPlayerDisconnection(String playerNickname) {
+        if (playerNickname == null || playerNickname.isBlank()) {
+            throw new IllegalArgumentException("Player nickname cannot be null or blank");
+        }
+
+        currentState.onPlayerDisconnected(this, playerNickname);
+        updateSuspensionStatus();
+    }
+
+    public void onPlayerReconnection(String playerNickname) {
+        if (playerNickname == null || playerNickname.isBlank()) {
+            throw new IllegalArgumentException("Player nickname cannot be null or blank");
+        }
+        if (!containsGamePlayer(playerNickname)) {
+            throw new IllegalArgumentException("Unknown player");
+        }
+
+        markPlayerConnected(playerNickname);
+        currentState.onPlayerReconnected(this, playerNickname);
+        updateSuspensionStatus();
     }
 
     /**
@@ -107,6 +136,7 @@ public class GameController implements Serializable {
             throw new IllegalArgumentException("Player cannot be null");
         }
         lobbyPlayers.add(player);
+        disconnectedPlayers.remove(player.getNickname());
     }
 
     public boolean isNicknameAvailable(String nickname) {
@@ -191,9 +221,92 @@ public class GameController implements Serializable {
         return isLobbyFull() && readyPlayers.size() == lobbyPlayers.size();
     }
 
-    private boolean containsLobbyPlayer(String nickname) {
+    public boolean containsLobbyPlayer(String nickname) {
         return lobbyPlayers.stream()
                 .anyMatch(player -> player.getNickname().equals(nickname));
+    }
+
+    public boolean containsGamePlayer(String nickname) {
+        if (game == null || nickname == null || nickname.isBlank()) {
+            return false;
+        }
+
+        return game.getPlayers().stream()
+                .anyMatch(player -> player.getNickname().equals(nickname));
+    }
+
+    public void removePlayerFromLobby(String nickname) {
+        if (nickname == null || nickname.isBlank()) {
+            throw new IllegalArgumentException("Nickname cannot be null or blank");
+        }
+
+        boolean removed = lobbyPlayers.removeIf(player -> player.getNickname().equals(nickname));
+        if (!removed) {
+            throw new IllegalArgumentException("Player is not in the lobby");
+        }
+
+        readyPlayers.remove(nickname);
+        disconnectedPlayers.remove(nickname);
+
+        if (lobbyPlayers.isEmpty()) {
+            chosenPlayersCount = -1;
+            readyPlayers.clear();
+        }
+    }
+
+    public void markPlayerDisconnected(String nickname) {
+        if (nickname == null || nickname.isBlank()) {
+            throw new IllegalArgumentException("Nickname cannot be null or blank");
+        }
+
+        if (!containsLobbyPlayer(nickname) && !containsGamePlayer(nickname)) {
+            throw new IllegalArgumentException("Unknown player");
+        }
+
+        disconnectedPlayers.add(nickname);
+    }
+
+    public void markPlayerConnected(String nickname) {
+        if (nickname == null || nickname.isBlank()) {
+            throw new IllegalArgumentException("Nickname cannot be null or blank");
+        }
+
+        disconnectedPlayers.remove(nickname);
+    }
+
+    public boolean isPlayerDisconnected(String nickname) {
+        if (nickname == null || nickname.isBlank()) {
+            return false;
+        }
+
+        return disconnectedPlayers.contains(nickname);
+    }
+
+    public int getConnectedGamePlayersCount() {
+        if (game == null) {
+            return 0;
+        }
+
+        int connectedPlayersCount = 0;
+        for (Player player : game.getPlayers()) {
+            if (!isPlayerDisconnected(player.getNickname())) {
+                connectedPlayersCount++;
+            }
+        }
+        return connectedPlayersCount;
+    }
+
+    public boolean isSuspended() {
+        return suspended;
+    }
+
+    public void updateSuspensionStatus() {
+        if (game == null || game.isGameOver()) {
+            suspended = false;
+            return;
+        }
+
+        suspended = getConnectedGamePlayersCount() <= 1;
     }
 
     // LISTENER
