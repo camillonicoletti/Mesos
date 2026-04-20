@@ -1,17 +1,15 @@
 package it.polimi.ingsw.model.board;
 
-import it.polimi.ingsw.model.enums.SlotType;
-
 public class ActionSlot {
-    private SlotType type;
+    private String type;
     private int amount;
 
-    public ActionSlot(SlotType type, int amount) {
+    public ActionSlot(String type, int amount) {
         this.type = type;
         this.amount = amount;
     }
 
-    public SlotType getType() {
+    public String getType() {
         return type;
     }
 
@@ -19,11 +17,6 @@ public class ActionSlot {
         return amount;
     }
 }
-
-
-
-
-
 
 
 

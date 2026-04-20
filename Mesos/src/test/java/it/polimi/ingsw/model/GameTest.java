@@ -33,8 +33,8 @@ public class GameTest {
         player1 = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
         player2 = new Player("Bob", new Totem(TotemColor.BLUE, TotemPosition.OFFER_TRACK));
 
-        tileA = new OfferTile('A', 2, List.of(new ActionSlot(SlotType.UPPER_ROW, 2)));
-        tileB = new OfferTile('B', 2, List.of(new ActionSlot(SlotType.FOOD, 3)));
+        tileA = new OfferTile('A', 2, List.of(new ActionSlot("UPPER_ROW", 2)));
+        tileB = new OfferTile('B', 2, List.of(new ActionSlot("FOOD", 3)));
 
         List<TurnSlot> turnSlots = new ArrayList<>();
         turnSlots.add(new TurnSlot(1, new NoSlotEffect()));

@@ -2,14 +2,10 @@ package it.polimi.ingsw.model;
 
 import it.polimi.ingsw.model.board.ActionSlot;
 import it.polimi.ingsw.model.board.OfferTile;
-import it.polimi.ingsw.model.enums.SlotType;
 import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.model.enums.TotemPosition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import it.polimi.ingsw.model.board.ActionSlot;
-import it.polimi.ingsw.model.enums.SlotType;
 
 import java.util.List;
 
@@ -31,7 +27,7 @@ public class OfferTileTest {
 
     @BeforeEach
     void setUp() {
-        tile = new OfferTile('A', 2, List.of(new ActionSlot(SlotType.FOOD, 1)));
+        tile = new OfferTile('A', 2, List.of(new ActionSlot("FOOD", 1)));
         totem = new Totem(TotemColor.RED, TotemPosition.TURN_ORDER);
     }
 
@@ -113,13 +109,13 @@ public class OfferTileTest {
 
     @Test
     void testActionSlotGetType() {
-        ActionSlot slot = new ActionSlot(SlotType.FOOD, 3);
-        assertEquals(SlotType.FOOD, slot.getType());
+        ActionSlot slot = new ActionSlot("FOOD", 3);
+        assertEquals("FOOD", slot.getType());
     }
 
     @Test
     void testActionSlotGetAmount() {
-        ActionSlot slot = new ActionSlot(SlotType.UPPER_ROW, 2);
+        ActionSlot slot = new ActionSlot("UPPER_ROW", 2);
         assertEquals(2, slot.getAmount());
     }
 
@@ -135,10 +131,10 @@ public class OfferTileTest {
 
     @Test
     void testOfferTileGetSlots() {
-        ActionSlot slot = new ActionSlot(SlotType.FOOD, 2);
+        ActionSlot slot = new ActionSlot("FOOD", 2);
         OfferTile t = new OfferTile('A', 2, List.of(slot));
         assertEquals(1, t.getSlots().size());
-        assertEquals(SlotType.FOOD, t.getSlots().get(0).getType());
+        assertEquals("FOOD", t.getSlots().get(0).getType());
         assertEquals(2, t.getSlots().get(0).getAmount());
     }
 

@@ -5,7 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import it.polimi.ingsw.model.enums.SlotType;
+
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -39,7 +39,7 @@ public class BoardFactory {
             List<ActionSlot> slots = new ArrayList<>();
             for (JsonElement slotElem : obj.getAsJsonArray("slots")) {
                 JsonObject slotObj = slotElem.getAsJsonObject();
-                SlotType type = SlotType.valueOf(slotObj.get("type").getAsString());
+                String type = slotObj.get("type").getAsString();
                 int amount = slotObj.get("amount").getAsInt();
                 slots.add(new ActionSlot(type, amount));
             }

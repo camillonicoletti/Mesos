@@ -1,7 +1,6 @@
 package it.polimi.ingsw.model;
 
 import it.polimi.ingsw.model.board.*;
-import it.polimi.ingsw.model.enums.SlotType;
 import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.model.enums.TotemPosition;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,9 +26,9 @@ public class BoardTest {
         totem2 = new Totem(TotemColor.BLUE, TotemPosition.OFFER_TRACK);
         totem3 = new Totem(TotemColor.PURPLE, TotemPosition.OFFER_TRACK);
 
-        List<ActionSlot> slotsA = List.of(new ActionSlot(SlotType.UPPER_ROW, 2));
-        List<ActionSlot> slotsC = List.of(new ActionSlot(SlotType.LOWER_ROW, 3));
-        List<ActionSlot> slotsE = List.of(new ActionSlot(SlotType.FOOD, 1));
+        List<ActionSlot> slotsA = List.of(new ActionSlot("UPPER_ROW", 2));
+        List<ActionSlot> slotsC = List.of(new ActionSlot("LOWER_ROW", 3));
+        List<ActionSlot> slotsE = List.of(new ActionSlot("FOOD", 1));
 
         offerTiles = new ArrayList<>();
         offerTiles.add(new OfferTile('C', 2, slotsC));
@@ -203,9 +202,9 @@ public class BoardTest {
 
     @Test
     void testAssignTurnOrderShouldRespectAlphabeticalOrderEvenIfOfferTilesListIsUnordered() {
-        List<ActionSlot> slotsB = List.of(new ActionSlot(SlotType.FOOD, 1));
-        List<ActionSlot> slotsA = List.of(new ActionSlot(SlotType.UPPER_ROW, 1));
-        List<ActionSlot> slotsD = List.of(new ActionSlot(SlotType.LOWER_ROW, 1));
+        List<ActionSlot> slotsB = List.of(new ActionSlot("FOOD", 1));
+        List<ActionSlot> slotsA = List.of(new ActionSlot("UPPER_ROW", 1));
+        List<ActionSlot> slotsD = List.of(new ActionSlot("LOWER_ROW", 1));
 
         OfferTile tileD = new OfferTile('D', 2, slotsD);
         OfferTile tileB = new OfferTile('B', 2, slotsB);

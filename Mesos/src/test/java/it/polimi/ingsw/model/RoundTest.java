@@ -25,10 +25,10 @@ public class RoundTest {
         player1 = new Player("Alice", new Totem(TotemColor.RED, TotemPosition.OFFER_TRACK));
         player2 = new Player("Bob", new Totem(TotemColor.BLUE, TotemPosition.OFFER_TRACK));
 
-        List<ActionSlot> slotsA = List.of(new ActionSlot(SlotType.UPPER_ROW, 2));
+        List<ActionSlot> slotsA = List.of(new ActionSlot("UPPER_ROW", 2));
         tileA = new OfferTile('A', 2, slotsA);
 
-        List<ActionSlot> slotsB = List.of(new ActionSlot(SlotType.FOOD, 3));
+        List<ActionSlot> slotsB = List.of(new ActionSlot("FOOD", 3));
         tileB = new OfferTile('B', 2, slotsB);
 
         List<TurnSlot> turnSlots = new ArrayList<>();
@@ -286,7 +286,7 @@ public class RoundTest {
 
         BuildingCard building = new BuildingCard(2, Era.I, 2, p -> {}, 0);
         OfferTile buildingTile = new OfferTile('C', 2,
-                List.of(new ActionSlot(SlotType.UPPER_ROW, 1)));
+                List.of(new ActionSlot("UPPER_ROW", 1)));
 
         Round buildingRound = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
                 new ArrayList<>(), new ArrayList<>(),
@@ -305,7 +305,7 @@ public class RoundTest {
     void testResolveOfferActionDoesNotPurchaseBuildingWhenNotAffordable() {
         BuildingCard building = new BuildingCard(3, Era.I, 2, p -> {}, 0);
         OfferTile buildingTile = new OfferTile('C', 2,
-                List.of(new ActionSlot(SlotType.UPPER_ROW, 1)));
+                List.of(new ActionSlot("UPPER_ROW", 1)));
 
         Round buildingRound = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
                 new ArrayList<>(), new ArrayList<>(),
@@ -362,7 +362,7 @@ public class RoundTest {
         );
 
         OfferTile lowerTile = new OfferTile('D', 2,
-                List.of(new ActionSlot(SlotType.LOWER_ROW, 1)));
+                List.of(new ActionSlot("LOWER_ROW", 1)));
 
         testRound.resolveOfferAction(player1, lowerTile, List.of(card));
 
@@ -387,7 +387,7 @@ public class RoundTest {
         );
 
         OfferTile multiTile = new OfferTile('E', 2,
-                List.of(new ActionSlot(SlotType.UPPER_ROW, 2)));
+                List.of(new ActionSlot("UPPER_ROW", 2)));
 
         testRound.resolveOfferAction(player1, multiTile, List.of(card1, card2));
 
@@ -410,7 +410,7 @@ public class RoundTest {
 
         // slot permette solo 1 carta
         OfferTile singleTile = new OfferTile('F', 2,
-                List.of(new ActionSlot(SlotType.UPPER_ROW, 1)));
+                List.of(new ActionSlot("UPPER_ROW", 1)));
 
         testRound.resolveOfferAction(player1, singleTile, List.of(card1, card2, card3));
 
@@ -434,7 +434,7 @@ public class RoundTest {
         );
 
         OfferTile buildingTile = new OfferTile('G', 2,
-                List.of(new ActionSlot(SlotType.UPPER_ROW, 1)));
+                List.of(new ActionSlot("UPPER_ROW", 1)));
 
         testRound.resolveOfferAction(player1, buildingTile, List.of(building));
 

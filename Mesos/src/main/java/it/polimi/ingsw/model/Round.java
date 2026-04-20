@@ -6,7 +6,6 @@ import it.polimi.ingsw.model.card.effect.ExtraCardUpperRowEffect;
 import it.polimi.ingsw.model.card.effect.TotemSlotFoodBonusEffect;
 import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.RoundPhase;
-import it.polimi.ingsw.model.enums.SlotType;
 import it.polimi.ingsw.model.Totem;
 
 import java.util.*;
@@ -235,15 +234,12 @@ public class Round {
 
     public void resolveOfferAction(Player player, OfferTile chosenTile, List<Card> chosenCards) {
         for (ActionSlot slot : chosenTile.getSlots()) {
-            SlotType type = slot.getType();
-
-            if (type == SlotType.FOOD) {
-                // give the player the food indicated on the slot
+            String type = slot.getType();
+            if ("FOOD".equals(type)) {
                 player.addFood(slot.getAmount());
-
-            } else if (type == SlotType.UPPER_ROW || type == SlotType.LOWER_ROW) {
-                List<CharacterCard> tributeRow = (type == SlotType.UPPER_ROW) ? upperRowTribute : lowerRowTribute;
-                List<BuildingCard> buildingRow = (type == SlotType.UPPER_ROW) ? upperRowBuildings : lowerRowBuildings;
+            } else if ("UPPER_ROW".equals(type) || "LOWER_ROW".equals(type)) {
+                List<CharacterCard> tributeRow = "UPPER_ROW".equals(type) ? upperRowTribute : lowerRowTribute;
+                List<BuildingCard> buildingRow = "UPPER_ROW".equals(type) ? upperRowBuildings : lowerRowBuildings;
 
                 int amount = slot.getAmount();
                 int taken = 0;
