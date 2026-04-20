@@ -5,7 +5,6 @@ import it.polimi.ingsw.model.enums.TotemColor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Comparator;
@@ -25,9 +24,9 @@ public class BoardTest {
         totem2 = new Totem(TotemColor.BLUE, "OFFER_TRACK");
         totem3 = new Totem(TotemColor.PURPLE, "OFFER_TRACK");
 
-        List<ActionSlot> slotsA = List.of(new ActionSlot("UPPER_ROW", 2));
-        List<ActionSlot> slotsC = List.of(new ActionSlot("LOWER_ROW", 3));
-        List<ActionSlot> slotsE = List.of(new ActionSlot("FOOD", 1));
+        List<ActionSlot> slotsA = List.of(new ActionSlot(new UpperRowSlot(), 2));
+        List<ActionSlot> slotsC = List.of(new ActionSlot(new LowerRowSlot(), 3));
+        List<ActionSlot> slotsE = List.of(new ActionSlot(new FoodSlot(), 1));
 
         offerTiles = new ArrayList<>();
         offerTiles.add(new OfferTile('C', 2, slotsC));
@@ -50,7 +49,6 @@ public class BoardTest {
     @Test
     void testRemoveTotemFromEmptyOfferTileReturnsNull() {
         OfferTile tile = offerTiles.get(0);
-
         assertFalse(tile.isOccupied());
         assertNull(tile.removeTotem());
         assertFalse(tile.isOccupied());
@@ -59,7 +57,6 @@ public class BoardTest {
     @Test
     void testRemoveTotemFromEmptyTurnSlotReturnsNull() {
         TurnSlot slot = turnOrderTile.getSlots().get(0);
-
         assertFalse(slot.isOccupied());
         assertNull(slot.removeTotem());
         assertFalse(slot.isOccupied());
@@ -68,10 +65,8 @@ public class BoardTest {
     @Test
     void testPlaceTotemTwiceOnOfferTileOverridesPreviousTotem() {
         OfferTile tile = offerTiles.get(0);
-
         tile.placeTotem(totem1);
         assertEquals(totem1, tile.getTotemSlot());
-
         tile.placeTotem(totem2);
         assertEquals(totem2, tile.getTotemSlot());
         assertTrue(tile.isOccupied());
@@ -80,10 +75,8 @@ public class BoardTest {
     @Test
     void testPlaceTotemTwiceOnTurnSlotOverridesPreviousTotem() {
         TurnSlot slot = turnOrderTile.getSlots().get(0);
-
         slot.placeTotem(totem1);
         assertEquals(totem1, slot.getOccupiedBy());
-
         slot.placeTotem(totem2);
         assertEquals(totem2, slot.getOccupiedBy());
         assertTrue(slot.isOccupied());
@@ -98,7 +91,6 @@ public class BoardTest {
         for (TurnSlot slot : turnOrderTile.getSlots()) {
             slot.placeTotem(totem1);
         }
-
         assertTrue(turnOrderTile.isFull());
         assertNull(turnOrderTile.getNextFreeSlot());
     }
@@ -106,7 +98,6 @@ public class BoardTest {
     @Test
     void testGetTurnOrderReturnsEmptyListWhenNoTurnSlotIsOccupied() {
         List<Totem> order = turnOrderTile.getTurnOrder();
-
         assertNotNull(order);
         assertTrue(order.isEmpty());
     }
@@ -114,7 +105,6 @@ public class BoardTest {
     @Test
     void testAssignTurnOrderWithNoOccupiedOfferTilesProducesEmptyOrder() {
         turnOrderTile.assignTurnOrder(board);
-
         List<Totem> order = turnOrderTile.getTurnOrder();
         assertNotNull(order);
         assertTrue(order.isEmpty());
@@ -122,25 +112,18 @@ public class BoardTest {
 
     @Test
     void testAssignTurnOrderWithOnlyOneOccupiedOfferTile() {
-        offerTiles.get(0).placeTotem(totem1); // C
-
+        offerTiles.get(0).placeTotem(totem1);
         turnOrderTile.assignTurnOrder(board);
-
         List<Totem> order = turnOrderTile.getTurnOrder();
-
         assertEquals(1, order.size());
         assertEquals(totem1, order.get(0));
     }
 
     @Test
     void testAssignTurnOrderIgnoresUnoccupiedOfferTiles() {
-        offerTiles.get(1).placeTotem(totem2); // A
-        // C ed E restano vuote
-
+        offerTiles.get(1).placeTotem(totem2);
         turnOrderTile.assignTurnOrder(board);
-
         List<Totem> order = turnOrderTile.getTurnOrder();
-
         assertEquals(1, order.size());
         assertEquals(totem2, order.get(0));
     }
@@ -151,28 +134,20 @@ public class BoardTest {
 
     @Test
     void testAssignTurnOrderShouldResetPreviousTurnSlots() {
-
         turnOrderTile.getSlots().get(0).placeTotem(totem3);
         turnOrderTile.getSlots().get(1).placeTotem(totem1);
         turnOrderTile.getSlots().get(2).placeTotem(totem2);
 
-        // new state on offer tiles
-
-        offerTiles.get(1).placeTotem(totem2); // A
-        offerTiles.get(0).placeTotem(totem1); // C
-
+        offerTiles.get(1).placeTotem(totem2);
+        offerTiles.get(0).placeTotem(totem1);
 
         turnOrderTile.assignTurnOrder(board);
 
         List<Totem> order = turnOrderTile.getTurnOrder();
-
-        // if assignTurnOrder does NOT reset, you might still find 3 totems here
         assertEquals(2, order.size());
-        assertEquals(totem2, order.get(0)); // A -> posizione 1
-        assertEquals(totem1, order.get(1)); // C -> posizione 2
+        assertEquals(totem2, order.get(0));
+        assertEquals(totem1, order.get(1));
     }
-
-
 
     @Test
     void testGetTurnOrderShouldBeSortedByPositionEvenIfSlotsListIsUnordered() {
@@ -190,20 +165,19 @@ public class BoardTest {
         unorderedSlots.add(slot2);
 
         TurnOrderTile unorderedTile = new TurnOrderTile(3, unorderedSlots);
-
         List<Totem> order = unorderedTile.getTurnOrder();
 
         assertEquals(3, order.size());
-        assertEquals(totem1, order.get(0)); // posizione 1
-        assertEquals(totem2, order.get(1)); // posizione 2
-        assertEquals(totem3, order.get(2)); // posizione 3
+        assertEquals(totem1, order.get(0));
+        assertEquals(totem2, order.get(1));
+        assertEquals(totem3, order.get(2));
     }
 
     @Test
     void testAssignTurnOrderShouldRespectAlphabeticalOrderEvenIfOfferTilesListIsUnordered() {
-        List<ActionSlot> slotsB = List.of(new ActionSlot("FOOD", 1));
-        List<ActionSlot> slotsA = List.of(new ActionSlot("UPPER_ROW", 1));
-        List<ActionSlot> slotsD = List.of(new ActionSlot("LOWER_ROW", 1));
+        List<ActionSlot> slotsB = List.of(new ActionSlot(new FoodSlot(), 1));
+        List<ActionSlot> slotsA = List.of(new ActionSlot(new UpperRowSlot(), 1));
+        List<ActionSlot> slotsD = List.of(new ActionSlot(new LowerRowSlot(), 1));
 
         OfferTile tileD = new OfferTile('D', 2, slotsD);
         OfferTile tileB = new OfferTile('B', 2, slotsB);
@@ -219,7 +193,6 @@ public class BoardTest {
         unorderedOfferTiles.add(tileA);
 
         List<TurnSlot> slots = new ArrayList<>();
-        // DOPO
         slots.add(new TurnSlot(1, new NoSlotEffect()));
         slots.add(new TurnSlot(2, new NoSlotEffect()));
         slots.add(new TurnSlot(3, new NoSlotEffect()));
@@ -232,15 +205,14 @@ public class BoardTest {
         List<Totem> order = localTurnOrderTile.getTurnOrder();
 
         assertEquals(3, order.size());
-        assertEquals(totem1, order.get(0)); // A
-        assertEquals(totem2, order.get(1)); // B
-        assertEquals(totem3, order.get(2)); // D
+        assertEquals(totem1, order.get(0));
+        assertEquals(totem2, order.get(1));
+        assertEquals(totem3, order.get(2));
     }
 
     @Test
     void testResetOnEmptyTurnOrderTileDoesNotThrowAndLeavesAllSlotsFree() {
         assertDoesNotThrow(() -> turnOrderTile.reset());
-
         for (TurnSlot slot : turnOrderTile.getSlots()) {
             assertFalse(slot.isOccupied());
         }
@@ -249,11 +221,8 @@ public class BoardTest {
     @Test
     void testAssignRandomTurnOrderPlacesAllTotemsInSlots() {
         List<Totem> totems = List.of(totem1, totem2, totem3);
-
         turnOrderTile.assignRandomTurnOrder(totems);
-
         List<Totem> order = turnOrderTile.getTurnOrder();
-
         assertEquals(3, order.size());
         assertTrue(order.contains(totem1));
         assertTrue(order.contains(totem2));
@@ -266,12 +235,10 @@ public class BoardTest {
         turnOrderTile.getSlots().get(1).placeTotem(totem2);
         turnOrderTile.getSlots().get(2).placeTotem(totem3);
 
-        // Reassign with only 2 totems — slot 3 must be empty after reset
         List<Totem> totems = List.of(totem1, totem2);
         turnOrderTile.assignRandomTurnOrder(totems);
 
         List<Totem> order = turnOrderTile.getTurnOrder();
-
         assertEquals(2, order.size());
         assertTrue(order.contains(totem1));
         assertTrue(order.contains(totem2));
@@ -279,9 +246,7 @@ public class BoardTest {
 
     @Test
     void testAssignRandomTurnOrderWithEmptyListLeavesAllSlotsFree() {
-        // assignRandomTurnOrder with empty list must leave all slots empty
         turnOrderTile.assignRandomTurnOrder(new ArrayList<>());
-
         List<Totem> order = turnOrderTile.getTurnOrder();
         assertTrue(order.isEmpty());
         for (TurnSlot slot : turnOrderTile.getSlots()) {
@@ -290,8 +255,8 @@ public class BoardTest {
     }
 
     // =========================================================
-// TESTS FOR createForPlayers()
-// =========================================================
+    // TESTS FOR createForPlayers()
+    // =========================================================
 
     @Test
     void testCreateForPlayersReturnsCorrectNumberOfSlotsFor2Players() {
@@ -364,18 +329,16 @@ public class BoardTest {
             assertFalse(slot.isOccupied());
         }
     }
+
     // -------------------------------------------------------
-// resetOfferTiles
-// -------------------------------------------------------
+    // resetOfferTiles
+    // -------------------------------------------------------
 
     @Test
     void testResetOfferTilesClearsAllTotems() {
-        // place totems on all offer tiles, then reset — all must be free
         offerTiles.get(0).placeTotem(totem1);
         offerTiles.get(1).placeTotem(totem2);
-
         board.resetOfferTiles();
-
         for (OfferTile tile : board.getOfferTiles()) {
             assertFalse(tile.isOccupied());
         }
@@ -388,18 +351,15 @@ public class BoardTest {
 
     @Test
     void testResetOfferTilesOnlyOnOccupiedTiles() {
-        // only one tile occupied — after reset all must be free
         offerTiles.get(0).placeTotem(totem1);
-
         board.resetOfferTiles();
-
         assertFalse(offerTiles.get(0).isOccupied());
         assertFalse(offerTiles.get(1).isOccupied());
     }
 
-// -------------------------------------------------------
-// TotemPosition updates via OfferTile and TurnSlot
-// -------------------------------------------------------
+    // -------------------------------------------------------
+    // TotemPosition updates via OfferTile and TurnSlot
+    // -------------------------------------------------------
 
     @Test
     void testPlaceTotemOnOfferTileSetsPositionToOfferTrack() {
@@ -422,8 +382,4 @@ public class BoardTest {
         turnOrderTile.getSlots().get(0).removeTotem();
         assertEquals("OFFER_TRACK", t.getPosition());
     }
-
-
-
-
 }

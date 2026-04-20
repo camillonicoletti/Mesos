@@ -8,7 +8,10 @@ import it.polimi.ingsw.model.Game;
 import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.Round;
 import it.polimi.ingsw.model.board.ActionSlot;
+import it.polimi.ingsw.model.board.FoodSlot;
+import it.polimi.ingsw.model.board.LowerRowSlot;
 import it.polimi.ingsw.model.board.OfferTile;
+import it.polimi.ingsw.model.board.UpperRowSlot;
 import it.polimi.ingsw.model.card.BuildingCard;
 import it.polimi.ingsw.model.card.CharacterCard;
 
@@ -61,10 +64,12 @@ public class ActionResolutionState extends AbstractGameState {
         remainingLowerPicks = 0;
 
         for (ActionSlot slot : tile.getSlots()) {
-            switch (slot.getType()) {
-                case FOOD      -> player.addFood(slot.getAmount()); // automatico
-                case UPPER_ROW -> remainingUpperPicks += slot.getAmount();
-                case LOWER_ROW -> remainingLowerPicks += slot.getAmount();
+            if (slot.getEffect() instanceof FoodSlot) {
+                player.addFood(slot.getAmount()); // automatico
+            } else if (slot.getEffect() instanceof UpperRowSlot) {
+                remainingUpperPicks += slot.getAmount();
+            } else if (slot.getEffect() instanceof LowerRowSlot) {
+                remainingLowerPicks += slot.getAmount();
             }
         }
 
@@ -160,6 +165,7 @@ public class ActionResolutionState extends AbstractGameState {
         }
         // TODO define gameplay policy for disconnected players during action resolution.
     }
+
     // ── HELPERS ──────────────────────────────────────────────────────
 
     private CharacterCard findCharacterCard(List<CharacterCard> row, String cardId) {

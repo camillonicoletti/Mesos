@@ -28,13 +28,17 @@
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/board/ActionSlot.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/board/Board.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/board/BoardFactory.java
+/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/board/FoodSlot.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/board/GainFoodSlotEffect.java
+/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/board/LowerRowSlot.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/board/NoSlotEffect.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/board/OfferTile.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/board/PayFoodSlotEffect.java
+/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/board/SlotEffect.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/board/TurnOrderTile.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/board/TurnSlot.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/board/TurnSlotEffect.java
+/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/board/UpperRowSlot.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/ArtistCard.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/BuilderCard.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/card/BuildingCard.java
@@ -69,6 +73,4 @@
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/enums/Era.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/enums/InventorIcons.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/enums/RoundPhase.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/enums/SlotType.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/enums/TotemColor.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/model/enums/TotemPosition.java

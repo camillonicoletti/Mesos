@@ -1,11 +1,9 @@
 package it.polimi.ingsw.model.board;
 
-
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -39,9 +37,14 @@ public class BoardFactory {
             List<ActionSlot> slots = new ArrayList<>();
             for (JsonElement slotElem : obj.getAsJsonArray("slots")) {
                 JsonObject slotObj = slotElem.getAsJsonObject();
-                String type = slotObj.get("type").getAsString();
+                SlotEffect effect = switch (slotObj.get("type").getAsString()) {
+                    case "FOOD"      -> new FoodSlot();
+                    case "UPPER_ROW" -> new UpperRowSlot();
+                    case "LOWER_ROW" -> new LowerRowSlot();
+                    default -> throw new IllegalArgumentException("Unknown slot type: " + slotObj.get("type").getAsString());
+                };
                 int amount = slotObj.get("amount").getAsInt();
-                slots.add(new ActionSlot(type, amount));
+                slots.add(new ActionSlot(effect, amount));
             }
 
             tiles.add(new OfferTile(letter, minPlayers, slots));
@@ -49,4 +52,3 @@ public class BoardFactory {
         return tiles;
     }
 }
-

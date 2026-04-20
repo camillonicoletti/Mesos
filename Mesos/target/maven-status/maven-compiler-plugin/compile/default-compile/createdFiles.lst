@@ -5,11 +5,13 @@ it/polimi/ingsw/controller/state/LobbyState.class
 it/polimi/ingsw/model/card/HuntEventCard.class
 it/polimi/ingsw/model/Game.class
 it/polimi/ingsw/model/card/SustenanceEventCard.class
+it/polimi/ingsw/model/board/FoodSlot.class
 it/polimi/ingsw/model/Round.class
 it/polimi/ingsw/controller/state/EndRoundState.class
 it/polimi/ingsw/model/card/InventorCard.class
 it/polimi/ingsw/controller/action/PickBuildingAction.class
 it/polimi/ingsw/model/card/effect/CavePaintingsFoodEffect.class
+it/polimi/ingsw/model/board/UpperRowSlot.class
 it/polimi/ingsw/model/enums/TotemColor.class
 it/polimi/ingsw/model/enums/InventorIcons.class
 it/polimi/ingsw/model/card/effect/InventorPairFoodEffect.class
@@ -23,7 +25,6 @@ it/polimi/ingsw/model/enums/Era.class
 it/polimi/ingsw/model/board/TurnOrderTile.class
 it/polimi/ingsw/controller/state/TotemPlacementState.class
 it/polimi/ingsw/model/Game$1.class
-it/polimi/ingsw/model/enums/SlotType.class
 it/polimi/ingsw/model/card/CardFactory.class
 it/polimi/ingsw/model/card/effect/ShamanicRitualImmunityEffect.class
 it/polimi/ingsw/controller/action/GameAction.class
@@ -57,7 +58,6 @@ it/polimi/ingsw/model/card/Card.class
 it/polimi/ingsw/model/card/effect/SustenanceFoodDiscountEffect.class
 it/polimi/ingsw/model/card/effect/Shaman3ExtraStarsEffect.class
 it/polimi/ingsw/App.class
-it/polimi/ingsw/controller/state/ActionResolutionState$1.class
 it/polimi/ingsw/model/board/GainFoodSlotEffect.class
 it/polimi/ingsw/model/card/effect/ExtraCardUpperRowEffect.class
 it/polimi/ingsw/model/card/effect/TotemSlotFoodBonusEffect.class
@@ -66,10 +66,11 @@ it/polimi/ingsw/model/enums/RoundPhase.class
 it/polimi/ingsw/controller/action/JoinGameAction.class
 it/polimi/ingsw/model/board/NoSlotEffect.class
 it/polimi/ingsw/model/board/OfferTile.class
+it/polimi/ingsw/model/board/SlotEffect.class
 it/polimi/ingsw/controller/state/StartGameState.class
 it/polimi/ingsw/controller/action/PickFoodAction.class
 it/polimi/ingsw/model/card/effect/EndFullSetPPEffect.class
 it/polimi/ingsw/model/card/effect/EndCharacterCountPPEffect.class
-it/polimi/ingsw/model/enums/TotemPosition.class
+it/polimi/ingsw/model/board/LowerRowSlot.class
 it/polimi/ingsw/controller/listener/GameListener.class
 it/polimi/ingsw/model/board/TurnSlot.class

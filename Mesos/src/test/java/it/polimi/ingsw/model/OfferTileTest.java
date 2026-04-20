@@ -1,7 +1,9 @@
 package it.polimi.ingsw.model;
 
 import it.polimi.ingsw.model.board.ActionSlot;
+import it.polimi.ingsw.model.board.FoodSlot;
 import it.polimi.ingsw.model.board.OfferTile;
+import it.polimi.ingsw.model.board.UpperRowSlot;
 import it.polimi.ingsw.model.enums.TotemColor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,15 +12,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Tests for OfferTile.java
- *
- * Covers:
- * 1. placeTotem  — occupies the tile and updates TotemPosition to OFFER_TRACK
- * 2. removeTotem — frees the tile and returns the removed totem
- * 3. isOccupied  — reflects the current state correctly
- * 4. isAvailableFor — filters by minimum player count
- */
 public class OfferTileTest {
 
     private OfferTile tile;
@@ -26,7 +19,7 @@ public class OfferTileTest {
 
     @BeforeEach
     void setUp() {
-        tile = new OfferTile('A', 2, List.of(new ActionSlot("FOOD", 1)));
+        tile = new OfferTile('A', 2, List.of(new ActionSlot(new FoodSlot(), 1)));
         totem = new Totem(TotemColor.RED, "TURN_ORDER");
     }
 
@@ -42,7 +35,6 @@ public class OfferTileTest {
 
     @Test
     void testPlaceTotemUpdatesTotemPositionToOfferTrack() {
-        // totem starts in TURN_ORDER — after placing on OfferTile it must be OFFER_TRACK
         tile.placeTotem(totem);
         assertEquals("OFFER_TRACK", totem.getPosition());
     }
@@ -100,27 +92,19 @@ public class OfferTileTest {
         assertFalse(tile.isAvailableFor(1));
     }
 
-
-
-// -------------------------------------------------------
-// ActionSlot getters
-// -------------------------------------------------------
-
-    @Test
-    void testActionSlotGetType() {
-        ActionSlot slot = new ActionSlot("FOOD", 3);
-        assertEquals("FOOD", slot.getType());
-    }
+    // -------------------------------------------------------
+    // ActionSlot getters
+    // -------------------------------------------------------
 
     @Test
     void testActionSlotGetAmount() {
-        ActionSlot slot = new ActionSlot("UPPER_ROW", 2);
+        ActionSlot slot = new ActionSlot(new UpperRowSlot(), 2);
         assertEquals(2, slot.getAmount());
     }
 
-// -------------------------------------------------------
-// OfferTile getters
-// -------------------------------------------------------
+    // -------------------------------------------------------
+    // OfferTile getters
+    // -------------------------------------------------------
 
     @Test
     void testOfferTileGetLetter() {
@@ -130,11 +114,9 @@ public class OfferTileTest {
 
     @Test
     void testOfferTileGetSlots() {
-        ActionSlot slot = new ActionSlot("FOOD", 2);
+        ActionSlot slot = new ActionSlot(new FoodSlot(), 2);
         OfferTile t = new OfferTile('A', 2, List.of(slot));
         assertEquals(1, t.getSlots().size());
-        assertEquals("FOOD", t.getSlots().get(0).getType());
         assertEquals(2, t.getSlots().get(0).getAmount());
     }
-
 }

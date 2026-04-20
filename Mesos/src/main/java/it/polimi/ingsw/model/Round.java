@@ -230,51 +230,6 @@ public class Round {
         return true;
     }
 
-
-
-    public void resolveOfferAction(Player player, OfferTile chosenTile, List<Card> chosenCards) {
-        for (ActionSlot slot : chosenTile.getSlots()) {
-            String type = slot.getType();
-            if ("FOOD".equals(type)) {
-                player.addFood(slot.getAmount());
-            } else if ("UPPER_ROW".equals(type) || "LOWER_ROW".equals(type)) {
-                List<CharacterCard> tributeRow = "UPPER_ROW".equals(type) ? upperRowTribute : lowerRowTribute;
-                List<BuildingCard> buildingRow = "UPPER_ROW".equals(type) ? upperRowBuildings : lowerRowBuildings;
-
-                int amount = slot.getAmount();
-                int taken = 0;
-
-                //TODO: WAITING CONTROLER TO POPULATE "CHOSENS CARD"
-
-                // iterate over the cards chosen by the player, stopping once the slot limit is reached
-                for (Card chosen : chosenCards) {
-                    if (taken >= amount) break;
-
-
-                    if (chosen instanceof CharacterCard cc && tributeRow.contains(cc)) {
-                        // character card: free, just add to tribe
-                        tributeRow.remove(cc);
-                        player.addCharacterCard(cc);
-                        taken++;
-
-                    } else if (chosen instanceof BuildingCard bc && buildingRow.contains(bc)) {
-                        // building card: pay food cost minus builder discount
-                        int actualCost = Math.max(0, bc.getFoodCost() - player.getTribe().getBuildingDiscount());
-                        if (player.canAfford(actualCost)) {
-                            player.spendFood(actualCost);
-                            buildingRow.remove(bc);
-                            player.addBuildingCard(bc);
-                            taken++;
-                        }
-                        // if cannot afford, skip silently — controller should validate before calling
-                    }
-                }
-            }
-        }
-    }
-
-
-
     public void placeTotemOrderForPlayer(Player player) {
         Board board = game.getBoard();
         TurnOrderTile turnOrderTile = board.getTurnOrderTile();

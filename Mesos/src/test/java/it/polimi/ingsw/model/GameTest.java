@@ -10,6 +10,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import it.polimi.ingsw.model.card.*;
 import it.polimi.ingsw.model.enums.Era;
+import it.polimi.ingsw.model.board.FoodSlot;
+import it.polimi.ingsw.model.board.UpperRowSlot;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,8 +35,8 @@ public class GameTest {
         player1 = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player2 = new Player("Bob", new Totem(TotemColor.BLUE, "OFFER_TRACK"));
 
-        tileA = new OfferTile('A', 2, List.of(new ActionSlot("UPPER_ROW", 2)));
-        tileB = new OfferTile('B', 2, List.of(new ActionSlot("FOOD", 3)));
+        tileA = new OfferTile('A', 2, List.of(new ActionSlot(new UpperRowSlot(), 2)));
+        tileB = new OfferTile('B', 2, List.of(new ActionSlot(new FoodSlot(), 3)));
 
         List<TurnSlot> turnSlots = new ArrayList<>();
         turnSlots.add(new TurnSlot(1, new NoSlotEffect()));
