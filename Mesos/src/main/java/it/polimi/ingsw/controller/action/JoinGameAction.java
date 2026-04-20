@@ -15,11 +15,6 @@ public class JoinGameAction implements GameAction {
         this.totem = totem;
     }
 
-    @Override
-    public String getType() {
-        return "JOIN_GAME";
-    }
-
     public Totem getTotem() {
         return totem;
     }
