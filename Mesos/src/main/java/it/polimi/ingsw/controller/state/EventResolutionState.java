@@ -31,4 +31,11 @@ public class EventResolutionState extends AbstractGameState {
         ctx.markPlayerDisconnected(playerNickname);
     }
 
+    @Override
+    public void onPlayerReconnected(GameController ctx, String playerNickname) {
+        if (!ctx.containsGamePlayer(playerNickname)) {
+            return;
+        }
+    }
+
 }

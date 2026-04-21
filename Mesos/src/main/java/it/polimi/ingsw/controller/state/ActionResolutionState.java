@@ -267,18 +267,25 @@ public class ActionResolutionState extends AbstractGameState {
         if (isInExtraPickPhase()) {
             if (extraPickIndex < extraPickQueue.size()
                     && extraPickQueue.get(extraPickIndex).getKey().getNickname().equals(playerNickname)
-                    && !ctx.isSuspended()) {
+                    && ctx.canContinueAfterDisconnection()) {
                 extraPickIndex++;
                 prepareExtraPickPlayer(ctx);
             }
         } else {
             if (currentIndex < orderedPlayers.size()
                     && orderedPlayers.get(currentIndex).getKey().getNickname().equals(playerNickname)
-                    && !ctx.isSuspended()) {
+                    && ctx.canContinueAfterDisconnection()) {
                 ctx.getGame().getCurrentRound().placeTotemOrderForPlayer(orderedPlayers.get(currentIndex).getKey());
                 currentIndex++;
                 prepareCurrentPlayer(ctx);
             }
+        }
+    }
+
+    @Override
+    public void onPlayerReconnected(GameController ctx, String playerNickname) {
+        if (!ctx.containsGamePlayer(playerNickname)) {
+            return;
         }
     }
 

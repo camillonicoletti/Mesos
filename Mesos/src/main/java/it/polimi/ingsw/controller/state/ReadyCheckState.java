@@ -37,6 +37,7 @@ public class ReadyCheckState extends AbstractGameState {
             return;
         }
 
+        ctx.markPlayerNotReady(playerNickname);
         ctx.removePlayerFromLobby(playerNickname);
         ctx.changeState(new LobbyState());
     }

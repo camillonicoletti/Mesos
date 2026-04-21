@@ -71,10 +71,16 @@ public class TotemPlacementState extends AbstractGameState {
         }
 
         ctx.markPlayerDisconnected(playerNickname);
-        if (!ctx.isSuspended() && haveAllConnectedPlayersPlaced(ctx)) {
+        if (ctx.canContinueAfterDisconnection() && haveAllConnectedPlayersPlaced(ctx)) {
             ctx.changeState(new ActionResolutionState());
         }
-        // TODO define gameplay policy for disconnected players during totem placement.
+    }
+
+    @Override
+    public void onPlayerReconnected(GameController ctx, String playerNickname) {
+        if (!ctx.containsGamePlayer(playerNickname)) {
+            return;
+        }
     }
 
     // ── HELPERS ──────────────────────────────────────────────────────

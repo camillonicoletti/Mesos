@@ -77,9 +77,17 @@ public class GameController implements Serializable {
         if (playerNickname == null || playerNickname.isBlank()) {
             throw new IllegalArgumentException("Player nickname cannot be null or blank");
         }
+        boolean knownPlayer = containsLobbyPlayer(playerNickname) || containsGamePlayer(playerNickname);
+        boolean wasSuspended = suspended;
 
         currentState.onPlayerDisconnected(this, playerNickname);
+        if (knownPlayer) {
+            notifyListeners(l -> l.onPlayerDisconnected(playerNickname));
+        }
         updateSuspensionStatus();
+        if (!wasSuspended && suspended) {
+            notifyListeners(GameListener::onGameSuspended);
+        }
     }
 
     public void onPlayerReconnection(String playerNickname) {
@@ -89,10 +97,15 @@ public class GameController implements Serializable {
         if (!containsGamePlayer(playerNickname)) {
             throw new IllegalArgumentException("Unknown player");
         }
+        boolean wasSuspended = suspended;
 
         markPlayerConnected(playerNickname);
         currentState.onPlayerReconnected(this, playerNickname);
+        notifyListeners(l -> l.onPlayerReconnected(playerNickname));
         updateSuspensionStatus();
+        if (wasSuspended && !suspended) {
+            notifyListeners(GameListener::onGameResumed);
+        }
     }
 
     /**
@@ -298,6 +311,10 @@ public class GameController implements Serializable {
 
     public boolean isSuspended() {
         return suspended;
+    }
+
+    public boolean canContinueAfterDisconnection() {
+        return game != null && !game.isGameOver() && getConnectedGamePlayersCount() >= 2;
     }
 
     public void updateSuspensionStatus() {

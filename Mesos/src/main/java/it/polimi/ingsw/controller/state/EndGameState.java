@@ -27,4 +27,19 @@ public class EndGameState extends AbstractGameState {
         rejectAction(action);
     }
 
+    @Override
+    public void onPlayerDisconnected(GameController ctx, String playerNickname) {
+        if (!ctx.containsGamePlayer(playerNickname)) {
+            return;
+        }
+
+        ctx.markPlayerDisconnected(playerNickname);
+    }
+
+    @Override
+    public void onPlayerReconnected(GameController ctx, String playerNickname) {
+        if (!ctx.containsGamePlayer(playerNickname)) {
+            return;
+        }
+    }
 }

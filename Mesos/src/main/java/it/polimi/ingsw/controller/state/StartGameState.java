@@ -68,4 +68,10 @@ public class StartGameState extends AbstractGameState {
         // StartGameState is transitory: by the time a disconnection is processed,
         // the controller is expected to have already moved to the next state.
     }
+
+    @Override
+    public void onPlayerReconnected(GameController ctx, String playerNickname) {
+        // StartGameState is transitory: by the time a reconnection is processed,
+        // the controller is expected to have already moved to the next state.
+    }
 }

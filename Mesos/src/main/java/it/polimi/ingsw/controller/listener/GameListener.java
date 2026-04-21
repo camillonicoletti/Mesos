@@ -10,6 +10,11 @@ public interface GameListener {
     // Lobby
     void onPlayerJoined(String nickname);
     void onPlayersCountSet(int count);
+    // Disconnections and Recconetctions
+    void onPlayerDisconnected(String nickname);
+    void onPlayerReconnected(String nickname);
+    void onGameSuspended();
+    void onGameResumed();
     // Start
     void onGameStarted();
     void onStateChanged(GameState newState);
