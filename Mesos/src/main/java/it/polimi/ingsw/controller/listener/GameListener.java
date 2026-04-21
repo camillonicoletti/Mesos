@@ -17,7 +17,7 @@ public interface GameListener {
     void onTotemPlaced(String nickname, char tileId);
     // Resources change
     void onFoodChanged(String nickname, int newAmount, int delta);
-    void onPointsChanged(String nickname, int newPoints, int delta);
+    void onPointsChanged(String nickname, int newAmount, int delta);
     // Era change
     void onEraChanged(Era newEra);
     // Actions
