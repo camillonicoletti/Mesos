@@ -196,7 +196,7 @@ public class Game {
         currentRound = currentRound.createNextRound(currentRoundNumber);
     }
 
-    /*
+    /* NON SERVE!
     public void endRound() {
         if (isGameOver()) {
             throw new IllegalStateException("Cannot end round if game is not running");
