@@ -14,6 +14,7 @@ import it.polimi.ingsw.model.board.OfferTile;
 import it.polimi.ingsw.model.board.UpperRowSlot;
 import it.polimi.ingsw.model.card.BuildingCard;
 import it.polimi.ingsw.model.card.CharacterCard;
+import it.polimi.ingsw.model.card.effect.ExtraCardUpperRowEffect;
 
 import java.util.*;
 
@@ -29,23 +30,27 @@ public class ActionResolutionState extends AbstractGameState {
     private int remainingUpperPicks;
     private int remainingLowerPicks;
 
+    // fase extra pick
+    private List<Map.Entry<Player, Integer>> extraPickQueue;
+    private int extraPickIndex;
+    private int remainingExtraPicks;
+
     @Override
     public void onEnter(GameController ctx) {
         Round round = ctx.getGame().getCurrentRound();
         Map<Player, OfferTile> playerChoices = round.getPlayerChoices();
 
-        // ordina i giocatori per lettera tile: A < B < C
         orderedPlayers = new ArrayList<>(playerChoices.entrySet());
         orderedPlayers.sort(Comparator.comparingInt(e -> (int) e.getValue().getLetter()));
 
         currentIndex = 0;
+        extraPickQueue = null;
         prepareCurrentPlayer(ctx);
     }
 
     private void prepareCurrentPlayer(GameController ctx) {
-        // tutti i giocatori hanno risolto → passa a EventResolutionState
         if (currentIndex >= orderedPlayers.size()) {
-            ctx.changeState(new EventResolutionState());
+            startExtraPickPhase(ctx);
             return;
         }
 
@@ -65,7 +70,10 @@ public class ActionResolutionState extends AbstractGameState {
 
         for (ActionSlot slot : tile.getSlots()) {
             if (slot.getEffect() instanceof FoodSlot) {
-                player.addFood(slot.getAmount()); // automatico
+                int amount = slot.getAmount();
+                player.addFood(amount);
+                ctx.notifyListeners(l -> l.onFoodChanged(
+                        player.getNickname(), player.getFood(), amount));
             } else if (slot.getEffect() instanceof UpperRowSlot) {
                 remainingUpperPicks += slot.getAmount();
             } else if (slot.getEffect() instanceof LowerRowSlot) {
@@ -73,7 +81,6 @@ public class ActionResolutionState extends AbstractGameState {
             }
         }
 
-        // se non ha carte da prendere → spostalo sul TurnOrderTile e avanza
         if (remainingUpperPicks == 0 && remainingLowerPicks == 0) {
             round.placeTotemOrderForPlayer(player);
             currentIndex++;
@@ -81,18 +88,66 @@ public class ActionResolutionState extends AbstractGameState {
         }
     }
 
+    // ── EXTRA PICK PHASE ─────────────────────────────────────
+
+    private void startExtraPickPhase(GameController ctx) {
+        extraPickQueue = new ArrayList<>();
+        for (Player p : ctx.getGame().getPlayers()) {
+            int count = 0;
+            for (BuildingCard b : p.getTribe().getBuildingCards()) {
+                if (b.getEffect() instanceof ExtraCardUpperRowEffect) count++;
+            }
+            if (count > 0) extraPickQueue.add(Map.entry(p, count));
+        }
+        extraPickIndex = 0;
+        prepareExtraPickPlayer(ctx);
+    }
+
+    private void prepareExtraPickPlayer(GameController ctx) {
+        if (extraPickIndex >= extraPickQueue.size()) {
+            ctx.changeState(new EventResolutionState());
+            return;
+        }
+
+        Player player = extraPickQueue.get(extraPickIndex).getKey();
+
+        if (ctx.isPlayerDisconnected(player.getNickname())) {
+            extraPickIndex++;
+            prepareExtraPickPlayer(ctx);
+            return;
+        }
+
+        remainingExtraPicks = extraPickQueue.get(extraPickIndex).getValue();
+        int picks = remainingExtraPicks;
+        ctx.notifyListeners(l -> l.onExtraCardPickAvailable(player.getNickname(), picks));
+    }
+
+    private boolean isInExtraPickPhase() {
+        return extraPickQueue != null && extraPickIndex < extraPickQueue.size();
+    }
+
+    // ── HANDLE ACTION ────────────────────────────────────────
+
     @Override
     public void handleAction(GameController ctx, String playerNickname, GameAction action) {
-        if (currentIndex >= orderedPlayers.size()) return;
         if (ctx.isPlayerDisconnected(playerNickname)) {
             throw new IllegalStateException("Disconnected players cannot act");
         }
+
+        if (isInExtraPickPhase()) {
+            handleExtraPickAction(ctx, playerNickname, action);
+        } else {
+            handleRegularPickAction(ctx, playerNickname, action);
+        }
+    }
+
+    private void handleRegularPickAction(GameController ctx, String playerNickname, GameAction action) {
+        if (currentIndex >= orderedPlayers.size()) return;
 
         Player currentPlayer = orderedPlayers.get(currentIndex).getKey();
         Game game = ctx.getGame();
         Round round = game.getCurrentRound();
 
-        // verifica che sia il turno di questo giocatore
         if (!currentPlayer.getNickname().equals(playerNickname)) {
             throw new IllegalStateException("Non è il turno di " + playerNickname);
         }
@@ -117,6 +172,7 @@ public class ActionResolutionState extends AbstractGameState {
 
             if (pickCard.isFromUpperRow()) remainingUpperPicks--;
             else remainingLowerPicks--;
+
         } else if (action instanceof PickBuildingAction pickBuilding) {
             if (pickBuilding.isFromUpperRow() && remainingUpperPicks <= 0)
                 throw new IllegalStateException("Non puoi prendere altri edifici dalla riga superiore");
@@ -131,42 +187,102 @@ public class ActionResolutionState extends AbstractGameState {
             if (card == null)
                 throw new IllegalArgumentException("Edificio non trovato: " + pickBuilding.getCardId());
 
+            if (!game.canAffordBuilding(currentPlayer, card))
+                throw new IllegalStateException("Non hai abbastanza cibo per acquistare questo edificio");
+
             game.takeBuildingCard(currentPlayer, row, card);
             ctx.notifyListeners(l -> l.onBuildingCardTaken(
                     playerNickname, pickBuilding.getCardId(), pickBuilding.isFromUpperRow()));
 
             if (pickBuilding.isFromUpperRow()) remainingUpperPicks--;
             else remainingLowerPicks--;
+
         } else {
             rejectAction(action);
         }
 
-        // giocatore ha finito tutti i pick → spostalo sul TurnOrderTile e avanza
         if (remainingUpperPicks == 0 && remainingLowerPicks == 0) {
-            round.placeTotemOrderForPlayer(currentPlayer);
+            ctx.getGame().getCurrentRound().placeTotemOrderForPlayer(currentPlayer);
             currentIndex++;
             prepareCurrentPlayer(ctx);
         }
     }
+
+    private void handleExtraPickAction(GameController ctx, String playerNickname, GameAction action) {
+        Player currentPlayer = extraPickQueue.get(extraPickIndex).getKey();
+        Game game = ctx.getGame();
+        Round round = game.getCurrentRound();
+
+        if (!currentPlayer.getNickname().equals(playerNickname)) {
+            throw new IllegalStateException("Non è il turno di " + playerNickname);
+        }
+
+        List<CharacterCard> upperTribute = round.getUpperRowTribute();
+        List<BuildingCard> upperBuildings = round.getUpperRowBuildings();
+
+        if (action instanceof PickCardAction pickCard) {
+            if (!pickCard.isFromUpperRow())
+                throw new IllegalStateException("La carta extra deve essere presa dalla riga superiore");
+
+            CharacterCard card = findCharacterCard(upperTribute, pickCard.getCardId());
+            if (card == null)
+                throw new IllegalArgumentException("Carta personaggio non trovata: " + pickCard.getCardId());
+
+            game.takeCharacterCard(currentPlayer, upperTribute, card);
+            ctx.notifyListeners(l -> l.onCharacterCardTaken(playerNickname, pickCard.getCardId(), true));
+
+        } else if (action instanceof PickBuildingAction pickBuilding) {
+            if (!pickBuilding.isFromUpperRow())
+                throw new IllegalStateException("L'edificio extra deve essere preso dalla riga superiore");
+
+            BuildingCard card = findBuildingCard(upperBuildings, pickBuilding.getCardId());
+            if (card == null)
+                throw new IllegalArgumentException("Edificio non trovato: " + pickBuilding.getCardId());
+
+            if (!game.canAffordBuilding(currentPlayer, card))
+                throw new IllegalStateException("Non hai abbastanza cibo per acquistare questo edificio");
+
+            game.takeBuildingCard(currentPlayer, upperBuildings, card);
+            ctx.notifyListeners(l -> l.onBuildingCardTaken(playerNickname, pickBuilding.getCardId(), true));
+
+        } else {
+            rejectAction(action);
+        }
+
+        remainingExtraPicks--;
+        if (remainingExtraPicks == 0) {
+            extraPickIndex++;
+            prepareExtraPickPlayer(ctx);
+        }
+    }
+
+    // ── DISCONNECTION ────────────────────────────────────────
 
     @Override
     public void onPlayerDisconnected(GameController ctx, String playerNickname) {
-        if (!ctx.containsGamePlayer(playerNickname)) {
-            return;
-        }
+        if (!ctx.containsGamePlayer(playerNickname)) return;
 
         ctx.markPlayerDisconnected(playerNickname);
-        if (currentIndex < orderedPlayers.size()
-                && orderedPlayers.get(currentIndex).getKey().getNickname().equals(playerNickname)
-                && !ctx.isSuspended()) {
-            ctx.getGame().getCurrentRound().placeTotemOrderForPlayer(orderedPlayers.get(currentIndex).getKey());
-            currentIndex++;
-            prepareCurrentPlayer(ctx);
+
+        if (isInExtraPickPhase()) {
+            if (extraPickIndex < extraPickQueue.size()
+                    && extraPickQueue.get(extraPickIndex).getKey().getNickname().equals(playerNickname)
+                    && !ctx.isSuspended()) {
+                extraPickIndex++;
+                prepareExtraPickPlayer(ctx);
+            }
+        } else {
+            if (currentIndex < orderedPlayers.size()
+                    && orderedPlayers.get(currentIndex).getKey().getNickname().equals(playerNickname)
+                    && !ctx.isSuspended()) {
+                ctx.getGame().getCurrentRound().placeTotemOrderForPlayer(orderedPlayers.get(currentIndex).getKey());
+                currentIndex++;
+                prepareCurrentPlayer(ctx);
+            }
         }
-        // TODO define gameplay policy for disconnected players during action resolution.
     }
 
-    // ── HELPERS ──────────────────────────────────────────────────────
+    // ── HELPERS ──────────────────────────────────────────────
 
     private CharacterCard findCharacterCard(List<CharacterCard> row, String cardId) {
         for (CharacterCard card : row) {

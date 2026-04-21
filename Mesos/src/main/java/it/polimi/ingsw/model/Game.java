@@ -357,6 +357,11 @@ public class Game {
         return player.getTribe().getBuildingDiscount();
     }
 
+    public boolean canAffordBuilding(Player player, BuildingCard card) {
+        int finalCost = Math.max(0, card.getFoodCost() - getBuildingDiscount(player));
+        return player.canAfford(finalCost);
+    }
+
 
     public void startNewEra(){}
 

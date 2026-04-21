@@ -27,5 +27,6 @@ public interface GameListener {
     // End Round/Game
     void onRoundEnded(int roundNumber);
     void onGameEnded(Player winner, Map<Player, Integer> finalScores);
+    void onExtraCardPickAvailable(String nickname, int picks);
 
 }
