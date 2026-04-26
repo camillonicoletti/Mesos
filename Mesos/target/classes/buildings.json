@@ -1,36 +1,34 @@
 [
-  {"id":1 , "era": "I", "foodCost":4 , "pointsEndOfMatch":3 , "effect": "FullSetFood"},
-  {"id":2 , "era": "I", "foodCost":4 , "pointsEndOfMatch":4 , "effect": {"name":
+  {"id":97 , "era": "I", "foodCost":4 , "pointsEndOfMatch":3 , "effect": "FullSetFood"},
+  {"id":98 , "era": "I", "foodCost":4 , "pointsEndOfMatch":4 , "effect": {"name":
   "SustenanceFoodDiscount", "targetType": "gatherer"}},
-  {"id":3, "era": "I", "foodCost":5 , "pointsEndOfMatch":3 , "effect": {"name":
+  {"id":99, "era": "I", "foodCost":5 , "pointsEndOfMatch":3 , "effect": {"name":
   "SustenanceFoodDiscount", "targetType": "artist"}},
-  {"id":4 , "era": "I", "foodCost":5, "pointsEndOfMatch":2 , "effect":
+  {"id":100 , "era": "I", "foodCost":5, "pointsEndOfMatch":2 , "effect":
   "ShamanicRitualImmunity"},
-  {"id":5, "era": "I", "foodCost":3 , "pointsEndOfMatch":3 , "effect": "TotemSlotFoodBonus"},
-  {"id":6, "era": "I", "foodCost": 3, "pointsEndOfMatch":4 , "effect": "InventorPairFood"},
-  {"id":7 , "era": "II", "foodCost":7 , "effect":
+  {"id":101, "era": "I", "foodCost":3 , "pointsEndOfMatch":3 , "effect": "TotemSlotFoodBonus"},
+  {"id":102, "era": "I", "foodCost": 3, "pointsEndOfMatch":4 , "effect": "InventorPairFood"},
+  {"id":103 , "era": "II", "foodCost":7 , "pointsEndOfMatch": 0 ,"effect":
   "ShamanicRitualDoublePP"},
-  {"id":8, "era": "II", "foodCost":6 , "pointsEndOfMatch":4 , "effect": "Shaman3ExtraStars"},
-  {"id":9 , "era": "II", "foodCost":7, "pointsEndOfMatch": 4, "effect": {"name":
+  {"id":104, "era": "II", "foodCost":6 , "pointsEndOfMatch":4 , "effect": "Shaman3ExtraStars"},
+  {"id":105 , "era": "II", "foodCost":7, "pointsEndOfMatch": 4, "effect": {"name":
   "SustenanceFoodDiscount", "targetType": "inventor"}},
-  {"id":10 , "era": "II", "foodCost":7 , "pointsEndOfMatch":2 , "effect": "Hunt1Food1PP"},
-  {"id":11 , "era": "II", "foodCost":6 , "pointsEndOfMatch":4 , "effect": "EndBuilderPP"},
-  {"id":12 , "era": "II", "foodCost":5 , "pointsEndOfMatch": 6, "effect": "CavePaintingsFood"},
-  {"id":13 , "era": "II", "foodCost":5 , "pointsEndOfMatch":6 , "effect": "FullSetFood"},
-  {"id": 14, "era": "III", "foodCost": 8, "pointsEndOfMatch": 8, "effect": {"name":
+  {"id":106 , "era": "II", "foodCost":7 , "pointsEndOfMatch":2 , "effect": "Hunt1Food1PP"},
+  {"id":107 , "era": "II", "foodCost":6 , "pointsEndOfMatch":4 , "effect": "EndBuilderPP"},
+  {"id":108 , "era": "II", "foodCost":5 , "pointsEndOfMatch": 6, "effect": "CavePaintingsFood"},
+  {"id":109 , "era": "II", "foodCost":5 , "pointsEndOfMatch":6 , "effect": "FullSetFood"},
+  {"id": 110, "era": "III", "foodCost": 8, "pointsEndOfMatch": 8, "effect": {"name":
   "EndCharacterCountPP", "pointsPerCard":3 , "targetType": "hunter"}},
-  {"id": 15, "era": "III", "foodCost":7 , "pointsEndOfMatch": 6, "effect": {"name":
+  {"id": 111, "era": "III", "foodCost":7 , "pointsEndOfMatch": 6, "effect": {"name":
   "EndCharacterCountPP", "pointsPerCard":4 , "targetType": "gatherer"}},
-  {"id": 16, "era": "III", "foodCost":7, "pointsEndOfMatch": 6, "effect": {"name":
+  {"id": 112, "era": "III", "foodCost":7, "pointsEndOfMatch": 6, "effect": {"name":
   "EndCharacterCountPP", "pointsPerCard":4 , "targetType": "shaman"}},
-  {"id": 17, "era": "III", "foodCost":6 , "pointsEndOfMatch":3 , "effect": {"name":
+  {"id": 113, "era": "III", "foodCost":6 , "pointsEndOfMatch":3 , "effect": {"name":
   "EndCharacterCountPP", "pointsPerCard":4 , "targetType": "builder"}},
-  {"id":18 , "era": "III", "foodCost": 7, "pointsEndOfMatch": 6, "effect": {"name":
+  {"id":114 , "era": "III", "foodCost": 7, "pointsEndOfMatch": 6, "effect": {"name":
   "EndCharacterCountPP", "pointsPerCard": 4, "targetType": "artist"}},
-  {"id":19, "era": "III", "foodCost":6 , "pointsEndOfMatch":6 , "effect": {"name":
+  {"id":115, "era": "III", "foodCost":6 , "pointsEndOfMatch":6 , "effect": {"name":
   "EndCharacterCountPP", "pointsPerCard": 2, "targetType": "inventor"}},
-  {"id": 20, "era": "III", "foodCost": 9, "pointsEndOfMatch":3 , "effect": "ExtraCardUpperRow"},
-  {"id": 21, "era": "III", "foodCost": 10, "pointsEndOfMatch": 25, "effect": "EndPP"}
-
-
+  {"id": 116, "era": "III", "foodCost": 9, "pointsEndOfMatch":3 , "effect": "ExtraCardUpperRow"},
+  {"id": 117, "era": "III", "foodCost": 10, "pointsEndOfMatch": 0, "effect": "EndPP"}
 ]
