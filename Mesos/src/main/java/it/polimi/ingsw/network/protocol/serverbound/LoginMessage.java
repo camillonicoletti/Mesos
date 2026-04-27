@@ -1,13 +1,13 @@
 package it.polimi.ingsw.network.protocol.serverbound;
-import it.polimi.ingsw.model.Totem;
+import it.polimi.ingsw.model.enums.TotemColor;
 
 public class LoginMessage implements ClientMessage {
     private final String nickname;
-    private final Totem totem;
-    public LoginMessage(String nickname, Totem totem) {
+    private final TotemColor totemColor;
+    public LoginMessage(String nickname, TotemColor totemColor) {
         this.nickname = nickname;
-        this.totem = totem;
+        this.totemColor = totemColor;
     }
     public String getNickname() { return nickname; }
-    public Totem getTotem() { return totem; }
+    public TotemColor getTotemColor() { return totemColor; }
 }

@@ -1,4 +1,5 @@
 package it.polimi.ingsw.network.client.tui;
+import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.protocol.serverbound.*;
 import it.polimi.ingsw.network.protocol.clientbound.*;
 import it.polimi.ingsw.model.Totem;
@@ -29,10 +30,9 @@ public class CommandParser {
     }
 
     private static ClientMessage parseLogin(String[] tok) {
-        // formato: login NICKNAME COLOR  (es. login mario red)
         if (tok.length != 3) throw new IllegalArgumentException("Uso: login <nick> <colore>");
-        Totem totem = Totem.valueOf(tok[2].toUpperCase()); // assumi enum Totem
-        return new LoginMessage(tok[1], totem);
+        TotemColor color = TotemColor.valueOf(tok[2].toUpperCase());
+        return new LoginMessage(tok[1], color);
     }
 
     private static ClientMessage parseCount(String[] tok) {
