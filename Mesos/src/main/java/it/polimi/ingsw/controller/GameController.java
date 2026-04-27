@@ -127,11 +127,21 @@ public class GameController implements Serializable {
             throw new IllegalArgumentException("New state cannot be null");
         }
 
-        currentState.onExit(this);
+        GameState previousState = currentState;
+        previousState.onExit(this);
         currentState = newState;
-        currentState.onEnter(this);
-        // Notify listener
-        notifyListeners(l -> l.onStateChanged(newState));
+        try {
+            currentState.onEnter(this);
+            notifyListeners(l -> l.onStateChanged(newState));
+        } catch (RuntimeException | Error exception) {
+            currentState = previousState;
+            try {
+                previousState.onEnter(this);
+            } catch (RuntimeException rollbackException) {
+                exception.addSuppressed(rollbackException);
+            }
+            throw exception;
+        }
     }
 
     public Game getGame() {
@@ -180,7 +190,10 @@ public class GameController implements Serializable {
         }
 
         return lobbyPlayers.stream()
-                .anyMatch(player -> player.getTotem().equals(totem));
+                .map(Player::getTotem)
+                .anyMatch(existingTotem ->
+                        existingTotem != null
+                                && existingTotem.getColor() == totem.getColor());
     }
 
     public int getChosenPlayersCount() {

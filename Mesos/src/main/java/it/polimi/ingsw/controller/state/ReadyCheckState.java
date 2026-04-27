@@ -46,6 +46,9 @@ public class ReadyCheckState extends AbstractGameState {
         if (playerNickname == null || playerNickname.isBlank()) {
             throw new IllegalArgumentException("Player nickname cannot be null or blank");
         }
+        if (!ctx.containsLobbyPlayer(playerNickname)) {
+            throw new IllegalArgumentException("Player is not in the lobby");
+        }
 
         if (action.isReady()) {
             ctx.markPlayerReady(playerNickname);
