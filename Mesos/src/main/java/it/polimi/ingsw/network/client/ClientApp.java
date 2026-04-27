@@ -27,8 +27,7 @@ public class ClientApp {
         Tui tui                         = new Tui(controller, model);
 
         try {
-            connection.connect(host, port);
-            System.out.println("Connesso a " + host + ":" + port);
+            System.out.println("Client pronto per la connessione a " + host + ":" + port);
             tui.run();
         } catch (Exception e) {
             System.err.println("Errore di connessione: " + e.getMessage());

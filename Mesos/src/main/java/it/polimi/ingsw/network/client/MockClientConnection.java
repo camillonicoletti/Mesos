@@ -9,18 +9,18 @@ import java.util.function.Consumer;
 public class MockClientConnection implements ClientSideConnection {
 
     @Override
-    public void connect(String host, int port) {
-        System.out.println("[MOCK] connect → " + host + ":" + port);
-    }
-
-    @Override
     public void send(ClientMessage message) {
         System.out.println("[MOCK] send → " + message.getClass().getSimpleName());
     }
 
     @Override
-    public void setMessageHandler(Consumer<ServerMessage> handler) {
+    public void setOnMessage(Consumer<ServerMessage> handler) {
         // non fa nulla — nessun messaggio simulato
+    }
+
+    @Override
+    public void setOnDisconnect(Runnable onDisconnect) {
+        // non fa nulla — nessuna disconnessione simulata
     }
 
     @Override

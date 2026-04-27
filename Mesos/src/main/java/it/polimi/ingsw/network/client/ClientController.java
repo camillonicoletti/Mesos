@@ -13,7 +13,7 @@ public class ClientController {
     public ClientController(ClientModel model, ClientSideConnection connection) {
         this.model = model;
         this.connection = connection;
-        connection.setMessageHandler(this::onMessage);
+        connection.setOnMessage(this::onMessage);
     }
 
     public void send(ClientMessage message) {
