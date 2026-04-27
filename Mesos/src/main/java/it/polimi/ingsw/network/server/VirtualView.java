@@ -84,5 +84,29 @@ public class VirtualView implements GameListener {
                 .collect(Collectors.toMap(e -> e.getKey().getNickname(), Map.Entry::getValue));
         connection.send(new GameEndedMessage(winner.getNickname(), scoresByNickname));
     }
+    @Override
+    public void onPlayerDisconnected(String nick) {
+        connection.send(new PlayerDisconnectedMessage(nick));
+    }
+
+    @Override
+    public void onPlayerReconnected(String nick) {
+        connection.send(new PlayerReconnectedMessage(nick));
+    }
+
+    @Override
+    public void onGameSuspended() {
+        connection.send(new GameSuspendedMessage());
+    }
+
+    @Override
+    public void onGameResumed() {
+        connection.send(new GameResumedMessage());
+    }
+
+    @Override
+    public void onExtraCardPickAvailable(String nick, int picks) {
+        connection.send(new ExtraCardPickAvailableMessage(nick, picks));
+    }
 
 }
