@@ -16,9 +16,13 @@ public class EndGameState extends AbstractGameState {
     public void onEnter(GameController ctx) {
         Game game = ctx.getGame();
         game.calculateFinalScores();
-        Player winner = game.getWinner();
+        Player winner = ctx.consumeForcedWinner();
+        if (winner == null) {
+            winner = game.getWinner();
+        }
+        Player finalWinner = winner;
         Map<Player, Integer> scores = game.getFinalScores();
-        ctx.notifyListeners(l -> l.onGameEnded(winner, scores));
+        ctx.notifyListeners(l -> l.onGameEnded(finalWinner, scores));
         game.end();
     }
 

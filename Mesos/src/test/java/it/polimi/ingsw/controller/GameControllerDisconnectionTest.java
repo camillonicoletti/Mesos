@@ -4,14 +4,22 @@ import it.polimi.ingsw.controller.action.JoinGameAction;
 import it.polimi.ingsw.controller.action.PlaceTotemAction;
 import it.polimi.ingsw.controller.action.ReadyAction;
 import it.polimi.ingsw.controller.action.SetPlayerCountAction;
+import it.polimi.ingsw.controller.listener.GameListener;
 import it.polimi.ingsw.controller.state.LobbyState;
 import it.polimi.ingsw.controller.state.ReadyCheckState;
 import it.polimi.ingsw.controller.state.StartGameState;
+import it.polimi.ingsw.controller.state.SuspendedState;
 import it.polimi.ingsw.controller.state.TotemPlacementState;
 import it.polimi.ingsw.model.Game;
+import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.Totem;
+import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.TotemColor;
 import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -74,6 +82,7 @@ public class GameControllerDisconnectionTest {
 
         assertTrue(controller.isPlayerDisconnected("Bob"));
         assertTrue(controller.isSuspended());
+        assertInstanceOf(SuspendedState.class, controller.getCurrentState());
         assertThrows(IllegalStateException.class,
                 () -> controller.onMessageReceived("Alice", new PlaceTotemAction('A')));
     }
@@ -90,6 +99,41 @@ public class GameControllerDisconnectionTest {
         assertInstanceOf(TotemPlacementState.class, controller.getCurrentState());
     }
 
+    @Test
+    void disconnectionAndReconnectionNotifyOtherPlayersAndSuspendResumeGame() {
+        GameController controller = createStartedGameController();
+        RecordingListener listener = new RecordingListener();
+        controller.addListener(listener);
+
+        controller.onPlayerDisconnection("Bob");
+        controller.onPlayerReconnection("Bob");
+
+        assertEquals(
+                List.of("disconnected:Bob", "suspended", "reconnected:Bob", "resumed"),
+                listener.events
+        );
+    }
+
+    @Test
+    void suspensionTimeoutEndsGameAndDeclaresOnlyConnectedPlayerAsWinner() {
+        GameController controller = createStartedGameController();
+        RecordingListener listener = new RecordingListener();
+        controller.addListener(listener);
+        controller.setSuspensionTimeoutMillis(10L);
+
+        controller.onPlayerDisconnection("Bob");
+
+        long suspendedAt = controller.getSuspensionStartedAtMillis();
+        assertFalse(controller.checkSuspensionTimeout(suspendedAt + 9L));
+        assertTrue(controller.isSuspended());
+        assertInstanceOf(SuspendedState.class, controller.getCurrentState());
+
+        assertTrue(controller.checkSuspensionTimeout(suspendedAt + 10L));
+        assertFalse(controller.isSuspended());
+        assertTrue(controller.getGame().isGameOver());
+        assertEquals("Alice", listener.gameEndedWinnerNickname);
+    }
+
     private GameController createReadyCheckController() {
         GameController controller = new GameController();
 
@@ -103,18 +147,6 @@ public class GameControllerDisconnectionTest {
 
     private GameController createStartedGameController() {
         GameController controller = new GameController();
-        Game game = new Game(
-                controller.getLobbyPlayers(),
-                1,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-        );
 
         controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
         controller.onMessageReceived("Bob", new JoinGameAction(createTotem(TotemColor.BLUE)));
@@ -137,5 +169,83 @@ public class GameControllerDisconnectionTest {
 
     private Totem createTotem(TotemColor color) {
         return new Totem(color, "OFFER_TRACK");
+    }
+
+    private static final class RecordingListener implements GameListener {
+        private final List<String> events = new ArrayList<>();
+        private String gameEndedWinnerNickname;
+
+        @Override
+        public void onPlayerJoined(String nickname) {
+        }
+
+        @Override
+        public void onPlayersCountSet(int count) {
+        }
+
+        @Override
+        public void onPlayerDisconnected(String nickname) {
+            events.add("disconnected:" + nickname);
+        }
+
+        @Override
+        public void onPlayerReconnected(String nickname) {
+            events.add("reconnected:" + nickname);
+        }
+
+        @Override
+        public void onGameSuspended() {
+            events.add("suspended");
+        }
+
+        @Override
+        public void onGameResumed() {
+            events.add("resumed");
+        }
+
+        @Override
+        public void onGameStarted() {
+        }
+
+        @Override
+        public void onStateChanged(it.polimi.ingsw.controller.state.GameState newState) {
+        }
+
+        @Override
+        public void onTotemPlaced(String nickname, char tileId) {
+        }
+
+        @Override
+        public void onFoodChanged(String nickname, int newAmount, int delta) {
+        }
+
+        @Override
+        public void onPointsChanged(String nickname, int newAmount, int delta) {
+        }
+
+        @Override
+        public void onEraChanged(Era newEra) {
+        }
+
+        @Override
+        public void onCharacterCardTaken(String nickname, String cardId, boolean fromUpperRow) {
+        }
+
+        @Override
+        public void onBuildingCardTaken(String nickname, String cardId, boolean fromUpperRow) {
+        }
+
+        @Override
+        public void onRoundEnded(int roundNumber) {
+        }
+
+        @Override
+        public void onGameEnded(Player winner, Map<Player, Integer> finalScores) {
+            gameEndedWinnerNickname = winner == null ? null : winner.getNickname();
+        }
+
+        @Override
+        public void onExtraCardPickAvailable(String nickname, int picks) {
+        }
     }
 }
