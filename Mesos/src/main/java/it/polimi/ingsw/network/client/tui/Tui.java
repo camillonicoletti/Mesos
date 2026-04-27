@@ -1,7 +1,7 @@
-package it.polimi.ingsw.client.tui;
+package it.polimi.ingsw.network.client.tui;
 
-import it.polimi.ingsw.client.ClientController;
-import it.polimi.ingsw.client.ClientModel;
+import it.polimi.ingsw.network.client.ClientController;
+import it.polimi.ingsw.network.client.ClientModel;
 import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.protocol.serverbound.*;
 

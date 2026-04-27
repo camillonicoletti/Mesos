@@ -1,6 +1,6 @@
-package it.polimi.ingsw.client;
+package it.polimi.ingsw.network.client;
 
-import it.polimi.ingsw.client.tui.Tui;
+import it.polimi.ingsw.network.client.tui.Tui;
 import it.polimi.ingsw.network.transport.ClientSideConnection;
 
 public class ClientApp {

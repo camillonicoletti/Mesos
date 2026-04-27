@@ -1,4 +1,4 @@
-package it.polimi.ingsw.client.tui;
+package it.polimi.ingsw.network.client.tui;
 
 import it.polimi.ingsw.controller.action.*;
 import it.polimi.ingsw.network.protocol.serverbound.*;
