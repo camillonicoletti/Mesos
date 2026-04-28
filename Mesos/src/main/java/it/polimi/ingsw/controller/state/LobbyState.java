@@ -44,6 +44,10 @@ public class LobbyState extends AbstractGameState {
             throw new IllegalStateException("Lobby is already full");
         }
 
+        if (action.getTotem() == null || action.getTotem().getColor() == null) {
+            throw new IllegalArgumentException("Totem color must be valid");
+        }
+
         if (!ctx.isNicknameAvailable(playerNickname)) {
             throw new IllegalArgumentException("Nickname already in use");
         }

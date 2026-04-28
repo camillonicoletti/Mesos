@@ -84,6 +84,9 @@ public class GameController implements Serializable {
         if (playerNickname == null || playerNickname.isBlank()) {
             throw new IllegalArgumentException("Player nickname cannot be null or blank");
         }
+        if (isPlayerDisconnected(playerNickname)) {
+            return;
+        }
         boolean knownPlayer = containsLobbyPlayer(playerNickname) || containsGamePlayer(playerNickname);
         boolean wasSuspended = suspended;
 
@@ -185,7 +188,7 @@ public class GameController implements Serializable {
     }
 
     public boolean isTotemAlreadyTaken(Totem totem) {
-        if (totem == null) {
+        if (totem == null || totem.getColor() == null) {
             return true;
         }
 
@@ -203,6 +206,9 @@ public class GameController implements Serializable {
     public void setChosenPlayersCount(int chosenPlayersCount) {
         if (chosenPlayersCount < 2 || chosenPlayersCount > 5) {
             throw new IllegalArgumentException("Players count must be between 2 and 5");
+        }
+        if (chosenPlayersCount < lobbyPlayers.size()) {
+            throw new IllegalArgumentException("Players count cannot be lower than the current lobby size");
         }
         this.chosenPlayersCount = chosenPlayersCount;
     }
@@ -279,6 +285,8 @@ public class GameController implements Serializable {
             throw new IllegalArgumentException("Nickname cannot be null or blank");
         }
 
+        boolean removedFirstPlayer = !lobbyPlayers.isEmpty()
+                && lobbyPlayers.get(0).getNickname().equals(nickname);
         boolean removed = lobbyPlayers.removeIf(player -> player.getNickname().equals(nickname));
         if (!removed) {
             throw new IllegalArgumentException("Player is not in the lobby");
@@ -290,6 +298,8 @@ public class GameController implements Serializable {
         if (lobbyPlayers.isEmpty()) {
             chosenPlayersCount = -1;
             readyPlayers.clear();
+        } else if (removedFirstPlayer) {
+            chosenPlayersCount = -1;
         }
     }
 

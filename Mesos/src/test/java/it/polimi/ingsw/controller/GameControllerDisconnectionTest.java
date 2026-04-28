@@ -40,6 +40,22 @@ public class GameControllerDisconnectionTest {
     }
 
     @Test
+    void firstPlayerDisconnectionResetsChosenPlayersCount() {
+        GameController controller = new GameController();
+
+        controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
+        controller.onMessageReceived("Bob", new JoinGameAction(createTotem(TotemColor.BLUE)));
+        controller.onMessageReceived("Alice", new SetPlayerCountAction(2));
+
+        controller.onPlayerDisconnection("Alice");
+
+        assertFalse(controller.hasChosenPlayersCount());
+        assertEquals(1, controller.getLobbyPlayers().size());
+        assertEquals("Bob", controller.getLobbyPlayers().get(0).getNickname());
+        assertInstanceOf(LobbyState.class, controller.getCurrentState());
+    }
+
+    @Test
     void disconnectionInReadyCheckRemovesPlayerAndReturnsToLobby() {
         GameController controller = createReadyCheckController();
 
@@ -110,6 +126,21 @@ public class GameControllerDisconnectionTest {
 
         assertEquals(
                 List.of("disconnected:Bob", "suspended", "reconnected:Bob", "resumed"),
+                listener.events
+        );
+    }
+
+    @Test
+    void repeatedDisconnectionIsIgnored() {
+        GameController controller = createStartedGameController();
+        RecordingListener listener = new RecordingListener();
+        controller.addListener(listener);
+
+        controller.onPlayerDisconnection("Bob");
+        controller.onPlayerDisconnection("Bob");
+
+        assertEquals(
+                List.of("disconnected:Bob", "suspended"),
                 listener.events
         );
     }
