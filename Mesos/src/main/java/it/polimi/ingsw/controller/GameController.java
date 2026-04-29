@@ -70,29 +70,25 @@ public class GameController implements Serializable {
      * @param action         the received action
      */
     public void onMessageReceived(String playerNickname, GameAction action) {
-        if (playerNickname == null || playerNickname.isBlank()) {
-            throw new IllegalArgumentException("Player nickname cannot be null or blank");
-        }
+        String normalizedNickname = normalizePlayerNickname(playerNickname);
         if (action == null) {
             throw new IllegalArgumentException("Action cannot be null");
         }
 
-        currentState.handleAction(this, playerNickname, action);
+        currentState.handleAction(this, normalizedNickname, action);
     }
 
     public void onPlayerDisconnection(String playerNickname) {
-        if (playerNickname == null || playerNickname.isBlank()) {
-            throw new IllegalArgumentException("Player nickname cannot be null or blank");
-        }
-        if (isPlayerDisconnected(playerNickname)) {
+        String normalizedNickname = normalizePlayerNickname(playerNickname);
+        if (isPlayerDisconnected(normalizedNickname)) {
             return;
         }
-        boolean knownPlayer = containsLobbyPlayer(playerNickname) || containsGamePlayer(playerNickname);
+        boolean knownPlayer = containsLobbyPlayer(normalizedNickname) || containsGamePlayer(normalizedNickname);
         boolean wasSuspended = suspended;
 
-        currentState.onPlayerDisconnected(this, playerNickname);
+        currentState.onPlayerDisconnected(this, normalizedNickname);
         if (knownPlayer) {
-            notifyListeners(l -> l.onPlayerDisconnected(playerNickname));
+            notifyListeners(l -> l.onPlayerDisconnected(normalizedNickname));
         }
         updateSuspensionStatus();
         if (!wasSuspended && suspended) {
@@ -102,20 +98,18 @@ public class GameController implements Serializable {
     }
 
     public void onPlayerReconnection(String playerNickname) {
-        if (playerNickname == null || playerNickname.isBlank()) {
-            throw new IllegalArgumentException("Player nickname cannot be null or blank");
-        }
-        if (!containsGamePlayer(playerNickname)) {
+        String normalizedNickname = normalizePlayerNickname(playerNickname);
+        if (!containsGamePlayer(normalizedNickname)) {
             throw new IllegalArgumentException("Unknown player");
         }
-        if (!isPlayerDisconnected(playerNickname)) {
+        if (!isPlayerDisconnected(normalizedNickname)) {
             throw new IllegalStateException("Player is already connected");
         }
         boolean wasSuspended = suspended;
 
-        markPlayerConnected(playerNickname);
-        currentState.onPlayerReconnected(this, playerNickname);
-        notifyListeners(l -> l.onPlayerReconnected(playerNickname));
+        markPlayerConnected(normalizedNickname);
+        currentState.onPlayerReconnected(this, normalizedNickname);
+        notifyListeners(l -> l.onPlayerReconnected(normalizedNickname));
         updateSuspensionStatus();
         if (wasSuspended && !suspended) {
             resumeSuspendedState();
@@ -508,6 +502,25 @@ public class GameController implements Serializable {
                 System.err.println("Listener error: " + e.getMessage());
             }
         }
+    }
+
+    private String normalizePlayerNickname(String playerNickname) {
+        if (playerNickname == null) {
+            throw new IllegalArgumentException("Player nickname cannot be null or blank");
+        }
+
+        String normalizedNickname = playerNickname.trim();
+        if (normalizedNickname.isBlank()) {
+            throw new IllegalArgumentException("Player nickname cannot be null or blank");
+        }
+
+        for (int i = 0; i < normalizedNickname.length(); i++) {
+            if (Character.isISOControl(normalizedNickname.charAt(i))) {
+                throw new IllegalArgumentException("Player nickname contains invalid characters");
+            }
+        }
+
+        return normalizedNickname;
     }
 
     @Serial

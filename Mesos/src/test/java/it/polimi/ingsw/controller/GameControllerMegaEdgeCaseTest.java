@@ -720,7 +720,7 @@ public class GameControllerMegaEdgeCaseTest {
 
         assertTrue(listener.events.contains("placed:Alice:A"));
         assertTrue(listener.events.contains("placed:Bob:B"));
-        assertFalse(controller.getCurrentState() instanceof TotemPlacementState);
+        assertEquals(2, controller.getGame().getCurrentRound().getNumber());
     }
 
     @Test

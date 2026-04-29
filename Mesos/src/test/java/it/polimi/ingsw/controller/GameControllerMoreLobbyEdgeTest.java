@@ -206,7 +206,7 @@ public class GameControllerMoreLobbyEdgeTest {
         controller.onMessageReceived("Bob", new JoinGameAction(createTotem(TotemColor.BLUE)));
         controller.onMessageReceived("Charlie", new JoinGameAction(createTotem(TotemColor.PURPLE)));
 
-        assertThrows(IllegalStateException.class, () ->
+        assertThrows(IllegalArgumentException.class, () ->
                 controller.onMessageReceived("Alice", new SetPlayerCountAction(2))
         );
     }
