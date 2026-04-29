@@ -8,6 +8,7 @@ import it.polimi.ingsw.model.Totem;
 import it.polimi.ingsw.network.protocol.clientbound.ErrorMessage;
 import it.polimi.ingsw.network.protocol.clientbound.LobbyUpdateMessage;
 import it.polimi.ingsw.network.protocol.clientbound.LoginAckMessage;
+import it.polimi.ingsw.network.protocol.clientbound.StateChangedMessage;
 import it.polimi.ingsw.network.protocol.serverbound.LoginMessage;
 import it.polimi.ingsw.network.protocol.serverbound.SetPlayersCountMessage;
 import it.polimi.ingsw.network.transport.ServerSideConnection;
@@ -15,6 +16,7 @@ import it.polimi.ingsw.network.transport.ServerSideConnection;
 import java.util.*;
 
 public class LobbyManager {
+
     private final GameController gameController = new GameController();
     private final Map<String, ServerSideConnection> connections = new HashMap<>();
     private final Map<String, VirtualView> views = new HashMap<>();
@@ -43,6 +45,11 @@ public class LobbyManager {
 
         conn.send(new LoginAckMessage(true, null));
         broadcastLobbyUpdate();
+
+        String currentState = gameController.getCurrentState().getClass().getSimpleName();
+        if (!currentState.equals("LobbyState")) {
+            conn.send(new StateChangedMessage(currentState));
+        }
     }
 
     public synchronized void handleSetPlayersCount(String nick, SetPlayersCountMessage msg) {
@@ -77,7 +84,8 @@ public class LobbyManager {
     private void broadcastLobbyUpdate() {
         List<String> players = new ArrayList<>(connections.keySet());
         int expected = gameController.getChosenPlayersCount();
-        LobbyUpdateMessage msg = new LobbyUpdateMessage(players, expected);
+        List<String> ready = new ArrayList<>(gameController.getReadyPlayers());
+        LobbyUpdateMessage msg = new LobbyUpdateMessage(players, expected, ready);
         for (ServerSideConnection c : connections.values()) {
             c.send(msg);
         }

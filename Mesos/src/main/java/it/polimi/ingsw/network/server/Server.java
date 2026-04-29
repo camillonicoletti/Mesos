@@ -1,4 +1,4 @@
-/*package it.polimi.ingsw.network.server;
+package it.polimi.ingsw.network.server;
 
 import it.polimi.ingsw.network.transport.ServerSideConnection;
 import it.polimi.ingsw.network.transport.SocketServerConnection;
@@ -30,4 +30,3 @@ public class Server {
         }
     }
 }
- */

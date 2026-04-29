@@ -263,6 +263,10 @@ public class GameController implements Serializable {
         return isLobbyFull() && readyPlayers.size() == lobbyPlayers.size();
     }
 
+    public Set<String> getReadyPlayers() {
+        return Collections.unmodifiableSet(readyPlayers);
+    }
+
     public boolean containsLobbyPlayer(String nickname) {
         return lobbyPlayers.stream()
                 .anyMatch(player -> player.getNickname().equals(nickname));
@@ -532,4 +536,5 @@ public class GameController implements Serializable {
             suspensionTimeoutMillis = DEFAULT_SUSPENSION_TIMEOUT_MILLIS;
         }
     }
+
 }

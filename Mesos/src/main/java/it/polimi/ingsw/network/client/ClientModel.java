@@ -14,35 +14,31 @@ public class ClientModel {
     private boolean gameSuspended;
     private String lastDisconnectedPlayer;
 
-    // --- login ---
     private boolean loginSuccess;
     private String lastError;
 
-    // --- lobby ---
+    private String myNickname;
+
     private List<String> lobbyPlayers = new ArrayList<>();
+    private List<String> readyPlayers = new ArrayList<>();
     private int expectedPlayers;
 
-    // --- partita ---
     private String gameState;
     private Era currentEra;
     private int roundNumber;
     private List<String> turnOrder = new ArrayList<>();
     private Map<Character, String> totemOnTiles = new HashMap<>();
 
-    // righe carte sul tavolo
     private List<Integer> upperRowCharacterIds = new ArrayList<>();
     private List<Integer> lowerRowCharacterIds = new ArrayList<>();
     private List<Integer> upperRowBuildingIds   = new ArrayList<>();
     private List<Integer> lowerRowBuildingIds   = new ArrayList<>();
 
-    // giocatori: nickname -> PlayerView
     private Map<String, PlayerView> players = new LinkedHashMap<>();
 
-    // --- fine partita ---
     private String winnerNickname;
     private Map<String, Integer> finalScores = new HashMap<>();
 
-    // --- observer ---
     private final List<Listener> listeners = new ArrayList<>();
 
     public void addListener(Listener l) { listeners.add(l); }
@@ -51,9 +47,7 @@ public class ClientModel {
         for (Listener l : listeners) l.onModelChanged();
     }
 
-    // -------------------------------------------------------
-    // APPLY — uno per ogni ServerMessage che modifica stato
-    // -------------------------------------------------------
+    // ── apply ────────────────────────────────────────────────────────────────
 
     public void applyLoginAck(LoginAckMessage m) {
         loginSuccess = m.isSuccess();
@@ -64,6 +58,9 @@ public class ClientModel {
     public void applyLobbyUpdate(LobbyUpdateMessage m) {
         lobbyPlayers = new ArrayList<>(m.getCurrentPlayers());
         expectedPlayers = m.getExpectedPlayers();
+        readyPlayers = m.getReadyPlayers() != null
+                ? new ArrayList<>(m.getReadyPlayers())
+                : new ArrayList<>();
         notifyChanged();
     }
 
@@ -79,14 +76,14 @@ public class ClientModel {
                     ps.getPrestigePoints(), ps.getCharacterCardIds(), ps.getBuildingCardIds()
             ));
         }
-        currentEra             = snap.getCurrentEra();
-        roundNumber            = snap.getRoundNumber();
-        totemOnTiles           = new HashMap<>(snap.getTotemOnTiles());
-        turnOrder              = new ArrayList<>(snap.getTurnOrder());
-        upperRowCharacterIds   = new ArrayList<>(snap.getUpperRowCharacterAndEventIds());
-        lowerRowCharacterIds   = new ArrayList<>(snap.getLowerRowCharacterAndEventIds());
-        upperRowBuildingIds    = new ArrayList<>(snap.getUpperRowBuildingIds());
-        lowerRowBuildingIds    = new ArrayList<>(snap.getLowerRowBuildingIds());
+        currentEra           = snap.getCurrentEra();
+        roundNumber          = snap.getRoundNumber();
+        totemOnTiles         = new HashMap<>(snap.getTotemOnTiles());
+        turnOrder            = new ArrayList<>(snap.getTurnOrder());
+        upperRowCharacterIds = new ArrayList<>(snap.getUpperRowCharacterAndEventIds());
+        lowerRowCharacterIds = new ArrayList<>(snap.getLowerRowCharacterAndEventIds());
+        upperRowBuildingIds  = new ArrayList<>(snap.getUpperRowBuildingIds());
+        lowerRowBuildingIds  = new ArrayList<>(snap.getLowerRowBuildingIds());
         notifyChanged();
     }
 
@@ -181,38 +178,43 @@ public class ClientModel {
     }
 
     public void applyExtraCardPickAvailable(ExtraCardPickAvailableMessage m) {
-        // il server gestisce il flusso — il client mostra solo che può pescare
         notifyChanged();
     }
 
+    // ── setters ──────────────────────────────────────────────────────────────
 
-    // -------------------------------------------------------
-    // GETTER
-    // -------------------------------------------------------
+    public void setMyNickname(String nickname) { this.myNickname = nickname; }
 
-    public boolean isLoginSuccess()              { return loginSuccess; }
-    public String getLastError()                 { return lastError; }
-    public List<String> getLobbyPlayers()        { return Collections.unmodifiableList(lobbyPlayers); }
-    public int getExpectedPlayers()              { return expectedPlayers; }
-    public String getGameState()                 { return gameState; }
-    public Era getCurrentEra()                   { return currentEra; }
-    public int getRoundNumber()                  { return roundNumber; }
-    public List<String> getTurnOrder()           { return Collections.unmodifiableList(turnOrder); }
-    public Map<Character, String> getTotemOnTiles() { return Collections.unmodifiableMap(totemOnTiles); }
-    public Map<String, PlayerView> getPlayers()  { return Collections.unmodifiableMap(players); }
-    public List<Integer> getUpperRowCharacterIds(){ return Collections.unmodifiableList(upperRowCharacterIds); }
-    public List<Integer> getLowerRowCharacterIds(){ return Collections.unmodifiableList(lowerRowCharacterIds); }
-    public List<Integer> getUpperRowBuildingIds() { return Collections.unmodifiableList(upperRowBuildingIds); }
-    public List<Integer> getLowerRowBuildingIds() { return Collections.unmodifiableList(lowerRowBuildingIds); }
-    public String getWinnerNickname()            { return winnerNickname; }
-    public Map<String, Integer> getFinalScores() { return Collections.unmodifiableMap(finalScores); }
-    public boolean isGameSuspended()          { return gameSuspended; }
-    public String getLastDisconnectedPlayer() { return lastDisconnectedPlayer; }
+    // ── getters ──────────────────────────────────────────────────────────────
 
+    public boolean isLoginSuccess()                { return loginSuccess; }
+    public String getLastError()                   { return lastError; }
+    public String getMyNickname()                  { return myNickname; }
+    public List<String> getLobbyPlayers()          { return Collections.unmodifiableList(lobbyPlayers); }
+    public List<String> getReadyPlayers()          { return Collections.unmodifiableList(readyPlayers); }
+    public int getExpectedPlayers()                { return expectedPlayers; }
+    public String getGameState()                   { return gameState; }
+    public Era getCurrentEra()                     { return currentEra; }
+    public int getRoundNumber()                    { return roundNumber; }
+    public List<String> getTurnOrder()             { return Collections.unmodifiableList(turnOrder); }
+    public Map<Character, String> getTotemOnTiles(){ return Collections.unmodifiableMap(totemOnTiles); }
+    public Map<String, PlayerView> getPlayers()    { return Collections.unmodifiableMap(players); }
+    public List<Integer> getUpperRowCharacterIds() { return Collections.unmodifiableList(upperRowCharacterIds); }
+    public List<Integer> getLowerRowCharacterIds() { return Collections.unmodifiableList(lowerRowCharacterIds); }
+    public List<Integer> getUpperRowBuildingIds()  { return Collections.unmodifiableList(upperRowBuildingIds); }
+    public List<Integer> getLowerRowBuildingIds()  { return Collections.unmodifiableList(lowerRowBuildingIds); }
+    public String getWinnerNickname()              { return winnerNickname; }
+    public Map<String, Integer> getFinalScores()   { return Collections.unmodifiableMap(finalScores); }
+    public boolean isGameSuspended()               { return gameSuspended; }
+    public String getLastDisconnectedPlayer()      { return lastDisconnectedPlayer; }
 
-    // -------------------------------------------------------
-    // HELPER
-    // -------------------------------------------------------
+    public boolean isMyTurn() {
+        return myNickname != null
+                && !turnOrder.isEmpty()
+                && myNickname.equals(turnOrder.get(0));
+    }
+
+    // ── helper ───────────────────────────────────────────────────────────────
 
     private void replacePlayer(String nickname, java.util.function.UnaryOperator<PlayerView> updater) {
         PlayerView old = players.get(nickname);
