@@ -8,6 +8,7 @@ public class CommandParser {
     /**
      * Comandi supportati:
      *   ready
+     *   unready
      *   players <n>
      *   place <tileId>         es. place A
      *   pick <cardId> upper|lower
@@ -22,7 +23,10 @@ public class CommandParser {
 
         switch (cmd) {
             case "ready":
-                return new ReadyMessage();
+                return new ReadyMessage(true);
+
+            case "unready":
+                return new ReadyMessage(false);
 
             case "players":
                 if (parts.length < 2) {
