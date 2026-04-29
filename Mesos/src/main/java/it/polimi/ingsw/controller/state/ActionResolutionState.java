@@ -81,6 +81,8 @@ public class ActionResolutionState extends AbstractGameState {
             }
         }
 
+        skipImpossibleRowPicks(round);
+
         if (remainingUpperPicks == 0 && remainingLowerPicks == 0) {
             round.placeTotemOrderForPlayer(player);
             currentIndex++;
@@ -201,10 +203,26 @@ public class ActionResolutionState extends AbstractGameState {
             rejectAction(action);
         }
 
+        skipImpossibleRowPicks(round);
+
         if (remainingUpperPicks == 0 && remainingLowerPicks == 0) {
             ctx.getGame().getCurrentRound().placeTotemOrderForPlayer(currentPlayer);
             currentIndex++;
             prepareCurrentPlayer(ctx);
+        }
+    }
+
+    private void skipImpossibleRowPicks(Round round) {
+        boolean upperRowEmpty = round.getUpperRowTribute().isEmpty()
+                && round.getUpperRowBuildings().isEmpty();
+        boolean lowerRowEmpty = round.getLowerRowTribute().isEmpty()
+                && round.getLowerRowBuildings().isEmpty();
+
+        if (upperRowEmpty) {
+            remainingUpperPicks = 0;
+        }
+        if (lowerRowEmpty) {
+            remainingLowerPicks = 0;
         }
     }
 

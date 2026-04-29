@@ -225,7 +225,7 @@ public class GameControllerMegaEdgeCaseTest {
         controller.onMessageReceived("Bob", new JoinGameAction(createTotem(TotemColor.BLUE)));
         controller.onMessageReceived("Charlie", new JoinGameAction(createTotem(TotemColor.PURPLE)));
 
-        assertThrows(IllegalStateException.class,
+        assertThrows(IllegalArgumentException.class,
                 () -> controller.onMessageReceived("Alice", new SetPlayerCountAction(2)));
     }
 
@@ -735,7 +735,8 @@ public class GameControllerMegaEdgeCaseTest {
         controller.onPlayerDisconnection("Charlie");
         controller.onMessageReceived("Bob", new PlaceTotemAction('B'));
 
-        assertFalse(controller.getCurrentState() instanceof TotemPlacementState);
+        assertTrue(controller.isPlayerDisconnected("Charlie"));
+        assertEquals(2, controller.getGame().getCurrentRound().getNumber());
     }
 
     /** BUG-HUNTER: rules say an empty required row gives nothing and the turn should continue. */

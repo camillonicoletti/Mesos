@@ -108,6 +108,9 @@ public class GameController implements Serializable {
         if (!containsGamePlayer(playerNickname)) {
             throw new IllegalArgumentException("Unknown player");
         }
+        if (!isPlayerDisconnected(playerNickname)) {
+            throw new IllegalStateException("Player is already connected");
+        }
         boolean wasSuspended = suspended;
 
         markPlayerConnected(playerNickname);
