@@ -4,6 +4,7 @@ import it.polimi.ingsw.controller.action.PickBuildingAction;
 import it.polimi.ingsw.controller.action.PickCardAction;
 import it.polimi.ingsw.controller.action.PlaceTotemAction;
 import it.polimi.ingsw.model.enums.Era;
+import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.protocol.clientbound.*;
 import it.polimi.ingsw.network.protocol.serverbound.*;
 import it.polimi.ingsw.network.transport.ClientSideConnection;
@@ -16,8 +17,8 @@ public class MockClientConnection implements ClientSideConnection {
     private Consumer<ServerMessage> handler;
     private String myNickname = "Player1";
 
-    private final List<String> lobbyPlayers = new ArrayList<>();
     private int expectedPlayers = 0;
+    private boolean botAdded = false;
     private int totemPlaced = 0;
     private int actionsDone = 0;
 
@@ -55,20 +56,19 @@ public class MockClientConnection implements ClientSideConnection {
 
     private void handleLogin(LoginMessage m) {
         myNickname = m.getNickname();
-        lobbyPlayers.clear();
-        lobbyPlayers.add(myNickname);
         expectedPlayers = 0;
+        botAdded = false;
         totemPlaced = 0;
         actionsDone = 0;
 
-        respond(new LoginAckMessage(true, null));
-        respond(new LobbyUpdateMessage(new ArrayList<>(lobbyPlayers), expectedPlayers, new ArrayList<>()));
+        respond(new LoginAckMessage(LoginAckMessage.Outcome.LOGIN_OK, null));
+        respond(new LobbyUpdateMessage(buildLobbySnapshots(), expectedPlayers));
     }
 
     private void handleSetPlayers(SetPlayersCountMessage m) {
         expectedPlayers = m.getCount();
-        if (lobbyPlayers.size() == 1) lobbyPlayers.add("Bot");
-        respond(new LobbyUpdateMessage(new ArrayList<>(lobbyPlayers), expectedPlayers, new ArrayList<>()));
+        botAdded = true;
+        respond(new LobbyUpdateMessage(buildLobbySnapshots(), expectedPlayers));
     }
 
     private void handleReady(ReadyMessage m) {
@@ -123,10 +123,19 @@ public class MockClientConnection implements ClientSideConnection {
 
     // -------------------------------------------------------
 
+    private List<LobbyPlayerSnapshot> buildLobbySnapshots() {
+        List<LobbyPlayerSnapshot> snaps = new ArrayList<>();
+        snaps.add(new LobbyPlayerSnapshot(myNickname, TotemColor.RED, false, true));
+        if (botAdded) {
+            snaps.add(new LobbyPlayerSnapshot("Bot", TotemColor.BLUE, false, true));
+        }
+        return snaps;
+    }
+
     private GameSnapshot buildSnapshot() {
         List<PlayerSnapshot> players = List.of(
-                new PlayerSnapshot(myNickname, "RED", 10, 0, new ArrayList<>(), new ArrayList<>()),
-                new PlayerSnapshot("Bot",      "BLUE", 10, 0, new ArrayList<>(), new ArrayList<>())
+                new PlayerSnapshot(myNickname, TotemColor.RED, 10, 0, new ArrayList<>(), new ArrayList<>()),
+                new PlayerSnapshot("Bot", TotemColor.BLUE, 10, 0, new ArrayList<>(), new ArrayList<>())
         );
         return new GameSnapshot(
                 players,

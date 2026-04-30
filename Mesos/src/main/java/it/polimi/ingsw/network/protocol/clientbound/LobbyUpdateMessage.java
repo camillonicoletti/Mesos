@@ -1,19 +1,17 @@
 package it.polimi.ingsw.network.protocol.clientbound;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class LobbyUpdateMessage implements ServerMessage {
-    private final List<String> currentPlayers;
+public class LobbyUpdateMessage implements ServerMessage, Serializable {
+    private final List<LobbyPlayerSnapshot> players;
     private final int expectedPlayers;
-    private final List<String> readyPlayers;
 
-    public LobbyUpdateMessage(List<String> currentPlayers, int expectedPlayers, List<String> readyPlayers) {
-        this.currentPlayers = currentPlayers;
+    public LobbyUpdateMessage(List<LobbyPlayerSnapshot> players, int expectedPlayers) {
+        this.players = players;
         this.expectedPlayers = expectedPlayers;
-        this.readyPlayers = readyPlayers;
     }
 
-    public List<String> getCurrentPlayers() { return currentPlayers; }
-    public int getExpectedPlayers()         { return expectedPlayers; }
-    public List<String> getReadyPlayers()   { return readyPlayers; }
+    public List<LobbyPlayerSnapshot> getPlayers() { return players; }
+    public int getExpectedPlayers() { return expectedPlayers; }
 }

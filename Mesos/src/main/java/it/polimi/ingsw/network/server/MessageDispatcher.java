@@ -16,7 +16,9 @@ public class MessageDispatcher {
             if (msg instanceof LoginMessage m) {
                 lobby.handleLogin(conn, m);
             } else if (msg instanceof SetPlayersCountMessage m) {
-                lobby.handleSetPlayersCount(conn.getNickname(), m);
+                lobby.handleSetPlayersCount(conn.getNickname(), m);}
+            else if (msg instanceof ReconnectMessage m) {
+                lobby.handleReconnect(conn, m);
             } else if (msg instanceof ReadyMessage m) {
                 lobby.handleReady(conn.getNickname(), m.isReady());
             } else if (msg instanceof GameActionMessage m) {
