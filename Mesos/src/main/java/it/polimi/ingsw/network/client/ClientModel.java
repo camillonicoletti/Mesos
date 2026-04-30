@@ -14,6 +14,7 @@ public class ClientModel {
     private boolean gameSuspended;
     private boolean connected = true;
     private String lastDisconnectedPlayer;
+    private String lastConnectionEvent;
 
     private boolean loginSuccess;
     private String lastError;
@@ -60,10 +61,10 @@ public class ClientModel {
     public void applyLobbyUpdate(LobbyUpdateMessage m) {
         lobbyPlayers = new ArrayList<>();
         readyPlayers = new ArrayList<>();
-        if (m.getPlayers() != null) {
-            for (LobbyPlayerSnapshot p : m.getPlayers()) {
-                lobbyPlayers.add(p.getNickname());
-                if (p.isReady()) readyPlayers.add(p.getNickname());
+        for (LobbyPlayerSnapshot player : m.getPlayers()) {
+            lobbyPlayers.add(player.getNickname());
+            if (player.isReady()) {
+                readyPlayers.add(player.getNickname());
             }
         }
         expectedPlayers = m.getExpectedPlayers();
@@ -82,9 +83,7 @@ public class ClientModel {
         players.clear();
         for (PlayerSnapshot ps : snap.getPlayers()) {
             players.put(ps.getNickname(), new PlayerView(
-                    ps.getNickname(),
-                    ps.getTotemColor() != null ? ps.getTotemColor().name() : null,
-                    ps.getFood(),
+                    ps.getNickname(), ps.getTotemColor(), ps.getFood(),
                     ps.getPrestigePoints(), ps.getCharacterCardIds(), ps.getBuildingCardIds()
             ));
         }
@@ -181,11 +180,13 @@ public class ClientModel {
 
     public void applyPlayerDisconnected(PlayerDisconnectedMessage m) {
         lastDisconnectedPlayer = m.getNickname();
+        lastConnectionEvent = m.getNickname() + " si è disconnesso";
         notifyChanged();
     }
 
     public void applyPlayerReconnected(PlayerReconnectedMessage m) {
         lastDisconnectedPlayer = null;
+        lastConnectionEvent = m.getNickname() + " si è riconnesso";
         notifyChanged();
     }
 
@@ -201,13 +202,17 @@ public class ClientModel {
 
     // ── setters ──────────────────────────────────────────────────────────────
 
-    public void setMyNickname(String nickname) { this.myNickname = nickname; }
+    public void setMyNickname(String nickname) {
+        this.myNickname = nickname;
+        notifyChanged();
+    }
 
     // ── getters ──────────────────────────────────────────────────────────────
 
     public boolean isLoginSuccess()                { return loginSuccess; }
     public boolean isConnected()                   { return connected; }
     public String getLastError()                   { return lastError; }
+    public String getLastConnectionEvent()         { return lastConnectionEvent; }
     public String getMyNickname()                  { return myNickname; }
     public List<String> getLobbyPlayers()          { return Collections.unmodifiableList(lobbyPlayers); }
     public List<String> getReadyPlayers()          { return Collections.unmodifiableList(readyPlayers); }
@@ -231,6 +236,24 @@ public class ClientModel {
         return myNickname != null
                 && !turnOrder.isEmpty()
                 && myNickname.equals(turnOrder.get(0));
+    }
+
+    public String getCurrentTotemPlacementPlayer() {
+        if (!"TotemPlacementState".equals(gameState) || turnOrder.isEmpty()) {
+            return null;
+        }
+
+        Set<String> playersWhoAlreadyPlaced = new HashSet<>(totemOnTiles.values());
+        for (String nickname : turnOrder) {
+            if (!playersWhoAlreadyPlaced.contains(nickname)) {
+                return nickname;
+            }
+        }
+        return null;
+    }
+
+    public boolean isMyTotemPlacementTurn() {
+        return myNickname != null && myNickname.equals(getCurrentTotemPlacementPlayer());
     }
 
     // ── helper ───────────────────────────────────────────────────────────────

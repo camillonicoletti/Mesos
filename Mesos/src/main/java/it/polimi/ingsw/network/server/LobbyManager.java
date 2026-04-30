@@ -7,9 +7,11 @@ import it.polimi.ingsw.controller.action.SetPlayerCountAction;
 import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.Totem;
 import it.polimi.ingsw.network.protocol.clientbound.ErrorMessage;
+import it.polimi.ingsw.network.protocol.clientbound.GameSyncMessage;
 import it.polimi.ingsw.network.protocol.clientbound.GameStartedMessage;
 import it.polimi.ingsw.network.protocol.clientbound.GameSuspendedMessage;
 import it.polimi.ingsw.network.protocol.clientbound.GameSyncMessage;
+import it.polimi.ingsw.network.protocol.clientbound.LobbyPlayerSnapshot;
 import it.polimi.ingsw.network.protocol.clientbound.LobbyPlayerSnapshot;
 import it.polimi.ingsw.network.protocol.clientbound.LobbyUpdateMessage;
 import it.polimi.ingsw.network.protocol.clientbound.LoginAckMessage;
@@ -35,6 +37,7 @@ public class LobbyManager {
         String nick = msg.getNickname();
 
         if (nick == null || nick.isBlank()) {
+            conn.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, "Nickname non valido"));
             conn.send(new LoginAckMessage(Outcome.REJECTED, "Nickname non valido"));
             return;
         }
@@ -42,6 +45,9 @@ public class LobbyManager {
             conn.send(new LoginAckMessage(Outcome.REJECTED, "Nickname già in uso"));
             return;
         }
+
+        if (connections.containsKey(nick)) {
+            conn.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, "Nickname già in uso"));
         if (gameController.containsGamePlayer(nick) || gameController.containsLobbyPlayer(nick)) {
             conn.send(new LoginAckMessage(Outcome.REJECTED, "Nickname già registrato (usa reconnect)"));
             return;
@@ -55,6 +61,7 @@ public class LobbyManager {
         try {
             gameController.onMessageReceived(nick, new JoinGameAction(totem));
         } catch (Exception e) {
+            conn.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, e.getMessage()));
             conn.send(new LoginAckMessage(Outcome.REJECTED, e.getMessage()));
             return;
         }
@@ -87,6 +94,8 @@ public class LobbyManager {
 
         registerConnection(nick, conn);
 
+        conn.send(new LoginAckMessage(LoginAckMessage.Outcome.LOGIN_OK, null));
+        broadcastLobbyUpdate();
         conn.send(new LoginAckMessage(Outcome.RECONNECT_OK, null));
         if (gameController.getGame() != null) {
             conn.send(new GameSyncMessage(SnapshotBuilder.build(gameController)));
@@ -113,6 +122,37 @@ public class LobbyManager {
         } catch (Exception e) {
             ServerSideConnection c = connections.get(nick);
             if (c != null) c.send(new ErrorMessage(e.getMessage()));
+        }
+    }
+
+    public synchronized void handleReconnect(ServerSideConnection conn, ReconnectMessage msg) {
+        String nick = msg.getNickname();
+        if (nick == null || nick.isBlank()) {
+            conn.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, "Nickname non valido"));
+            return;
+        }
+        if (!gameController.containsGamePlayer(nick)) {
+            conn.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, "Player sconosciuto"));
+            return;
+        }
+        if (!gameController.isPlayerDisconnected(nick)) {
+            conn.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, "Player già connesso"));
+            return;
+        }
+
+        try {
+            gameController.onPlayerReconnection(nick);
+        } catch (Exception e) {
+            conn.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, e.getMessage()));
+            return;
+        }
+
+        registerConnection(nick, conn);
+        conn.send(new LoginAckMessage(LoginAckMessage.Outcome.RECONNECT_OK, null));
+        conn.send(new GameSyncMessage(SnapshotBuilder.build(gameController)));
+        conn.send(new StateChangedMessage(gameController.getCurrentState().getClass().getSimpleName()));
+        if (gameController.isSuspended()) {
+            conn.send(new GameSuspendedMessage());
         }
     }
 
@@ -150,6 +190,16 @@ public class LobbyManager {
     }
 
     private void broadcastLobbyUpdate() {
+        List<LobbyPlayerSnapshot> players = gameController.getLobbyPlayers().stream()
+                .map(player -> new LobbyPlayerSnapshot(
+                        player.getNickname(),
+                        player.getTotem().getColor(),
+                        gameController.isPlayerReady(player.getNickname()),
+                        !gameController.isPlayerDisconnected(player.getNickname())
+                ))
+                .collect(Collectors.toList());
+        int expected = gameController.getChosenPlayersCount();
+        LobbyUpdateMessage msg = new LobbyUpdateMessage(players, expected);
         List<LobbyPlayerSnapshot> snaps = new ArrayList<>();
         for (Player p : gameController.getLobbyPlayers()) {
             String nick = p.getNickname();

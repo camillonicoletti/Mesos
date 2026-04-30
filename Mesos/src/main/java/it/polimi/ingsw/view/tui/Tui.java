@@ -16,6 +16,7 @@ public class Tui implements View {
     private final Scanner scanner;
     private final Object modelLock = new Object();
     private final Renderer renderer;
+    private volatile String activePrompt;
 
     public Tui(ClientController controller, ClientModel model) {
         this.controller = controller;
@@ -26,6 +27,9 @@ public class Tui implements View {
 
         model.addListener(() -> {
             renderer.render(model);
+            if (activePrompt != null) {
+                System.out.print(activePrompt);
+            }
             synchronized (modelLock) {
                 modelLock.notifyAll();
             }
@@ -36,14 +40,16 @@ public class Tui implements View {
     public void run() {
         renderer.render(model);
         loginLoop();
-        waitForLobbyUpdate();
-
-        if (isFirstPlayer()) {
-            askPlayerCount();
+        if (!model.isConnected()) {
+            return;
         }
 
-        waitForReadyCheck();
-        readyLoop();
+        if (isInPreGame()) {
+            runPreGameFlow();
+            if (!model.isConnected()) {
+                return;
+            }
+        }
 
         Thread inputThread = new Thread(this::gameInputLoop);
         inputThread.setDaemon(true);
@@ -57,29 +63,35 @@ public class Tui implements View {
 
     private void loginLoop() {
         while (!model.isLoginSuccess() && model.isConnected()) {
-            System.out.print("Nickname: ");
-            String nickname = scanner.nextLine().trim();
+            String nickname = readLineWithPrompt("Nickname: ").trim();
             if (nickname.isBlank()) continue;
 
-            TotemColor color = askTotemColor();
-            if (color == null) continue;
-
-            controller.send(new LoginMessage(nickname, color));
+            if (askReconnect()) {
+                controller.send(new ReconnectMessage(nickname));
+            } else {
+                TotemColor color = askTotemColor();
+                if (color == null) continue;
+                controller.send(new LoginMessage(nickname, color));
+            }
             waitForModel();
 
             if (model.isLoginSuccess()) {
-                model.setMyNickname(nickname);   // ← salva il proprio nickname
+                model.setMyNickname(nickname);
             } else if (model.getLastError() != null) {
                 System.out.println("[ERRORE] " + model.getLastError());
             }
         }
     }
 
+    private boolean askReconnect() {
+        String answer = readLineWithPrompt("Vuoi riconnetterti a una partita esistente? [y/N]: ").trim();
+        return answer.equalsIgnoreCase("y") || answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("s");
+    }
+
     private TotemColor askTotemColor() {
         System.out.println("Scegli un colore tra: RED / BLUE / PURPLE / YELLOW / WHITE");
-        System.out.print("Colore: ");
         try {
-            return TotemColor.valueOf(scanner.nextLine().trim().toUpperCase());
+            return TotemColor.valueOf(readLineWithPrompt("Colore: ").trim().toUpperCase());
         } catch (IllegalArgumentException e) {
             System.out.println("[ERRORE] Colore non valido.");
             return null;
@@ -89,15 +101,16 @@ public class Tui implements View {
     // ── Numero giocatori (solo primo) ────────────────────────────────────────
 
     private boolean isFirstPlayer() {
-        return model.getLobbyPlayers().size() == 1
-                && model.getExpectedPlayers() < 2;
+        return model.getExpectedPlayers() < 2
+                && model.getMyNickname() != null
+                && !model.getLobbyPlayers().isEmpty()
+                && model.getMyNickname().equals(model.getLobbyPlayers().get(0));
     }
 
     private void askPlayerCount() {
         System.out.println("Sei il primo giocatore — sei tu a decidere quanti giocatori parteciperanno.");
         while (model.getExpectedPlayers() < 2) {
-            System.out.print("Numero di giocatori (min 2, max 5): ");
-            String input = scanner.nextLine().trim();
+            String input = readLineWithPrompt("Numero di giocatori (min 2, max 5): ").trim();
             try {
                 int n = Integer.parseInt(input);
                 if (n < 2 || n > 5) {
@@ -111,6 +124,29 @@ public class Tui implements View {
             }
         }
         System.out.println("Perfetto! In attesa degli altri " + (model.getExpectedPlayers() - 1) + " giocatori...");
+    }
+
+    private void runPreGameFlow() {
+        waitForLobbyUpdate();
+        while (model.isConnected() && isInPreGame()) {
+            String state = model.getGameState();
+
+            if ("LobbyState".equals(state)) {
+                if (model.getExpectedPlayers() < 2) {
+                    if (isFirstPlayer()) {
+                        askPlayerCount();
+                    } else {
+                        waitForModel();
+                    }
+                } else {
+                    waitForReadyCheck();
+                }
+            } else if ("ReadyCheckState".equals(state)) {
+                readyLoop();
+            } else {
+                waitForModel();
+            }
+        }
     }
 
     // ── Attesa lobby piena ───────────────────────────────────────────────────
@@ -133,8 +169,7 @@ public class Tui implements View {
         boolean localReady = false;
         while (model.isConnected() && !isGameStarted()) {
             if (!localReady) {
-                System.out.print("> ");
-                String line = scanner.nextLine().trim();
+                String line = readLineWithPrompt("> ").trim();
 
                 if (line.equalsIgnoreCase("ready")) {
                     controller.send(new ReadyMessage(true));
@@ -166,11 +201,23 @@ public class Tui implements View {
             System.out.print("> ");
             String line;
             try {
-                line = scanner.nextLine().trim();
+                line = readLineWithPrompt("> ").trim();
             } catch (Exception e) {
                 return;
             }
             if (line.isBlank()) continue;
+
+            if ("TotemPlacementState".equals(model.getGameState())
+                    && line.toLowerCase().startsWith("place")
+                    && !model.isMyTotemPlacementTurn()) {
+                String currentPlayer = model.getCurrentTotemPlacementPlayer();
+                if (currentPlayer != null) {
+                    System.out.println("[ERRORE] Non è il tuo turno: deve piazzare " + currentPlayer + ".");
+                } else {
+                    System.out.println("[ERRORE] Nessun giocatore disponibile per il piazzamento in questo momento.");
+                }
+                continue;
+            }
 
             if (line.equalsIgnoreCase("help")) {
                 printHelp();
@@ -190,7 +237,7 @@ public class Tui implements View {
             return;
         }
         System.out.println("\nPartita terminata. Premi INVIO per uscire.");
-        scanner.nextLine();
+        readLineWithPrompt("");
         controller.send(new DisconnectMessage());
     }
 
@@ -228,8 +275,25 @@ public class Tui implements View {
                 && !s.equals("ReadyCheckState");
     }
 
+    private boolean isInPreGame() {
+        String state = model.getGameState();
+        return state == null || "LobbyState".equals(state) || "ReadyCheckState".equals(state);
+    }
+
     private boolean isGameEnded() {
         return "EndGameState".equals(model.getGameState());
+    }
+
+    private String readLineWithPrompt(String prompt) {
+        activePrompt = prompt;
+        if (!prompt.isEmpty()) {
+            System.out.print(prompt);
+        }
+        try {
+            return scanner.nextLine();
+        } finally {
+            activePrompt = null;
+        }
     }
 
     private void printHelp() {

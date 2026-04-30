@@ -31,12 +31,16 @@ public class Renderer {
         String state = model.getGameState();
         header(state, model);
         body(state, model);
+        if (model.getLastConnectionEvent() != null) {
+            blank();
+            row("  " + CYN + "ℹ  " + model.getLastConnectionEvent() + RST);
+        }
         if (model.getLastError() != null) {
             blank();
             row("  " + RED + "⚠  " + model.getLastError() + RST);
         }
         blank();
-        footer();
+        footer(model);
     }
 
     private void body(String state, ClientModel model) {
@@ -65,6 +69,11 @@ public class Renderer {
     private void header(String state, ClientModel model) {
         boxLine('╔', '═', '╗');
         row(center(WHT + BOLD + "M E S O S   —   TUI MODE" + RST, W));
+        if (model.getMyNickname() != null && !model.getMyNickname().isBlank()) {
+            row(GRY + center("Giocatore: " + model.getMyNickname(), W) + RST);
+        } else {
+            blank();
+        }
         if (state != null && model.getCurrentEra() != null) {
             String sub = "Era " + model.getCurrentEra().name()
                     + "  ·  Round " + model.getRoundNumber()
@@ -76,9 +85,9 @@ public class Renderer {
         boxLine('╠', '═', '╣');
     }
 
-    private void footer() {
+    private void footer(ClientModel model) {
         boxLine('╚', '═', '╝');
-        System.out.print(WHT + BOLD + "  > " + RST);
+        System.out.print(WHT + BOLD + footerPrompt(model) + RST);
     }
 
     private void boxLine(char l, char m, char r) {
@@ -86,8 +95,12 @@ public class Renderer {
     }
 
     private void row(String content) {
+        row(content, CYN);
+    }
+
+    private void row(String content, String borderColor) {
         int pad = Math.max(0, W - vis(content));
-        System.out.println(CYN + "║" + RST + content + " ".repeat(pad) + CYN + "║" + RST);
+        System.out.println(borderColor + "║" + RST + content + " ".repeat(pad) + borderColor + "║" + RST);
     }
 
     private void blank() {
@@ -108,6 +121,7 @@ public class Renderer {
         row(center(WHT + BOLD + "Benvenuto in MESOS!" + RST, W));
         blank();
         row("  " + GRY + "Inserisci nickname e colore totem per entrare nel gioco." + RST);
+        row("  " + GRY + "Se eri già in partita puoi scegliere la riconnessione." + RST);
         blank();
         row("  Colori disponibili:  "
                 + RED  + BOLD + "RED"    + RST + "   "
@@ -121,6 +135,9 @@ public class Renderer {
     private void lobbyScreen(ClientModel model) {
         int currentPlayers = model.getLobbyPlayers().size();
         int expectedPlayers = model.getExpectedPlayers();
+        boolean iAmFirstPlayer = model.getMyNickname() != null
+                && !model.getLobbyPlayers().isEmpty()
+                && model.getMyNickname().equals(model.getLobbyPlayers().get(0));
 
         blank();
         row("  " + WHT + BOLD + "LOBBY" + RST + "  " + GRY
@@ -132,7 +149,12 @@ public class Renderer {
         }
         blank();
         if (expectedPlayers == 0) {
-            row("  " + GRY + "Sei il primo — digita:  " + RST + YLW + "players <2-5>" + RST);
+            if (iAmFirstPlayer) {
+                row("  " + YLW + BOLD + "Sei il primo giocatore!" + RST);
+                row("  " + GRY + "Scegli subito il numero di partecipanti con:  " + RST + YLW + "players <2-5>" + RST);
+            } else {
+                row("  " + GRY + "In attesa che il primo giocatore scelga il numero di partecipanti..." + RST);
+            }
         } else if (currentPlayers < expectedPlayers) {
             int missingPlayers = expectedPlayers - currentPlayers;
             row("  " + GRY + "In attesa di " + missingPlayers
@@ -174,6 +196,7 @@ public class Renderer {
 
     private void gameScreen(ClientModel model, boolean totemPhase) {
         blank();
+        String currentActor = currentActor(model, totemPhase);
 
         // ordine di turno
         List<String> order = model.getTurnOrder();
@@ -185,6 +208,18 @@ public class Renderer {
             }
             row(sb.toString());
             blank();
+        }
+
+        if (totemPhase) {
+            String currentPlayer = model.getCurrentTotemPlacementPlayer();
+            if (currentPlayer != null) {
+                if (currentPlayer.equals(model.getMyNickname())) {
+                    row("  " + YLW + BOLD + "Tocca a te piazzare il totem." + RST);
+                } else {
+                    row("  " + GRY + "In attesa del piazzamento di " + YLW + currentPlayer + RST + GRY + "..." + RST);
+                }
+                blank();
+            }
         }
 
         section("TABELLONE");
@@ -213,10 +248,14 @@ public class Renderer {
         row("  " + DIM + String.format("  %-14s  %5s  %-18s  %5s",
                 "Nickname", "Cibo", "", "PP") + RST);
         for (PlayerView p : model.getPlayers().values()) {
-            row("  " + WHT + String.format("  %-14s", p.getNickname()) + RST
+            boolean isCurrentActor = p.getNickname().equals(currentActor);
+            String borderColor = isCurrentActor ? GRN : CYN;
+            String nameColor = isCurrentActor ? GRN + BOLD : WHT;
+            row("  " + nameColor + String.format("  %-14s", p.getNickname()) + RST
                     + "  " + YLW + String.format("%5d", p.getFood()) + RST
                     + "  " + foodBar(p.getFood(), 20)
-                    + "  " + YLW + String.format("%5d", p.getPrestigePoints()) + RST + " PP");
+                    + "  " + YLW + String.format("%5d", p.getPrestigePoints()) + RST + " PP",
+                    borderColor);
         }
 
         blank();
@@ -315,6 +354,27 @@ public class Renderer {
             case "EndGameState"          -> "FINE PARTITA";
             default                      -> state;
         };
+    }
+
+    private String footerPrompt(ClientModel model) {
+        if ("LobbyState".equals(model.getGameState())
+                && model.getExpectedPlayers() < 2
+                && model.getMyNickname() != null
+                && !model.getLobbyPlayers().isEmpty()
+                && model.getMyNickname().equals(model.getLobbyPlayers().get(0))) {
+            return "  Numero giocatori (2-5) > ";
+        }
+        return "  > ";
+    }
+
+    private String currentActor(ClientModel model, boolean totemPhase) {
+        if (totemPhase) {
+            return model.getCurrentTotemPlacementPlayer();
+        }
+        if (!model.getTurnOrder().isEmpty()) {
+            return model.getTurnOrder().get(0);
+        }
+        return null;
     }
 
     /** Lunghezza visibile: ignora i codici ANSI escape. */

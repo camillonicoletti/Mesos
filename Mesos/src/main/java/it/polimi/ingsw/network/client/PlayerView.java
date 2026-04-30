@@ -1,17 +1,19 @@
 package it.polimi.ingsw.network.client;
 
+import it.polimi.ingsw.model.enums.TotemColor;
+
 import java.util.List;
 
 public class PlayerView {
 
     private final String nickname;
-    private final String totemColor;
+    private final TotemColor totemColor;
     private final int food;
     private final int prestigePoints;
     private final List<Integer> characterCardIds;
     private final List<Integer> buildingCardIds;
 
-    public PlayerView(String nickname, String totemColor, int food, int prestigePoints,
+    public PlayerView(String nickname, TotemColor totemColor, int food, int prestigePoints,
                       List<Integer> characterCardIds, List<Integer> buildingCardIds) {
         this.nickname = nickname;
         this.totemColor = totemColor;
@@ -22,7 +24,7 @@ public class PlayerView {
     }
 
     public String getNickname()                { return nickname; }
-    public String getTotemColor()              { return totemColor; }
+    public TotemColor getTotemColor()          { return totemColor; }
     public int getFood()                       { return food; }
     public int getPrestigePoints()             { return prestigePoints; }
     public List<Integer> getCharacterCardIds() { return characterCardIds; }
