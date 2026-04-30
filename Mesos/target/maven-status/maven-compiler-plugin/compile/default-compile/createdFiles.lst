@@ -1,5 +1,7 @@
+it/polimi/ingsw/view/tui/CardCatalog$Kind.class
 it/polimi/ingsw/network/server/Server.class
 it/polimi/ingsw/model/card/CavePaintingsEventCard.class
+it/polimi/ingsw/view/tui/Renderer$2.class
 it/polimi/ingsw/model/card/effect/Effect.class
 it/polimi/ingsw/model/board/Board.class
 it/polimi/ingsw/model/card/HuntEventCard.class
@@ -57,6 +59,7 @@ it/polimi/ingsw/network/protocol/clientbound/StateChangedMessage.class
 it/polimi/ingsw/model/board/NoSlotEffect.class
 it/polimi/ingsw/network/client/ClientModel.class
 it/polimi/ingsw/controller/state/StartGameState.class
+it/polimi/ingsw/network/protocol/clientbound/LobbyPlayerSnapshot.class
 it/polimi/ingsw/model/card/effect/EndFullSetPPEffect.class
 it/polimi/ingsw/controller/listener/GameListener.class
 it/polimi/ingsw/network/protocol/clientbound/GameSnapshot.class
@@ -86,6 +89,7 @@ it/polimi/ingsw/network/client/ClientController.class
 it/polimi/ingsw/network/protocol/clientbound/ErrorMessage.class
 it/polimi/ingsw/model/Game$1.class
 it/polimi/ingsw/model/card/CardFactory.class
+it/polimi/ingsw/view/tui/Renderer$1.class
 it/polimi/ingsw/model/card/effect/ShamanicRitualImmunityEffect.class
 it/polimi/ingsw/model/Player.class
 it/polimi/ingsw/network/protocol/serverbound/DisconnectMessage.class
@@ -96,9 +100,11 @@ it/polimi/ingsw/controller/action/PlaceTotemAction.class
 it/polimi/ingsw/network/protocol/clientbound/CharacterCardTakenMessage.class
 it/polimi/ingsw/network/protocol/serverbound/DummyClientMessage.class
 it/polimi/ingsw/network/protocol/clientbound/PlayerSnapshot.class
+it/polimi/ingsw/network/protocol/clientbound/LoginAckMessage$Outcome.class
 it/polimi/ingsw/network/protocol/clientbound/TotemPlacedMessage.class
 it/polimi/ingsw/model/card/GathererCard.class
 it/polimi/ingsw/model/card/HunterCard.class
+it/polimi/ingsw/network/protocol/clientbound/GameSyncMessage.class
 it/polimi/ingsw/network/protocol/clientbound/DummyServerMessage.class
 it/polimi/ingsw/model/card/effect/EndBuilderPPEffect.class
 it/polimi/ingsw/controller/state/GameState.class
@@ -114,15 +120,19 @@ it/polimi/ingsw/model/card/Card.class
 it/polimi/ingsw/network/protocol/clientbound/GameStartedMessage.class
 it/polimi/ingsw/view/tui/Tui.class
 it/polimi/ingsw/controller/state/SuspendedState.class
+it/polimi/ingsw/network/protocol/serverbound/ReconnectMessage.class
 it/polimi/ingsw/network/server/VirtualView.class
 it/polimi/ingsw/network/client/ClientApp.class
 it/polimi/ingsw/network/protocol/clientbound/GameResumedMessage.class
 it/polimi/ingsw/model/card/effect/ExtraCardUpperRowEffect.class
+it/polimi/ingsw/view/tui/CardCatalog$CardInfo.class
 it/polimi/ingsw/model/board/OfferTile.class
 it/polimi/ingsw/network/protocol/clientbound/FoodChangedMessage.class
 it/polimi/ingsw/model/board/SlotEffect.class
 it/polimi/ingsw/network/protocol/serverbound/ClientMessage.class
+it/polimi/ingsw/network/server/SnapshotBuilder.class
 it/polimi/ingsw/model/card/effect/EndCharacterCountPPEffect.class
 it/polimi/ingsw/network/protocol/clientbound/ExtraCardPickAvailableMessage.class
 it/polimi/ingsw/model/board/LowerRowSlot.class
+it/polimi/ingsw/view/tui/CardCatalog.class
 it/polimi/ingsw/model/board/TurnSlot.class
