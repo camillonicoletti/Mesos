@@ -119,19 +119,26 @@ public class Renderer {
     }
 
     private void lobbyScreen(ClientModel model) {
+        int currentPlayers = model.getLobbyPlayers().size();
+        int expectedPlayers = model.getExpectedPlayers();
+
         blank();
         row("  " + WHT + BOLD + "LOBBY" + RST + "  " + GRY
-                + model.getLobbyPlayers().size() + " / " + model.getExpectedPlayers()
+                + currentPlayers + " / " + expectedPlayers
                 + " giocatori" + RST);
         blank();
         for (String p : model.getLobbyPlayers()) {
             row("    " + GRN + "●" + RST + "  " + WHT + p + RST);
         }
         blank();
-        if (model.getExpectedPlayers() == 0) {
+        if (expectedPlayers == 0) {
             row("  " + GRY + "Sei il primo — digita:  " + RST + YLW + "players <2-5>" + RST);
+        } else if (currentPlayers < expectedPlayers) {
+            int missingPlayers = expectedPlayers - currentPlayers;
+            row("  " + GRY + "In attesa di " + missingPlayers
+                    + (missingPlayers == 1 ? " giocatore..." : " giocatori...") + RST);
         } else {
-            row("  " + GRY + "Quando sei pronto — digita:  " + RST + YLW + "ready" + RST);
+            row("  " + GRY + "Lobby completa — attendo il passaggio al ready check..." + RST);
         }
         blank();
     }
@@ -237,7 +244,7 @@ public class Renderer {
         blank();
         row(center(RED + BOLD + "⚠  PARTITA IN PAUSA" + RST, W));
         blank();
-        row(center(GRY + "In attesa che tutti i giocatori si riconnettano..." + RST, W));
+        row(center(GRY + "In attesa che almeno un altro giocatore si riconnetta..." + RST, W));
         blank();
     }
 

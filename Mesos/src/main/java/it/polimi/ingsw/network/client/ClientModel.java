@@ -12,6 +12,7 @@ public class ClientModel {
     }
 
     private boolean gameSuspended;
+    private boolean connected = true;
     private String lastDisconnectedPlayer;
 
     private boolean loginSuccess;
@@ -50,6 +51,7 @@ public class ClientModel {
     // ── apply ────────────────────────────────────────────────────────────────
 
     public void applyLoginAck(LoginAckMessage m) {
+        connected = true;
         loginSuccess = m.isSuccess();
         lastError = m.isSuccess() ? null : m.getErrorReason();
         notifyChanged();
@@ -181,6 +183,12 @@ public class ClientModel {
         notifyChanged();
     }
 
+    public void applyConnectionLost(String reason) {
+        connected = false;
+        lastError = reason;
+        notifyChanged();
+    }
+
     // ── setters ──────────────────────────────────────────────────────────────
 
     public void setMyNickname(String nickname) { this.myNickname = nickname; }
@@ -188,6 +196,7 @@ public class ClientModel {
     // ── getters ──────────────────────────────────────────────────────────────
 
     public boolean isLoginSuccess()                { return loginSuccess; }
+    public boolean isConnected()                   { return connected; }
     public String getLastError()                   { return lastError; }
     public String getMyNickname()                  { return myNickname; }
     public List<String> getLobbyPlayers()          { return Collections.unmodifiableList(lobbyPlayers); }

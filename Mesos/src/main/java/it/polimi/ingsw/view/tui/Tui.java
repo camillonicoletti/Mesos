@@ -56,7 +56,7 @@ public class Tui implements View {
     // ── Login ────────────────────────────────────────────────────────────────
 
     private void loginLoop() {
-        while (!model.isLoginSuccess()) {
+        while (!model.isLoginSuccess() && model.isConnected()) {
             System.out.print("Nickname: ");
             String nickname = scanner.nextLine().trim();
             if (nickname.isBlank()) continue;
@@ -117,7 +117,7 @@ public class Tui implements View {
 
     private void waitForReadyCheck() {
         synchronized (modelLock) {
-            while (!"ReadyCheckState".equals(model.getGameState())) {
+            while (model.isConnected() && !"ReadyCheckState".equals(model.getGameState())) {
                 try { modelLock.wait(1_000); }
                 catch (InterruptedException e) { Thread.currentThread().interrupt(); return; }
             }
@@ -131,7 +131,7 @@ public class Tui implements View {
         System.out.println("Digita  ready  per confermare la tua presenza.");
 
         boolean localReady = false;
-        while (!isGameStarted()) {
+        while (model.isConnected() && !isGameStarted()) {
             if (!localReady) {
                 System.out.print("> ");
                 String line = scanner.nextLine().trim();
@@ -157,7 +157,7 @@ public class Tui implements View {
     // ── Game ─────────────────────────────────────────────────────────────────
 
     private void gameInputLoop() {
-        while (!isGameEnded()) {
+        while (model.isConnected() && !isGameEnded()) {
             if (model.isGameSuspended()) {
                 try { Thread.sleep(500); } catch (InterruptedException e) { return; }
                 continue;
@@ -185,6 +185,10 @@ public class Tui implements View {
     // ── End ──────────────────────────────────────────────────────────────────
 
     private void endGame() {
+        if (!model.isConnected()) {
+            System.out.println("\nConnessione chiusa.");
+            return;
+        }
         System.out.println("\nPartita terminata. Premi INVIO per uscire.");
         scanner.nextLine();
         controller.send(new DisconnectMessage());
@@ -201,7 +205,7 @@ public class Tui implements View {
 
     private void waitForLobbyUpdate() {
         synchronized (modelLock) {
-            while (model.getLobbyPlayers().isEmpty()) {
+            while (model.isConnected() && model.getLobbyPlayers().isEmpty()) {
                 try { modelLock.wait(5_000); }
                 catch (InterruptedException e) { Thread.currentThread().interrupt(); return; }
             }
@@ -210,7 +214,7 @@ public class Tui implements View {
 
     private void waitForGameEnd() {
         synchronized (modelLock) {
-            while (!isGameEnded()) {
+            while (model.isConnected() && !isGameEnded()) {
                 try { modelLock.wait(1_000); }
                 catch (InterruptedException e) { Thread.currentThread().interrupt(); return; }
             }

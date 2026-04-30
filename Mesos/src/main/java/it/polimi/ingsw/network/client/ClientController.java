@@ -14,10 +14,16 @@ public class ClientController {
         this.model = model;
         this.connection = connection;
         connection.setOnMessage(this::onMessage);
+        connection.setOnDisconnect(this::onDisconnect);
     }
 
     public void send(ClientMessage message) {
-        connection.send(message);
+        try {
+            connection.send(message);
+        } catch (RuntimeException exception) {
+            model.applyConnectionLost("Connessione al server interrotta");
+            throw exception;
+        }
     }
 
     public void onMessage(ServerMessage message) {
@@ -40,5 +46,9 @@ public class ClientController {
         else if (message instanceof PlayerDisconnectedMessage m)   model.applyPlayerDisconnected(m);
         else if (message instanceof PlayerReconnectedMessage m)    model.applyPlayerReconnected(m);
         else if (message instanceof ExtraCardPickAvailableMessage m) model.applyExtraCardPickAvailable(m);
+    }
+
+    private void onDisconnect() {
+        model.applyConnectionLost("Connessione al server interrotta");
     }
 }
