@@ -99,7 +99,7 @@ public class TotemPlacementState extends AbstractGameState {
         }
 
         ctx.markPlayerDisconnected(playerNickname);
-        if (playerNickname.equals(getCurrentPlayerNickname(ctx))) {
+        if (playerNickname.equals(getCurrentPlayerNickname(ctx)) && ctx.canContinueAfterDisconnection()) {
             currentTurnIndex++;
             advanceToNextConnectedPlayer(ctx);
         }

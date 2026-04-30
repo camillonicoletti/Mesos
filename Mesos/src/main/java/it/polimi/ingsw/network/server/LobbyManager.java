@@ -86,14 +86,16 @@ public class LobbyManager {
             return;
         }
 
+        registerConnection(nickname, connection);
+
         try {
             gameController.onPlayerReconnection(nickname);
         } catch (Exception exception) {
+            unregisterConnection(nickname);
             connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, exception.getMessage()));
             return;
         }
 
-        registerConnection(nickname, connection);
         connection.send(new LoginAckMessage(LoginAckMessage.Outcome.RECONNECT_OK, null));
         connection.send(new GameSyncMessage(SnapshotBuilder.build(gameController)));
         connection.send(new StateChangedMessage(gameController.getCurrentState().getClass().getSimpleName()));

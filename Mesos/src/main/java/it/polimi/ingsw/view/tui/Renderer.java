@@ -251,7 +251,8 @@ public class Renderer {
             boolean isCurrentActor = p.getNickname().equals(currentActor);
             String borderColor = isCurrentActor ? GRN : CYN;
             String nameColor = isCurrentActor ? GRN + BOLD : WHT;
-            row("  " + nameColor + String.format("  %-14s", p.getNickname()) + RST
+            String marker = isCurrentActor ? GRN + BOLD + "▶ " + RST : "  ";
+            row(marker + nameColor + String.format("  %-14s", p.getNickname()) + RST
                     + "  " + YLW + String.format("%5d", p.getFood()) + RST
                     + "  " + foodBar(p.getFood(), 20)
                     + "  " + YLW + String.format("%5d", p.getPrestigePoints()) + RST + " PP",
