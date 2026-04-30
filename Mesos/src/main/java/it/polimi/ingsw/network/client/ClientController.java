@@ -30,6 +30,7 @@ public class ClientController {
         if (message instanceof LoginAckMessage m)           model.applyLoginAck(m);
         else if (message instanceof LobbyUpdateMessage m)   model.applyLobbyUpdate(m);
         else if (message instanceof GameStartedMessage m)   model.applyGameStarted(m);
+        else if (message instanceof GameSyncMessage m)      model.applyGameSync(m);
         else if (message instanceof StateChangedMessage m)  model.applyStateChanged(m);
         else if (message instanceof TotemPlacedMessage m)   model.applyTotemPlaced(m);
         else if (message instanceof EraChangedMessage m)    model.applyEraChanged(m);

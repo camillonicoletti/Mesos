@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 public class LoginAckMessage implements ServerMessage {
 
-    public enum Outcome implements Serializable {
+    public enum Outcome{
         LOGIN_OK,
         RECONNECT_OK,
         REJECTED

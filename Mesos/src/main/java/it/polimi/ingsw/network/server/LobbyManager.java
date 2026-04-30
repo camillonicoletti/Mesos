@@ -4,29 +4,26 @@ import it.polimi.ingsw.controller.GameController;
 import it.polimi.ingsw.controller.action.JoinGameAction;
 import it.polimi.ingsw.controller.action.ReadyAction;
 import it.polimi.ingsw.controller.action.SetPlayerCountAction;
-import it.polimi.ingsw.model.Game;
 import it.polimi.ingsw.model.Player;
-import it.polimi.ingsw.model.Round;
 import it.polimi.ingsw.model.Totem;
-import it.polimi.ingsw.model.board.OfferTile;
-import it.polimi.ingsw.model.card.BuildingCard;
-import it.polimi.ingsw.model.card.Card;
-import it.polimi.ingsw.model.card.CharacterCard;
-import it.polimi.ingsw.model.card.EventCard;
 import it.polimi.ingsw.network.protocol.clientbound.ErrorMessage;
-import it.polimi.ingsw.network.protocol.clientbound.GameSnapshot;
 import it.polimi.ingsw.network.protocol.clientbound.GameStartedMessage;
 import it.polimi.ingsw.network.protocol.clientbound.GameSuspendedMessage;
+import it.polimi.ingsw.network.protocol.clientbound.GameSyncMessage;
+import it.polimi.ingsw.network.protocol.clientbound.LobbyPlayerSnapshot;
 import it.polimi.ingsw.network.protocol.clientbound.LobbyUpdateMessage;
 import it.polimi.ingsw.network.protocol.clientbound.LoginAckMessage;
-import it.polimi.ingsw.network.protocol.clientbound.PlayerSnapshot;
+import it.polimi.ingsw.network.protocol.clientbound.LoginAckMessage.Outcome;
 import it.polimi.ingsw.network.protocol.clientbound.StateChangedMessage;
 import it.polimi.ingsw.network.protocol.serverbound.LoginMessage;
+import it.polimi.ingsw.network.protocol.serverbound.ReconnectMessage;
 import it.polimi.ingsw.network.protocol.serverbound.SetPlayersCountMessage;
 import it.polimi.ingsw.network.transport.ServerSideConnection;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class LobbyManager {
 
@@ -38,22 +35,19 @@ public class LobbyManager {
         String nick = msg.getNickname();
 
         if (nick == null || nick.isBlank()) {
-            conn.send(new LoginAckMessage(false, "Nickname non valido"));
+            conn.send(new LoginAckMessage(Outcome.REJECTED, "Nickname non valido"));
             return;
         }
-
-        if (connections.containsKey(nick) && !gameController.isPlayerDisconnected(nick)) {
-            conn.send(new LoginAckMessage(false, "Nickname già in uso"));
+        if (connections.containsKey(nick)) {
+            conn.send(new LoginAckMessage(Outcome.REJECTED, "Nickname già in uso"));
             return;
         }
-
-        if (gameController.containsGamePlayer(nick) && gameController.isPlayerDisconnected(nick)) {
-            handleReconnection(conn, msg);
+        if (gameController.containsGamePlayer(nick) || gameController.containsLobbyPlayer(nick)) {
+            conn.send(new LoginAckMessage(Outcome.REJECTED, "Nickname già registrato (usa reconnect)"));
             return;
         }
-
         if (gameController.getGame() != null) {
-            conn.send(new LoginAckMessage(false, "La partita è già iniziata"));
+            conn.send(new LoginAckMessage(Outcome.REJECTED, "La partita è già iniziata"));
             return;
         }
 
@@ -61,17 +55,55 @@ public class LobbyManager {
         try {
             gameController.onMessageReceived(nick, new JoinGameAction(totem));
         } catch (Exception e) {
-            conn.send(new LoginAckMessage(false, e.getMessage()));
+            conn.send(new LoginAckMessage(Outcome.REJECTED, e.getMessage()));
+            return;
+        }
+
+        registerConnection(nick, conn);
+        conn.send(new LoginAckMessage(Outcome.LOGIN_OK, null));
+        broadcastLobbyUpdate();
+        conn.send(new StateChangedMessage(gameController.getCurrentState().getClass().getSimpleName()));
+    }
+
+    public synchronized void handleReconnect(ServerSideConnection conn, ReconnectMessage msg) {
+        String nick = msg.getNickname();
+
+        if (nick == null || nick.isBlank()) {
+            conn.send(new LoginAckMessage(Outcome.REJECTED, "Nickname non valido"));
+            return;
+        }
+        if (!gameController.containsGamePlayer(nick) && !gameController.containsLobbyPlayer(nick)) {
+            conn.send(new LoginAckMessage(Outcome.REJECTED, "Nickname sconosciuto"));
+            return;
+        }
+        if (connections.containsKey(nick)) {
+            conn.send(new LoginAckMessage(Outcome.REJECTED, "Player già connesso"));
+            return;
+        }
+        if (!gameController.isPlayerDisconnected(nick)) {
+            conn.send(new LoginAckMessage(Outcome.REJECTED, "Player non risulta disconnesso"));
             return;
         }
 
         registerConnection(nick, conn);
 
-        conn.send(new LoginAckMessage(true, null));
-        broadcastLobbyUpdate();
+        conn.send(new LoginAckMessage(Outcome.RECONNECT_OK, null));
+        if (gameController.getGame() != null) {
+            conn.send(new GameSyncMessage(SnapshotBuilder.build(gameController)));
+        } else {
+            broadcastLobbyUpdate();
+        }
+        conn.send(new StateChangedMessage(gameController.getCurrentState().getClass().getSimpleName()));
 
-        String currentState = gameController.getCurrentState().getClass().getSimpleName();
-        conn.send(new StateChangedMessage(currentState));
+        try {
+            gameController.onPlayerReconnection(nick);
+        } catch (Exception e) {
+            conn.send(new ErrorMessage(e.getMessage()));
+        }
+
+        if (gameController.isSuspended()) {
+            conn.send(new GameSuspendedMessage());
+        }
     }
 
     public synchronized void handleSetPlayersCount(String nick, SetPlayersCountMessage msg) {
@@ -100,9 +132,7 @@ public class LobbyManager {
     }
 
     public synchronized void handleDisconnect(String nick) {
-        if (nick == null || nick.isBlank()) {
-            return;
-        }
+        if (nick == null || nick.isBlank()) return;
 
         unregisterConnection(nick);
 
@@ -110,7 +140,9 @@ public class LobbyManager {
             return;
         }
 
-        gameController.onPlayerDisconnection(nick);
+        try {
+            gameController.onPlayerDisconnection(nick);
+        } catch (Exception ignored) {}
 
         if (gameController.getGame() == null) {
             broadcastLobbyUpdate();
@@ -118,161 +150,27 @@ public class LobbyManager {
     }
 
     private void broadcastLobbyUpdate() {
-        List<String> players = gameController.getLobbyPlayers().stream()
-                .map(Player::getNickname)
-                .collect(Collectors.toList());
-        int expected = gameController.getChosenPlayersCount();
-        List<String> ready = new ArrayList<>(gameController.getReadyPlayers());
-        LobbyUpdateMessage msg = new LobbyUpdateMessage(players, expected, ready);
+        List<LobbyPlayerSnapshot> snaps = new ArrayList<>();
+        for (Player p : gameController.getLobbyPlayers()) {
+            String nick = p.getNickname();
+            snaps.add(new LobbyPlayerSnapshot(
+                    nick,
+                    p.getTotem() != null ? p.getTotem().getColor() : null,
+                    gameController.isPlayerReady(nick),
+                    !gameController.isPlayerDisconnected(nick)
+            ));
+        }
+        LobbyUpdateMessage msg = new LobbyUpdateMessage(snaps, gameController.getChosenPlayersCount());
         for (ServerSideConnection c : connections.values()) {
             c.send(msg);
         }
     }
 
-    private void handleReconnection(ServerSideConnection conn, LoginMessage msg) {
-        Player existingPlayer = findGamePlayer(msg.getNickname());
-        if (existingPlayer == null) {
-            conn.send(new LoginAckMessage(false, "Player sconosciuto"));
-            return;
-        }
-        if (existingPlayer.getTotem() == null
-                || existingPlayer.getTotem().getColor() != msg.getTotemColor()) {
-            conn.send(new LoginAckMessage(false, "Totem non coerente con il player esistente"));
-            return;
-        }
-
-        try {
-            gameController.onPlayerReconnection(msg.getNickname());
-        } catch (Exception e) {
-            conn.send(new LoginAckMessage(false, e.getMessage()));
-            return;
-        }
-
-        registerConnection(msg.getNickname(), conn);
-        conn.send(new LoginAckMessage(true, null));
-        conn.send(new GameStartedMessage(buildGameSnapshot()));
-        conn.send(new StateChangedMessage(gameController.getCurrentState().getClass().getSimpleName()));
-        if (gameController.isSuspended()) {
-            conn.send(new GameSuspendedMessage());
-        }
-    }
-
     private void broadcastGameStarted() {
-        GameStartedMessage message = new GameStartedMessage(buildGameSnapshot());
+        GameStartedMessage message = new GameStartedMessage(SnapshotBuilder.build(gameController));
         for (ServerSideConnection connection : connections.values()) {
             connection.send(message);
         }
-    }
-
-    private GameSnapshot buildGameSnapshot() {
-        Game game = gameController.getGame();
-        if (game == null) {
-            throw new IllegalStateException("Cannot build a game snapshot before the game starts");
-        }
-
-        Round round = game.getCurrentRound();
-
-        List<PlayerSnapshot> players = game.getPlayers().stream()
-                .map(this::toPlayerSnapshot)
-                .collect(Collectors.toList());
-
-        List<Integer> upperRowCharacterAndEventIds = round == null
-                ? List.of()
-                : mergeCardIds(round.getUpperRowTribute(), round.getUpperRowEvents());
-        List<Integer> lowerRowCharacterAndEventIds = round == null
-                ? List.of()
-                : mergeCardIds(round.getLowerRowTribute(), round.getLowerRowEvents());
-        List<Integer> upperRowBuildingIds = round == null
-                ? List.of()
-                : extractCardIds(round.getUpperRowBuildings());
-        List<Integer> lowerRowBuildingIds = round == null
-                ? List.of()
-                : extractCardIds(round.getLowerRowBuildings());
-
-        Map<Character, String> totemOnTiles = new LinkedHashMap<>();
-        if (game.getBoard() != null) {
-            for (OfferTile tile : game.getBoard().getOfferTiles()) {
-                if (tile.getTotemSlot() == null) {
-                    continue;
-                }
-                String ownerNickname = findNicknameByTotem(game, tile.getTotemSlot());
-                if (ownerNickname != null) {
-                    totemOnTiles.put(tile.getLetter(), ownerNickname);
-                }
-            }
-        }
-
-        List<String> turnOrder = new ArrayList<>();
-        if (game.getBoard() != null && game.getBoard().getTurnOrderTile() != null) {
-            for (Totem totem : game.getBoard().getTurnOrderTile().getTurnOrder()) {
-                String ownerNickname = findNicknameByTotem(game, totem);
-                if (ownerNickname != null) {
-                    turnOrder.add(ownerNickname);
-                }
-            }
-        }
-
-        return new GameSnapshot(
-                players,
-                upperRowCharacterAndEventIds,
-                lowerRowCharacterAndEventIds,
-                upperRowBuildingIds,
-                lowerRowBuildingIds,
-                game.getCurrentEra(),
-                round != null ? round.getNumber() : 0,
-                totemOnTiles,
-                turnOrder
-        );
-    }
-
-    private PlayerSnapshot toPlayerSnapshot(Player player) {
-        return new PlayerSnapshot(
-                player.getNickname(),
-                player.getTotem().getColor().name(),
-                player.getFood(),
-                player.getPrestigePoints(),
-                extractCardIds(player.getTribe().getCharacterCards()),
-                extractCardIds(player.getTribe().getBuildingCards())
-        );
-    }
-
-    private List<Integer> mergeCardIds(List<? extends CharacterCard> characterCards,
-                                       List<? extends EventCard> eventCards) {
-        List<Integer> ids = new ArrayList<>();
-        ids.addAll(extractCardIds(characterCards));
-        ids.addAll(extractCardIds(eventCards));
-        return ids;
-    }
-
-    private List<Integer> extractCardIds(List<? extends Card> cards) {
-        return cards.stream()
-                .map(Card::getId)
-                .collect(Collectors.toList());
-    }
-
-    private String findNicknameByTotem(Game game, Totem totem) {
-        if (game == null || totem == null || totem.getColor() == null) {
-            return null;
-        }
-
-        return game.getPlayers().stream()
-                .filter(player -> player.getTotem() != null
-                        && player.getTotem().getColor() == totem.getColor())
-                .map(Player::getNickname)
-                .findFirst()
-                .orElse(null);
-    }
-
-    private Player findGamePlayer(String nickname) {
-        Game game = gameController.getGame();
-        if (game == null) {
-            return null;
-        }
-
-        return game.getPlayers().stream()
-                .filter(player -> player.getNickname().equals(nickname))
-                .findFirst()
-                .orElse(null);
     }
 
     private void registerConnection(String nickname, ServerSideConnection connection) {

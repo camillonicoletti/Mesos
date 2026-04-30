@@ -58,11 +58,15 @@ public class ClientModel {
     }
 
     public void applyLobbyUpdate(LobbyUpdateMessage m) {
-        lobbyPlayers = new ArrayList<>(m.getCurrentPlayers());
+        lobbyPlayers = new ArrayList<>();
+        readyPlayers = new ArrayList<>();
+        if (m.getPlayers() != null) {
+            for (LobbyPlayerSnapshot p : m.getPlayers()) {
+                lobbyPlayers.add(p.getNickname());
+                if (p.isReady()) readyPlayers.add(p.getNickname());
+            }
+        }
         expectedPlayers = m.getExpectedPlayers();
-        readyPlayers = m.getReadyPlayers() != null
-                ? new ArrayList<>(m.getReadyPlayers())
-                : new ArrayList<>();
         notifyChanged();
     }
 
@@ -70,11 +74,17 @@ public class ClientModel {
         applySnapshot(m.getSnapshot());
     }
 
+    public void applyGameSync(GameSyncMessage m) {
+        applySnapshot(m.getSnapshot());
+    }
+
     public void applySnapshot(GameSnapshot snap) {
         players.clear();
         for (PlayerSnapshot ps : snap.getPlayers()) {
             players.put(ps.getNickname(), new PlayerView(
-                    ps.getNickname(), ps.getTotemColor(), ps.getFood(),
+                    ps.getNickname(),
+                    ps.getTotemColor() != null ? ps.getTotemColor().name() : null,
+                    ps.getFood(),
                     ps.getPrestigePoints(), ps.getCharacterCardIds(), ps.getBuildingCardIds()
             ));
         }
