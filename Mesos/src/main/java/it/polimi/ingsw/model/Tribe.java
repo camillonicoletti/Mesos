@@ -3,6 +3,7 @@ package it.polimi.ingsw.model;
 import it.polimi.ingsw.model.card.*;
 import it.polimi.ingsw.model.enums.InventorIcons;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -10,7 +11,8 @@ import java.util.Map;
 import java.util.HashSet;
 import java.util.Set;
 
-public class Tribe {
+public class Tribe implements Serializable {
+    private static final long serialVersionUID = 1L;
     private List<CharacterCard> characterCards;
     private List<BuildingCard> buildingCards;
 

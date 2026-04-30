@@ -2,9 +2,11 @@ package it.polimi.ingsw.model.board;
 
 import it.polimi.ingsw.model.Totem;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class OfferTile {
+public class OfferTile implements Serializable {
+    private static final long serialVersionUID = 1L;
     private char letter;
     private int minPlayers;
     private Totem totemSlot;

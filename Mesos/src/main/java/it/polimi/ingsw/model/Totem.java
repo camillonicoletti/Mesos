@@ -2,7 +2,10 @@ package it.polimi.ingsw.model;
 
 import it.polimi.ingsw.model.enums.TotemColor;
 
-public class Totem {
+import java.io.Serializable;
+
+public class Totem implements Serializable {
+    private static final long serialVersionUID = 1L;
     private TotemColor color;
     private String position;
 

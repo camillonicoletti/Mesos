@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ShamanicRitualEventCard extends EventCard {
-
+    private static final long serialVersionUID = 1L;
     private final int ppGain;
     private final int ppLoss;
 

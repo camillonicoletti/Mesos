@@ -14,6 +14,7 @@ import it.polimi.ingsw.model.card.HunterCard;
 import it.polimi.ingsw.model.card.InventorCard;
 import it.polimi.ingsw.model.board.TurnSlot;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ArrayList;
@@ -23,8 +24,8 @@ import java.util.Map;
 import it.polimi.ingsw.controller.listener.GameListener;
 import java.util.function.Consumer;
 
-public class Game {
-
+public class Game implements Serializable {
+    private static final long serialVersionUID = 1L;
     private static final int MAX_ROUNDS = 10;
 
     private final List<Player> players;

@@ -8,6 +8,7 @@ import it.polimi.ingsw.model.enums.Era;
 
 public class SustenanceEventCard extends EventCard {
 
+    private static final long serialVersionUID = 1L;
     private static final int FOOD_DISCOUNT_PER_GATHERER = 3;
 
     private final int ppPenaltyPerUnfed;

@@ -1,9 +1,10 @@
 package it.polimi.ingsw.model.board;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class Board {
-
+public class Board implements Serializable {
+    private static final long serialVersionUID = 1L;
     private List<OfferTile> offerTiles;
     private TurnOrderTile turnOrderTile;
 

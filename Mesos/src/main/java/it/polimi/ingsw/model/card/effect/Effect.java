@@ -2,7 +2,9 @@ package it.polimi.ingsw.model.card.effect;
 
 import it.polimi.ingsw.model.Player;
 
-public interface Effect {
+import java.io.Serializable;
+
+public interface Effect extends Serializable {
 
     void apply(Player player);
 

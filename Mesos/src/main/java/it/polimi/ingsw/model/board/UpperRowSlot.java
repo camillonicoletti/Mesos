@@ -6,9 +6,11 @@ import it.polimi.ingsw.model.card.BuildingCard;
 import it.polimi.ingsw.model.card.Card;
 import it.polimi.ingsw.model.card.CharacterCard;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class UpperRowSlot implements SlotEffect {
+public class UpperRowSlot implements SlotEffect{
+    private static final long serialVersionUID = 1L;
     @Override
     public void resolve(Player player, int amount, List<Card> chosenCards, Round round) {
         List<CharacterCard> tributeRow = round.getUpperRowTribute();

@@ -4,6 +4,7 @@ import it.polimi.ingsw.model.enums.Era;
 
 public abstract class CharacterCard extends Card {
 
+    private static final long serialVersionUID = 1L;
     private final int minPlayers;
 
     public CharacterCard(int id, Era era, int minPlayers) {

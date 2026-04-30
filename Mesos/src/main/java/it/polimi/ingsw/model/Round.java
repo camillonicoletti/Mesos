@@ -8,11 +8,12 @@ import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.Totem;
 
+import java.io.Serializable;
 import java.util.*;
 
 
-public class Round {
-
+public class Round implements Serializable {
+    private static final long serialVersionUID = 1L;
     private final int number;
     private final Game game;
     private RoundPhase phase;

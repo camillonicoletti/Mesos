@@ -4,9 +4,11 @@ import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.Round;
 import it.polimi.ingsw.model.card.Card;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class ActionSlot {
+public class ActionSlot implements Serializable {
+    private static final long serialVersionUID = 1L;
     private SlotEffect effect;
     private int amount;
 

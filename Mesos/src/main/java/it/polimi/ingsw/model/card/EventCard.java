@@ -5,7 +5,7 @@ import it.polimi.ingsw.model.enums.Era;
 
 
 public abstract class EventCard extends Card {
-
+    private static final long serialVersionUID = 1L;
     private final boolean closeEvent;
 
     public EventCard(int id, Era era, boolean closeEvent) {

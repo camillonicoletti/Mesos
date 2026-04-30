@@ -8,6 +8,7 @@ import it.polimi.ingsw.model.enums.Era;
 
 public class CavePaintingsEventCard extends EventCard {
 
+    private static final long serialVersionUID = 1L;
     private final int minArtists;
     private final int ppPenalty;
     private final int ppPerArtist;

@@ -2,8 +2,11 @@ package it.polimi.ingsw.model.board;
 
 import it.polimi.ingsw.model.Totem;
 
-public class TurnSlot {
+import java.io.Serializable;
 
+public class TurnSlot implements Serializable {
+
+    private static final long serialVersionUID = 1L;
     private final int position;
     private final TurnSlotEffect effect;
     private Totem occupiedBy;

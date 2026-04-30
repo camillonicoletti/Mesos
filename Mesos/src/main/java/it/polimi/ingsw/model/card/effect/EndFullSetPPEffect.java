@@ -3,7 +3,7 @@ package it.polimi.ingsw.model.card.effect;
 import it.polimi.ingsw.model.Player;
 
 public class EndFullSetPPEffect implements EndGameEffect {
-
+    private static final long serialVersionUID = 1L;
     @Override
     public int calculatePoints(Player player) {
         return player.getTribe().countFullSets() * 6;

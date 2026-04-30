@@ -3,6 +3,7 @@ package it.polimi.ingsw.model.card;
 import it.polimi.ingsw.model.enums.Era;
 
 public class BuilderCard extends CharacterCard{
+    private static final long serialVersionUID = 1L;
     private final int foodDiscount;
     private final int pointsEndOfMatch;
 

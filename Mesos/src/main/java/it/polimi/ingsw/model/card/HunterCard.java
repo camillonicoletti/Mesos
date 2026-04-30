@@ -3,6 +3,7 @@ package it.polimi.ingsw.model.card;
 import it.polimi.ingsw.model.enums.Era;
 
 public class    HunterCard extends CharacterCard{
+    private static final long serialVersionUID = 1L;
     private final boolean foodIcon;
 
     public HunterCard(int id, Era era, int minPlayers, boolean foodIcon) {
@@ -16,5 +17,5 @@ public class    HunterCard extends CharacterCard{
         return foodIcon;
     }
 
-    // TODO: getExtraFood()
+
 }

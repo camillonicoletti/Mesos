@@ -3,13 +3,15 @@ package it.polimi.ingsw.model.board;
 import it.polimi.ingsw.model.Totem;
 
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Collections;
 
-public class TurnOrderTile {
+public class TurnOrderTile implements Serializable {
 
+    private static final long serialVersionUID = 1L;
     private int numPlayers;
     private List<TurnSlot> slots;
 

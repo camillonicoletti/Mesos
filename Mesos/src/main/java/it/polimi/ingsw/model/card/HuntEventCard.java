@@ -7,7 +7,7 @@ import it.polimi.ingsw.model.enums.Era;
 
 
 public class HuntEventCard extends EventCard {
-
+    private static final long serialVersionUID = 1L;
     private final int foodPerHunter;
     private final int ppPerHunter;
 

@@ -4,7 +4,7 @@ import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.card.CharacterCard;
 
 public class EndCharacterCountPPEffect implements EndGameEffect {
-
+    private static final long serialVersionUID = 1L;
     private final Class<? extends CharacterCard> targetType;
     private final int pointsPerCard;
 

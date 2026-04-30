@@ -3,6 +3,7 @@ package it.polimi.ingsw.model.card.effect;
 import it.polimi.ingsw.model.Player;
 
 public class InventorPairFoodEffect implements Effect{
+    private static final long serialVersionUID = 1L;
     private int rewardedPairs = 0;
 
     public void setRewardedPairs(int rewardedPairs) {
