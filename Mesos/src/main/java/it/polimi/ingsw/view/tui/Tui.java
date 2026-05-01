@@ -106,8 +106,7 @@ public class Tui implements View {
     // ── Numero giocatori (solo primo) ────────────────────────────────────────
 
     private boolean isFirstPlayer() {
-        return model.getExpectedPlayers() < 2
-                && model.getMyNickname() != null
+        return model.getMyNickname() != null
                 && !model.getLobbyPlayers().isEmpty()
                 && model.getMyNickname().equals(model.getLobbyPlayers().get(0));
     }
@@ -115,6 +114,10 @@ public class Tui implements View {
     private void askPlayerCount() {
         while (model.getExpectedPlayers() < 2) {
             String input = readLineWithPrompt("Numero di giocatori (min 2, max 5): ").trim();
+            if (input.equalsIgnoreCase("quit")) {
+                controller.disconnect();
+                return;
+            }
             try {
                 int n = Integer.parseInt(input);
                 if (n < 2 || n > 5) {
@@ -141,10 +144,10 @@ public class Tui implements View {
                     if (isFirstPlayer()) {
                         askPlayerCount();
                     } else {
-                        waitForModel();
+                        lobbyLoop();
                     }
                 } else {
-                    waitForReadyCheck();
+                    lobbyLoop();
                 }
             } else if ("ReadyCheckState".equals(state)) {
                 readyLoop();
@@ -165,10 +168,67 @@ public class Tui implements View {
         }
     }
 
+    private void lobbyLoop() {
+        while (model.isConnected() && "LobbyState".equals(model.getGameState())) {
+            String line = readLineWithPrompt("> ").trim();
+            if (line.isBlank()) {
+                continue;
+            }
+
+            if (line.equalsIgnoreCase("quit")) {
+                controller.disconnect();
+                return;
+            } else if (line.equalsIgnoreCase("ready")) {
+                controller.send(new ReadyMessage(true));
+            } else if (line.equalsIgnoreCase("unready")) {
+                controller.send(new ReadyMessage(false));
+            } else if (line.toLowerCase().startsWith("players")) {
+                if (!isFirstPlayer()) {
+                    System.out.println("[ERRORE] Solo il primo giocatore puo scegliere il numero di partecipanti.");
+                } else {
+                    handlePlayersCommand(line);
+                }
+            } else if (line.equalsIgnoreCase("help")) {
+                System.out.println("Comandi disponibili in lobby: ready, unready, quit");
+                if (isFirstPlayer()) {
+                    System.out.println("Essendo il primo giocatore puoi anche usare: players <2-5>");
+                }
+            } else {
+                System.out.println("In lobby puoi usare: ready, unready, quit");
+                if (isFirstPlayer()) {
+                    System.out.println("Sei il primo giocatore: usa players <2-5> per scegliere il numero di partecipanti.");
+                }
+            }
+
+            if ("LobbyState".equals(model.getGameState())) {
+                waitForModel();
+            }
+        }
+    }
+
+    private void handlePlayersCommand(String line) {
+        String[] parts = line.trim().split("\\s+");
+        if (parts.length < 2) {
+            System.out.println("[ERRORE] Uso corretto: players <2-5>");
+            return;
+        }
+
+        try {
+            int count = Integer.parseInt(parts[1]);
+            if (count < 2 || count > 5) {
+                System.out.println("[ERRORE] Il numero deve essere tra 2 e 5.");
+                return;
+            }
+            controller.send(new SetPlayersCountMessage(count));
+        } catch (NumberFormatException exception) {
+            System.out.println("[ERRORE] Uso corretto: players <2-5>");
+        }
+    }
+
     // ── Ready ────────────────────────────────────────────────────────────────
 
     private void readyLoop() {
-        boolean localReady = false;
+        boolean localReady = model.getReadyPlayers().contains(model.getMyNickname());
 
         while (model.isConnected() && !isGameStarted()) {
             if (!localReady) {
@@ -178,10 +238,13 @@ public class Tui implements View {
                     controller.send(new ReadyMessage(true));
                     localReady = true;
                     System.out.println("Hai confermato! In attesa degli altri giocatori...");
+                } else if (line.equalsIgnoreCase("quit")) {
+                    controller.disconnect();
+                    return;
                 } else if (line.equalsIgnoreCase("unready")) {
                     System.out.println("Non hai ancora confermato.");
                 } else {
-                    System.out.println("Comando non valido. Digita ready.");
+                    System.out.println("Comando non valido. Digita ready oppure quit.");
                 }
             } else {
                 synchronized (modelLock) {
@@ -228,6 +291,10 @@ public class Tui implements View {
             }
 
             ClientMessage msg = parser.parse(line);
+            if (msg instanceof DisconnectMessage) {
+                controller.disconnect();
+                return;
+            }
             if (msg != null) controller.send(msg);
         }
     }
@@ -241,7 +308,7 @@ public class Tui implements View {
         }
         System.out.println("\nPartita terminata. Premi INVIO per uscire.");
         readLineWithPrompt("");
-        controller.send(new DisconnectMessage());
+        controller.disconnect();
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

@@ -2,6 +2,7 @@ package it.polimi.ingsw.network.client;
 
 import it.polimi.ingsw.network.protocol.clientbound.*;
 import it.polimi.ingsw.network.protocol.serverbound.ClientMessage;
+import it.polimi.ingsw.network.protocol.serverbound.DisconnectMessage;
 import it.polimi.ingsw.network.protocol.serverbound.PongMessage;
 import it.polimi.ingsw.network.transport.ClientSideConnection;
 
@@ -23,6 +24,17 @@ public class ClientController {
         } catch (RuntimeException exception) {
             model.applyConnectionLost("Connessione al server interrotta");
             throw exception;
+        }
+    }
+
+    public void disconnect() {
+        try {
+            connection.send(new DisconnectMessage());
+        } catch (RuntimeException ignored) {
+            // If the socket is already down, we still want the client to terminate cleanly.
+        } finally {
+            connection.close();
+            model.applyConnectionLost("Connessione chiusa.");
         }
     }
 

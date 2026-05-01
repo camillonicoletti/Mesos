@@ -3,6 +3,7 @@ package it.polimi.ingsw.controller.state;
 import it.polimi.ingsw.controller.GameController;
 import it.polimi.ingsw.controller.action.GameAction;
 import it.polimi.ingsw.controller.action.JoinGameAction;
+import it.polimi.ingsw.controller.action.ReadyAction;
 import it.polimi.ingsw.controller.action.SetPlayerCountAction;
 import it.polimi.ingsw.model.Player;
 
@@ -24,6 +25,11 @@ public class LobbyState extends AbstractGameState {
 
         if (action instanceof SetPlayerCountAction setPlayersCountAction) {
             handleSetPlayersCount(ctx, playerNickname, setPlayersCountAction);
+            return;
+        }
+
+        if (action instanceof ReadyAction readyAction) {
+            handleReadyAction(ctx, playerNickname, readyAction);
             return;
         }
 
@@ -68,11 +74,6 @@ public class LobbyState extends AbstractGameState {
     private void handleSetPlayersCount(GameController ctx,
                                        String playerNickname,
                                        SetPlayerCountAction action) {
-
-        if (ctx.hasChosenPlayersCount()) {
-            throw new IllegalStateException("Players count has already been chosen");
-        }
-
         if (ctx.getLobbyPlayers().isEmpty()) {
             throw new IllegalStateException(
                     "At least one player must join before setting the players count"
@@ -91,6 +92,21 @@ public class LobbyState extends AbstractGameState {
 
         if (ctx.isLobbyFull()) {
             ctx.changeState(new ReadyCheckState());
+        }
+    }
+
+    private void handleReadyAction(GameController ctx, String playerNickname, ReadyAction action) {
+        if (playerNickname == null || playerNickname.isBlank()) {
+            throw new IllegalArgumentException("Player nickname cannot be null or blank");
+        }
+        if (!ctx.containsLobbyPlayer(playerNickname)) {
+            throw new IllegalArgumentException("Player is not in the lobby");
+        }
+
+        if (action.isReady()) {
+            ctx.markPlayerReady(playerNickname);
+        } else {
+            ctx.markPlayerNotReady(playerNickname);
         }
     }
 }

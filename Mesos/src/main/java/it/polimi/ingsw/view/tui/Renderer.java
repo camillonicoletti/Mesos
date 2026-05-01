@@ -187,7 +187,12 @@ public class Renderer {
         blank();
 
         for (String p : model.getLobbyPlayers()) {
-            row("    " + GRN + "●" + RST + "  " + WHT + p + RST);
+            boolean ready = model.getReadyPlayers().contains(p);
+            String readyBadge = ready ? GRN + "✓ pronto" + RST : GRY + "⌛ attesa" + RST;
+            boolean isLobbyLeader = !model.getLobbyPlayers().isEmpty()
+                    && p.equals(model.getLobbyPlayers().get(0));
+            String leaderBadge = isLobbyLeader ? YLW + "👑 " + RST : "";
+            row("    " + GRN + "●" + RST + "  " + leaderBadge + WHT + p + RST + "  " + readyBadge);
         }
 
         blank();
@@ -196,13 +201,19 @@ public class Renderer {
             if (iAmFirst) {
                 row("  " + YLW + BOLD + "Sei il primo giocatore!" + RST);
                 row("  " + GRY + "Scegli il numero di partecipanti:  " + RST + YLW + "players <2-5>" + RST);
+                row("  " + GRY + "In lobby puoi anche usare: " + RST + YLW + "ready" + RST + GRY + " / " + RST + YLW + "unready" + RST + GRY + " / " + RST + YLW + "quit" + RST);
             } else {
                 row("  " + GRY + "In attesa che il primo giocatore scelga il numero di partecipanti..." + RST);
+                row("  " + GRY + "Puoi gia confermare con: " + RST + YLW + "ready" + RST + GRY + " / " + RST + YLW + "unready" + RST + GRY + " / " + RST + YLW + "quit" + RST);
             }
         } else if (cur < exp) {
             int miss = exp - cur;
             row("  " + GRY + "In attesa di " + miss
                     + (miss == 1 ? " giocatore..." : " giocatori...") + RST);
+            row("  " + GRY + "Comandi disponibili: " + RST + YLW + "ready" + RST + GRY + " / " + RST + YLW + "unready" + RST + GRY + " / " + RST + YLW + "quit" + RST);
+            if (iAmFirst) {
+                row("  " + GRY + "Sei il capo lobby: puoi ancora modificare il numero con " + RST + YLW + "players <2-5>" + RST);
+            }
         } else {
             row("  " + GRY + "Lobby completa — attendo il passaggio al ready check..." + RST);
         }
@@ -871,20 +882,21 @@ public class Renderer {
 
         return switch (state) {
             case "LobbyState" -> {
-                boolean canSetPlayers = model.getExpectedPlayers() < 2
-                        && model.getMyNickname() != null
+                boolean canSetPlayers = model.getMyNickname() != null
                         && !model.getLobbyPlayers().isEmpty()
                         && model.getMyNickname().equals(model.getLobbyPlayers().get(0));
 
                 if (canSetPlayers) {
                     yield List.of(
-                            new String[]{"players <2-5>", "scegli il numero di giocatori"},
+                            new String[]{"ready / unready", "conferma o annulla la tua presenza"},
+                            new String[]{"players <2-5>", "scegli o modifica il numero di giocatori"},
                             new String[]{"quit", "esci dalla lobby"}
                     );
                 }
 
                 yield List.of(
-                        new String[]{"attendi", "il primo giocatore sceglie il numero"},
+                        new String[]{"ready / unready", "conferma o annulla la tua presenza"},
+                        new String[]{"attendi", "il capo lobby sceglie il numero"},
                         new String[]{"quit", "esci dalla lobby"}
                 );
             }
