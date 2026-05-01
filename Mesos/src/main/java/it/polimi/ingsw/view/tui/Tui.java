@@ -44,6 +44,11 @@ public class Tui implements View {
             return;
         }
 
+        waitForInitialStateSync();
+        if (!model.isConnected()) {
+            return;
+        }
+
         if (isInPreGame()) {
             runPreGameFlow();
             if (!model.isConnected()) {
@@ -250,7 +255,9 @@ public class Tui implements View {
 
     private void waitForLobbyUpdate() {
         synchronized (modelLock) {
-            while (model.isConnected() && model.getLobbyPlayers().isEmpty()) {
+            while (model.isConnected()
+                    && model.getLobbyPlayers().isEmpty()
+                    && isInPreGame()) {
                 try { modelLock.wait(5_000); }
                 catch (InterruptedException e) { Thread.currentThread().interrupt(); return; }
             }
@@ -280,6 +287,17 @@ public class Tui implements View {
 
     private boolean isGameEnded() {
         return "EndGameState".equals(model.getGameState());
+    }
+
+    private void waitForInitialStateSync() {
+        synchronized (modelLock) {
+            while (model.isConnected()
+                    && model.getGameState() == null
+                    && model.getLobbyPlayers().isEmpty()) {
+                try { modelLock.wait(1_000); }
+                catch (InterruptedException e) { Thread.currentThread().interrupt(); return; }
+            }
+        }
     }
 
     private String readLineWithPrompt(String prompt) {
