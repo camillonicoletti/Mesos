@@ -89,14 +89,14 @@ public class Tui implements View {
     }
 
     private TotemColor askTotemColor() {
-        System.out.println("Scegli un colore tra: RED / BLUE / PURPLE / YELLOW / WHITE");
         try {
-            return TotemColor.valueOf(readLineWithPrompt("Colore: ").trim().toUpperCase());
+            return TotemColor.valueOf(readLineWithPrompt("Colore totem: ").trim().toUpperCase());
         } catch (IllegalArgumentException e) {
             System.out.println("[ERRORE] Colore non valido.");
             return null;
         }
     }
+
 
     // ── Numero giocatori (solo primo) ────────────────────────────────────────
 
@@ -108,7 +108,6 @@ public class Tui implements View {
     }
 
     private void askPlayerCount() {
-        System.out.println("Sei il primo giocatore — sei tu a decidere quanti giocatori parteciperanno.");
         while (model.getExpectedPlayers() < 2) {
             String input = readLineWithPrompt("Numero di giocatori (min 2, max 5): ").trim();
             try {
@@ -125,6 +124,7 @@ public class Tui implements View {
         }
         System.out.println("Perfetto! In attesa degli altri " + (model.getExpectedPlayers() - 1) + " giocatori...");
     }
+
 
     private void runPreGameFlow() {
         waitForLobbyUpdate();
@@ -163,10 +163,8 @@ public class Tui implements View {
     // ── Ready ────────────────────────────────────────────────────────────────
 
     private void readyLoop() {
-        System.out.println("La lobby è al completo!");
-        System.out.println("Digita  ready  per confermare la tua presenza.");
-
         boolean localReady = false;
+
         while (model.isConnected() && !isGameStarted()) {
             if (!localReady) {
                 String line = readLineWithPrompt("> ").trim();
@@ -178,10 +176,9 @@ public class Tui implements View {
                 } else if (line.equalsIgnoreCase("unready")) {
                     System.out.println("Non hai ancora confermato.");
                 } else {
-                    System.out.println("Digita  ready  per confermare.");
+                    System.out.println("Comando non valido. Digita ready.");
                 }
             } else {
-                // ho già confermato: aspetto in silenzio gli altri
                 synchronized (modelLock) {
                     try { modelLock.wait(1_000); }
                     catch (InterruptedException e) { Thread.currentThread().interrupt(); return; }
@@ -189,6 +186,7 @@ public class Tui implements View {
             }
         }
     }
+
     // ── Game ─────────────────────────────────────────────────────────────────
 
     private void gameInputLoop() {

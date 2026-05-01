@@ -1,6 +1,7 @@
 package it.polimi.ingsw.network.client;
 
 import it.polimi.ingsw.model.enums.Era;
+import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.protocol.clientbound.*;
 
 import java.util.*;
@@ -15,6 +16,8 @@ public class ClientModel {
     private boolean connected = true;
     private String lastDisconnectedPlayer;
     private String lastConnectionEvent;
+    private Map<String, TotemColor> lobbyPlayerColors = new LinkedHashMap<>();
+
 
     private boolean loginSuccess;
     private String lastError;
@@ -61,15 +64,21 @@ public class ClientModel {
     public void applyLobbyUpdate(LobbyUpdateMessage m) {
         lobbyPlayers = new ArrayList<>();
         readyPlayers = new ArrayList<>();
+        lobbyPlayerColors = new LinkedHashMap<>();
+
         for (LobbyPlayerSnapshot player : m.getPlayers()) {
             lobbyPlayers.add(player.getNickname());
+            lobbyPlayerColors.put(player.getNickname(), player.getTotemColor());
+
             if (player.isReady()) {
                 readyPlayers.add(player.getNickname());
             }
         }
+
         expectedPlayers = m.getExpectedPlayers();
         notifyChanged();
     }
+
 
     public void applyGameStarted(GameStartedMessage m) {
         applySnapshot(m.getSnapshot());
@@ -231,6 +240,10 @@ public class ClientModel {
     public Map<String, Integer> getFinalScores()   { return Collections.unmodifiableMap(finalScores); }
     public boolean isGameSuspended()               { return gameSuspended; }
     public String getLastDisconnectedPlayer()      { return lastDisconnectedPlayer; }
+    public Map<String, TotemColor> getLobbyPlayerColors() {
+        return Collections.unmodifiableMap(lobbyPlayerColors);
+    }
+
 
     public boolean isMyTurn() {
         return myNickname != null

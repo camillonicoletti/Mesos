@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 public class Renderer {
 
     private static final String RST  = "\033[0m";
+    private static final String BLINK = "\033[5m";
     private static final String BOLD = "\033[1m";
     private static final String DIM  = "\033[2m";
     private static final String CYN  = "\033[96m";
@@ -53,28 +54,40 @@ public class Renderer {
     public void render(ClientModel model) {
         clear();
         String state = model.getGameState();
+
+        if (state == null) {
+            loginScreen(model);
+            return;
+        }
+
         header(state, model);
         body(state, model);
+
         if (model.getLastConnectionEvent() != null) {
             blank();
             row("  " + CYN + "i  " + model.getLastConnectionEvent() + RST);
         }
+
         if (model.getLastError() != null) {
             blank();
             row("  " + RED + "!  " + model.getLastError() + RST);
         }
+
         blank();
         footer(model);
     }
 
+
     private void body(String state, ClientModel model) {
         if (state == null) {
-            loginScreen();
+            loginScreen(model);
         } else switch (state) {
             case "LobbyState"            -> lobbyScreen(model);
             case "ReadyCheckState"       -> renderReadyCheck(model);
+            case "StartGameState"        -> gameScreen(model, true);
             case "TotemPlacementState"   -> gameScreen(model, true);
             case "ActionResolutionState" -> gameScreen(model, false);
+
             case "EventResolutionState"  -> simpleScreen("Il server sta risolvendo gli eventi...", model);
             case "EndRoundState"         -> simpleScreen("Fine del round " + model.getRoundNumber() + ". Preparazione...", model);
             case "SuspendedState"        -> suspendedScreen();
@@ -90,12 +103,20 @@ public class Renderer {
 
     private void header(String state, ClientModel model) {
         boxLine('╔', '═', '╗');
-        row(center(WHT + BOLD + "M E S O S" + RST, W));
+
+        row(center(RED + BOLD + "███╗   ███╗   ███████╗   ███████╗    ██████╗    ███████╗" + RST, W));
+        row(center(RED + BOLD + "████╗ ████║   ██╔════╝   ██╔════╝   ██╔═══██╗   ██╔════╝" + RST, W));
+        row(center(RED + BOLD + "██╔████╔██║   █████╗     ███████╗   ██║   ██║   ███████╗" + RST, W));
+        row(center(RED + BOLD + "██║╚██╔╝██║   ██╔══╝     ╚════██║   ██║   ██║   ╚════██║" + RST, W));
+        row(center(RED + BOLD + "██║ ╚═╝ ██║   ███████╗   ███████║   ╚██████╔╝   ███████║" + RST, W));
+        row(center(RED + BOLD + "╚═╝     ╚═╝   ╚══════╝   ╚══════╝    ╚═════╝    ╚══════╝" + RST, W));
+
         if (model.getMyNickname() != null && !model.getMyNickname().isBlank()) {
-            row(GRY + center("Giocatore: " + WHT + BOLD + model.getMyNickname() + RST + GRY, W) + RST);
+            row(center(GRN + BOLD + "GIOCATORE: " + model.getMyNickname().toUpperCase() + RST, W));
         } else {
             blank();
         }
+
         if (state != null && model.getCurrentEra() != null) {
             String sub = "Era " + model.getCurrentEra().name()
                     + "  |  Round " + model.getRoundNumber()
@@ -104,13 +125,19 @@ public class Renderer {
         } else {
             blank();
         }
-        boxLine('╠', '═', '╣');
+
+        blank();
     }
+
+
 
     private void footer(ClientModel model) {
         boxLine('╚', '═', '╝');
+        printCommandPanel(model);
         System.out.print(WHT + BOLD + footerPrompt(model) + RST);
     }
+
+
 
     private void boxLine(char l, char m, char r) {
         System.out.println(CYN + BOLD + l + String.valueOf(m).repeat(W) + r + RST);
@@ -129,38 +156,43 @@ public class Renderer {
         System.out.println(CYN + "║" + " ".repeat(W) + "║" + RST);
     }
 
-    private void loginScreen() {
-        blank();
-        row(center(WHT + BOLD + "Benvenuto in MESOS!" + RST, W));
-        blank();
-        row("  " + GRY + "Inserisci nickname e colore totem per entrare nel gioco." + RST);
-        row("  " + GRY + "Se eri gia in partita puoi scegliere la riconnessione." + RST);
-        blank();
-        row("  Colori disponibili:  "
-                + RED + BOLD + "RED" + RST + "   "
-                + BLU + BOLD + "BLUE" + RST + "   "
-                + MGN + BOLD + "PURPLE" + RST + "   "
-                + YLW + BOLD + "YELLOW" + RST + "   "
-                + WHT + BOLD + "WHITE" + RST);
-        blank();
+    private void loginScreen(ClientModel model) {
+        printMesosLogoPlain();
+
+        System.out.println();
+        System.out.println(centerPlain(WHT + BOLD + "Benvenuto in MESOS!" + RST, W));
+        System.out.println();
+        System.out.println(GRY + "Inserisci nickname e colore totem per entrare nel gioco." + RST);
+        System.out.println(GRY + "Se eri gia in partita puoi scegliere la riconnessione." + RST);
+        System.out.println();
+        System.out.println(GRN + BOLD + "Colori disponibili:" + RST + "  " + availableColorLabels(model));
+        System.out.println();
     }
+
 
     private void lobbyScreen(ClientModel model) {
         int cur = model.getLobbyPlayers().size();
         int exp = model.getExpectedPlayers();
+
+        boolean playersCountChosen = exp >= 2;
+
         boolean iAmFirst = model.getMyNickname() != null
                 && !model.getLobbyPlayers().isEmpty()
                 && model.getMyNickname().equals(model.getLobbyPlayers().get(0));
 
         blank();
-        row("  " + WHT + BOLD + "LOBBY" + RST + "  " + GRY + cur + " / " + (exp > 0 ? exp : "?") + " giocatori" + RST);
+        row("  " + WHT + BOLD + "LOBBY" + RST + "  " + GRY
+                + cur + " / " + (playersCountChosen ? exp : "?")
+                + " giocatori" + RST);
         blank();
+
         for (String p : model.getLobbyPlayers()) {
             row("    " + GRN + "●" + RST + "  " + WHT + p + RST);
         }
+
         blank();
 
-        if (exp == 0) {
+        if (!playersCountChosen) {
             if (iAmFirst) {
                 row("  " + YLW + BOLD + "Sei il primo giocatore!" + RST);
                 row("  " + GRY + "Scegli il numero di partecipanti:  " + RST + YLW + "players <2-5>" + RST);
@@ -169,12 +201,15 @@ public class Renderer {
             }
         } else if (cur < exp) {
             int miss = exp - cur;
-            row("  " + GRY + "In attesa di " + miss + (miss == 1 ? " giocatore..." : " giocatori...") + RST);
+            row("  " + GRY + "In attesa di " + miss
+                    + (miss == 1 ? " giocatore..." : " giocatori...") + RST);
         } else {
             row("  " + GRY + "Lobby completa — attendo il passaggio al ready check..." + RST);
         }
+
         blank();
     }
+
 
     private void renderReadyCheck(ClientModel model) {
         blank();
@@ -247,27 +282,32 @@ public class Renderer {
         blank();
 
         List<String> order = model.getTurnOrder();
+        String current = null;
+
         if (!order.isEmpty()) {
-            StringBuilder sb = new StringBuilder("  " + GRY + "Turno: " + RST);
-            for (int i = 0; i < order.size(); i++) {
-                if (i > 0) sb.append(GRY + "  ->  " + RST);
-                PlayerView pv = model.getPlayers().get(order.get(i));
-                String col = pv != null ? totemColor(pv.getTotemColor()) : WHT;
-                sb.append(col).append(BOLD).append("● ").append(order.get(i)).append(RST);
-            }
-            row(sb.toString());
+            current = totemPhase ? currentPlacementPlayer(model) : order.get(0);
+            PlayerView pv = current != null ? model.getPlayers().get(current) : null;
+            String col = pv != null ? totemColor(pv.getTotemColor()) : WHT;
+
+            row(center(WHT + BOLD + "ORA TOCCA A " + RST
+                    + col + BOLD + (current != null ? current.toUpperCase() : "?") + RST, W));
         }
 
+
+
         if (totemPhase) {
-            String cur = model.getCurrentTotemPlacementPlayer();
+            String cur = currentPlacementPlayer(model);
             if (cur != null && cur.equals(model.getMyNickname())) {
-                row(center(YLW + BOLD + ">>>  TOCCA A TE — PIAZZA IL TOTEM!  <<<" + RST, W));
+                row(center(YLW + BOLD + BLINK + ">>>  TOCCA A TE — PIAZZA IL TOTEM!  <<<" + RST, W));
+
             } else if (cur != null) {
                 row("  " + GRY + "In attesa del piazzamento di " + YLW + cur + RST + GRY + "..." + RST);
             }
         } else if (model.isMyTurn()) {
-            row(center(GRN + BOLD + ">>>  TOCCA A TE!  <<<" + RST, W));
+            row(center(GRN + BOLD + BLINK + ">>>  TOCCA A TE!  <<<" + RST, W));
+
         }
+
 
         blank();
 
@@ -286,17 +326,24 @@ public class Renderer {
         blank();
 
         String currentActor = totemPhase
-                ? model.getCurrentTotemPlacementPlayer()
+                ? currentPlacementPlayer(model)
                 : (!order.isEmpty() ? order.get(0) : null);
-        for (PlayerView p : model.getPlayers().values()) {
-            renderPlayer(p, p.getNickname().equals(currentActor), p.getNickname().equals(model.getMyNickname()));
-        }
 
-        blank();
-        if (totemPhase) {
-            row("  " + GRY + "place <lettera>   es. place B" + RST);
-        } else {
-            row("  " + GRY + "pick <id> upper|lower   --   build <id> upper|lower   --   help" + RST);
+
+        row("  " + CYN + BOLD + "GIOCATORI" + RST);
+
+        List<PlayerView> sortedPlayers = model.getPlayers().values().stream()
+                .sorted((a, b) -> Integer.compare(b.getPrestigePoints(), a.getPrestigePoints()))
+                .toList();
+
+        for (int i = 0; i < sortedPlayers.size(); i++) {
+            PlayerView p = sortedPlayers.get(i);
+            renderPlayer(
+                    p,
+                    i + 1,
+                    p.getNickname().equals(currentActor),
+                    p.getNickname().equals(model.getMyNickname())
+            );
         }
         blank();
     }
@@ -443,6 +490,8 @@ public class Renderer {
 
     private String[] drawOrderBox(ClientModel model) {
         List<String> order = model.getTurnOrder();
+        List<String> placedPlayers = new ArrayList<>(model.getTotemOnTiles().values());
+
         int numPlayers = Math.max(2, Math.max(model.getPlayers().size(), order.size()));
         int visibleSlots = Math.max(numPlayers, order.size());
 
@@ -451,15 +500,25 @@ public class Renderer {
 
         box[line++] = titledTop("ORDINE TURNO", ORDER_W, CYN);
 
+        String currentPlacementPlayer = model.getCurrentTotemPlacementPlayer();
+
         for (int i = 0; i < visibleSlots; i++) {
             String name = i < order.size() ? order.get(i) : "";
+
+            if (placedPlayers.contains(name)) {
+                name = "";
+            }
+
             PlayerView pv = name.isBlank() ? null : model.getPlayers().get(name);
             String col = pv != null ? totemColor(pv.getTotemColor()) : GRY;
-            boolean current = i == 0 && !name.isBlank();
+            boolean current = name.equals(currentPlacementPlayer);
 
             String marker = current ? GRN + BOLD + "▶" + RST : " ";
-            String shownName = name.isBlank() ? "vuoto" : ellipsize(name, 12);
-            String playerText = marker + " " + (i + 1) + "  " + col + "●" + RST + " "
+            String shownName = name.isBlank() ? "" : ellipsize(name, 12);
+
+            String playerText = name.isBlank()
+                    ? " ".repeat(22)
+                    : marker + " " + (i + 1) + "  " + col + "●" + RST + " "
                     + (current ? BOLD : "") + shownName + RST;
 
             String effect = turnEffectLabel(numPlayers, i + 1);
@@ -482,6 +541,7 @@ public class Renderer {
         box[line] = roundedBottom(ORDER_W, CYN);
         return box;
     }
+
 
 
     private String[] drawOfferTile(char letter, String occupant, String occCol) {
@@ -570,32 +630,47 @@ public class Renderer {
         return WHT;
     }
 
-    private void renderPlayer(PlayerView p, boolean isActor, boolean isMe) {
+    private void renderPlayer(PlayerView p, int rank, boolean isActor, boolean isMe) {
         String col = totemColor(p.getTotemColor());
-        String marker = isActor ? GRN + BOLD + "> " + RST : "  ";
-        String name = p.getNickname();
-        if (name.length() > 14) name = name.substring(0, 13) + ".";
-        String nameStr = (isMe ? BOLD : "") + col + String.format("%-14s", name) + RST;
-        String foodStr = YLW + String.format("%3d", p.getFood()) + "c" + RST;
-        String barStr = foodBar(p.getFood(), 20);
-        String ppStr = GRN + String.format("%4d", p.getPrestigePoints()) + " PP" + RST;
+        String marker = isActor ? GRN + BOLD + "▶" + RST : " ";
+        String meTag = isMe ? CYN + BOLD + " tu" + RST : "";
 
-        String bc = isActor ? GRN : CYN;
-        row(marker + col + "●" + RST + " " + nameStr + "  " + foodStr + "  " + barStr + "  " + ppStr, bc);
+        String rankStr = rankLabel(rank);
+        String name = ellipsize(p.getNickname(), 14);
+        String nameStr = col + BOLD + String.format("%-14s", name) + RST;
+
+        String foodStr = YLW + BOLD + "🍖 " + String.format("%2d", p.getFood()) + RST;
+        String barStr = foodBar(p.getFood(), 20);
+
+        String ppColor = p.getPrestigePoints() < 0 ? RED : GRN;
+        String ppStr = ppColor + BOLD + "🌟 " + String.format("%3d", p.getPrestigePoints()) + RST;
+
+        row("  " + rankStr + "  " + marker + " "
+                + nameStr
+                + "   " + foodStr
+                + "   " + barStr
+                + "   " + ppStr
+                + meTag);
 
         List<Integer> all = new ArrayList<>(p.getCharacterCardIds());
         all.addAll(p.getBuildingCardIds());
+
         if (!all.isEmpty()) {
             String list = all.stream()
                     .map(id -> {
                         CardCatalog.CardInfo ci = CardCatalog.get(id);
                         return ci.typeName + (ci.detail.isEmpty() ? "" : " " + ci.detail);
                     })
-                    .collect(Collectors.joining(" | "));
-            if (list.length() > W - 16) list = list.substring(0, W - 18) + "...";
+                    .collect(Collectors.joining(" · "));
+
+            if (vis(list) > W - 18) {
+                list = ellipsize(list, W - 18);
+            }
+
             row("      " + GRY + "Carte: " + RST + WHT + list + RST);
         }
     }
+
 
     private String totemColor(TotemColor c) {
         if (c == null) return WHT;
@@ -609,10 +684,15 @@ public class Renderer {
     }
 
     private String foodBar(int food, int max) {
-        int total = 16;
-        int filled = (int) Math.round((double) Math.min(Math.max(food, 0), max) / max * total);
-        return GRN + "#".repeat(filled) + GRY + ".".repeat(total - filled) + RST;
+        int total = 18;
+        int safeMax = Math.max(1, max);
+        int filled = (int) Math.round((double) Math.min(Math.max(food, 0), safeMax) / safeMax * total);
+
+        return GRN + "█".repeat(filled)
+                + GRY + "░".repeat(total - filled)
+                + RST;
     }
+
 
     private String stateLabel(String state) {
         return switch (state) {
@@ -629,15 +709,9 @@ public class Renderer {
     }
 
     private String footerPrompt(ClientModel model) {
-        if ("LobbyState".equals(model.getGameState())
-                && model.getExpectedPlayers() < 2
-                && model.getMyNickname() != null
-                && !model.getLobbyPlayers().isEmpty()
-                && model.getMyNickname().equals(model.getLobbyPlayers().get(0))) {
-            return "  Numero giocatori (2-5) > ";
-        }
         return "  > ";
     }
+
 
     private int vis(String s) {
         if (s == null) return 0;
@@ -739,5 +813,182 @@ public class Renderer {
         }
         return sb.toString();
     }
+
+    private String rankLabel(int rank) {
+        String label = rank + "°";
+        return switch (rank) {
+            case 1 -> YLW + BOLD + label + RST;
+            case 2 -> WHT + BOLD + label + RST;
+            case 3 -> GRY + BOLD + label + RST;
+            default -> GRY + label + RST;
+        };
+    }
+
+    private void printCommandPanel(ClientModel model) {
+        List<String[]> commands = commandsForState(model);
+
+        if (commands.isEmpty()) {
+            System.out.println();
+            return;
+        }
+
+        int panelW = 72;
+        String title = " COMANDI ";
+        int dashTotal = panelW - title.length();
+        int left = dashTotal / 2;
+        int right = dashTotal - left;
+
+        System.out.println();
+        System.out.println(CYN + "•" + "-".repeat(left) + title + "-".repeat(right) + "•" + RST);
+
+        for (String[] cmd : commands) {
+            String leftCol = cmd[0];
+            String rightCol = cmd[1];
+
+            String line = " " + String.format("%-20s", leftCol) + " " + rightCol;
+            int pad = Math.max(0, panelW - vis(line));
+
+            System.out.println(CYN + "|" + RST
+                    + WHT + BOLD + line.substring(0, Math.min(line.length(), Math.min(21, line.length()))) + RST
+                    + (line.length() > 21 ? GRY + line.substring(21) + RST : "")
+                    + " ".repeat(pad)
+                    + CYN + "|" + RST);
+        }
+
+        System.out.println(CYN + "'" + "-".repeat(panelW) + "'" + RST);
+        System.out.println();
+    }
+
+    private List<String[]> commandsForState(ClientModel model) {
+        String state = model.getGameState();
+
+        if (state == null) {
+            return List.of(
+                    new String[]{"nickname", "inserisci il tuo nome quando richiesto"},
+                    new String[]{"colore", "scegli RED, BLUE, PURPLE, YELLOW o WHITE"}
+            );
+        }
+
+        return switch (state) {
+            case "LobbyState" -> {
+                boolean canSetPlayers = model.getExpectedPlayers() < 2
+                        && model.getMyNickname() != null
+                        && !model.getLobbyPlayers().isEmpty()
+                        && model.getMyNickname().equals(model.getLobbyPlayers().get(0));
+
+                if (canSetPlayers) {
+                    yield List.of(
+                            new String[]{"players <2-5>", "scegli il numero di giocatori"},
+                            new String[]{"quit", "esci dalla lobby"}
+                    );
+                }
+
+                yield List.of(
+                        new String[]{"attendi", "il primo giocatore sceglie il numero"},
+                        new String[]{"quit", "esci dalla lobby"}
+                );
+            }
+
+            case "ReadyCheckState" -> List.of(
+                    new String[]{"ready", "conferma la tua presenza"},
+                    new String[]{"unready", "annulla la conferma"},
+                    new String[]{"quit", "esci dalla partita"}
+            );
+
+            case "StartGameState", "TotemPlacementState" -> List.of(
+                    new String[]{"place <tile>", "piazza il totem su una tile, es. place B"},
+                    new String[]{"help", "mostra aiuto rapido"},
+                    new String[]{"quit", "esci dalla partita"}
+            );
+
+            case "ActionResolutionState" -> List.of(
+                    new String[]{"pick <id> upper", "prendi personaggio/evento dalla riga sopra"},
+                    new String[]{"pick <id> lower", "prendi personaggio/evento dalla riga sotto"},
+                    new String[]{"build <id> upper", "costruisci edificio dalla riga sopra"},
+                    new String[]{"build <id> lower", "costruisci edificio dalla riga sotto"},
+                    new String[]{"help", "mostra aiuto rapido"},
+                    new String[]{"quit", "esci dalla partita"}
+            );
+
+
+            case "EventResolutionState" -> List.of(
+                    new String[]{"attendi", "il server sta risolvendo gli eventi"},
+                    new String[]{"quit", "esci dalla partita"}
+            );
+
+            case "EndRoundState" -> List.of(
+                    new String[]{"attendi", "preparazione del prossimo round"},
+                    new String[]{"quit", "esci dalla partita"}
+            );
+
+            case "SuspendedState" -> List.of(
+                    new String[]{"attendi", "la partita riprende quando i giocatori tornano"},
+                    new String[]{"quit", "esci dalla partita"}
+            );
+
+            case "EndGameState" -> List.of(
+                    new String[]{"invio", "chiudi la TUI"},
+                    new String[]{"quit", "esci"}
+            );
+
+            default -> List.of(
+                    new String[]{"help", "mostra aiuto rapido"},
+                    new String[]{"quit", "esci dalla partita"}
+            );
+        };
+    }
+
+    private String currentPlacementPlayer(ClientModel model) {
+        List<String> placedPlayers = new ArrayList<>(model.getTotemOnTiles().values());
+
+        for (String nickname : model.getTurnOrder()) {
+            if (!placedPlayers.contains(nickname)) {
+                return nickname;
+            }
+        }
+
+        return null;
+    }
+
+    private void printMesosLogoPlain() {
+        System.out.println(centerPlain(RED + BOLD + "███╗   ███╗   ███████╗   ███████╗    ██████╗    ███████╗" + RST, W));
+        System.out.println(centerPlain(RED + BOLD + "████╗ ████║   ██╔════╝   ██╔════╝   ██╔═══██╗   ██╔════╝" + RST, W));
+        System.out.println(centerPlain(RED + BOLD + "██╔████╔██║   █████╗     ███████╗   ██║   ██║   ███████╗" + RST, W));
+        System.out.println(centerPlain(RED + BOLD + "██║╚██╔╝██║   ██╔══╝     ╚════██║   ██║   ██║   ╚════██║" + RST, W));
+        System.out.println(centerPlain(RED + BOLD + "██║ ╚═╝ ██║   ███████╗   ███████║   ╚██████╔╝   ███████║" + RST, W));
+        System.out.println(centerPlain(RED + BOLD + "╚═╝     ╚═╝   ╚══════╝   ╚══════╝    ╚═════╝    ╚══════╝" + RST, W));
+    }
+
+    private String centerPlain(String text, int width) {
+        int pad = Math.max(0, width - vis(text));
+        return " ".repeat(pad / 2) + text;
+    }
+
+    private String availableColorLabels(ClientModel model) {
+        List<TotemColor> taken = new ArrayList<>(model.getLobbyPlayerColors().values());
+
+        List<String> labels = new ArrayList<>();
+        for (TotemColor color : TotemColor.values()) {
+            if (!taken.contains(color)) {
+                labels.add(colorLabel(color));
+            }
+        }
+
+        return String.join("   ", labels);
+    }
+
+    private String colorLabel(TotemColor color) {
+        return switch (color) {
+            case RED    -> RED + BOLD + "RED" + RST;
+            case BLUE   -> BLU + BOLD + "BLUE" + RST;
+            case PURPLE -> MGN + BOLD + "PURPLE" + RST;
+            case YELLOW -> YLW + BOLD + "YELLOW" + RST;
+            case WHITE  -> WHT + BOLD + "WHITE" + RST;
+        };
+    }
+
+
+
+
 
 }

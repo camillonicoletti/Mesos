@@ -16,15 +16,23 @@ public class Server {
 
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Server avviato su porta " + port);
+
             while (true) {
                 Socket socket = serverSocket.accept();
                 ServerSideConnection conn = new SocketServerConnection(socket);
+
                 conn.setOnMessage(msg -> dispatcher.dispatch(conn, msg));
+
                 conn.setOnDisconnect(() -> {
                     if (conn.getNickname() != null) {
                         lobby.handleDisconnect(conn.getNickname());
+                    } else {
+                        lobby.unregisterPendingConnection(conn);
                     }
                 });
+
+                lobby.registerPendingConnection(conn);
+
                 System.out.println("Nuova connessione: " + socket.getRemoteSocketAddress());
             }
         }

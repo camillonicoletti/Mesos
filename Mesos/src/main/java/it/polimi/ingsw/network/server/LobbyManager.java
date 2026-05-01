@@ -29,6 +29,8 @@ public class LobbyManager {
     private final GameController gameController = new GameController();
     private final Map<String, ServerSideConnection> connections = new HashMap<>();
     private final Map<String, VirtualView> views = new HashMap<>();
+    private final List<ServerSideConnection> pendingConnections = new ArrayList<>();
+
 
     public synchronized void handleLogin(ServerSideConnection connection, LoginMessage message) {
         String nickname = message.getNickname();
@@ -59,6 +61,7 @@ public class LobbyManager {
             return;
         }
 
+        unregisterPendingConnection(connection);
         registerConnection(nickname, connection);
         connection.send(new LoginAckMessage(LoginAckMessage.Outcome.LOGIN_OK, null));
         broadcastLobbyUpdate();
@@ -157,22 +160,17 @@ public class LobbyManager {
     }
 
     private void broadcastLobbyUpdate() {
-        List<LobbyPlayerSnapshot> players = new ArrayList<>();
-        for (Player player : gameController.getLobbyPlayers()) {
-            String nickname = player.getNickname();
-            players.add(new LobbyPlayerSnapshot(
-                    nickname,
-                    player.getTotem() != null ? player.getTotem().getColor() : null,
-                    gameController.isPlayerReady(nickname),
-                    !gameController.isPlayerDisconnected(nickname)
-            ));
-        }
+        LobbyUpdateMessage message = buildLobbyUpdateMessage();
 
-        LobbyUpdateMessage message = new LobbyUpdateMessage(players, gameController.getChosenPlayersCount());
         for (ServerSideConnection connection : connections.values()) {
             connection.send(message);
         }
+
+        for (ServerSideConnection connection : pendingConnections) {
+            connection.send(message);
+        }
     }
+
 
     private void broadcastGameStarted() {
         GameStartedMessage message = new GameStartedMessage(SnapshotBuilder.build(gameController));
@@ -205,4 +203,29 @@ public class LobbyManager {
     public GameController getGameController() {
         return gameController;
     }
+    public synchronized void registerPendingConnection(ServerSideConnection connection) {
+        pendingConnections.add(connection);
+        connection.send(buildLobbyUpdateMessage());
+    }
+
+    public synchronized void unregisterPendingConnection(ServerSideConnection connection) {
+        pendingConnections.remove(connection);
+    }
+
+    private LobbyUpdateMessage buildLobbyUpdateMessage() {
+        List<LobbyPlayerSnapshot> players = new ArrayList<>();
+
+        for (Player player : gameController.getLobbyPlayers()) {
+            String nickname = player.getNickname();
+            players.add(new LobbyPlayerSnapshot(
+                    nickname,
+                    player.getTotem() != null ? player.getTotem().getColor() : null,
+                    gameController.isPlayerReady(nickname),
+                    !gameController.isPlayerDisconnected(nickname)
+            ));
+        }
+
+        return new LobbyUpdateMessage(players, gameController.getChosenPlayersCount());
+    }
+
 }
