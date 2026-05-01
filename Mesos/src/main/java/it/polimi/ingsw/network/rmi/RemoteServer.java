@@ -1,0 +1,31 @@
+package it.polimi.ingsw.network.rmi;
+
+import it.polimi.ingsw.network.protocol.serverbound.ClientMessage;
+
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+
+/**
+ * Remote entrypoint exposed by the server.
+ * Clients push {@link ClientMessage}s through this interface and receive
+ * asynchronous updates via {@link RemoteClient}.
+ */
+public interface RemoteServer extends Remote {
+
+    /**
+     * Delivers a client-side message to the server.
+     *
+     * @param client  the remote callback associated with the sender
+     * @param message the message to process
+     * @throws RemoteException if the invocation fails
+     */
+    void send(RemoteClient client, ClientMessage message) throws RemoteException;
+
+    /**
+     * Explicitly disconnects a client callback from the server.
+     *
+     * @param client the remote client to disconnect
+     * @throws RemoteException if the invocation fails
+     */
+    void disconnect(RemoteClient client) throws RemoteException;
+}
