@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+
 public class Renderer {
 
     private static final String RST  = "\033[0m";
@@ -25,10 +26,10 @@ public class Renderer {
     private static final String WHT  = "\033[97m";
     private static final String GRY  = "\033[90m";
 
-    private static final int W        = 140;
+    private static final int W = 140;
     private static final int CARD_W   = 16;
     private static final int CARD_H   = 10;
-    private static final int CARD_GAP = 1;
+    private static final int CARD_GAP = 2;
     private static final int OFFER_W  = 14;
     private static final int OFFER_H  = 10;
     private static final int ORDER_W  = 38;
@@ -59,6 +60,8 @@ public class Renderer {
             loginScreen(model);
             return;
         }
+
+
 
         header(state, model);
         body(state, model);
@@ -140,20 +143,19 @@ public class Renderer {
 
 
     private void boxLine(char l, char m, char r) {
-        System.out.println(CYN + BOLD + l + String.valueOf(m).repeat(W) + r + RST);
+        System.out.println();
     }
 
     private void row(String content) {
-        row(content, CYN);
+        System.out.println(content);
     }
 
     private void row(String content, String borderColor) {
-        int pad = Math.max(0, W - vis(content));
-        System.out.println(borderColor + "║" + RST + content + " ".repeat(pad) + borderColor + "║" + RST);
+        System.out.println(content);
     }
 
     private void blank() {
-        System.out.println(CYN + "║" + " ".repeat(W) + "║" + RST);
+        System.out.println();
     }
 
     private void loginScreen(ClientModel model) {
@@ -189,10 +191,15 @@ public class Renderer {
         for (String p : model.getLobbyPlayers()) {
             boolean ready = model.getReadyPlayers().contains(p);
             String readyBadge = ready ? GRN + "✓ pronto" + RST : GRY + "⌛ attesa" + RST;
+
             boolean isLobbyLeader = !model.getLobbyPlayers().isEmpty()
                     && p.equals(model.getLobbyPlayers().get(0));
+
             String leaderBadge = isLobbyLeader ? YLW + "👑 " + RST : "";
-            row("    " + GRN + "●" + RST + "  " + leaderBadge + WHT + p + RST + "  " + readyBadge);
+
+            row("    " + GRN + "●" + RST + "  "
+                    + leaderBadge + WHT + p + RST
+                    + "  " + readyBadge);
         }
 
         blank();
@@ -200,19 +207,18 @@ public class Renderer {
         if (!playersCountChosen) {
             if (iAmFirst) {
                 row("  " + YLW + BOLD + "Sei il primo giocatore!" + RST);
-                row("  " + GRY + "Scegli il numero di partecipanti:  " + RST + YLW + "players <2-5>" + RST);
-                row("  " + GRY + "In lobby puoi anche usare: " + RST + YLW + "ready" + RST + GRY + " / " + RST + YLW + "unready" + RST + GRY + " / " + RST + YLW + "quit" + RST);
-            } else {
+                row("  " + GRY + "Digita il numero dei giocatori." + RST);
+            }
+            else {
                 row("  " + GRY + "In attesa che il primo giocatore scelga il numero di partecipanti..." + RST);
-                row("  " + GRY + "Puoi gia confermare con: " + RST + YLW + "ready" + RST + GRY + " / " + RST + YLW + "unready" + RST + GRY + " / " + RST + YLW + "quit" + RST);
             }
         } else if (cur < exp) {
             int miss = exp - cur;
             row("  " + GRY + "In attesa di " + miss
                     + (miss == 1 ? " giocatore..." : " giocatori...") + RST);
-            row("  " + GRY + "Comandi disponibili: " + RST + YLW + "ready" + RST + GRY + " / " + RST + YLW + "unready" + RST + GRY + " / " + RST + YLW + "quit" + RST);
+
             if (iAmFirst) {
-                row("  " + GRY + "Sei il capo lobby: puoi ancora modificare il numero con " + RST + YLW + "players <2-5>" + RST);
+                row("  " + GRY + "Sei il capo lobby: puoi modificare il numero quando richiesto." + RST);
             }
         } else {
             row("  " + GRY + "Lobby completa — attendo il passaggio al ready check..." + RST);
@@ -220,6 +226,7 @@ public class Renderer {
 
         blank();
     }
+
 
 
     private void renderReadyCheck(ClientModel model) {
@@ -365,8 +372,7 @@ public class Renderer {
             return;
         }
 
-        int slotW = CARD_W + 2 + CARD_GAP;
-        int maxPer = Math.max(1, (W - 4) / slotW);
+        int maxPer = ids.size();
 
         for (int start = 0; start < ids.size(); start += maxPer) {
             List<Integer> slice = ids.subList(start, Math.min(start + maxPer, ids.size()));
@@ -374,6 +380,7 @@ public class Renderer {
             if (start + maxPer < ids.size()) blank();
         }
     }
+
 
     private void renderCardChunk(List<Integer> ids) {
         String[][] cards = new String[ids.size()][];
@@ -393,6 +400,10 @@ public class Renderer {
 
     private String[] drawCard(int id) {
         CardCatalog.CardInfo c = CardCatalog.get(id);
+
+        if (c.kind == CardCatalog.Kind.CHARACTER) {
+            return drawCharacterCard(c);
+        }
 
         String bc = switch (c.kind) {
             case CHARACTER -> WHT;
@@ -432,6 +443,198 @@ public class Renderer {
         out[9] = bc + "+" + "-".repeat(CARD_W) + "+" + RST;
         return out;
     }
+
+    private String[] drawCharacterCard(CardCatalog.CardInfo c) {
+        String[] out = new String[CARD_H];
+
+        out[0] = makeAsciiCardTopBorder(String.valueOf(c.id), CARD_W, WHT);
+        out[1] = characterLine("");
+        out[2] = characterLine(BOLD + characterName(c.typeName) + RST);
+        out[3] = characterLine(characterIcon(c));
+
+        switch (c.typeName) {
+            case "Hunter" -> {
+                out[4] = characterLine("");
+
+                if ("+".equals(c.detail)) {
+                    out[5] = characterMiniBoxTop();
+                    out[6] = characterMiniBoxText("+1🍖");
+                    out[7] = characterMiniBoxBottom();
+                } else {
+                    out[5] = characterLine("");
+                    out[6] = characterLine("");
+                    out[7] = characterLine("");
+                }
+
+                out[8] = characterLine("");
+            }
+            case "Builder" -> {
+                int pp = parseBuilderPoints(c.detail);
+                int discount = parseBuilderDiscount(c.detail);
+                out[4] = builderMiniBoxTop();
+                out[5] = builderMiniBoxText("-" + discount + "🍖");
+                out[6] = builderMiniBoxBottom();
+                out[7] = builderMiniBoxText("+" + pp + "🌟");
+                out[8] = builderMiniBoxBottom();
+            }
+
+
+            case "Shaman" -> {
+                out[4] = characterLine("");
+                out[5] = characterMiniBoxTop();
+                out[6] = characterMiniBoxText(c.detail.replace("★", " 🔯"));
+                out[7] = characterMiniBoxBottom();
+                out[8] = characterLine("");
+            }
+
+            case "Inventor" -> {
+                out[4] = characterLine("");
+                out[5] = characterMiniBoxTop();
+                out[6] = characterMiniBoxText("N. " + inventorNumber(c.detail));
+                out[7] = characterMiniBoxBottom();
+                out[8] = characterLine("");
+            }
+
+
+
+
+            default -> {
+                out[4] = characterLine("");
+                out[5] = characterLine("");
+                out[6] = characterLine("");
+                out[7] = characterLine("");
+                out[8] = characterLine("");
+            }
+        }
+
+        out[9] = WHT + "+" + "-".repeat(CARD_W) + "+" + RST;
+
+        return out;
+    }
+
+
+    private String characterName(String typeName) {
+        return switch (typeName) {
+            case "Hunter"   -> "Hunter";
+            case "Builder"  -> "Builder";
+            case "Gatherer" -> "Gatherer";
+            case "Artist"   -> "Artist";
+            case "Inventor" -> "Inventor";
+            case "Shaman"   -> "Shaman";
+            default         -> typeName;
+        };
+    }
+
+    private String characterIcon(CardCatalog.CardInfo c) {
+        return switch (c.typeName) {
+            case "Hunter"   -> "🏹";
+            case "Builder"  -> "🔨";
+            case "Gatherer" -> "🌾";
+            case "Artist"   -> "🎨";
+            case "Inventor" -> "🧠";
+            case "Shaman"   -> "🔮";
+            default         -> "";
+        };
+    }
+
+    private String characterInfoLine(CardCatalog.CardInfo c, boolean bottomLine) {
+        return switch (c.typeName) {
+            case "Hunter" -> bottomLine && "+".equals(c.detail) ? "+1🍖" : "";
+
+            case "Builder" -> {
+                int pp = parseBuilderPoints(c.detail);
+                int discount = parseBuilderDiscount(c.detail);
+                yield bottomLine ? "+" + pp + "🌟" : "−" + discount + "🍖";
+            }
+
+            case "Shaman" -> bottomLine ? c.detail.replace("★", "🔯") : "";
+
+            default -> "";
+        };
+    }
+
+    private int parseBuilderPoints(String detail) {
+        if (detail == null || detail.isBlank()) return 0;
+
+        String[] parts = detail.split(" ");
+        for (String part : parts) {
+            if (part.startsWith("+")) {
+                return Integer.parseInt(part.substring(1));
+            }
+        }
+
+        return 0;
+    }
+
+    private int parseBuilderDiscount(String detail) {
+        if (detail == null || detail.isBlank()) return 0;
+
+        String[] parts = detail.split(" ");
+        for (String part : parts) {
+            if (part.startsWith("-") && part.endsWith("c")) {
+                return Integer.parseInt(part.substring(1, part.length() - 1));
+            }
+        }
+
+        return 0;
+    }
+
+
+
+    private String characterLine(String text) {
+        return WHT + "|" + RST + centerCardText(text) + WHT + "|" + RST;
+    }
+    private String characterMiniBoxTop() {
+        return characterLine("+" + "-".repeat(8) + "+");
+    }
+
+    private String characterMiniBoxBottom() {
+        return characterLine("+" + "-".repeat(8) + "+");
+    }
+
+    private String characterMiniBoxText(String text) {
+        return characterLine("|" + centerVisual(text, 8) + "|");
+    }
+
+    private String centerCardText(String text) {
+        if (text == null || text.isBlank()) {
+            return " ".repeat(CARD_W);
+        }
+
+        String clean = stripAnsi(text);
+
+        if (isSingleCardEmoji(clean)) {
+            return centerSingleEmoji(text);
+        }
+
+        return centerVisual(text, CARD_W);
+    }
+
+    private boolean isSingleCardEmoji(String text) {
+        return text.equals("🏹")
+
+                || text.equals("🔨")
+                || text.equals("🌾")
+                || text.equals("🎨")
+                || text.equals("🔮")
+                || text.equals("1️⃣")
+                || text.equals("2️⃣")
+                || text.equals("3️⃣")
+                || text.equals("4️⃣")
+                || text.equals("5️⃣")
+                || text.equals("6️⃣")
+                || text.equals("7️⃣")
+                || text.equals("8️⃣")
+                || text.equals("9️⃣");
+    }
+
+    private String centerSingleEmoji(String emoji) {
+        return " ".repeat(7) + emoji + " ".repeat(7);
+    }
+
+
+
+
 
     private String makeCardTopBorder(String idStr, int cardW, String bc) {
         String label = " " + idStr + " ";
@@ -735,9 +938,7 @@ public class Renderer {
         return " ".repeat(pad / 2) + coloredText + " ".repeat(pad - pad / 2);
     }
 
-    private String centerColored(String coloredText, int targetVisW) {
-        return center(coloredText, targetVisW);
-    }
+
 
     private String centerStr(String text, int targetW) {
         if (text == null) text = "";
@@ -809,21 +1010,9 @@ public class Renderer {
     }
 
 
-    private String dashedLine(int width) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < width; i++) {
-            sb.append(i % 2 == 0 ? "─" : " ");
-        }
-        return sb.toString();
-    }
 
-    private String dashedAsciiLine(int width) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < width; i++) {
-            sb.append(i % 2 == 0 ? "-" : " ");
-        }
-        return sb.toString();
-    }
+
+
 
     private String rankLabel(int rank) {
         String label = rank + "°";
@@ -882,21 +1071,18 @@ public class Renderer {
 
         return switch (state) {
             case "LobbyState" -> {
-                boolean canSetPlayers = model.getMyNickname() != null
-                        && !model.getLobbyPlayers().isEmpty()
-                        && model.getMyNickname().equals(model.getLobbyPlayers().get(0));
+                int cur = model.getLobbyPlayers().size();
+                int exp = model.getExpectedPlayers();
 
-                if (canSetPlayers) {
-                    yield List.of(
-                            new String[]{"ready / unready", "conferma o annulla la tua presenza"},
-                            new String[]{"players <2-5>", "scegli o modifica il numero di giocatori"},
-                            new String[]{"quit", "esci dalla lobby"}
-                    );
+                boolean playersCountChosen = exp >= 2;
+                boolean lobbyFull = playersCountChosen && cur >= exp;
+
+                if (!lobbyFull) {
+                    yield List.of();
                 }
 
                 yield List.of(
                         new String[]{"ready / unready", "conferma o annulla la tua presenza"},
-                        new String[]{"attendi", "il capo lobby sceglie il numero"},
                         new String[]{"quit", "esci dalla lobby"}
                 );
             }
@@ -998,6 +1184,108 @@ public class Renderer {
             case WHITE  -> WHT + BOLD + "WHITE" + RST;
         };
     }
+
+    private String makeAsciiCardTopBorder(String idStr, int cardW, String color) {
+        String label = " " + idStr + " ";
+        int dashTotal = Math.max(0, cardW - visualWidth(label));
+        int left = dashTotal / 2;
+        int right = dashTotal - left;
+
+        return color + "+" + "-".repeat(left) + label + "-".repeat(right) + "+" + RST;
+    }
+
+    private String centerVisual(String text, int targetW) {
+        if (text == null) text = "";
+
+        int textW = visualWidth(text);
+        if (textW > targetW) {
+            return centerStr(stripAnsi(text), targetW);
+        }
+
+        int pad = targetW - textW;
+        return " ".repeat(pad / 2) + text + " ".repeat(pad - pad / 2);
+    }
+
+    private int visualWidth(String text) {
+        if (text == null) return 0;
+
+        String clean = stripAnsi(text);
+        int width = 0;
+
+        for (int i = 0; i < clean.length(); ) {
+            int cp = clean.codePointAt(i);
+            int charCount = Character.charCount(cp);
+
+            if (isKeycapEmoji(clean, i)) {
+                width += 2;
+                i += charCount;
+
+                if (i < clean.length() && clean.codePointAt(i) == 0xFE0F) {
+                    i += Character.charCount(clean.codePointAt(i));
+                }
+                if (i < clean.length() && clean.codePointAt(i) == 0x20E3) {
+                    i += Character.charCount(clean.codePointAt(i));
+                }
+                continue;
+            }
+
+            if (cp == 0xFE0F || cp == 0x20E3 || Character.getType(cp) == Character.NON_SPACING_MARK) {
+                i += charCount;
+                continue;
+            }
+
+            width += isWideEmoji(cp) ? 2 : 1;
+            i += charCount;
+        }
+
+        return width;
+    }
+
+    private boolean isKeycapEmoji(String text, int index) {
+        int cp = text.codePointAt(index);
+        if (!Character.isDigit(cp)) return false;
+
+        int next = index + Character.charCount(cp);
+        if (next < text.length() && text.codePointAt(next) == 0xFE0F) {
+            next += Character.charCount(text.codePointAt(next));
+        }
+
+        return next < text.length() && text.codePointAt(next) == 0x20E3;
+    }
+
+    private boolean isWideEmoji(int cp) {
+        return (cp >= 0x1F300 && cp <= 0x1FAFF)
+                || (cp >= 0x2600 && cp <= 0x27BF);
+    }
+
+    private String stripAnsi(String text) {
+        return text.replaceAll("\\u001B\\[[;\\d]*m", "");
+    }
+
+    private String builderMiniBoxTop() {
+        return characterLine("+" + "-".repeat(10) + "+");
+    }
+
+    private String builderMiniBoxBottom() {
+        return characterLine("+" + "-".repeat(10) + "+");
+    }
+
+    private String builderMiniBoxText(String text) {
+        return characterLine("|" + centerVisual(text, 10) + "|");
+    }
+
+    private String inventorNumber(String detail) {
+        if (detail == null || detail.isBlank()) return "";
+        return detail.replace("[", "").replace("]", "");
+    }
+
+
+
+
+
+
+
+
 
 
 

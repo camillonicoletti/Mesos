@@ -4,6 +4,7 @@ it/polimi/ingsw/model/card/CavePaintingsEventCard.class
 it/polimi/ingsw/view/tui/Renderer$2.class
 it/polimi/ingsw/model/card/effect/Effect.class
 it/polimi/ingsw/model/board/Board.class
+it/polimi/ingsw/network/rmi/RemoteClient.class
 it/polimi/ingsw/model/card/HuntEventCard.class
 it/polimi/ingsw/model/Game.class
 it/polimi/ingsw/model/card/SustenanceEventCard.class
@@ -13,6 +14,7 @@ it/polimi/ingsw/network/protocol/serverbound/ReadyMessage.class
 it/polimi/ingsw/model/enums/InventorIcons.class
 it/polimi/ingsw/network/transport/TestClient.class
 it/polimi/ingsw/network/server/LobbyManager.class
+it/polimi/ingsw/network/client/RMIClientApp.class
 it/polimi/ingsw/network/transport/ClientSideConnection.class
 it/polimi/ingsw/network/client/PlayerView.class
 it/polimi/ingsw/model/card/ShamanCard.class
@@ -21,14 +23,18 @@ it/polimi/ingsw/view/tui/CommandParser.class
 it/polimi/ingsw/network/protocol/serverbound/PongMessage.class
 it/polimi/ingsw/controller/state/TotemPlacementState.class
 it/polimi/ingsw/model/card/CardFactory$1.class
+it/polimi/ingsw/controller/state/ActionResolutionState$OrderedPlayer.class
 it/polimi/ingsw/network/client/ClientModel$Listener.class
 it/polimi/ingsw/controller/action/GameAction.class
 it/polimi/ingsw/model/card/effect/EndPPEffect.class
 it/polimi/ingsw/controller/state/EventResolutionState.class
+it/polimi/ingsw/network/rmi/RMIClientCallback.class
 it/polimi/ingsw/model/card/effect/FullSetFoodEffect.class
 it/polimi/ingsw/controller/state/AbstractGameState.class
+it/polimi/ingsw/controller/state/ActionResolutionState$ExtraPick.class
 it/polimi/ingsw/model/card/ArtistCard.class
 it/polimi/ingsw/model/board/BoardFactory.class
+it/polimi/ingsw/network/rmi/RMIServerConnection.class
 it/polimi/ingsw/model/board/TurnSlotEffect.class
 it/polimi/ingsw/model/card/BuildingCard.class
 it/polimi/ingsw/model/board/PayFoodSlotEffect.class
@@ -42,6 +48,7 @@ it/polimi/ingsw/controller/state/ActionResolutionState.class
 it/polimi/ingsw/model/board/ActionSlot.class
 it/polimi/ingsw/network/protocol/clientbound/RoundEndedMessage.class
 it/polimi/ingsw/network/transport/TestServer.class
+it/polimi/ingsw/network/rmi/RMIServerMain.class
 it/polimi/ingsw/model/card/effect/SustenanceFoodDiscountEffect.class
 it/polimi/ingsw/model/card/effect/Shaman3ExtraStarsEffect.class
 it/polimi/ingsw/view/View.class
@@ -54,6 +61,7 @@ it/polimi/ingsw/model/card/effect/TotemSlotFoodBonusEffect.class
 it/polimi/ingsw/network/protocol/clientbound/LoginAckMessage.class
 it/polimi/ingsw/controller/action/PickCardAction.class
 it/polimi/ingsw/model/enums/RoundPhase.class
+it/polimi/ingsw/network/rmi/RMIServer.class
 it/polimi/ingsw/controller/action/JoinGameAction.class
 it/polimi/ingsw/network/protocol/clientbound/StateChangedMessage.class
 it/polimi/ingsw/model/board/NoSlotEffect.class
@@ -91,6 +99,7 @@ it/polimi/ingsw/model/Game$1.class
 it/polimi/ingsw/model/card/CardFactory.class
 it/polimi/ingsw/view/tui/Renderer$1.class
 it/polimi/ingsw/model/card/effect/ShamanicRitualImmunityEffect.class
+it/polimi/ingsw/controller/Persistence.class
 it/polimi/ingsw/model/Player.class
 it/polimi/ingsw/network/protocol/serverbound/DisconnectMessage.class
 it/polimi/ingsw/network/protocol/clientbound/PlayerDisconnectedMessage.class
@@ -114,11 +123,13 @@ it/polimi/ingsw/network/protocol/clientbound/ServerMessage.class
 it/polimi/ingsw/network/server/MessageDispatcher.class
 it/polimi/ingsw/model/card/effect/ShamanicRitualDoublePPEffect.class
 it/polimi/ingsw/network/transport/SocketClientConnection.class
+it/polimi/ingsw/network/rmi/RMIClientConnection.class
 it/polimi/ingsw/model/card/CharacterCard.class
 it/polimi/ingsw/view/tui/Renderer.class
 it/polimi/ingsw/model/card/Card.class
 it/polimi/ingsw/network/protocol/clientbound/GameStartedMessage.class
 it/polimi/ingsw/view/tui/Tui.class
+it/polimi/ingsw/controller/listener/PersistenceListener.class
 it/polimi/ingsw/controller/state/SuspendedState.class
 it/polimi/ingsw/network/protocol/serverbound/ReconnectMessage.class
 it/polimi/ingsw/network/server/VirtualView.class
@@ -128,6 +139,7 @@ it/polimi/ingsw/model/card/effect/ExtraCardUpperRowEffect.class
 it/polimi/ingsw/view/tui/CardCatalog$CardInfo.class
 it/polimi/ingsw/model/board/OfferTile.class
 it/polimi/ingsw/network/protocol/clientbound/FoodChangedMessage.class
+it/polimi/ingsw/network/rmi/RemoteServer.class
 it/polimi/ingsw/model/board/SlotEffect.class
 it/polimi/ingsw/network/protocol/serverbound/ClientMessage.class
 it/polimi/ingsw/network/server/SnapshotBuilder.class

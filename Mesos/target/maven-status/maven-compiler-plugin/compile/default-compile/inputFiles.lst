@@ -80,6 +80,7 @@
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/network/client/ClientModel.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/network/client/MockClientConnection.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/network/client/PlayerView.java
+/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/network/client/RMIClientApp.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/network/protocol/clientbound/BuildingCardTakenMessage.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/network/protocol/clientbound/CharacterCardTakenMessage.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/network/protocol/clientbound/DummyServerMessage.java
@@ -114,6 +115,13 @@
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/network/protocol/serverbound/ReadyMessage.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/network/protocol/serverbound/ReconnectMessage.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/network/protocol/serverbound/SetPlayersCountMessage.java
+/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/network/rmi/RMIClientCallback.java
+/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/network/rmi/RMIClientConnection.java
+/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/network/rmi/RMIServer.java
+/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/network/rmi/RMIServerConnection.java
+/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/network/rmi/RMIServerMain.java
+/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/network/rmi/RemoteClient.java
+/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/network/rmi/RemoteServer.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/network/server/LobbyManager.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/network/server/MessageDispatcher.java
 /Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/main/java/it/polimi/ingsw/network/server/Server.java
