@@ -332,6 +332,33 @@ public class GameController implements Serializable {
         return disconnectedPlayers.contains(nickname);
     }
 
+    /**
+     * Marks every known player (both in lobby and in game) as disconnected.
+     * Intended to be called after restoring a controller from persistence:
+     * the on-disk state reflects the situation before the crash, but all
+     * actual network connections have been lost and need to be re-established
+     * via the standard reconnect flow.
+     *
+     * <p>After this call, suspension status is recomputed: if a game is in
+     * progress, the controller will enter SuspendedState until at least one
+     * player reconnects.
+     */
+    public void markAllPlayersDisconnected() {
+        for (Player player : lobbyPlayers) {
+            disconnectedPlayers.add(player.getNickname());
+        }
+        if (game != null) {
+            for (Player player : game.getPlayers()) {
+                disconnectedPlayers.add(player.getNickname());
+            }
+        }
+        updateSuspensionStatus();
+        if (suspended && !(currentState instanceof SuspendedState)) {
+            enterSuspendedState();
+            notifyListeners(GameListener::onGameSuspended);
+        }
+    }
+
     public int getConnectedGamePlayersCount() {
         if (game == null) {
             return 0;

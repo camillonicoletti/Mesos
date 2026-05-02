@@ -1,5 +1,6 @@
 package it.polimi.ingsw.network.server;
 
+import it.polimi.ingsw.controller.listener.PersistenceListener;
 import it.polimi.ingsw.controller.GameController;
 import it.polimi.ingsw.controller.action.JoinGameAction;
 import it.polimi.ingsw.controller.action.ReadyAction;
@@ -26,10 +27,39 @@ import java.util.Map;
 
 public class LobbyManager {
 
-    private final GameController gameController = new GameController();
+    private final GameController gameController;
     private final Map<String, ServerSideConnection> connections = new HashMap<>();
     private final Map<String, VirtualView> views = new HashMap<>();
     private final List<ServerSideConnection> pendingConnections = new ArrayList<>();
+    /**
+     * Creates a fresh lobby manager with a brand-new controller.
+     * Used on a clean server start with no save file on disk.
+     */
+    public LobbyManager() {
+        this(new GameController());
+    }
+
+    /**
+     * Creates a lobby manager around an existing controller, typically one
+     * restored from disk after a server crash.
+     *
+     * <p>If the restored controller has a game in progress, every player is
+     * marked as disconnected so the controller can suspend the match until the
+     * clients reconnect. A {@link PersistenceListener} is attached to keep the
+     * save file aligned with future events.
+     *
+     * @param preloaded the controller to use as backing state; must not be null
+     */
+    public LobbyManager(GameController preloaded) {
+        if (preloaded == null) {
+            throw new IllegalArgumentException("Controller cannot be null");
+        }
+        this.gameController = preloaded;
+        if (this.gameController.getGame() != null) {
+            this.gameController.markAllPlayersDisconnected();
+        }
+        this.gameController.addListener(new PersistenceListener(this.gameController));
+    }
 
 
     public synchronized void handleLogin(ServerSideConnection connection, LoginMessage message) {

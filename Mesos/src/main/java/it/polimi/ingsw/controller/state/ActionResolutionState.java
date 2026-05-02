@@ -16,14 +16,48 @@ import it.polimi.ingsw.model.card.BuildingCard;
 import it.polimi.ingsw.model.card.CharacterCard;
 import it.polimi.ingsw.model.card.effect.ExtraCardUpperRowEffect;
 
-import java.util.*;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 
 public class ActionResolutionState extends AbstractGameState {
 
     private static final long serialVersionUID = 1L;
 
+    /** Serializable replacement for Map.Entry<Player, OfferTile>. */
+    private static final class OrderedPlayer implements Serializable {
+        private static final long serialVersionUID = 1L;
+        private final Player player;
+        private final OfferTile tile;
+
+        OrderedPlayer(Player player, OfferTile tile) {
+            this.player = player;
+            this.tile = tile;
+        }
+
+        Player getPlayer() { return player; }
+        OfferTile getTile() { return tile; }
+    }
+
+    /** Serializable replacement for Map.Entry<Player, Integer>. */
+    private static final class ExtraPick implements Serializable {
+        private static final long serialVersionUID = 1L;
+        private final Player player;
+        private final int picks;
+
+        ExtraPick(Player player, int picks) {
+            this.player = player;
+            this.picks = picks;
+        }
+
+        Player getPlayer() { return player; }
+        int getPicks() { return picks; }
+    }
+
     // giocatori ordinati per lettera tile (A < B < C)
-    private List<Map.Entry<Player, OfferTile>> orderedPlayers;
+    private List<OrderedPlayer> orderedPlayers;
     private int currentIndex;
 
     // quante carte può ancora prendere il giocatore corrente
@@ -31,7 +65,7 @@ public class ActionResolutionState extends AbstractGameState {
     private int remainingLowerPicks;
 
     // fase extra pick
-    private List<Map.Entry<Player, Integer>> extraPickQueue;
+    private List<ExtraPick> extraPickQueue;
     private int extraPickIndex;
     private int remainingExtraPicks;
 
@@ -40,8 +74,11 @@ public class ActionResolutionState extends AbstractGameState {
         Round round = ctx.getGame().getCurrentRound();
         Map<Player, OfferTile> playerChoices = round.getPlayerChoices();
 
-        orderedPlayers = new ArrayList<>(playerChoices.entrySet());
-        orderedPlayers.sort(Comparator.comparingInt(e -> (int) e.getValue().getLetter()));
+        orderedPlayers = new ArrayList<>();
+        for (Map.Entry<Player, OfferTile> entry : playerChoices.entrySet()) {
+            orderedPlayers.add(new OrderedPlayer(entry.getKey(), entry.getValue()));
+        }
+        orderedPlayers.sort(Comparator.comparingInt(op -> (int) op.getTile().getLetter()));
 
         currentIndex = 0;
         extraPickQueue = null;
@@ -54,8 +91,8 @@ public class ActionResolutionState extends AbstractGameState {
             return;
         }
 
-        Player player = orderedPlayers.get(currentIndex).getKey();
-        OfferTile tile = orderedPlayers.get(currentIndex).getValue();
+        Player player = orderedPlayers.get(currentIndex).getPlayer();
+        OfferTile tile = orderedPlayers.get(currentIndex).getTile();
         Round round = ctx.getGame().getCurrentRound();
 
         if (ctx.isPlayerDisconnected(player.getNickname())) {
@@ -99,7 +136,7 @@ public class ActionResolutionState extends AbstractGameState {
             for (BuildingCard b : p.getTribe().getBuildingCards()) {
                 if (b.getEffect() instanceof ExtraCardUpperRowEffect) count++;
             }
-            if (count > 0) extraPickQueue.add(Map.entry(p, count));
+            if (count > 0) extraPickQueue.add(new ExtraPick(p, count));
         }
         extraPickIndex = 0;
         prepareExtraPickPlayer(ctx);
@@ -111,7 +148,7 @@ public class ActionResolutionState extends AbstractGameState {
             return;
         }
 
-        Player player = extraPickQueue.get(extraPickIndex).getKey();
+        Player player = extraPickQueue.get(extraPickIndex).getPlayer();
 
         if (ctx.isPlayerDisconnected(player.getNickname())) {
             extraPickIndex++;
@@ -119,7 +156,7 @@ public class ActionResolutionState extends AbstractGameState {
             return;
         }
 
-        remainingExtraPicks = extraPickQueue.get(extraPickIndex).getValue();
+        remainingExtraPicks = extraPickQueue.get(extraPickIndex).getPicks();
         int picks = remainingExtraPicks;
         ctx.notifyListeners(l -> l.onExtraCardPickAvailable(player.getNickname(), picks));
     }
@@ -146,7 +183,7 @@ public class ActionResolutionState extends AbstractGameState {
     private void handleRegularPickAction(GameController ctx, String playerNickname, GameAction action) {
         if (currentIndex >= orderedPlayers.size()) return;
 
-        Player currentPlayer = orderedPlayers.get(currentIndex).getKey();
+        Player currentPlayer = orderedPlayers.get(currentIndex).getPlayer();
         Game game = ctx.getGame();
         Round round = game.getCurrentRound();
 
@@ -227,7 +264,7 @@ public class ActionResolutionState extends AbstractGameState {
     }
 
     private void handleExtraPickAction(GameController ctx, String playerNickname, GameAction action) {
-        Player currentPlayer = extraPickQueue.get(extraPickIndex).getKey();
+        Player currentPlayer = extraPickQueue.get(extraPickIndex).getPlayer();
         Game game = ctx.getGame();
         Round round = game.getCurrentRound();
 
@@ -284,16 +321,17 @@ public class ActionResolutionState extends AbstractGameState {
 
         if (isInExtraPickPhase()) {
             if (extraPickIndex < extraPickQueue.size()
-                    && extraPickQueue.get(extraPickIndex).getKey().getNickname().equals(playerNickname)
+                    && extraPickQueue.get(extraPickIndex).getPlayer().getNickname().equals(playerNickname)
                     && ctx.canContinueAfterDisconnection()) {
                 extraPickIndex++;
                 prepareExtraPickPlayer(ctx);
             }
         } else {
             if (currentIndex < orderedPlayers.size()
-                    && orderedPlayers.get(currentIndex).getKey().getNickname().equals(playerNickname)
+                    && orderedPlayers.get(currentIndex).getPlayer().getNickname().equals(playerNickname)
                     && ctx.canContinueAfterDisconnection()) {
-                ctx.getGame().getCurrentRound().placeTotemOrderForPlayer(orderedPlayers.get(currentIndex).getKey());
+                ctx.getGame().getCurrentRound().placeTotemOrderForPlayer(
+                        orderedPlayers.get(currentIndex).getPlayer());
                 currentIndex++;
                 prepareCurrentPlayer(ctx);
             }
