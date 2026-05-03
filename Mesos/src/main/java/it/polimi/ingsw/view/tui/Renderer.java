@@ -218,7 +218,11 @@ public class Renderer {
                     + (miss == 1 ? " giocatore..." : " giocatori...") + RST);
 
             if (iAmFirst) {
-                row("  " + GRY + "Sei il capo lobby: puoi modificare il numero quando richiesto." + RST);
+                if (model.isPromotedToLobbyLeader()) {
+                    row("  " + YLW + "Sei il nuovo capo lobby: puoi modificare il numero giocatori della partita." + RST);
+                } else {
+                    row("  " + GRY + "Sei il capo lobby: puoi modificare il numero giocatori della partita." + RST);
+                }
             }
         } else {
             row("  " + GRY + "Lobby completa — attendo il passaggio al ready check..." + RST);
@@ -1071,27 +1075,53 @@ public class Renderer {
 
         return switch (state) {
             case "LobbyState" -> {
-                int cur = model.getLobbyPlayers().size();
                 int exp = model.getExpectedPlayers();
-
                 boolean playersCountChosen = exp >= 2;
-                boolean lobbyFull = playersCountChosen && cur >= exp;
 
-                if (!lobbyFull) {
+                if (!playersCountChosen) {
                     yield List.of();
                 }
 
+                boolean iAmFirst = model.getMyNickname() != null
+                        && !model.getLobbyPlayers().isEmpty()
+                        && model.getMyNickname().equals(model.getLobbyPlayers().get(0));
+
+                if (iAmFirst) {
+                    yield List.of(
+                            new String[]{"ready", "conferma la tua presenza"},
+                            new String[]{"unready", "annulla la conferma"},
+                            new String[]{"players <2-5>", "modifica il numero giocatori della partita"},
+                            new String[]{"quit", "esci dalla lobby"}
+                    );
+                }
+
                 yield List.of(
-                        new String[]{"ready / unready", "conferma o annulla la tua presenza"},
+                        new String[]{"ready", "conferma la tua presenza"},
+                        new String[]{"unready", "annulla la conferma"},
                         new String[]{"quit", "esci dalla lobby"}
                 );
             }
 
-            case "ReadyCheckState" -> List.of(
-                    new String[]{"ready", "conferma la tua presenza"},
-                    new String[]{"unready", "annulla la conferma"},
-                    new String[]{"quit", "esci dalla partita"}
-            );
+            case "ReadyCheckState" -> {
+                boolean iAmFirst = model.getMyNickname() != null
+                        && !model.getLobbyPlayers().isEmpty()
+                        && model.getMyNickname().equals(model.getLobbyPlayers().get(0));
+
+                if (iAmFirst) {
+                    yield List.of(
+                            new String[]{"ready", "conferma la tua presenza"},
+                            new String[]{"unready", "annulla la conferma"},
+                            new String[]{"players <2-5>", "modifica il numero giocatori della partita"},
+                            new String[]{"quit", "esci dalla partita"}
+                    );
+                }
+
+                yield List.of(
+                        new String[]{"ready", "conferma la tua presenza"},
+                        new String[]{"unready", "annulla la conferma"},
+                        new String[]{"quit", "esci dalla partita"}
+                );
+            }
 
             case "StartGameState", "TotemPlacementState" -> List.of(
                     new String[]{"place <tile>", "piazza il totem su una tile, es. place B"},

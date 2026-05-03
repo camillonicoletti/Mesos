@@ -17,6 +17,7 @@ public class ClientModel {
     private String lastDisconnectedPlayer;
     private String lastConnectionEvent;
     private Map<String, TotemColor> lobbyPlayerColors = new LinkedHashMap<>();
+    private boolean promotedToLobbyLeader;
 
 
     private boolean loginSuccess;
@@ -62,6 +63,9 @@ public class ClientModel {
     }
 
     public void applyLobbyUpdate(LobbyUpdateMessage m) {
+        String previousLeader = lobbyPlayers.isEmpty() ? null : lobbyPlayers.get(0);
+        boolean wasInLobby = myNickname != null && lobbyPlayers.contains(myNickname);
+
         lobbyPlayers = new ArrayList<>();
         readyPlayers = new ArrayList<>();
         lobbyPlayerColors = new LinkedHashMap<>();
@@ -76,6 +80,19 @@ public class ClientModel {
         }
 
         expectedPlayers = m.getExpectedPlayers();
+
+        boolean iAmCurrentLeader = myNickname != null
+                && !lobbyPlayers.isEmpty()
+                && myNickname.equals(lobbyPlayers.get(0));
+        if (iAmCurrentLeader
+                && wasInLobby
+                && previousLeader != null
+                && !previousLeader.equals(myNickname)) {
+            promotedToLobbyLeader = true;
+        } else if (!iAmCurrentLeader) {
+            promotedToLobbyLeader = false;
+        }
+
         notifyChanged();
     }
 
@@ -225,6 +242,7 @@ public class ClientModel {
     public String getMyNickname()                  { return myNickname; }
     public List<String> getLobbyPlayers()          { return Collections.unmodifiableList(lobbyPlayers); }
     public List<String> getReadyPlayers()          { return Collections.unmodifiableList(readyPlayers); }
+    public boolean isPromotedToLobbyLeader()       { return promotedToLobbyLeader; }
     public int getExpectedPlayers()                { return expectedPlayers; }
     public String getGameState()                   { return gameState; }
     public Era getCurrentEra()                     { return currentEra; }

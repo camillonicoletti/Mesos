@@ -139,8 +139,13 @@ public class LobbyManager {
 
     public synchronized void handleSetPlayersCount(String nickname, SetPlayersCountMessage message) {
         try {
+            boolean gameWasNotStarted = gameController.getGame() == null;
             gameController.onMessageReceived(nickname, new SetPlayerCountAction(message.getCount()));
-            broadcastLobbyUpdate();
+            if (gameWasNotStarted && gameController.getGame() != null) {
+                broadcastGameStarted();
+            } else {
+                broadcastLobbyUpdate();
+            }
         } catch (Exception exception) {
             ServerSideConnection connection = connections.get(nickname);
             if (connection != null) {
@@ -204,8 +209,12 @@ public class LobbyManager {
 
     private void broadcastGameStarted() {
         GameStartedMessage message = new GameStartedMessage(SnapshotBuilder.build(gameController));
+        StateChangedMessage stateMessage = new StateChangedMessage(
+                gameController.getCurrentState().getClass().getSimpleName()
+        );
         for (ServerSideConnection connection : connections.values()) {
             connection.send(message);
+            connection.send(stateMessage);
         }
     }
 

@@ -286,8 +286,6 @@ public class GameController implements Serializable {
             throw new IllegalArgumentException("Nickname cannot be null or blank");
         }
 
-        boolean removedFirstPlayer = !lobbyPlayers.isEmpty()
-                && lobbyPlayers.get(0).getNickname().equals(nickname);
         boolean removed = lobbyPlayers.removeIf(player -> player.getNickname().equals(nickname));
         if (!removed) {
             throw new IllegalArgumentException("Player is not in the lobby");
@@ -299,8 +297,6 @@ public class GameController implements Serializable {
         if (lobbyPlayers.isEmpty()) {
             chosenPlayersCount = -1;
             readyPlayers.clear();
-        } else if (removedFirstPlayer) {
-            chosenPlayersCount = -1;
         }
     }
 

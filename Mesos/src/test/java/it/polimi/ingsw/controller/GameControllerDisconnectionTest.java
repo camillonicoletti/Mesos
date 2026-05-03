@@ -40,7 +40,7 @@ public class GameControllerDisconnectionTest {
     }
 
     @Test
-    void firstPlayerDisconnectionResetsChosenPlayersCount() {
+    void firstPlayerDisconnectionKeepsChosenPlayersCountAndPromotesNextPlayer() {
         GameController controller = new GameController();
 
         controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
@@ -49,9 +49,11 @@ public class GameControllerDisconnectionTest {
 
         controller.onPlayerDisconnection("Alice");
 
-        assertFalse(controller.hasChosenPlayersCount());
+        assertTrue(controller.hasChosenPlayersCount());
+        assertEquals(2, controller.getChosenPlayersCount());
         assertEquals(1, controller.getLobbyPlayers().size());
         assertEquals("Bob", controller.getLobbyPlayers().get(0).getNickname());
+        assertTrue(controller.isFirstPlayer("Bob"));
         assertInstanceOf(LobbyState.class, controller.getCurrentState());
     }
 
@@ -77,6 +79,30 @@ public class GameControllerDisconnectionTest {
 
         assertNull(controller.getGame());
         assertInstanceOf(LobbyState.class, controller.getCurrentState());
+    }
+
+    @Test
+    void reducingPlayerCountToReadyPlayersAfterDisconnectStartsGame() {
+        GameController controller = new GameController();
+
+        controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
+        controller.onMessageReceived("Bob", new JoinGameAction(createTotem(TotemColor.BLUE)));
+        controller.onMessageReceived("Charlie", new JoinGameAction(createTotem(TotemColor.PURPLE)));
+        controller.onMessageReceived("Alice", new SetPlayerCountAction(3));
+
+        controller.onMessageReceived("Alice", new ReadyAction(true));
+        controller.onMessageReceived("Bob", new ReadyAction(true));
+        controller.onPlayerDisconnection("Charlie");
+
+        assertInstanceOf(LobbyState.class, controller.getCurrentState());
+        assertEquals(3, controller.getChosenPlayersCount());
+        assertTrue(controller.isPlayerReady("Alice"));
+        assertTrue(controller.isPlayerReady("Bob"));
+
+        controller.onMessageReceived("Alice", new SetPlayerCountAction(2));
+
+        assertNotNull(controller.getGame());
+        assertInstanceOf(TotemPlacementState.class, controller.getCurrentState());
     }
 
     @Test

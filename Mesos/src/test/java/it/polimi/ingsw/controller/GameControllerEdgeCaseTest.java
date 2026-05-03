@@ -36,17 +36,15 @@ public class GameControllerEdgeCaseTest {
     }
 
     @Test
-    void playerCountCannotBeChangedAfterItHasAlreadyBeenChosen() {
+    void firstPlayerCanChangePlayerCountAfterItHasAlreadyBeenChosen() {
         GameController controller = new GameController();
 
         controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
         controller.onMessageReceived("Alice", new SetPlayerCountAction(3));
 
-        assertThrows(IllegalStateException.class, () ->
-                controller.onMessageReceived("Alice", new SetPlayerCountAction(4))
-        );
+        controller.onMessageReceived("Alice", new SetPlayerCountAction(4));
 
-        assertEquals(3, controller.getChosenPlayersCount());
+        assertEquals(4, controller.getChosenPlayersCount());
         assertInstanceOf(LobbyState.class, controller.getCurrentState());
     }
 
@@ -174,12 +172,13 @@ public class GameControllerEdgeCaseTest {
     }
 
     @Test
-    void readyCheckRejectsSetPlayerCountAndTotemPlacementActions() {
+    void readyCheckAllowsFirstPlayerToIncreasePlayerCountAndRejectsTotemPlacementActions() {
         GameController controller = createReadyCheckController();
 
-        assertThrows(IllegalStateException.class, () ->
-                controller.onMessageReceived("Alice", new SetPlayerCountAction(2))
-        );
+        controller.onMessageReceived("Alice", new SetPlayerCountAction(3));
+
+        assertEquals(3, controller.getChosenPlayersCount());
+        assertInstanceOf(LobbyState.class, controller.getCurrentState());
 
         assertThrows(IllegalStateException.class, () ->
                 controller.onMessageReceived("Alice", new PlaceTotemAction('A'))

@@ -3,6 +3,7 @@ package it.polimi.ingsw.controller.state;
 import it.polimi.ingsw.controller.GameController;
 import it.polimi.ingsw.controller.action.GameAction;
 import it.polimi.ingsw.controller.action.ReadyAction;
+import it.polimi.ingsw.controller.action.SetPlayerCountAction;
 
 public class ReadyCheckState extends AbstractGameState {
 
@@ -26,6 +27,11 @@ public class ReadyCheckState extends AbstractGameState {
     public void handleAction(GameController ctx, String playerNickname, GameAction action) {
         if (action instanceof ReadyAction readyAction) {
             handleReadyAction(ctx, playerNickname, readyAction);
+            return;
+        }
+
+        if (action instanceof SetPlayerCountAction setPlayersCountAction) {
+            handleSetPlayersCount(ctx, playerNickname, setPlayersCountAction);
             return;
         }
 
@@ -59,6 +65,24 @@ public class ReadyCheckState extends AbstractGameState {
 
         if (ctx.areAllPlayersReady()) {
             ctx.changeState(new StartGameState());
+        }
+    }
+
+    private void handleSetPlayersCount(GameController ctx,
+                                       String playerNickname,
+                                       SetPlayerCountAction action) {
+        if (!ctx.isFirstPlayer(playerNickname)) {
+            throw new IllegalStateException(
+                    "Only the first player can choose the number of players"
+            );
+        }
+
+        ctx.setChosenPlayersCount(action.getPlayersCount());
+        ctx.resetReadyPlayers();
+        ctx.notifyListeners(l -> l.onPlayersCountSet(action.getPlayersCount()));
+
+        if (!ctx.isLobbyFull()) {
+            ctx.changeState(new LobbyState());
         }
     }
 }

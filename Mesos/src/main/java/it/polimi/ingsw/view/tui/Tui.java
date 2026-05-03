@@ -189,14 +189,17 @@ public class Tui implements View {
                     handlePlayersCommand(line);
                 }
             } else if (line.equalsIgnoreCase("help")) {
-                System.out.println("Comandi disponibili in lobby: ready, unready, quit");
                 if (isFirstPlayer()) {
-                    System.out.println("Essendo il primo giocatore puoi anche usare: players <2-5>");
+                    System.out.println("Comandi disponibili in lobby: ready, unready, players <2-5>, quit");
+                } else {
+                    System.out.println("Comandi disponibili in lobby: ready, unready, quit");
                 }
             } else {
-                System.out.println("In lobby puoi usare: ready, unready, quit");
                 if (isFirstPlayer()) {
-                    System.out.println("Sei il primo giocatore: usa players <2-5> per scegliere il numero di partecipanti.");
+                    System.out.println("In lobby puoi usare: ready, unready, players <2-5>, quit");
+                    System.out.println("Sei il capo lobby: usa players <2-5> per modificare il numero giocatori della partita.");
+                } else {
+                    System.out.println("In lobby puoi usare: ready, unready, quit");
                 }
             }
 
@@ -228,29 +231,30 @@ public class Tui implements View {
     // ── Ready ────────────────────────────────────────────────────────────────
 
     private void readyLoop() {
-        boolean localReady = model.getReadyPlayers().contains(model.getMyNickname());
-
         while (model.isConnected() && !isGameStarted()) {
-            if (!localReady) {
-                String line = readLineWithPrompt("> ").trim();
+            String line = readLineWithPrompt("> ").trim();
+            if (line.isBlank()) {
+                continue;
+            }
 
-                if (line.equalsIgnoreCase("ready")) {
-                    controller.send(new ReadyMessage(true));
-                    localReady = true;
-                    System.out.println("Hai confermato! In attesa degli altri giocatori...");
-                } else if (line.equalsIgnoreCase("quit")) {
-                    controller.disconnect();
-                    return;
-                } else if (line.equalsIgnoreCase("unready")) {
-                    System.out.println("Non hai ancora confermato.");
+            if (line.equalsIgnoreCase("ready")) {
+                controller.send(new ReadyMessage(true));
+                System.out.println("Hai confermato! In attesa degli altri giocatori...");
+            } else if (line.equalsIgnoreCase("quit")) {
+                controller.disconnect();
+                return;
+            } else if (line.equalsIgnoreCase("unready")) {
+                controller.send(new ReadyMessage(false));
+            } else if (line.toLowerCase().startsWith("players")) {
+                if (!isFirstPlayer()) {
+                    System.out.println("[ERRORE] Solo il primo giocatore puo scegliere il numero di partecipanti.");
                 } else {
-                    System.out.println("Comando non valido. Digita ready oppure quit.");
-                }
+                    handlePlayersCommand(line);
+                }   
             } else {
-                synchronized (modelLock) {
-                    try { modelLock.wait(1_000); }
-                    catch (InterruptedException e) { Thread.currentThread().interrupt(); return; }
-                }
+                System.out.println("Comando non valido. Digita ready, unready"
+                        + (isFirstPlayer() ? ", players <2-5>" : "")
+                        + " oppure quit.");
             }
         }
     }
