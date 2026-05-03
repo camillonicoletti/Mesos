@@ -2,6 +2,7 @@ package it.polimi.ingsw.controller.listener;
 
 import it.polimi.ingsw.controller.GameController;
 import it.polimi.ingsw.controller.Persistence;
+import it.polimi.ingsw.controller.state.EndGameState;
 import it.polimi.ingsw.controller.state.GameState;
 import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.enums.Era;
@@ -51,6 +52,9 @@ public class PersistenceListener implements GameListener {
 
     @Override
     public void onStateChanged(GameState newState) {
+        if (newState instanceof EndGameState) {
+            return;  // skip: clear() already called by onGameEnded
+        }
         persist();
     }
 

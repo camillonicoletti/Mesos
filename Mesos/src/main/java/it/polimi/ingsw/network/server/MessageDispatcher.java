@@ -22,7 +22,7 @@ public class MessageDispatcher {
             } else if (msg instanceof ReadyMessage m) {
                 lobby.handleReady(conn.getNickname(), m.isReady());
             } else if (msg instanceof GameActionMessage m) {
-                lobby.getGameController().onMessageReceived(conn.getNickname(), m.getAction());
+                lobby.handleGameAction(conn.getNickname(), m.getAction());
             } else if (msg instanceof PongMessage) {
                 // heartbeat
             } else if (msg instanceof DisconnectMessage) {

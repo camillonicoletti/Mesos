@@ -1,5 +1,6 @@
 package it.polimi.ingsw.network.server;
 
+import it.polimi.ingsw.controller.action.GameAction;
 import it.polimi.ingsw.controller.listener.PersistenceListener;
 import it.polimi.ingsw.controller.GameController;
 import it.polimi.ingsw.controller.action.JoinGameAction;
@@ -61,6 +62,16 @@ public class LobbyManager {
         this.gameController.addListener(new PersistenceListener(this.gameController));
     }
 
+    public synchronized void handleGameAction(String nickname, GameAction action) {
+        try {
+            gameController.onMessageReceived(nickname, action);
+        } catch (Exception exception) {
+            ServerSideConnection connection = connections.get(nickname);
+            if (connection != null) {
+                connection.send(new ErrorMessage(exception.getMessage()));
+            }
+        }
+    }
 
     public synchronized void handleLogin(ServerSideConnection connection, LoginMessage message) {
         String nickname = message.getNickname();
@@ -119,21 +130,27 @@ public class LobbyManager {
             return;
         }
 
-        registerConnection(nickname, connection);
+        // 1. Send the ack and the baseline snapshot BEFORE wiring any listener,
+        //    so the client always renders state in this order:
+        //       ack -> snapshot -> live events.
         connection.send(new LoginAckMessage(LoginAckMessage.Outcome.RECONNECT_OK, null));
+        connection.send(new GameSyncMessage(SnapshotBuilder.build(gameController)));
+        connection.send(new StateChangedMessage(gameController.getCurrentState().getClass().getSimpleName()));
+        if (gameController.isSuspended()) {
+            connection.send(new GameSuspendedMessage());
+        }
 
+        // 2. Now register the connection + VirtualView so future events flow.
+        registerConnection(nickname, connection);
+
+        // 3. Trigger the reconnection in the controller. Any events fired here
+        //    (onPlayerReconnected to others, onGameResumed, onStateChanged)
+        //    arrive at the client AFTER the snapshot above.
         try {
             gameController.onPlayerReconnection(nickname);
         } catch (Exception exception) {
             unregisterConnection(nickname);
             connection.send(new ErrorMessage(exception.getMessage()));
-            return;
-        }
-
-        connection.send(new GameSyncMessage(SnapshotBuilder.build(gameController)));
-        connection.send(new StateChangedMessage(gameController.getCurrentState().getClass().getSimpleName()));
-        if (gameController.isSuspended()) {
-            connection.send(new GameSuspendedMessage());
         }
     }
 
