@@ -89,7 +89,7 @@ public class Tui implements View {
     }
 
     private boolean askReconnect() {
-        String answer = readLineWithPrompt("Vuoi riconnetterti a una partita esistente? [y/N]: ").trim();
+        String answer = readLineWithPrompt("Do you want to reconnect to an existing match? [y/N]: ").trim();
         return answer.equalsIgnoreCase("y") || answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("s");
     }
 
@@ -102,7 +102,7 @@ public class Tui implements View {
             } catch (IllegalArgumentException e) {
                 System.out.println("[ERROR] Invalid color. Choose between: "
                         + java.util.Arrays.toString(TotemColor.values())
-                        + " (oppure 'quit' per annullare).");
+                        + " (or 'quit' to cancel).");
             }
         }
     }
@@ -113,12 +113,12 @@ public class Tui implements View {
     private boolean isFirstPlayer() {
         return model.getMyNickname() != null
                 && !model.getLobbyPlayers().isEmpty()
-                && model.getMyNickname().equals(model.getLobbyPlayers().get(0));
+                && model.getMyNickname().equals(model.getLobbyPlayers().getFirst());
     }
 
     private void askPlayerCount() {
         while (model.getExpectedPlayers() < 2) {
-            String input = readLineWithPrompt("Numero di giocatori (min 2, max 5): ").trim();
+            String input = readLineWithPrompt("Number of players (min 2, max 5): ").trim();
             if (input.equalsIgnoreCase("quit")) {
                 controller.disconnect();
                 return;
@@ -126,16 +126,16 @@ public class Tui implements View {
             try {
                 int n = Integer.parseInt(input);
                 if (n < 2 || n > 5) {
-                    System.out.println("[ERRORE] Il numero deve essere tra 2 e 5.");
+                    System.out.println("[ERROR] Number needs to be between 2 and 5.");
                     continue;
                 }
                 controller.send(new SetPlayersCountMessage(n));
                 waitForModel();
             } catch (NumberFormatException e) {
-                System.out.println("[ERRORE] Inserisci un numero valido.");
+                System.out.println("[ERROR] Insert a valid number.");
             }
         }
-        System.out.println("Perfetto! In attesa degli altri " + (model.getExpectedPlayers() - 1) + " giocatori...");
+        System.out.println("Perfect! Waiting for other " + (model.getExpectedPlayers() - 1) + " players...");
     }
 
 
@@ -189,22 +189,22 @@ public class Tui implements View {
                 controller.send(new ReadyMessage(false));
             } else if (line.toLowerCase().startsWith("players")) {
                 if (!isFirstPlayer()) {
-                    System.out.println("[ERRORE] Solo il primo giocatore puo scegliere il numero di partecipanti.");
+                    System.out.println("[Error] Only the lobby leader can choose the number of participants.");
                 } else {
                     handlePlayersCommand(line);
                 }
             } else if (line.equalsIgnoreCase("help")) {
                 if (isFirstPlayer()) {
-                    System.out.println("Comandi disponibili in lobby: ready, unready, players <2-5>, quit");
+                    System.out.println("Available commands in lobby: ready, unready, players <2-5>, quit");
                 } else {
-                    System.out.println("Comandi disponibili in lobby: ready, unready, quit");
+                    System.out.println("Available commands in lobby: ready, unready, quit");
                 }
             } else {
                 if (isFirstPlayer()) {
-                    System.out.println("In lobby puoi usare: ready, unready, players <2-5>, quit");
-                    System.out.println("Sei il capo lobby: usa players <2-5> per modificare il numero giocatori della partita.");
+                    System.out.println("In lobby you can use: ready, unready, players <2-5>, quit");
+                    System.out.println("You are the lobby leader: use players <2-5> to modify the number of players for the game.");
                 } else {
-                    System.out.println("In lobby puoi usare: ready, unready, quit");
+                    System.out.println("In lobby you can use: ready, unready, quit");
                 }
             }
 
@@ -217,19 +217,19 @@ public class Tui implements View {
     private void handlePlayersCommand(String line) {
         String[] parts = line.trim().split("\\s+");
         if (parts.length < 2) {
-            System.out.println("[ERRORE] Uso corretto: players <2-5>");
+            System.out.println("[ERROR] Correct use: players <2-5>");
             return;
         }
 
         try {
             int count = Integer.parseInt(parts[1]);
             if (count < 2 || count > 5) {
-                System.out.println("[ERRORE] Il numero deve essere tra 2 e 5.");
+                System.out.println("[ERROR] Number should be between 2 and 5.");
                 return;
             }
             controller.send(new SetPlayersCountMessage(count));
         } catch (NumberFormatException exception) {
-            System.out.println("[ERRORE] Uso corretto: players <2-5>");
+            System.out.println("[ERROR] Correct: players <2-5>");
         }
     }
 
@@ -244,7 +244,7 @@ public class Tui implements View {
 
             if (line.equalsIgnoreCase("ready")) {
                 controller.send(new ReadyMessage(true));
-                System.out.println("Hai confermato! In attesa degli altri giocatori...");
+                System.out.println("Ready to go! Waiting for other players...");
             } else if (line.equalsIgnoreCase("quit")) {
                 controller.disconnect();
                 return;
@@ -252,14 +252,14 @@ public class Tui implements View {
                 controller.send(new ReadyMessage(false));
             } else if (line.toLowerCase().startsWith("players")) {
                 if (!isFirstPlayer()) {
-                    System.out.println("[ERRORE] Solo il primo giocatore puo scegliere il numero di partecipanti.");
+                    System.out.println("[ERROR] Only the lobby leader can choose the number of participants.");
                 } else {
                     handlePlayersCommand(line);
                 }   
             } else {
-                System.out.println("Comando non valido. Digita ready, unready"
+                System.out.println("Invalid command. Type ready, unready"
                         + (isFirstPlayer() ? ", players <2-5>" : "")
-                        + " oppure quit.");
+                        + " or quit.");
             }
         }
     }
@@ -287,9 +287,9 @@ public class Tui implements View {
                     && !model.isMyTotemPlacementTurn()) {
                 String currentPlayer = model.getCurrentTotemPlacementPlayer();
                 if (currentPlayer != null) {
-                    System.out.println("[ERRORE] Non è il tuo turno: deve piazzare " + currentPlayer + ".");
+                    System.out.println("[ERROR] It's not your turn: It's" + currentPlayer + "'s turn.");
                 } else {
-                    System.out.println("[ERRORE] Nessun giocatore disponibile per il piazzamento in questo momento.");
+                    System.out.println("[ERRORE] No player available for placing in this moment.");
                 }
                 continue;
             }
@@ -312,10 +312,10 @@ public class Tui implements View {
 
     private void endGame() {
         if (!model.isConnected()) {
-            System.out.println("\nConnessione chiusa.");
+            System.out.println("\nConnection lost.");
             return;
         }
-        System.out.println("\nPartita terminata. Premi INVIO per uscire.");
+        System.out.println("\nGame ended. Press INVIO to quit.");
         readLineWithPrompt("");
         controller.disconnect();
     }
@@ -389,10 +389,10 @@ public class Tui implements View {
     }
 
     private void printHelp() {
-        System.out.println("  place <lettera>        — posiziona il totem");
-        System.out.println("  pick <id> upper|lower  — prendi carta personaggio");
-        System.out.println("  build <id> upper|lower — prendi edificio");
-        System.out.println("  quit                   — disconnettiti");
-        System.out.println("  help                   — questo messaggio");
+        System.out.println("  place <lettera>        — place totem");
+        System.out.println("  pick <id> upper|lower  — take character card");
+        System.out.println("  build <id> upper|lower — take building card");
+        System.out.println("  quit                   — disconnect");
+        System.out.println("  help                   — show available commands");
     }
 }
