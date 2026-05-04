@@ -217,10 +217,6 @@ public class LobbyManager {
         for (ServerSideConnection connection : connections.values()) {
             connection.send(message);
         }
-
-        for (ServerSideConnection connection : pendingConnections) {
-            connection.send(message);
-        }
     }
 
 
@@ -261,7 +257,6 @@ public class LobbyManager {
     }
     public synchronized void registerPendingConnection(ServerSideConnection connection) {
         pendingConnections.add(connection);
-        connection.send(buildLobbyUpdateMessage());
     }
 
     public synchronized void unregisterPendingConnection(ServerSideConnection connection) {

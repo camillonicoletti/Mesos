@@ -20,8 +20,15 @@ public class RMIServer extends UnicastRemoteObject implements RemoteServer {
     private final Map<RemoteClient, RMIServerConnection> connections;
 
     public RMIServer() throws RemoteException {
+        this(new LobbyManager());
+    }
+
+    public RMIServer(LobbyManager lobbyManager) throws RemoteException {
         super();
-        this.lobbyManager = new LobbyManager();
+        if (lobbyManager == null) {
+            throw new IllegalArgumentException("Lobby manager cannot be null");
+        }
+        this.lobbyManager = lobbyManager;
         this.dispatcher = new MessageDispatcher(lobbyManager);
         this.connections = new HashMap<>();
     }

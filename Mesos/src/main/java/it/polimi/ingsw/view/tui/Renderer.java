@@ -927,6 +927,13 @@ public class Renderer {
     }
 
     private String footerPrompt(ClientModel model) {
+        boolean iAmFirst = model.getMyNickname() != null
+                && !model.getLobbyPlayers().isEmpty()
+                && model.getMyNickname().equals(model.getLobbyPlayers().get(0));
+
+        if ("LobbyState".equals(model.getGameState()) && model.getExpectedPlayers() < 2 && iAmFirst) {
+            return "  Numero giocatori (2-5) > ";
+        }
         return "  > ";
     }
 
@@ -1079,7 +1086,23 @@ public class Renderer {
                 boolean playersCountChosen = exp >= 2;
 
                 if (!playersCountChosen) {
-                    yield List.of();
+                    boolean iAmFirst = model.getMyNickname() != null
+                            && !model.getLobbyPlayers().isEmpty()
+                            && model.getMyNickname().equals(model.getLobbyPlayers().get(0));
+
+                    if (iAmFirst) {
+                        yield List.of(
+                                new String[]{"2 / 3 / 4 / 5", "scegli il numero di giocatori"},
+                                new String[]{"players <2-5>", "imposta esplicitamente il numero"},
+                                new String[]{"ready", "prenota il tuo ready"},
+                                new String[]{"quit", "esci dalla lobby"}
+                        );
+                    }
+
+                    yield List.of(
+                            new String[]{"ready", "prenota il tuo ready"},
+                            new String[]{"quit", "esci dalla lobby"}
+                    );
                 }
 
                 boolean iAmFirst = model.getMyNickname() != null

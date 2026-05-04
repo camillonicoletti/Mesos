@@ -49,14 +49,7 @@ public class Tui implements View {
             return;
         }
 
-        if (isInPreGame()) {
-            runPreGameFlow();
-            if (!model.isConnected()) {
-                return;
-            }
-        }
-
-        Thread inputThread = new Thread(this::gameInputLoop);
+        Thread inputThread = new Thread(this::interactiveInputLoop);
         inputThread.setDaemon(true);
         inputThread.start();
 
@@ -70,6 +63,7 @@ public class Tui implements View {
         while (!model.isLoginSuccess() && model.isConnected()) {
             String nickname = readLineWithPrompt("Nickname: ").trim();
             if (nickname.isBlank()) continue;
+            String previousError = model.getLastError();
 
             if (askReconnect()) {
                 controller.send(new ReconnectMessage(nickname));
@@ -78,7 +72,7 @@ public class Tui implements View {
                 if (color == null) continue;
                 controller.send(new LoginMessage(nickname, color));
             }
-            waitForModel();
+            waitForLoginOutcome(previousError);
 
             if (model.isLoginSuccess()) {
                 model.setMyNickname(nickname);
@@ -115,105 +109,6 @@ public class Tui implements View {
                 && !model.getLobbyPlayers().isEmpty()
                 && model.getMyNickname().equals(model.getLobbyPlayers().getFirst());
     }
-
-    private void askPlayerCount() {
-        while (model.getExpectedPlayers() < 2) {
-            String input = readLineWithPrompt("Number of players (min 2, max 5): ").trim();
-            if (input.equalsIgnoreCase("quit")) {
-                controller.disconnect();
-                return;
-            }
-            try {
-                int n = Integer.parseInt(input);
-                if (n < 2 || n > 5) {
-                    System.out.println("[ERROR] Number needs to be between 2 and 5.");
-                    continue;
-                }
-                controller.send(new SetPlayersCountMessage(n));
-                waitForModel();
-            } catch (NumberFormatException e) {
-                System.out.println("[ERROR] Insert a valid number.");
-            }
-        }
-        System.out.println("Perfect! Waiting for other " + (model.getExpectedPlayers() - 1) + " players...");
-    }
-
-
-    private void runPreGameFlow() {
-        waitForLobbyUpdate();
-        while (model.isConnected() && isInPreGame()) {
-            String state = model.getGameState();
-
-            if ("LobbyState".equals(state)) {
-                if (model.getExpectedPlayers() < 2) {
-                    if (isFirstPlayer()) {
-                        askPlayerCount();
-                    } else {
-                        lobbyLoop();
-                    }
-                } else {
-                    lobbyLoop();
-                }
-            } else if ("ReadyCheckState".equals(state)) {
-                readyLoop();
-            } else {
-                waitForModel();
-            }
-        }
-    }
-
-    // ── Attesa lobby piena ───────────────────────────────────────────────────
-
-    private void waitForReadyCheck() {
-        synchronized (modelLock) {
-            while (model.isConnected() && !"ReadyCheckState".equals(model.getGameState())) {
-                try { modelLock.wait(1_000); }
-                catch (InterruptedException e) { Thread.currentThread().interrupt(); return; }
-            }
-        }
-    }
-
-    private void lobbyLoop() {
-        while (model.isConnected() && "LobbyState".equals(model.getGameState())) {
-            String line = readLineWithPrompt("> ").trim();
-            if (line.isBlank()) {
-                continue;
-            }
-
-            if (line.equalsIgnoreCase("quit")) {
-                controller.disconnect();
-                return;
-            } else if (line.equalsIgnoreCase("ready")) {
-                controller.send(new ReadyMessage(true));
-            } else if (line.equalsIgnoreCase("unready")) {
-                controller.send(new ReadyMessage(false));
-            } else if (line.toLowerCase().startsWith("players")) {
-                if (!isFirstPlayer()) {
-                    System.out.println("[Error] Only the lobby leader can choose the number of participants.");
-                } else {
-                    handlePlayersCommand(line);
-                }
-            } else if (line.equalsIgnoreCase("help")) {
-                if (isFirstPlayer()) {
-                    System.out.println("Available commands in lobby: ready, unready, players <2-5>, quit");
-                } else {
-                    System.out.println("Available commands in lobby: ready, unready, quit");
-                }
-            } else {
-                if (isFirstPlayer()) {
-                    System.out.println("In lobby you can use: ready, unready, players <2-5>, quit");
-                    System.out.println("You are the lobby leader: use players <2-5> to modify the number of players for the game.");
-                } else {
-                    System.out.println("In lobby you can use: ready, unready, quit");
-                }
-            }
-
-            if ("LobbyState".equals(model.getGameState())) {
-                waitForModel();
-            }
-        }
-    }
-
     private void handlePlayersCommand(String line) {
         String[] parts = line.trim().split("\\s+");
         if (parts.length < 2) {
@@ -233,47 +128,13 @@ public class Tui implements View {
         }
     }
 
-    // ── Ready ────────────────────────────────────────────────────────────────
-
-    private void readyLoop() {
-        while (model.isConnected() && !isGameStarted()) {
-            String line = readLineWithPrompt("> ").trim();
-            if (line.isBlank()) {
-                continue;
-            }
-
-            if (line.equalsIgnoreCase("ready")) {
-                controller.send(new ReadyMessage(true));
-                System.out.println("Ready to go! Waiting for other players...");
-            } else if (line.equalsIgnoreCase("quit")) {
-                controller.disconnect();
-                return;
-            } else if (line.equalsIgnoreCase("unready")) {
-                controller.send(new ReadyMessage(false));
-            } else if (line.toLowerCase().startsWith("players")) {
-                if (!isFirstPlayer()) {
-                    System.out.println("[ERROR] Only the lobby leader can choose the number of participants.");
-                } else {
-                    handlePlayersCommand(line);
-                }   
-            } else {
-                System.out.println("Invalid command. Type ready, unready"
-                        + (isFirstPlayer() ? ", players <2-5>" : "")
-                        + " or quit.");
-            }
-        }
-    }
-
-    // ── Game ─────────────────────────────────────────────────────────────────
-
-    private void gameInputLoop() {
+    private void interactiveInputLoop() {
         while (model.isConnected() && !isGameEnded()) {
             if (model.isGameSuspended()) {
                 try { Thread.sleep(500); } catch (InterruptedException e) { return; }
                 continue;
             }
 
-            System.out.print("> ");
             String line;
             try {
                 line = readLineWithPrompt("> ").trim();
@@ -281,6 +142,12 @@ public class Tui implements View {
                 return;
             }
             if (line.isBlank()) continue;
+
+            String state = model.getGameState();
+            if (state == null || "LobbyState".equals(state) || "ReadyCheckState".equals(state)) {
+                handlePreGameCommand(line);
+                continue;
+            }
 
             if ("TotemPlacementState".equals(model.getGameState())
                     && line.toLowerCase().startsWith("place")
@@ -308,6 +175,58 @@ public class Tui implements View {
         }
     }
 
+    private void handlePreGameCommand(String line) {
+        if (line.equalsIgnoreCase("quit")) {
+            controller.disconnect();
+            return;
+        }
+
+        if (line.equalsIgnoreCase("ready")) {
+            controller.send(new ReadyMessage(true));
+            return;
+        }
+
+        if (line.equalsIgnoreCase("unready")) {
+            controller.send(new ReadyMessage(false));
+            return;
+        }
+
+        if (line.toLowerCase().startsWith("players")) {
+            if (!isFirstPlayer()) {
+                System.out.println("[ERROR] Only the lobby leader can choose the number of participants.");
+            } else {
+                handlePlayersCommand(line);
+            }
+            return;
+        }
+
+        if (isFirstPlayer() && model.getExpectedPlayers() < 2 && line.matches("[2-5]")) {
+            controller.send(new SetPlayersCountMessage(Integer.parseInt(line)));
+            return;
+        }
+
+        if (line.equalsIgnoreCase("help")) {
+            if (isFirstPlayer()) {
+                System.out.println("Available commands before the game starts: ready, unready, players <2-5>, quit");
+                if (model.getExpectedPlayers() < 2) {
+                    System.out.println("You can also type a number between 2 and 5 directly.");
+                }
+            } else {
+                System.out.println("Available commands before the game starts: ready, unready, quit");
+            }
+            return;
+        }
+
+        if (isFirstPlayer()) {
+            System.out.println("Before the game starts you can use: ready, unready, players <2-5>, quit");
+            if (model.getExpectedPlayers() < 2) {
+                System.out.println("As lobby leader you can also type directly 2, 3, 4 or 5.");
+            }
+        } else {
+            System.out.println("Before the game starts you can use: ready, unready, quit");
+        }
+    }
+
     // ── End ──────────────────────────────────────────────────────────────────
 
     private void endGame() {
@@ -329,13 +248,17 @@ public class Tui implements View {
         }
     }
 
-    private void waitForLobbyUpdate() {
+    private void waitForLoginOutcome(String previousError) {
         synchronized (modelLock) {
             while (model.isConnected()
-                    && model.getLobbyPlayers().isEmpty()
-                    && isInPreGame()) {
-                try { modelLock.wait(5_000); }
-                catch (InterruptedException e) { Thread.currentThread().interrupt(); return; }
+                    && !model.isLoginSuccess()
+                    && java.util.Objects.equals(previousError, model.getLastError())) {
+                try {
+                    modelLock.wait(10_000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
             }
         }
     }

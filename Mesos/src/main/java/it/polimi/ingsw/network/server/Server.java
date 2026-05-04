@@ -12,9 +12,22 @@ import java.util.Optional;
 
 public class Server {
     public static void main(String[] args) throws IOException {
-        int port = args.length > 0 ? Integer.parseInt(args[0]) : 1234;
+        boolean freshStart = false;
+        int port = 1234;
 
-        Optional<GameController> restored = Persistence.load();
+        for (String arg : args) {
+            if ("--fresh".equalsIgnoreCase(arg)) {
+                freshStart = true;
+            } else {
+                port = Integer.parseInt(arg);
+            }
+        }
+
+        if (freshStart) {
+            Persistence.clear();
+        }
+
+        Optional<GameController> restored = freshStart ? Optional.empty() : Persistence.load();
         LobbyManager lobby = restored
                 .map(LobbyManager::new)
                 .orElseGet(LobbyManager::new);
@@ -22,6 +35,8 @@ public class Server {
         if (restored.isPresent()) {
             System.out.println("Stato precedente ripristinato da disco — "
                     + "in attesa che i giocatori si riconnettano.");
+        } else if (freshStart) {
+            System.out.println("Avvio pulito richiesto — nessun salvataggio precedente verra ripristinato.");
         }
 
         MessageDispatcher dispatcher = new MessageDispatcher(lobby);
