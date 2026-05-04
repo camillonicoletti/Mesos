@@ -94,11 +94,16 @@ public class Tui implements View {
     }
 
     private TotemColor askTotemColor() {
-        try {
-            return TotemColor.valueOf(readLineWithPrompt("Colore totem: ").trim().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            System.out.println("[ERRORE] Colore non valido.");
-            return null;
+        while (true) {
+            String input = readLineWithPrompt("Totem Color: ").trim().toUpperCase();
+            if (input.equalsIgnoreCase("quit")) return null;
+            try {
+                return TotemColor.valueOf(input);
+            } catch (IllegalArgumentException e) {
+                System.out.println("[ERROR] Invalid color. Choose between: "
+                        + java.util.Arrays.toString(TotemColor.values())
+                        + " (oppure 'quit' per annullare).");
+            }
         }
     }
 
