@@ -89,3 +89,7 @@ fabric.properties
 .DS_Store
 .claude
 Icon?
+
+
+Mesos/mesos-savestate.bin
+Mesos/target/
