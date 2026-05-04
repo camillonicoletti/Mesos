@@ -9,6 +9,7 @@
 
 # Ignore game assets
 assets/*
+src/main/resources/assets/
 
 # User-specific stuff
 .idea/**/workspace.xml
