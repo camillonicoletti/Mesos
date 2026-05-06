@@ -1,5 +1,6 @@
 package it.polimi.ingsw.network.server;
 
+import it.polimi.ingsw.controller.GameController;
 import it.polimi.ingsw.controller.listener.GameListener;
 import it.polimi.ingsw.controller.state.GameState;
 import it.polimi.ingsw.model.Player;
@@ -14,10 +15,12 @@ import java.util.stream.Collectors;
 public class VirtualView implements GameListener {
     private final ServerSideConnection connection;
     private final String nickname;
+    private final GameController controller;
 
-    public VirtualView(ServerSideConnection connection, String nickname) {
+    public VirtualView(ServerSideConnection connection, String nickname, GameController controller) {
         this.connection = connection;
         this.nickname = nickname;
+        this.controller = controller;
     }
 
     public String getNickname() { return nickname; }
@@ -96,7 +99,7 @@ public class VirtualView implements GameListener {
 
     @Override
     public void onGameSuspended() {
-        connection.send(new GameSuspendedMessage());
+        connection.send(new GameSuspendedMessage(controller.getSuspensionRemainingMillis()));
     }
 
     @Override

@@ -53,6 +53,10 @@ public class Tui implements View {
         inputThread.setDaemon(true);
         inputThread.start();
 
+        Thread timerThread = new Thread(this::suspensionTimerRenderLoop);
+        timerThread.setDaemon(true);
+        timerThread.start();
+
         waitForGameEnd();
         endGame();
     }
@@ -172,6 +176,24 @@ public class Tui implements View {
                 return;
             }
             if (msg != null) controller.send(msg);
+        }
+    }
+
+    private void suspensionTimerRenderLoop() {
+        while (model.isConnected() && !isGameEnded()) {
+            if (model.isGameSuspended()) {
+                renderer.render(model);
+                if (activePrompt != null) {
+                    System.out.print(activePrompt);
+                }
+            }
+
+            try {
+                Thread.sleep(1_000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
         }
     }
 

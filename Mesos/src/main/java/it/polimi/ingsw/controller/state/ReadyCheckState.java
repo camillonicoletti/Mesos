@@ -18,9 +18,6 @@ public class ReadyCheckState extends AbstractGameState {
         if (!ctx.isLobbyFull()) {
             throw new IllegalStateException("Cannot enter ReadyCheckState if the lobby is not full");
         }
-        if (ctx.areAllPlayersReady()) {
-            ctx.changeState(new StartGameState());
-        }
     }
 
     @Override

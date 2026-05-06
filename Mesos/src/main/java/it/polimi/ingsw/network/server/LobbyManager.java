@@ -25,13 +25,19 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class LobbyManager {
+
+    private static final int SUSPENSION_TIMEOUT_CHECK_INTERVAL_SECONDS = 1;
 
     private final GameController gameController;
     private final Map<String, ServerSideConnection> connections = new HashMap<>();
     private final Map<String, VirtualView> views = new HashMap<>();
     private final List<ServerSideConnection> pendingConnections = new ArrayList<>();
+    private final ScheduledExecutorService suspensionTimeoutExecutor;
     /**
      * Creates a fresh lobby manager with a brand-new controller.
      * Used on a clean server start with no save file on disk.
@@ -60,6 +66,17 @@ public class LobbyManager {
             this.gameController.markAllPlayersDisconnected();
         }
         this.gameController.addListener(new PersistenceListener(this.gameController));
+        this.suspensionTimeoutExecutor = Executors.newSingleThreadScheduledExecutor(runnable -> {
+            Thread thread = new Thread(runnable, "suspension-timeout-monitor");
+            thread.setDaemon(true);
+            return thread;
+        });
+        this.suspensionTimeoutExecutor.scheduleAtFixedRate(
+                this::checkSuspensionTimeout,
+                SUSPENSION_TIMEOUT_CHECK_INTERVAL_SECONDS,
+                SUSPENSION_TIMEOUT_CHECK_INTERVAL_SECONDS,
+                TimeUnit.SECONDS
+        );
     }
 
     public synchronized void handleGameAction(String nickname, GameAction action) {
@@ -137,7 +154,7 @@ public class LobbyManager {
         connection.send(new GameSyncMessage(SnapshotBuilder.build(gameController)));
         connection.send(new StateChangedMessage(gameController.getCurrentState().getClass().getSimpleName()));
         if (gameController.isSuspended()) {
-            connection.send(new GameSuspendedMessage());
+            connection.send(new GameSuspendedMessage(gameController.getSuspensionRemainingMillis()));
         }
 
         // 2. Now register the connection + VirtualView so future events flow.
@@ -235,7 +252,7 @@ public class LobbyManager {
         unregisterConnection(nickname);
         connections.put(nickname, connection);
 
-        VirtualView view = new VirtualView(connection, nickname);
+        VirtualView view = new VirtualView(connection, nickname, gameController);
         views.put(nickname, view);
         gameController.addListener(view);
         connection.setNickname(nickname);
@@ -255,6 +272,20 @@ public class LobbyManager {
     public GameController getGameController() {
         return gameController;
     }
+
+    public void shutdown() {
+        suspensionTimeoutExecutor.shutdownNow();
+    }
+
+    private synchronized void checkSuspensionTimeout() {
+        try {
+            gameController.checkSuspensionTimeout();
+        } catch (RuntimeException exception) {
+            System.err.println("Errore durante il controllo del timeout di sospensione: "
+                    + exception.getMessage());
+        }
+    }
+
     public synchronized void registerPendingConnection(ServerSideConnection connection) {
         pendingConnections.add(connection);
     }

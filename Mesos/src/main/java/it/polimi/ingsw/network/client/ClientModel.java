@@ -13,6 +13,7 @@ public class ClientModel {
     }
 
     private boolean gameSuspended;
+    private long suspensionDeadlineMillis = -1L;
     private boolean connected = true;
     private String lastDisconnectedPlayer;
     private String lastConnectionEvent;
@@ -196,11 +197,15 @@ public class ClientModel {
 
     public void applyGameSuspended(GameSuspendedMessage m) {
         gameSuspended = true;
+        suspensionDeadlineMillis = m.getRemainingMillis() >= 0L
+                ? System.currentTimeMillis() + m.getRemainingMillis()
+                : -1L;
         notifyChanged();
     }
 
     public void applyGameResumed(GameResumedMessage m) {
         gameSuspended = false;
+        suspensionDeadlineMillis = -1L;
         notifyChanged();
     }
 
@@ -257,6 +262,12 @@ public class ClientModel {
     public String getWinnerNickname()              { return winnerNickname; }
     public Map<String, Integer> getFinalScores()   { return Collections.unmodifiableMap(finalScores); }
     public boolean isGameSuspended()               { return gameSuspended; }
+    public long getSuspensionRemainingMillis() {
+        if (!gameSuspended || suspensionDeadlineMillis < 0L) {
+            return -1L;
+        }
+        return Math.max(0L, suspensionDeadlineMillis - System.currentTimeMillis());
+    }
     public String getLastDisconnectedPlayer()      { return lastDisconnectedPlayer; }
     public Map<String, TotemColor> getLobbyPlayerColors() {
         return Collections.unmodifiableMap(lobbyPlayerColors);

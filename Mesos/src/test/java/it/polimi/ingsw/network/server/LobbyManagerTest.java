@@ -1,6 +1,7 @@
 package it.polimi.ingsw.network.server;
 
 import it.polimi.ingsw.model.enums.TotemColor;
+import it.polimi.ingsw.network.protocol.clientbound.GameEndedMessage;
 import it.polimi.ingsw.network.protocol.clientbound.GameStartedMessage;
 import it.polimi.ingsw.network.protocol.clientbound.ServerMessage;
 import it.polimi.ingsw.network.protocol.clientbound.StateChangedMessage;
@@ -27,20 +28,59 @@ class LobbyManagerTest {
         RecordingConnection bob = new RecordingConnection();
         RecordingConnection charlie = new RecordingConnection();
 
-        lobby.handleLogin(alice, new LoginMessage("Alice", TotemColor.RED));
-        lobby.handleLogin(bob, new LoginMessage("Bob", TotemColor.BLUE));
-        lobby.handleLogin(charlie, new LoginMessage("Charlie", TotemColor.PURPLE));
-        lobby.handleSetPlayersCount("Alice", new SetPlayersCountMessage(3));
+        try {
+            lobby.handleLogin(alice, new LoginMessage("Alice", TotemColor.RED));
+            lobby.handleLogin(bob, new LoginMessage("Bob", TotemColor.BLUE));
+            lobby.handleLogin(charlie, new LoginMessage("Charlie", TotemColor.PURPLE));
+            lobby.handleSetPlayersCount("Alice", new SetPlayersCountMessage(3));
 
-        lobby.handleReady("Alice", true);
-        lobby.handleReady("Bob", true);
-        lobby.handleDisconnect("Charlie");
-        lobby.handleSetPlayersCount("Alice", new SetPlayersCountMessage(2));
+            lobby.handleReady("Alice", true);
+            lobby.handleReady("Bob", true);
+            lobby.handleDisconnect("Charlie");
+            lobby.handleSetPlayersCount("Alice", new SetPlayersCountMessage(2));
 
-        assertTrue(alice.messages.stream().anyMatch(GameStartedMessage.class::isInstance));
-        ServerMessage lastMessage = alice.messages.get(alice.messages.size() - 1);
-        StateChangedMessage stateChanged = assertInstanceOf(StateChangedMessage.class, lastMessage);
-        assertEquals("TotemPlacementState", stateChanged.getStateName());
+            assertTrue(alice.messages.stream().anyMatch(GameStartedMessage.class::isInstance));
+            ServerMessage lastMessage = alice.messages.get(alice.messages.size() - 1);
+            StateChangedMessage stateChanged = assertInstanceOf(StateChangedMessage.class, lastMessage);
+            assertEquals("TotemPlacementState", stateChanged.getStateName());
+        } finally {
+            lobby.shutdown();
+        }
+    }
+
+    @Test
+    void suspendedGameTimeoutIsCheckedAutomatically() throws Exception {
+        LobbyManager lobby = new LobbyManager();
+        RecordingConnection alice = new RecordingConnection();
+        RecordingConnection bob = new RecordingConnection();
+
+        try {
+            lobby.handleLogin(alice, new LoginMessage("Alice", TotemColor.RED));
+            lobby.handleLogin(bob, new LoginMessage("Bob", TotemColor.BLUE));
+            lobby.handleSetPlayersCount("Alice", new SetPlayersCountMessage(2));
+            lobby.handleReady("Alice", true);
+            lobby.handleReady("Bob", true);
+
+            lobby.getGameController().setSuspensionTimeoutMillis(10L);
+            lobby.handleDisconnect("Bob");
+
+            long deadline = System.currentTimeMillis() + 2_000L;
+            while (System.currentTimeMillis() < deadline
+                    && alice.messages.stream().noneMatch(GameEndedMessage.class::isInstance)) {
+                Thread.sleep(25L);
+            }
+
+            GameEndedMessage gameEnded = assertInstanceOf(
+                    GameEndedMessage.class,
+                    alice.messages.stream()
+                            .filter(GameEndedMessage.class::isInstance)
+                            .findFirst()
+                            .orElseThrow()
+            );
+            assertEquals("Alice", gameEnded.getWinnerNickname());
+        } finally {
+            lobby.shutdown();
+        }
     }
 
     private static class RecordingConnection implements ServerSideConnection {

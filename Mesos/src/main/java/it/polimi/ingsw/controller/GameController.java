@@ -414,6 +414,19 @@ public class GameController implements Serializable {
         return suspensionStartedAtMillis;
     }
 
+    public long getSuspensionRemainingMillis() {
+        return getSuspensionRemainingMillis(System.currentTimeMillis());
+    }
+
+    public long getSuspensionRemainingMillis(long nowMillis) {
+        if (!suspended || suspensionStartedAtMillis < 0L) {
+            return -1L;
+        }
+
+        long elapsedMillis = Math.max(0L, nowMillis - suspensionStartedAtMillis);
+        return Math.max(0L, suspensionTimeoutMillis - elapsedMillis);
+    }
+
     public boolean checkSuspensionTimeout() {
         return checkSuspensionTimeout(System.currentTimeMillis());
     }

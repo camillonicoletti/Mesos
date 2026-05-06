@@ -93,7 +93,7 @@ public class Renderer {
 
             case "EventResolutionState"  -> simpleScreen("Il server sta risolvendo gli eventi...", model);
             case "EndRoundState"         -> simpleScreen("Fine del round " + model.getRoundNumber() + ". Preparazione...", model);
-            case "SuspendedState"        -> suspendedScreen();
+            case "SuspendedState"        -> suspendedScreen(model);
             case "EndGameState"          -> endGameScreen(model);
             default                      -> gameScreen(model, false);
         }
@@ -257,11 +257,20 @@ public class Renderer {
         blank();
     }
 
-    private void suspendedScreen() {
+    private void suspendedScreen(ClientModel model) {
         blank();
         row(center(RED + BOLD + "PARTITA IN PAUSA" + RST, W));
         blank();
         row(center(GRY + "In attesa che almeno un altro giocatore si riconnetta..." + RST, W));
+        blank();
+
+        long remainingMillis = model.getSuspensionRemainingMillis();
+        if (remainingMillis >= 0L) {
+            row(center(YLW + BOLD + "Timeout vittoria automatica: "
+                    + formatDuration(remainingMillis) + RST, W));
+        } else {
+            row(center(YLW + BOLD + "Timeout vittoria automatica: in attesa del server" + RST, W));
+        }
         blank();
     }
 
@@ -1173,7 +1182,7 @@ public class Renderer {
             );
 
             case "SuspendedState" -> List.of(
-                    new String[]{"attendi", "la partita riprende quando i giocatori tornano"},
+                    new String[]{"attendi", "timer attivo: vince l'unico connesso se scade"},
                     new String[]{"quit", "esci dalla partita"}
             );
 
@@ -1199,6 +1208,13 @@ public class Renderer {
         }
 
         return null;
+    }
+
+    private String formatDuration(long millis) {
+        long totalSeconds = Math.max(0L, (millis + 999L) / 1000L);
+        long minutes = totalSeconds / 60L;
+        long seconds = totalSeconds % 60L;
+        return String.format("%02d:%02d", minutes, seconds);
     }
 
     private void printMesosLogoPlain() {
