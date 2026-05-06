@@ -149,6 +149,7 @@ public class SocketServerConnection implements ServerSideConnection {
                 }
 
                 alive = false;
+                heartbeatExecutor.shutdownNow();
                 notifyDisconnect();
                 return;
             }

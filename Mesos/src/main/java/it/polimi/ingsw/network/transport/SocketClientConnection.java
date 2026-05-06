@@ -133,6 +133,7 @@ public class SocketClientConnection implements ClientSideConnection {
                 }
 
                 alive = false;
+                heartbeatExecutor.shutdownNow();
                 notifyDisconnect();
                 return;
             }
