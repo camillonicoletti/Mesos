@@ -26,6 +26,8 @@ public interface GameListener {
     // Era change
     void onEraChanged(Era newEra);
     // Actions
+    default void onCurrentPlayerChanged(String nickname) {
+    }
     void onCharacterCardTaken(String nickname, String cardId, boolean fromUpperRow);
     void onBuildingCardTaken(String nickname, String cardId, boolean fromUpperRow);
     // TODO : EventResolved

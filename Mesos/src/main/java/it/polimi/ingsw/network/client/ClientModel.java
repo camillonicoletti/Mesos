@@ -8,6 +8,8 @@ import java.util.*;
 
 public class ClientModel {
 
+    private static final long CONNECTION_EVENT_VISIBLE_MILLIS = 5_000L;
+
     public interface Listener {
         void onModelChanged();
     }
@@ -17,6 +19,7 @@ public class ClientModel {
     private boolean connected = true;
     private String lastDisconnectedPlayer;
     private String lastConnectionEvent;
+    private long lastConnectionEventExpiresAtMillis = -1L;
     private Map<String, TotemColor> lobbyPlayerColors = new LinkedHashMap<>();
     private boolean promotedToLobbyLeader;
 
@@ -31,6 +34,7 @@ public class ClientModel {
     private int expectedPlayers;
 
     private String gameState;
+    private String currentActionPlayer;
     private Era currentEra;
     private int roundNumber;
     private List<String> turnOrder = new ArrayList<>();
@@ -127,6 +131,14 @@ public class ClientModel {
 
     public void applyStateChanged(StateChangedMessage m) {
         gameState = m.getStateName();
+        if (!"ActionResolutionState".equals(gameState)) {
+            currentActionPlayer = null;
+        }
+        notifyChanged();
+    }
+
+    public void applyCurrentPlayerChanged(CurrentPlayerChangedMessage m) {
+        currentActionPlayer = m.getNickname();
         notifyChanged();
     }
 
@@ -157,6 +169,7 @@ public class ClientModel {
     public void applyCharacterCardTaken(CharacterCardTakenMessage m) {
         if (m.isFromUpperRow()) upperRowCharacterIds.remove(Integer.valueOf(m.getCardId()));
         else                    lowerRowCharacterIds.remove(Integer.valueOf(m.getCardId()));
+        clearCurrentActionPlayerIfActor(m.getNickname());
 
         replacePlayer(m.getNickname(), old -> {
             List<Integer> cards = new ArrayList<>(old.getCharacterCardIds());
@@ -169,6 +182,7 @@ public class ClientModel {
     public void applyBuildingCardTaken(BuildingCardTakenMessage m) {
         if (m.isFromUpperRow()) upperRowBuildingIds.remove(Integer.valueOf(m.getCardId()));
         else                    lowerRowBuildingIds.remove(Integer.valueOf(m.getCardId()));
+        clearCurrentActionPlayerIfActor(m.getNickname());
 
         replacePlayer(m.getNickname(), old -> {
             List<Integer> cards = new ArrayList<>(old.getBuildingCardIds());
@@ -211,13 +225,13 @@ public class ClientModel {
 
     public void applyPlayerDisconnected(PlayerDisconnectedMessage m) {
         lastDisconnectedPlayer = m.getNickname();
-        lastConnectionEvent = m.getNickname() + " si è disconnesso";
+        setConnectionEvent(m.getNickname() + " si è disconnesso");
         notifyChanged();
     }
 
     public void applyPlayerReconnected(PlayerReconnectedMessage m) {
         lastDisconnectedPlayer = null;
-        lastConnectionEvent = m.getNickname() + " si è riconnesso";
+        setConnectionEvent(m.getNickname() + " si è riconnesso");
         notifyChanged();
     }
 
@@ -243,13 +257,23 @@ public class ClientModel {
     public boolean isLoginSuccess()                { return loginSuccess; }
     public boolean isConnected()                   { return connected; }
     public String getLastError()                   { return lastError; }
-    public String getLastConnectionEvent()         { return lastConnectionEvent; }
+    public String getLastConnectionEvent() {
+        if (lastConnectionEvent == null) {
+            return null;
+        }
+        if (lastConnectionEventExpiresAtMillis >= 0L
+                && System.currentTimeMillis() >= lastConnectionEventExpiresAtMillis) {
+            return null;
+        }
+        return lastConnectionEvent;
+    }
     public String getMyNickname()                  { return myNickname; }
     public List<String> getLobbyPlayers()          { return Collections.unmodifiableList(lobbyPlayers); }
     public List<String> getReadyPlayers()          { return Collections.unmodifiableList(readyPlayers); }
     public boolean isPromotedToLobbyLeader()       { return promotedToLobbyLeader; }
     public int getExpectedPlayers()                { return expectedPlayers; }
     public String getGameState()                   { return gameState; }
+    public String getCurrentActionPlayer()         { return currentActionPlayer; }
     public Era getCurrentEra()                     { return currentEra; }
     public int getRoundNumber()                    { return roundNumber; }
     public List<String> getTurnOrder()             { return Collections.unmodifiableList(turnOrder); }
@@ -276,8 +300,17 @@ public class ClientModel {
 
     public boolean isMyTurn() {
         return myNickname != null
-                && !turnOrder.isEmpty()
-                && myNickname.equals(turnOrder.get(0));
+                && myNickname.equals(getCurrentActionResolutionPlayer());
+    }
+
+    public String getCurrentActionResolutionPlayer() {
+        if (!"ActionResolutionState".equals(gameState)) {
+            return null;
+        }
+        if (currentActionPlayer != null) {
+            return currentActionPlayer;
+        }
+        return null;
     }
 
     public String getCurrentTotemPlacementPlayer() {
@@ -304,5 +337,18 @@ public class ClientModel {
         PlayerView old = players.get(nickname);
         if (old != null) players.put(nickname, updater.apply(old));
         notifyChanged();
+    }
+
+    private void setConnectionEvent(String message) {
+        lastConnectionEvent = message;
+        lastConnectionEventExpiresAtMillis = System.currentTimeMillis() + CONNECTION_EVENT_VISIBLE_MILLIS;
+    }
+
+    private void clearCurrentActionPlayerIfActor(String nickname) {
+        if ("ActionResolutionState".equals(gameState)
+                && currentActionPlayer != null
+                && currentActionPlayer.equals(nickname)) {
+            currentActionPlayer = null;
+        }
     }
 }

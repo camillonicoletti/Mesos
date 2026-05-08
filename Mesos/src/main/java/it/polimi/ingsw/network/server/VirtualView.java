@@ -44,6 +44,7 @@ public class VirtualView implements GameListener {
     @Override
     public void onStateChanged(GameState newState) {
         connection.send(new StateChangedMessage(newState.getClass().getSimpleName()));
+        sendCurrentPlayerIfAvailable();
     }
 
     @Override
@@ -110,6 +111,18 @@ public class VirtualView implements GameListener {
     @Override
     public void onExtraCardPickAvailable(String nick, int picks) {
         connection.send(new ExtraCardPickAvailableMessage(nick, picks));
+    }
+
+    @Override
+    public void onCurrentPlayerChanged(String nick) {
+        connection.send(new CurrentPlayerChangedMessage(nick));
+    }
+
+    private void sendCurrentPlayerIfAvailable() {
+        String currentPlayer = controller.getCurrentActionPlayerNickname();
+        if (currentPlayer != null) {
+            connection.send(new CurrentPlayerChangedMessage(currentPlayer));
+        }
     }
 
 }

@@ -241,9 +241,12 @@ public class Renderer {
         for (String p : model.getLobbyPlayers()) {
             boolean ready = model.getReadyPlayers().contains(p);
             boolean isMe  = p.equals(model.getMyNickname());
+            boolean isLobbyLeader = !model.getLobbyPlayers().isEmpty()
+                    && p.equals(model.getLobbyPlayers().get(0));
             String status = ready ? GRN + "v  Pronto          " : YLW + "?  In attesa...    ";
+            String leaderBadge = isLobbyLeader ? YLW + "👑 " + RST : "";
             String name   = isMe ? CYN + BOLD + p + "  (tu)" + RST : WHT + p + RST;
-            row("    " + status + RST + name);
+            row("    " + status + RST + leaderBadge + name);
         }
 
         blank();
@@ -315,8 +318,8 @@ public class Renderer {
         List<String> order = model.getTurnOrder();
         String current = null;
 
-        if (!order.isEmpty()) {
-            current = totemPhase ? currentPlacementPlayer(model) : order.get(0);
+        if (totemPhase ? !order.isEmpty() : model.getCurrentActionResolutionPlayer() != null) {
+            current = totemPhase ? currentPlacementPlayer(model) : model.getCurrentActionResolutionPlayer();
             PlayerView pv = current != null ? model.getPlayers().get(current) : null;
             String col = pv != null ? totemColor(pv.getTotemColor()) : WHT;
 
@@ -358,7 +361,7 @@ public class Renderer {
 
         String currentActor = totemPhase
                 ? currentPlacementPlayer(model)
-                : (!order.isEmpty() ? order.get(0) : null);
+                : model.getCurrentActionResolutionPlayer();
 
 
         row("  " + CYN + BOLD + "GIOCATORI" + RST);
@@ -716,7 +719,8 @@ public class Renderer {
     }
 
     private String[] drawOrderBox(ClientModel model) {
-        List<String> order = model.getTurnOrder();
+        boolean actionResolution = "ActionResolutionState".equals(model.getGameState());
+        List<String> order = actionResolution ? actionResolutionOrder(model) : model.getTurnOrder();
         List<String> placedPlayers = new ArrayList<>(model.getTotemOnTiles().values());
 
         int numPlayers = Math.max(2, Math.max(model.getPlayers().size(), order.size()));
@@ -727,18 +731,20 @@ public class Renderer {
 
         box[line++] = titledTop("ORDINE TURNO", ORDER_W, CYN);
 
-        String currentPlacementPlayer = model.getCurrentTotemPlacementPlayer();
+        String currentPlayer = actionResolution
+                ? model.getCurrentActionResolutionPlayer()
+                : model.getCurrentTotemPlacementPlayer();
 
         for (int i = 0; i < visibleSlots; i++) {
             String name = i < order.size() ? order.get(i) : "";
 
-            if (placedPlayers.contains(name)) {
+            if (!actionResolution && placedPlayers.contains(name)) {
                 name = "";
             }
 
             PlayerView pv = name.isBlank() ? null : model.getPlayers().get(name);
             String col = pv != null ? totemColor(pv.getTotemColor()) : GRY;
-            boolean current = name.equals(currentPlacementPlayer);
+            boolean current = name.equals(currentPlayer);
 
             String marker = current ? GRN + BOLD + "▶" + RST : " ";
             String shownName = name.isBlank() ? "" : ellipsize(name, 12);
@@ -1208,6 +1214,23 @@ public class Renderer {
         }
 
         return null;
+    }
+
+    private List<String> actionResolutionOrder(ClientModel model) {
+        List<String> ordered = new ArrayList<>();
+        Map<Character, String> totemOnTiles = model.getTotemOnTiles();
+
+        for (Character tile : TILE_ORDER) {
+            String nickname = totemOnTiles.get(tile);
+            if (nickname != null && !ordered.contains(nickname)) {
+                ordered.add(nickname);
+            }
+        }
+
+        if (ordered.isEmpty()) {
+            ordered.addAll(model.getTurnOrder());
+        }
+        return ordered;
     }
 
     private String formatDuration(long millis) {

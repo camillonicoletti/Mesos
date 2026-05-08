@@ -181,7 +181,7 @@ public class Tui implements View {
 
     private void suspensionTimerRenderLoop() {
         while (model.isConnected() && !isGameEnded()) {
-            if (model.isGameSuspended()) {
+            if (model.isGameSuspended() || model.getLastConnectionEvent() != null) {
                 renderer.render(model);
                 if (activePrompt != null) {
                     System.out.print(activePrompt);

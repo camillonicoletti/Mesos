@@ -124,7 +124,10 @@ public class ActionResolutionState extends AbstractGameState {
             round.placeTotemOrderForPlayer(player);
             currentIndex++;
             prepareCurrentPlayer(ctx);
+            return;
         }
+
+        ctx.notifyListeners(l -> l.onCurrentPlayerChanged(player.getNickname()));
     }
 
     // ── EXTRA PICK PHASE ─────────────────────────────────────
@@ -158,11 +161,22 @@ public class ActionResolutionState extends AbstractGameState {
 
         remainingExtraPicks = extraPickQueue.get(extraPickIndex).getPicks();
         int picks = remainingExtraPicks;
+        ctx.notifyListeners(l -> l.onCurrentPlayerChanged(player.getNickname()));
         ctx.notifyListeners(l -> l.onExtraCardPickAvailable(player.getNickname(), picks));
     }
 
     private boolean isInExtraPickPhase() {
         return extraPickQueue != null && extraPickIndex < extraPickQueue.size();
+    }
+
+    public String getCurrentPlayerNickname() {
+        if (isInExtraPickPhase()) {
+            return extraPickQueue.get(extraPickIndex).getPlayer().getNickname();
+        }
+        if (orderedPlayers == null || currentIndex >= orderedPlayers.size()) {
+            return null;
+        }
+        return orderedPlayers.get(currentIndex).getPlayer().getNickname();
     }
 
     // ── HANDLE ACTION ────────────────────────────────────────
@@ -246,6 +260,8 @@ public class ActionResolutionState extends AbstractGameState {
             ctx.getGame().getCurrentRound().placeTotemOrderForPlayer(currentPlayer);
             currentIndex++;
             prepareCurrentPlayer(ctx);
+        } else {
+            ctx.notifyListeners(l -> l.onCurrentPlayerChanged(currentPlayer.getNickname()));
         }
     }
 
@@ -308,6 +324,8 @@ public class ActionResolutionState extends AbstractGameState {
         if (remainingExtraPicks == 0) {
             extraPickIndex++;
             prepareExtraPickPlayer(ctx);
+        } else {
+            ctx.notifyListeners(l -> l.onCurrentPlayerChanged(currentPlayer.getNickname()));
         }
     }
 

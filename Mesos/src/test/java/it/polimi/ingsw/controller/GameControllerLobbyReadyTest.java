@@ -8,6 +8,7 @@ import it.polimi.ingsw.controller.listener.GameListener;
 import it.polimi.ingsw.controller.state.GameState;
 import it.polimi.ingsw.controller.state.LobbyState;
 import it.polimi.ingsw.controller.state.ReadyCheckState;
+import it.polimi.ingsw.controller.state.TotemPlacementState;
 import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.Totem;
 import it.polimi.ingsw.model.enums.Era;
@@ -117,6 +118,24 @@ public class GameControllerLobbyReadyTest {
 
         assertEquals(2, controller.getLobbyPlayers().size());
         assertInstanceOf(ReadyCheckState.class, controller.getCurrentState());
+    }
+
+    @Test
+    void choosingPlayerCountStartsImmediatelyIfJoinedPlayersWereAlreadyReady() {
+        GameController controller = new GameController();
+
+        controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
+        controller.onMessageReceived("Bob", new JoinGameAction(createTotem(TotemColor.BLUE)));
+        controller.onMessageReceived("Charlie", new JoinGameAction(createTotem(TotemColor.PURPLE)));
+
+        controller.onMessageReceived("Alice", new ReadyAction(true));
+        controller.onMessageReceived("Bob", new ReadyAction(true));
+        controller.onMessageReceived("Charlie", new ReadyAction(true));
+
+        controller.onMessageReceived("Alice", new SetPlayerCountAction(3));
+
+        assertNotNull(controller.getGame());
+        assertInstanceOf(TotemPlacementState.class, controller.getCurrentState());
     }
 
     @Test

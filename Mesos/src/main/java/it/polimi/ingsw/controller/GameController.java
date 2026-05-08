@@ -3,6 +3,7 @@ package it.polimi.ingsw.controller;
 import it.polimi.ingsw.controller.action.GameAction;
 import it.polimi.ingsw.controller.listener.GameListener;
 import it.polimi.ingsw.controller.state.GameState;
+import it.polimi.ingsw.controller.state.ActionResolutionState;
 import it.polimi.ingsw.controller.state.LobbyState;
 import it.polimi.ingsw.controller.state.SuspendedState;
 import it.polimi.ingsw.model.Game;
@@ -161,6 +162,17 @@ public class GameController implements Serializable {
 
     public GameState getCurrentState() {
         return currentState;
+    }
+
+    public String getCurrentActionPlayerNickname() {
+        GameState state = currentState;
+        if (state instanceof SuspendedState suspendedState) {
+            state = suspendedState.getSuspendedState();
+        }
+        if (state instanceof ActionResolutionState actionResolutionState) {
+            return actionResolutionState.getCurrentPlayerNickname();
+        }
+        return null;
     }
 
     public List<Player> getLobbyPlayers() {

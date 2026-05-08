@@ -8,6 +8,7 @@ import it.polimi.ingsw.controller.action.ReadyAction;
 import it.polimi.ingsw.controller.action.SetPlayerCountAction;
 import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.Totem;
+import it.polimi.ingsw.network.protocol.clientbound.CurrentPlayerChangedMessage;
 import it.polimi.ingsw.network.protocol.clientbound.ErrorMessage;
 import it.polimi.ingsw.network.protocol.clientbound.GameStartedMessage;
 import it.polimi.ingsw.network.protocol.clientbound.GameSuspendedMessage;
@@ -153,6 +154,10 @@ public class LobbyManager {
         connection.send(new LoginAckMessage(LoginAckMessage.Outcome.RECONNECT_OK, null));
         connection.send(new GameSyncMessage(SnapshotBuilder.build(gameController)));
         connection.send(new StateChangedMessage(gameController.getCurrentState().getClass().getSimpleName()));
+        String currentActionPlayer = gameController.getCurrentActionPlayerNickname();
+        if (currentActionPlayer != null) {
+            connection.send(new CurrentPlayerChangedMessage(currentActionPlayer));
+        }
         if (gameController.isSuspended()) {
             connection.send(new GameSuspendedMessage(gameController.getSuspensionRemainingMillis()));
         }
