@@ -87,24 +87,54 @@ public class Tui implements View {
     }
 
     private boolean askReconnect() {
-        String answer = readLineWithPrompt("Do you want to reconnect to an existing match? [y/N]: ").trim();
-        return answer.equalsIgnoreCase("y") || answer.equalsIgnoreCase("yes");
+        while (true) {
+            String answer = readLineWithPrompt(
+                    "Do you want to reconnect to an existing match? [y/n]: ").trim().toLowerCase();
+            if (answer.equals("y") || answer.equals("yes")) return true;
+            if (answer.equals("n") || answer.equals("no"))  return false;
+            System.out.println("[ERROR] Please answer 'y' or 'n'.");
+        }
     }
 
     private TotemColor askTotemColor() {
         while (true) {
-            String input = readLineWithPrompt("Totem Color: ").trim().toUpperCase();
+            java.util.List<TotemColor> available = availableColors();
+            if (available.isEmpty()) {
+                System.out.println("[ERROR] No totem color is available right now.");
+                return null;
+            }
+
+            String input = readLineWithPrompt("Totem Color " + available + ": ")
+                    .trim().toUpperCase();
             if (input.equalsIgnoreCase("quit")) return null;
+
+            TotemColor parsed;
             try {
-                return TotemColor.valueOf(input);
+                parsed = TotemColor.valueOf(input);
             } catch (IllegalArgumentException e) {
                 System.out.println("[ERROR] Invalid color. Choose between: "
-                        + java.util.Arrays.toString(TotemColor.values())
-                        + " (or 'quit' to cancel).");
+                        + available + " (or 'quit' to cancel).");
+                continue;
             }
+
+            if (!available.contains(parsed)) {
+                System.out.println("[ERROR] Color " + parsed
+                        + " is already taken. Choose between: " + available + ".");
+                continue;
+            }
+            return parsed;
         }
     }
-
+    /** Returns totem colors not yet picked in the current lobby snapshot. */
+    private java.util.List<TotemColor> availableColors() {
+        java.util.Set<TotemColor> taken =
+                new java.util.HashSet<>(model.getLobbyPlayerColors().values());
+        java.util.List<TotemColor> available = new java.util.ArrayList<>();
+        for (TotemColor c : TotemColor.values()) {
+            if (!taken.contains(c)) available.add(c);
+        }
+        return available;
+    }
     // ── Main input loop ──────────────────────────────────────────────────────
 
     private void interactiveInputLoop() {
