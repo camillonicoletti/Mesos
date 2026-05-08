@@ -312,7 +312,28 @@ public class ClientModel {
         }
         return null;
     }
+    public boolean isLobbyLeader() {
+        return myNickname != null
+                && !lobbyPlayers.isEmpty()
+                && myNickname.equals(lobbyPlayers.get(0));
+    }
 
+    public boolean isGameStarted() {
+        return gameState != null
+                && !"LobbyState".equals(gameState)
+                && !"ReadyCheckState".equals(gameState);
+    }
+
+    public boolean isInPreGame() {
+        return gameState == null
+                || "LobbyState".equals(gameState)
+                || "ReadyCheckState".equals(gameState);
+    }
+
+    public boolean isGameEnded() {
+        return "EndGameState".equals(gameState);
+    }
+    
     public String getCurrentTotemPlacementPlayer() {
         if (!"TotemPlacementState".equals(gameState) || turnOrder.isEmpty()) {
             return null;
