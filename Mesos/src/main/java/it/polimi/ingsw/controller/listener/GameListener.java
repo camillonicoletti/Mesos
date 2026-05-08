@@ -30,7 +30,7 @@ public interface GameListener {
     }
     void onCharacterCardTaken(String nickname, String cardId, boolean fromUpperRow);
     void onBuildingCardTaken(String nickname, String cardId, boolean fromUpperRow);
-    // TODO : EventResolved
+    default void onGameSnapshotChanged() {}
     // End Round/Game
     void onRoundEnded(int roundNumber);
     void onGameEnded(Player winner, Map<Player, Integer> finalScores);

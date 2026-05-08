@@ -132,11 +132,16 @@ public class GameController implements Serializable {
         GameState previousState = currentState;
         previousState.onExit(this);
         currentState = newState;
+        // Fire onStateChanged BEFORE onEnter so listeners see state transitions in
+        // the correct order even when onEnter triggers a recursive changeState
+        // (e.g. EventResolution -> EndRound -> TotemPlacement chained synchronously).
+        notifyListeners(l -> l.onStateChanged(newState));
         try {
             currentState.onEnter(this);
-            notifyListeners(l -> l.onStateChanged(newState));
         } catch (RuntimeException | Error exception) {
             currentState = previousState;
+            // Re-emit the previous state so clients reflect the rollback
+            notifyListeners(l -> l.onStateChanged(previousState));
             try {
                 previousState.onEnter(this);
             } catch (RuntimeException rollbackException) {

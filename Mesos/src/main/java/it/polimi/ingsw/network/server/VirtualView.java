@@ -124,5 +124,8 @@ public class VirtualView implements GameListener {
             connection.send(new CurrentPlayerChangedMessage(currentPlayer));
         }
     }
-
+    @Override
+    public void onGameSnapshotChanged() {
+        connection.send(new GameSyncMessage(SnapshotBuilder.build(controller)));
+    }
 }

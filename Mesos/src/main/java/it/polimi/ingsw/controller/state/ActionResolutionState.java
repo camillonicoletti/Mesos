@@ -74,6 +74,10 @@ public class ActionResolutionState extends AbstractGameState {
         Round round = ctx.getGame().getCurrentRound();
         Map<Player, OfferTile> playerChoices = round.getPlayerChoices();
 
+        // Clear the turn-order tile so this round's resolution can repopulate it
+        // with the new order based on offer-tile letters.
+        ctx.getGame().getBoard().getTurnOrderTile().reset();
+
         orderedPlayers = new ArrayList<>();
         for (Map.Entry<Player, OfferTile> entry : playerChoices.entrySet()) {
             orderedPlayers.add(new OrderedPlayer(entry.getKey(), entry.getValue()));

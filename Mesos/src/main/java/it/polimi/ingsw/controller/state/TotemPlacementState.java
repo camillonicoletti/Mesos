@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
+import it.polimi.ingsw.model.board.TurnOrderTile;
 public class TotemPlacementState extends AbstractGameState {
 
     private static final long serialVersionUID = 1L;
@@ -25,15 +25,25 @@ public class TotemPlacementState extends AbstractGameState {
     public void onEnter(GameController ctx) {
         playersWhoPlaced.clear();
         placementOrder.clear();
-        for (Totem totem : ctx.getGame().getBoard().getTurnOrderTile().getTurnOrder()) {
+
+        var turnTile = ctx.getGame().getBoard().getTurnOrderTile();
+        for (Totem totem : turnTile.getTurnOrder()) {
             Player owner = findPlayerByTotem(ctx, totem);
             if (owner != null) {
                 placementOrder.add(owner.getNickname());
             }
         }
+
+        // First round of the match: the turn-order tile is empty, fall back to the
+        // game's own player order (which respects the original setup randomization).
+        if (placementOrder.isEmpty()) {
+            for (Player p : ctx.getGame().getPlayers()) {
+                placementOrder.add(p.getNickname());
+            }
+        }
+
         currentTurnIndex = 0;
         advanceToNextConnectedPlayer(ctx);
-        notifyCurrentPlayer(ctx);
     }
 
     @Override

@@ -2,6 +2,7 @@ package it.polimi.ingsw.controller.state;
 
 import it.polimi.ingsw.controller.GameController;
 import it.polimi.ingsw.controller.action.GameAction;
+import it.polimi.ingsw.controller.listener.GameListener;
 import it.polimi.ingsw.model.Game;
 import it.polimi.ingsw.model.Round;
 
@@ -16,9 +17,7 @@ public class EndRoundState extends AbstractGameState {
         Game game = ctx.getGame();
         Round round = game.getCurrentRound();
         game.getBoard().resetOfferTiles();
-        game.getBoard().getTurnOrderTile().reset();
 
-        game.getBoard().getTurnOrderTile().reset();
 
         if (game.isLastRound()) {
             game.end();
@@ -30,11 +29,12 @@ public class EndRoundState extends AbstractGameState {
             round.refillUpperRow();
             round.checkEraTransition();
             game.nextRound();
+
             ctx.notifyListeners(l -> l.onRoundEnded(finishedRound));
+            ctx.notifyListeners(GameListener::onGameSnapshotChanged);
             ctx.changeState(new TotemPlacementState());
         }
     }
-
     @Override
     public void handleAction(GameController ctx, String playerNickname, GameAction action) {
         rejectAction(action);
