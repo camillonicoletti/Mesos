@@ -293,6 +293,8 @@ public class LobbyManager {
 
     public synchronized void registerPendingConnection(ServerSideConnection connection) {
         pendingConnections.add(connection);
+        // Send the current lobby snapshot so the client knows which totem colors are already taken
+        connection.send(buildLobbyUpdateMessage());
     }
 
     public synchronized void unregisterPendingConnection(ServerSideConnection connection) {

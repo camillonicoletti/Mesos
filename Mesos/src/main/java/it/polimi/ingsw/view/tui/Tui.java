@@ -98,28 +98,31 @@ public class Tui implements View {
 
     private TotemColor askTotemColor() {
         while (true) {
-            java.util.List<TotemColor> available = availableColors();
+            java.util.Set<TotemColor> taken =
+                    new java.util.HashSet<>(model.getLobbyPlayerColors().values());
+            java.util.List<TotemColor> available = new java.util.ArrayList<>();
+            for (TotemColor c : TotemColor.values()) {
+                if (!taken.contains(c)) available.add(c);
+            }
+
             if (available.isEmpty()) {
                 System.out.println("[ERROR] No totem color is available right now.");
                 return null;
             }
 
-            String input = readLineWithPrompt("Totem Color " + available + ": ")
-                    .trim().toUpperCase();
+            String input = readLineWithPrompt("Totem Color: ").trim().toUpperCase();
             if (input.equalsIgnoreCase("quit")) return null;
 
             TotemColor parsed;
             try {
                 parsed = TotemColor.valueOf(input);
             } catch (IllegalArgumentException e) {
-                System.out.println("[ERROR] Invalid color. Choose between: "
-                        + available + " (or 'quit' to cancel).");
+                System.out.println("[ERROR] Invalid color. Type 'quit' to cancel.");
                 continue;
             }
 
             if (!available.contains(parsed)) {
-                System.out.println("[ERROR] Color " + parsed
-                        + " is already taken. Choose between: " + available + ".");
+                System.out.println("[ERROR] Color " + parsed + " is already taken.");
                 continue;
             }
             return parsed;
