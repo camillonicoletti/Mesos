@@ -81,14 +81,14 @@ public class Tui implements View {
             if (model.isLoginSuccess()) {
                 model.setMyNickname(nickname);
             } else if (model.getLastError() != null) {
-                System.out.println("[ERRORE] " + model.getLastError());
+                System.out.println("[ERROR] " + model.getLastError());
             }
         }
     }
 
     private boolean askReconnect() {
         String answer = readLineWithPrompt("Do you want to reconnect to an existing match? [y/N]: ").trim();
-        return answer.equalsIgnoreCase("y") || answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("s");
+        return answer.equalsIgnoreCase("y") || answer.equalsIgnoreCase("yes");
     }
 
     private TotemColor askTotemColor() {
@@ -105,35 +105,10 @@ public class Tui implements View {
         }
     }
 
-
-    // ── Numero giocatori (solo primo) ────────────────────────────────────────
-
-    private boolean isFirstPlayer() {
-        return model.getMyNickname() != null
-                && !model.getLobbyPlayers().isEmpty()
-                && model.getMyNickname().equals(model.getLobbyPlayers().getFirst());
-    }
-    private void handlePlayersCommand(String line) {
-        String[] parts = line.trim().split("\\s+");
-        if (parts.length < 2) {
-            System.out.println("[ERROR] Correct use: players <2-5>");
-            return;
-        }
-
-        try {
-            int count = Integer.parseInt(parts[1]);
-            if (count < 2 || count > 5) {
-                System.out.println("[ERROR] Number should be between 2 and 5.");
-                return;
-            }
-            controller.send(new SetPlayersCountMessage(count));
-        } catch (NumberFormatException exception) {
-            System.out.println("[ERROR] Correct: players <2-5>");
-        }
-    }
+    // ── Main input loop ──────────────────────────────────────────────────────
 
     private void interactiveInputLoop() {
-        while (model.isConnected() && !isGameEnded()) {
+        while (model.isConnected() && !model.isGameEnded()) {
             if (model.isGameSuspended()) {
                 try { Thread.sleep(500); } catch (InterruptedException e) { return; }
                 continue;
@@ -153,14 +128,14 @@ public class Tui implements View {
                 continue;
             }
 
-            if ("TotemPlacementState".equals(model.getGameState())
+            if ("TotemPlacementState".equals(state)
                     && line.toLowerCase().startsWith("place")
                     && !model.isMyTotemPlacementTurn()) {
                 String currentPlayer = model.getCurrentTotemPlacementPlayer();
                 if (currentPlayer != null) {
-                    System.out.println("[ERROR] It's not your turn: It's" + currentPlayer + "'s turn.");
+                    System.out.println("[ERROR] It's not your turn: it's " + currentPlayer + "'s turn.");
                 } else {
-                    System.out.println("[ERRORE] No player available for placing in this moment.");
+                    System.out.println("[ERROR] No player available for placement at this moment.");
                 }
                 continue;
             }
@@ -180,7 +155,7 @@ public class Tui implements View {
     }
 
     private void suspensionTimerRenderLoop() {
-        while (model.isConnected() && !isGameEnded()) {
+        while (model.isConnected() && !model.isGameEnded()) {
             if (model.isGameSuspended()) {
                 renderer.render(model);
                 if (activePrompt != null) {
@@ -197,55 +172,54 @@ public class Tui implements View {
         }
     }
 
+    // ── Pre-game commands (lobby + ready check) ──────────────────────────────
+
     private void handlePreGameCommand(String line) {
-        if (line.equalsIgnoreCase("quit")) {
+        if (line.equalsIgnoreCase("help")) {
+            printPreGameHelp();
+            return;
+        }
+
+        // Lobby leader shortcut: typing just a number sets the player count
+        if (model.isLobbyLeader()
+                && model.getExpectedPlayers() < CommandParser.MIN_PLAYERS
+                && line.matches("\\d+")) {
+            ClientMessage shortcut = parser.parse("players " + line);
+            if (shortcut != null) controller.send(shortcut);
+            return;
+        }
+
+        // Reject "players" command from non-leaders before delegating to the parser
+        if (line.toLowerCase().startsWith("players") && !model.isLobbyLeader()) {
+            System.out.println("[ERROR] Only the lobby leader can choose the number of participants.");
+            return;
+        }
+
+        ClientMessage msg = parser.parse(line);
+        if (msg instanceof DisconnectMessage) {
             controller.disconnect();
             return;
         }
-
-        if (line.equalsIgnoreCase("ready")) {
-            controller.send(new ReadyMessage(true));
+        if (msg != null) {
+            controller.send(msg);
             return;
         }
 
-        if (line.equalsIgnoreCase("unready")) {
-            controller.send(new ReadyMessage(false));
-            return;
-        }
+        // Parser already printed an "Unknown command" hint; show context-aware help
+        printPreGameHelp();
+    }
 
-        if (line.toLowerCase().startsWith("players")) {
-            if (!isFirstPlayer()) {
-                System.out.println("[ERROR] Only the lobby leader can choose the number of participants.");
-            } else {
-                handlePlayersCommand(line);
-            }
-            return;
-        }
-
-        if (isFirstPlayer() && model.getExpectedPlayers() < 2 && line.matches("[2-5]")) {
-            controller.send(new SetPlayersCountMessage(Integer.parseInt(line)));
-            return;
-        }
-
-        if (line.equalsIgnoreCase("help")) {
-            if (isFirstPlayer()) {
-                System.out.println("Available commands before the game starts: ready, unready, players <2-5>, quit");
-                if (model.getExpectedPlayers() < 2) {
-                    System.out.println("You can also type a number between 2 and 5 directly.");
-                }
-            } else {
-                System.out.println("Available commands before the game starts: ready, unready, quit");
-            }
-            return;
-        }
-
-        if (isFirstPlayer()) {
-            System.out.println("Before the game starts you can use: ready, unready, players <2-5>, quit");
-            if (model.getExpectedPlayers() < 2) {
-                System.out.println("As lobby leader you can also type directly 2, 3, 4 or 5.");
+    private void printPreGameHelp() {
+        if (model.isLobbyLeader()) {
+            System.out.println("Available commands before the game starts: ready, unready, players <"
+                    + CommandParser.MIN_PLAYERS + "-" + CommandParser.MAX_PLAYERS + ">, quit");
+            if (model.getExpectedPlayers() < CommandParser.MIN_PLAYERS) {
+                System.out.println("As lobby leader you can also type a number between "
+                        + CommandParser.MIN_PLAYERS + " and "
+                        + CommandParser.MAX_PLAYERS + " directly.");
             }
         } else {
-            System.out.println("Before the game starts you can use: ready, unready, quit");
+            System.out.println("Available commands before the game starts: ready, unready, quit");
         }
     }
 
@@ -256,7 +230,7 @@ public class Tui implements View {
             System.out.println("\nConnection lost.");
             return;
         }
-        System.out.println("\nGame ended. Press INVIO to quit.");
+        System.out.println("\nGame ended. Press ENTER to quit.");
         readLineWithPrompt("");
         controller.disconnect();
     }
@@ -287,27 +261,11 @@ public class Tui implements View {
 
     private void waitForGameEnd() {
         synchronized (modelLock) {
-            while (model.isConnected() && !isGameEnded()) {
+            while (model.isConnected() && !model.isGameEnded()) {
                 try { modelLock.wait(1_000); }
                 catch (InterruptedException e) { Thread.currentThread().interrupt(); return; }
             }
         }
-    }
-
-    private boolean isGameStarted() {
-        String s = model.getGameState();
-        return s != null
-                && !s.equals("LobbyState")
-                && !s.equals("ReadyCheckState");
-    }
-
-    private boolean isInPreGame() {
-        String state = model.getGameState();
-        return state == null || "LobbyState".equals(state) || "ReadyCheckState".equals(state);
-    }
-
-    private boolean isGameEnded() {
-        return "EndGameState".equals(model.getGameState());
     }
 
     private void waitForInitialStateSync() {
@@ -334,7 +292,7 @@ public class Tui implements View {
     }
 
     private void printHelp() {
-        System.out.println("  place <lettera>        — place totem");
+        System.out.println("  place <letter>         — place totem");
         System.out.println("  pick <id> upper|lower  — take character card");
         System.out.println("  build <id> upper|lower — take building card");
         System.out.println("  quit                   — disconnect");
