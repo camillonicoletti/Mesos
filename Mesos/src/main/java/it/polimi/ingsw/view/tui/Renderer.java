@@ -315,22 +315,24 @@ public class Renderer {
     private void gameScreen(ClientModel model, boolean totemPhase) {
         blank();
 
-        List<String> order = model.getTurnOrder();
-        String current = null;
+        String current = currentTurnPlayer(model, totemPhase);
 
-        if (totemPhase ? !order.isEmpty() : model.getCurrentActionResolutionPlayer() != null) {
-            current = totemPhase ? currentPlacementPlayer(model) : model.getCurrentActionResolutionPlayer();
+        if (current != null) {
             PlayerView pv = current != null ? model.getPlayers().get(current) : null;
             String col = pv != null ? totemColor(pv.getTotemColor()) : WHT;
 
             row(center(WHT + BOLD + "ORA TOCCA A " + RST
                     + col + BOLD + (current != null ? current.toUpperCase() : "?") + RST, W));
+            String turnEvent = model.getLastTurnEvent();
+            if (turnEvent != null) {
+                row(center(CYN + BOLD + ">> " + turnEvent + " <<" + RST, W));
+            }
         }
 
 
 
         if (totemPhase) {
-            String cur = currentPlacementPlayer(model);
+            String cur = model.getCurrentTotemPlacementPlayer();
             if (cur != null && cur.equals(model.getMyNickname())) {
                 row(center(YLW + BOLD + BLINK + ">>>  TOCCA A TE — PIAZZA IL TOTEM!  <<<" + RST, W));
 
@@ -360,7 +362,7 @@ public class Renderer {
         blank();
 
         String currentActor = totemPhase
-                ? currentPlacementPlayer(model)
+                ? model.getCurrentTotemPlacementPlayer()
                 : model.getCurrentActionResolutionPlayer();
 
 
@@ -376,7 +378,8 @@ public class Renderer {
                     p,
                     i + 1,
                     p.getNickname().equals(currentActor),
-                    p.getNickname().equals(model.getMyNickname())
+                    p.getNickname().equals(model.getMyNickname()),
+                    model.isPlayerDisconnected(p.getNickname())
             );
         }
         blank();
@@ -738,13 +741,13 @@ public class Renderer {
         for (int i = 0; i < visibleSlots; i++) {
             String name = i < order.size() ? order.get(i) : "";
 
-            if (!actionResolution && placedPlayers.contains(name)) {
+            if (!actionResolution && (placedPlayers.contains(name) || model.isPlayerDisconnected(name))) {
                 name = "";
             }
 
             PlayerView pv = name.isBlank() ? null : model.getPlayers().get(name);
             String col = pv != null ? totemColor(pv.getTotemColor()) : GRY;
-            boolean current = name.equals(currentPlayer);
+            boolean current = name.equals(currentPlayer) && !model.isPlayerDisconnected(name);
 
             String marker = current ? GRN + BOLD + "▶" + RST : " ";
             String shownName = name.isBlank() ? "" : ellipsize(name, 12);
@@ -863,14 +866,15 @@ public class Renderer {
         return WHT;
     }
 
-    private void renderPlayer(PlayerView p, int rank, boolean isActor, boolean isMe) {
+    private void renderPlayer(PlayerView p, int rank, boolean isActor, boolean isMe, boolean disconnected) {
         String col = totemColor(p.getTotemColor());
-        String marker = isActor ? GRN + BOLD + "▶" + RST : " ";
+        String marker = isActor ? YLW + BOLD + BLINK + "▶" + RST : disconnected ? RED + "x" + RST : " ";
         String meTag = isMe ? CYN + BOLD + " tu" + RST : "";
 
         String rankStr = rankLabel(rank);
         String name = ellipsize(p.getNickname(), 14);
-        String nameStr = col + BOLD + String.format("%-14s", name) + RST;
+        String nameColor = disconnected ? GRY : isActor ? YLW : col;
+        String nameStr = nameColor + BOLD + String.format("%-14s", name) + RST;
 
         String foodStr = YLW + BOLD + "🍖 " + String.format("%2d", p.getFood()) + RST;
         String barStr = foodBar(p.getFood(), 20);
@@ -883,7 +887,9 @@ public class Renderer {
                 + "   " + foodStr
                 + "   " + barStr
                 + "   " + ppStr
-                + meTag);
+                + meTag
+                + (isActor ? YLW + BOLD + "   <-- TURNO" + RST : "")
+                + (disconnected ? RED + BOLD + "   disconnesso" + RST : ""));
 
         List<Integer> all = new ArrayList<>(p.getCharacterCardIds());
         all.addAll(p.getBuildingCardIds());
@@ -1204,16 +1210,10 @@ public class Renderer {
         };
     }
 
-    private String currentPlacementPlayer(ClientModel model) {
-        List<String> placedPlayers = new ArrayList<>(model.getTotemOnTiles().values());
-
-        for (String nickname : model.getTurnOrder()) {
-            if (!placedPlayers.contains(nickname)) {
-                return nickname;
-            }
-        }
-
-        return null;
+    private String currentTurnPlayer(ClientModel model, boolean totemPhase) {
+        return totemPhase
+                ? model.getCurrentTotemPlacementPlayer()
+                : model.getCurrentActionResolutionPlayer();
     }
 
     private List<String> actionResolutionOrder(ClientModel model) {

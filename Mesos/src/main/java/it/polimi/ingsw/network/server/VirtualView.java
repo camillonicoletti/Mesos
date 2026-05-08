@@ -119,7 +119,7 @@ public class VirtualView implements GameListener {
     }
 
     private void sendCurrentPlayerIfAvailable() {
-        String currentPlayer = controller.getCurrentActionPlayerNickname();
+        String currentPlayer = controller.getCurrentTurnPlayerNickname();
         if (currentPlayer != null) {
             connection.send(new CurrentPlayerChangedMessage(currentPlayer));
         }

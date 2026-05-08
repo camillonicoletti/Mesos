@@ -6,6 +6,7 @@ import it.polimi.ingsw.controller.state.GameState;
 import it.polimi.ingsw.controller.state.ActionResolutionState;
 import it.polimi.ingsw.controller.state.LobbyState;
 import it.polimi.ingsw.controller.state.SuspendedState;
+import it.polimi.ingsw.controller.state.TotemPlacementState;
 import it.polimi.ingsw.model.Game;
 import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.Totem;
@@ -168,6 +169,20 @@ public class GameController implements Serializable {
         GameState state = currentState;
         if (state instanceof SuspendedState suspendedState) {
             state = suspendedState.getSuspendedState();
+        }
+        if (state instanceof ActionResolutionState actionResolutionState) {
+            return actionResolutionState.getCurrentPlayerNickname();
+        }
+        return null;
+    }
+
+    public String getCurrentTurnPlayerNickname() {
+        GameState state = currentState;
+        if (state instanceof SuspendedState suspendedState) {
+            state = suspendedState.getSuspendedState();
+        }
+        if (state instanceof TotemPlacementState totemPlacementState) {
+            return totemPlacementState.getCurrentPlayerNickname(this);
         }
         if (state instanceof ActionResolutionState actionResolutionState) {
             return actionResolutionState.getCurrentPlayerNickname();

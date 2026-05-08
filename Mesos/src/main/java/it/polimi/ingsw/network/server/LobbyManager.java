@@ -154,9 +154,9 @@ public class LobbyManager {
         connection.send(new LoginAckMessage(LoginAckMessage.Outcome.RECONNECT_OK, null));
         connection.send(new GameSyncMessage(SnapshotBuilder.build(gameController)));
         connection.send(new StateChangedMessage(gameController.getCurrentState().getClass().getSimpleName()));
-        String currentActionPlayer = gameController.getCurrentActionPlayerNickname();
-        if (currentActionPlayer != null) {
-            connection.send(new CurrentPlayerChangedMessage(currentActionPlayer));
+        String currentTurnPlayer = gameController.getCurrentTurnPlayerNickname();
+        if (currentTurnPlayer != null) {
+            connection.send(new CurrentPlayerChangedMessage(currentTurnPlayer));
         }
         if (gameController.isSuspended()) {
             connection.send(new GameSuspendedMessage(gameController.getSuspensionRemainingMillis()));

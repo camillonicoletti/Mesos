@@ -142,7 +142,9 @@ public class Tui implements View {
 
     private void interactiveInputLoop() {
         while (model.isConnected() && !model.isGameEnded()) {
-            if (model.isGameSuspended()) {
+            if (model.isGameSuspended()
+                    || model.getLastConnectionEvent() != null
+                    || model.getLastTurnEvent() != null) {
                 try { Thread.sleep(500); } catch (InterruptedException e) { return; }
                 continue;
             }

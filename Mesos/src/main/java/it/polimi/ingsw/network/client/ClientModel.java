@@ -35,10 +35,13 @@ public class ClientModel {
 
     private String gameState;
     private String currentActionPlayer;
+    private String lastTurnEvent;
+    private long lastTurnEventExpiresAtMillis = -1L;
     private Era currentEra;
     private int roundNumber;
     private List<String> turnOrder = new ArrayList<>();
     private Map<Character, String> totemOnTiles = new HashMap<>();
+    private Set<String> disconnectedPlayers = new HashSet<>();
 
     private List<Integer> upperRowCharacterIds = new ArrayList<>();
     private List<Integer> lowerRowCharacterIds = new ArrayList<>();
@@ -131,14 +134,19 @@ public class ClientModel {
 
     public void applyStateChanged(StateChangedMessage m) {
         gameState = m.getStateName();
-        if (!"ActionResolutionState".equals(gameState)) {
+        if (!"ActionResolutionState".equals(gameState)
+                && !"TotemPlacementState".equals(gameState)) {
             currentActionPlayer = null;
         }
         notifyChanged();
     }
 
     public void applyCurrentPlayerChanged(CurrentPlayerChangedMessage m) {
+        String previousPlayer = currentActionPlayer;
         currentActionPlayer = m.getNickname();
+        if (currentActionPlayer != null && !currentActionPlayer.equals(previousPlayer)) {
+            setTurnEvent("Turno passato a " + currentActionPlayer);
+        }
         notifyChanged();
     }
 
@@ -225,12 +233,15 @@ public class ClientModel {
 
     public void applyPlayerDisconnected(PlayerDisconnectedMessage m) {
         lastDisconnectedPlayer = m.getNickname();
+        disconnectedPlayers.add(m.getNickname());
+        clearCurrentActionPlayerIfActor(m.getNickname());
         setConnectionEvent(m.getNickname() + " si è disconnesso");
         notifyChanged();
     }
 
     public void applyPlayerReconnected(PlayerReconnectedMessage m) {
         lastDisconnectedPlayer = null;
+        disconnectedPlayers.remove(m.getNickname());
         setConnectionEvent(m.getNickname() + " si è riconnesso");
         notifyChanged();
     }
@@ -274,6 +285,16 @@ public class ClientModel {
     public int getExpectedPlayers()                { return expectedPlayers; }
     public String getGameState()                   { return gameState; }
     public String getCurrentActionPlayer()         { return currentActionPlayer; }
+    public String getLastTurnEvent() {
+        if (lastTurnEvent == null) {
+            return null;
+        }
+        if (lastTurnEventExpiresAtMillis >= 0L
+                && System.currentTimeMillis() >= lastTurnEventExpiresAtMillis) {
+            return null;
+        }
+        return lastTurnEvent;
+    }
     public Era getCurrentEra()                     { return currentEra; }
     public int getRoundNumber()                    { return roundNumber; }
     public List<String> getTurnOrder()             { return Collections.unmodifiableList(turnOrder); }
@@ -293,6 +314,9 @@ public class ClientModel {
         return Math.max(0L, suspensionDeadlineMillis - System.currentTimeMillis());
     }
     public String getLastDisconnectedPlayer()      { return lastDisconnectedPlayer; }
+    public boolean isPlayerDisconnected(String nickname) {
+        return nickname != null && disconnectedPlayers.contains(nickname);
+    }
     public Map<String, TotemColor> getLobbyPlayerColors() {
         return Collections.unmodifiableMap(lobbyPlayerColors);
     }
@@ -307,7 +331,7 @@ public class ClientModel {
         if (!"ActionResolutionState".equals(gameState)) {
             return null;
         }
-        if (currentActionPlayer != null) {
+        if (currentActionPlayer != null && !disconnectedPlayers.contains(currentActionPlayer)) {
             return currentActionPlayer;
         }
         return null;
@@ -335,13 +359,20 @@ public class ClientModel {
     }
     
     public String getCurrentTotemPlacementPlayer() {
-        if (!"TotemPlacementState".equals(gameState) || turnOrder.isEmpty()) {
+        if (!"TotemPlacementState".equals(gameState)) {
+            return null;
+        }
+        if (currentActionPlayer != null && !disconnectedPlayers.contains(currentActionPlayer)) {
+            return currentActionPlayer;
+        }
+        if (turnOrder.isEmpty()) {
             return null;
         }
 
         Set<String> playersWhoAlreadyPlaced = new HashSet<>(totemOnTiles.values());
         for (String nickname : turnOrder) {
-            if (!playersWhoAlreadyPlaced.contains(nickname)) {
+            if (!playersWhoAlreadyPlaced.contains(nickname)
+                    && !disconnectedPlayers.contains(nickname)) {
                 return nickname;
             }
         }
@@ -363,6 +394,11 @@ public class ClientModel {
     private void setConnectionEvent(String message) {
         lastConnectionEvent = message;
         lastConnectionEventExpiresAtMillis = System.currentTimeMillis() + CONNECTION_EVENT_VISIBLE_MILLIS;
+    }
+
+    private void setTurnEvent(String message) {
+        lastTurnEvent = message;
+        lastTurnEventExpiresAtMillis = System.currentTimeMillis() + CONNECTION_EVENT_VISIBLE_MILLIS;
     }
 
     private void clearCurrentActionPlayerIfActor(String nickname) {

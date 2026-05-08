@@ -33,6 +33,7 @@ public class TotemPlacementState extends AbstractGameState {
         }
         currentTurnIndex = 0;
         advanceToNextConnectedPlayer(ctx);
+        notifyCurrentPlayer(ctx);
     }
 
     @Override
@@ -89,6 +90,8 @@ public class TotemPlacementState extends AbstractGameState {
         // se tutti hanno piazzato → passa ad ActionResolutionState
         if (haveAllConnectedPlayersPlaced(ctx)) {
             ctx.changeState(new ActionResolutionState());
+        } else {
+            notifyCurrentPlayer(ctx);
         }
     }
 
@@ -98,10 +101,12 @@ public class TotemPlacementState extends AbstractGameState {
             return;
         }
 
+        boolean wasCurrentPlayer = playerNickname.equals(getCurrentPlayerNickname(ctx));
         ctx.markPlayerDisconnected(playerNickname);
-        if (playerNickname.equals(getCurrentPlayerNickname(ctx)) && ctx.canContinueAfterDisconnection()) {
+        if (wasCurrentPlayer && ctx.canContinueAfterDisconnection()) {
             currentTurnIndex++;
             advanceToNextConnectedPlayer(ctx);
+            notifyCurrentPlayer(ctx);
         }
         if (ctx.canContinueAfterDisconnection() && haveAllConnectedPlayersPlaced(ctx)) {
             ctx.changeState(new ActionResolutionState());
@@ -143,12 +148,19 @@ public class TotemPlacementState extends AbstractGameState {
         return null;
     }
 
-    private String getCurrentPlayerNickname(GameController ctx) {
+    public String getCurrentPlayerNickname(GameController ctx) {
         advanceToNextConnectedPlayer(ctx);
         if (currentTurnIndex >= placementOrder.size()) {
             return null;
         }
         return placementOrder.get(currentTurnIndex);
+    }
+
+    private void notifyCurrentPlayer(GameController ctx) {
+        String currentPlayer = getCurrentPlayerNickname(ctx);
+        if (currentPlayer != null) {
+            ctx.notifyListeners(l -> l.onCurrentPlayerChanged(currentPlayer));
+        }
     }
 
     private void advanceToNextConnectedPlayer(GameController ctx) {
