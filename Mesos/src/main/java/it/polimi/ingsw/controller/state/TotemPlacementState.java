@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import it.polimi.ingsw.model.board.TurnOrderTile;
 
 public class TotemPlacementState extends AbstractGameState {
 
@@ -57,6 +56,7 @@ public class TotemPlacementState extends AbstractGameState {
         }
         PlaceTotemAction placeTotem = (PlaceTotemAction) action;
 
+        advanceToNextConnectedPlayer(ctx);
         String currentPlayerNickname = getCurrentPlayerNickname(ctx);
         if (currentPlayerNickname == null) {
             throw new IllegalStateException("No player available for placement");
@@ -115,9 +115,7 @@ public class TotemPlacementState extends AbstractGameState {
         boolean wasCurrentPlayer = playerNickname.equals(getCurrentPlayerNickname(ctx));
         ctx.markPlayerDisconnected(playerNickname);
         if (wasCurrentPlayer && ctx.canContinueAfterDisconnection()) {
-            currentTurnIndex++;
-            advanceToNextConnectedPlayer(ctx);
-            notifyCurrentPlayer(ctx);
+            skipCurrentPlayer(ctx);
         }
         if (ctx.canContinueAfterDisconnection() && haveAllConnectedPlayersPlaced(ctx)) {
             ctx.changeState(new ActionResolutionState());
@@ -128,6 +126,20 @@ public class TotemPlacementState extends AbstractGameState {
     public void onPlayerReconnected(GameController ctx, String playerNickname) {
         if (!ctx.containsGamePlayer(playerNickname)) {
             return;
+        }
+    }
+
+    @Override
+    public void onResume(GameController ctx) {
+        if (haveAllConnectedPlayersPlaced(ctx)) {
+            ctx.changeState(new ActionResolutionState());
+            return;
+        }
+        String previousCurrentPlayer = getCurrentPlayerNickname(ctx);
+        advanceToNextConnectedPlayer(ctx);
+        String currentPlayer = getCurrentPlayerNickname(ctx);
+        if (currentPlayer != null && !currentPlayer.equals(previousCurrentPlayer)) {
+            notifyCurrentPlayer(ctx);
         }
     }
 
@@ -160,7 +172,6 @@ public class TotemPlacementState extends AbstractGameState {
     }
 
     public String getCurrentPlayerNickname(GameController ctx) {
-        advanceToNextConnectedPlayer(ctx);
         if (currentTurnIndex >= placementOrder.size()) {
             return null;
         }
@@ -182,6 +193,12 @@ public class TotemPlacementState extends AbstractGameState {
             }
             currentTurnIndex++;
         }
+    }
+
+    private void skipCurrentPlayer(GameController ctx) {
+        currentTurnIndex++;
+        advanceToNextConnectedPlayer(ctx);
+        notifyCurrentPlayer(ctx);
     }
 
     private boolean haveAllConnectedPlayersPlaced(GameController ctx) {

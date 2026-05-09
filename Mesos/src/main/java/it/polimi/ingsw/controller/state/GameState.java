@@ -43,6 +43,13 @@ public interface GameState extends Serializable {
     void onPlayerReconnected(GameController ctx, String playerNickname);
 
     /**
+     * Called when the controller restores this state after a suspension.
+     *
+     * @param ctx the game controller context
+     */
+    void onResume(GameController ctx);
+
+    /**
      * Called when the controller exits this state.
      *
      * @param ctx the game controller context

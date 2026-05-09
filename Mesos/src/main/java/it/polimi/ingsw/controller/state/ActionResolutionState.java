@@ -367,6 +367,27 @@ public class ActionResolutionState extends AbstractGameState {
         }
     }
 
+    @Override
+    public void onResume(GameController ctx) {
+        if (isInExtraPickPhase()) {
+            if (extraPickIndex < extraPickQueue.size()
+                    && ctx.isPlayerDisconnected(extraPickQueue.get(extraPickIndex).getPlayer().getNickname())) {
+                extraPickIndex++;
+                prepareExtraPickPlayer(ctx);
+            }
+            return;
+        }
+
+        if (orderedPlayers != null
+                && currentIndex < orderedPlayers.size()
+                && ctx.isPlayerDisconnected(orderedPlayers.get(currentIndex).getPlayer().getNickname())) {
+            ctx.getGame().getCurrentRound().placeTotemOrderForPlayer(
+                    orderedPlayers.get(currentIndex).getPlayer());
+            currentIndex++;
+            prepareCurrentPlayer(ctx);
+        }
+    }
+
     // ── HELPERS ──────────────────────────────────────────────
 
     private CharacterCard findCharacterCard(List<CharacterCard> row, String cardId) {

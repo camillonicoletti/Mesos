@@ -86,6 +86,13 @@ public final class SnapshotBuilder {
             for (Player p : game.getPlayers()) turnOrder.add(p.getNickname());
         }
 
+        List<String> disconnectedPlayers = new ArrayList<>();
+        for (Player p : game.getPlayers()) {
+            if (controller.isPlayerDisconnected(p.getNickname())) {
+                disconnectedPlayers.add(p.getNickname());
+            }
+        }
+
         return new GameSnapshot(
                 players,
                 upperCharAndEvent, lowerCharAndEvent,
@@ -93,7 +100,8 @@ public final class SnapshotBuilder {
                 game.getCurrentEra(),
                 round != null ? round.getNumber() : 0,
                 totemOnTiles,
-                turnOrder
+                turnOrder,
+                disconnectedPlayers
         );
     }
 }

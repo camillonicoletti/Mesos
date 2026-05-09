@@ -129,15 +129,14 @@ public class GameControllerMegaEdgeCaseTest {
     }
 
     @Test
-    void firstPlayerCanChoosePlayerCountOnlyOnce() {
+    void firstPlayerCanChangePlayerCountBeforeGameStarts() {
         GameController controller = new GameController();
         controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
 
         controller.onMessageReceived("Alice", new SetPlayerCountAction(4));
+        controller.onMessageReceived("Alice", new SetPlayerCountAction(5));
 
-        assertEquals(4, controller.getChosenPlayersCount());
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Alice", new SetPlayerCountAction(5)));
+        assertEquals(5, controller.getChosenPlayersCount());
     }
 
     @Test
@@ -252,9 +251,8 @@ public class GameControllerMegaEdgeCaseTest {
         assertEquals(2, controller.getChosenPlayersCount());
     }
 
-    /** BUG-HUNTER / design decision: host leaves after choosing count. */
     @Test
-    void firstPlayerLeavingAfterChoosingCountShouldNotLeaveRemainingLobbyLockedToOldCount() {
+    void firstPlayerLeavingAfterChoosingCountPromotesNextPlayerWhoCanChangeCount() {
         GameController controller = new GameController();
 
         controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
@@ -263,7 +261,11 @@ public class GameControllerMegaEdgeCaseTest {
         controller.onPlayerDisconnection("Alice");
 
         assertEquals("Bob", controller.getLobbyPlayers().get(0).getNickname());
-        assertEquals(-1, controller.getChosenPlayersCount());
+        assertEquals(3, controller.getChosenPlayersCount());
+
+        controller.onMessageReceived("Bob", new SetPlayerCountAction(2));
+
+        assertEquals(2, controller.getChosenPlayersCount());
     }
 
     @Test
@@ -631,6 +633,27 @@ public class GameControllerMegaEdgeCaseTest {
         controller.onPlayerDisconnection("Alice");
 
         assertFalse(controller.checkSuspensionTimeout(start + 10L));
+    }
+
+    @Test
+    void resumeAfterDifferentPlayerReconnectsSkipsStillDisconnectedCurrentPlayer() {
+        GameController controller = createStartedTotemPlacementController(3, List.of(
+                new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
+                new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
+                new OfferTile('C', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
+        ));
+
+        controller.onPlayerDisconnection("Bob");
+        controller.onPlayerDisconnection("Alice");
+        assertTrue(controller.isSuspended());
+
+        controller.onPlayerReconnection("Bob");
+
+        assertFalse(controller.isSuspended());
+        assertEquals("Bob", controller.getCurrentTurnPlayerNickname());
+        assertThrows(IllegalStateException.class,
+                () -> controller.onMessageReceived("Alice", new PlaceTotemAction('A')));
+        assertDoesNotThrow(() -> controller.onMessageReceived("Bob", new PlaceTotemAction('B')));
     }
 
     @Test

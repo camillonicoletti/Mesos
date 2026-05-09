@@ -14,6 +14,7 @@ public class GameSnapshot implements Serializable {
     private final int roundNumber;
     private final Map<Character, String> totemOnTiles;
     private final List<String> turnOrder;
+    private final List<String> disconnectedPlayers;
 
     public GameSnapshot(List<PlayerSnapshot> players,
                         List<Integer> upperRowCharacterAndEventIds,
@@ -23,6 +24,20 @@ public class GameSnapshot implements Serializable {
                         Era currentEra, int roundNumber,
                         Map<Character, String> totemOnTiles,
                         List<String> turnOrder) {
+        this(players, upperRowCharacterAndEventIds, lowerRowCharacterAndEventIds,
+                upperRowBuildingIds, lowerRowBuildingIds, currentEra, roundNumber,
+                totemOnTiles, turnOrder, List.of());
+    }
+
+    public GameSnapshot(List<PlayerSnapshot> players,
+                        List<Integer> upperRowCharacterAndEventIds,
+                        List<Integer> lowerRowCharacterAndEventIds,
+                        List<Integer> upperRowBuildingIds,
+                        List<Integer> lowerRowBuildingIds,
+                        Era currentEra, int roundNumber,
+                        Map<Character, String> totemOnTiles,
+                        List<String> turnOrder,
+                        List<String> disconnectedPlayers) {
         this.players = players;
         this.upperRowCharacterAndEventIds = upperRowCharacterAndEventIds;
         this.lowerRowCharacterAndEventIds = lowerRowCharacterAndEventIds;
@@ -32,6 +47,7 @@ public class GameSnapshot implements Serializable {
         this.roundNumber = roundNumber;
         this.totemOnTiles = totemOnTiles;
         this.turnOrder = turnOrder;
+        this.disconnectedPlayers = disconnectedPlayers;
     }
 
     public List<PlayerSnapshot> getPlayers() { return players; }
@@ -43,4 +59,5 @@ public class GameSnapshot implements Serializable {
     public int getRoundNumber() { return roundNumber; }
     public Map<Character, String> getTotemOnTiles() { return totemOnTiles; }
     public List<String> getTurnOrder() { return turnOrder; }
+    public List<String> getDisconnectedPlayers() { return disconnectedPlayers; }
 }
