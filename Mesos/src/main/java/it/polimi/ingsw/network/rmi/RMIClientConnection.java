@@ -31,6 +31,10 @@ public class RMIClientConnection implements ClientSideConnection {
         this.disconnectNotified = false;
         this.onMessage = message -> { };
         this.onDisconnect = () -> { };
+
+    }
+    public void register() throws RemoteException {
+        remoteServer.register(callback);
     }
 
     @Override

@@ -30,7 +30,12 @@ public class RMIClientApp {
         ClientModel model = new ClientModel();
         ClientController controller = new ClientController(model, connection);
         View view = selectView(controller, model);
-
+        try {
+            ((RMIClientConnection) connection).register();
+        } catch (java.rmi.RemoteException e) {
+            System.err.println("Unable to register with the RMI server: " + e.getMessage());
+            System.exit(1);
+        }
         try {
             view.run();
         } catch (Exception exception) {
