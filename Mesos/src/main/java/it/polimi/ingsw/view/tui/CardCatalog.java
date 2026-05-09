@@ -20,10 +20,10 @@ public final class CardCatalog {
         public final Kind kind;
         public final String era;       // "I" / "II" / "III"
         public final String typeName;  // "Hunter", "Builder", "Bldg", "Event", ...
-        public final String detail;    // breve qualificatore (es. "+", "[9]", "2★", "+3 -1c", "FullSet")
-        public final int foodCost;     // solo edifici (0 altrimenti)
-        public final int pointsEnd;    // solo edifici (0 altrimenti)
-        public final String eventTag;  // solo eventi (es. "Hunt", "Cave", ...)
+        public final String detail;    // short qualifier, e.g. "+", "[9]", "2★", "+3 -1c", "FullSet"
+        public final int foodCost;     // buildings only, 0 otherwise
+        public final int pointsEnd;    // buildings only, 0 otherwise
+        public final String eventTag;  // events only, e.g. "Hunt", "Cave", ...
 
         CardInfo(int id, Kind kind, String era, String typeName, String detail,
                  int foodCost, int pointsEnd, String eventTag) {
@@ -56,7 +56,7 @@ public final class CardCatalog {
                 + (c.detail.isEmpty() ? "" : " " + c.detail);
     }
 
-    // ── caricamento ──────────────────────────────────────────────────────────
+    // ── loading ──────────────────────────────────────────────────────────────
 
     private static void loadCharacters() {
         for (JsonElement el : safeRead("characters.json")) {
