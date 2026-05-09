@@ -145,6 +145,7 @@ public class ClientModel {
                 && !"TotemPlacementState".equals(gameState)) {
             currentActionPlayer = null;
         }
+        lastError = null;
         notifyChanged();
     }
 
@@ -158,11 +159,13 @@ public class ClientModel {
     }
 
     public void applyTotemPlaced(TotemPlacedMessage m) {
+        lastError = null;
         totemOnTiles.put(m.getTileId(), m.getNickname());
         notifyChanged();
     }
 
     public void applyEventResolved(EventResolvedMessage m) {
+        lastError = null;
         lastResolvedEventCardId       = m.getCardId();
         lastResolvedEventTitle        = m.getTitle();
         lastResolvedEventDescription  = m.getDescription();
@@ -190,6 +193,7 @@ public class ClientModel {
     }
 
     public void applyCharacterCardTaken(CharacterCardTakenMessage m) {
+        lastError = null;
         if (m.isFromUpperRow()) upperRowCharacterIds.remove(Integer.valueOf(m.getCardId()));
         else                    lowerRowCharacterIds.remove(Integer.valueOf(m.getCardId()));
         clearCurrentActionPlayerIfActor(m.getNickname());
