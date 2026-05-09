@@ -549,7 +549,11 @@ public class GameController implements Serializable {
         // Restore the exact pre-suspension state without re-entering it from scratch.
         currentState = suspendedStateReturn;
         suspendedStateReturn = null;
-        notifyListeners(l -> l.onStateChanged(currentState));
+        GameState resumedState = currentState;
+        currentState.onResume(this);
+        if (currentState == resumedState) {
+            notifyListeners(l -> l.onStateChanged(currentState));
+        }
     }
 
     // LISTENER

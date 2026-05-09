@@ -34,6 +34,14 @@ public class RMIServer extends UnicastRemoteObject implements RemoteServer {
     }
 
     @Override
+    public synchronized void register(RemoteClient client) throws RemoteException {
+        if (client == null) {
+            throw new IllegalArgumentException("Remote client cannot be null");
+        }
+        getOrCreateConnection(client);
+    }
+
+    @Override
     public synchronized void send(RemoteClient client, ClientMessage message) throws RemoteException {
         if (client == null) {
             throw new IllegalArgumentException("Remote client cannot be null");
@@ -84,6 +92,7 @@ public class RMIServer extends UnicastRemoteObject implements RemoteServer {
             }
         });
 
+        System.out.println("New RMI connection: " + client);
         lobbyManager.registerPendingConnection(created);
         connections.put(client, created);
         return created;

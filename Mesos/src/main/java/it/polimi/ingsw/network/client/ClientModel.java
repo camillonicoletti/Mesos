@@ -132,10 +132,12 @@ public class ClientModel {
         roundNumber          = snap.getRoundNumber();
         totemOnTiles         = new HashMap<>(snap.getTotemOnTiles());
         turnOrder            = new ArrayList<>(snap.getTurnOrder());
+        disconnectedPlayers  = new HashSet<>(snap.getDisconnectedPlayers());
         upperRowCharacterIds = new ArrayList<>(snap.getUpperRowCharacterAndEventIds());
         lowerRowCharacterIds = new ArrayList<>(snap.getLowerRowCharacterAndEventIds());
         upperRowBuildingIds  = new ArrayList<>(snap.getUpperRowBuildingIds());
         lowerRowBuildingIds  = new ArrayList<>(snap.getLowerRowBuildingIds());
+        clearCurrentActionPlayerIfDisconnected();
         notifyChanged();
     }
 
@@ -432,9 +434,14 @@ public class ClientModel {
     }
 
     private void clearCurrentActionPlayerIfActor(String nickname) {
-        if ("ActionResolutionState".equals(gameState)
-                && currentActionPlayer != null
+        if (currentActionPlayer != null
                 && currentActionPlayer.equals(nickname)) {
+            currentActionPlayer = null;
+        }
+    }
+
+    private void clearCurrentActionPlayerIfDisconnected() {
+        if (currentActionPlayer != null && disconnectedPlayers.contains(currentActionPlayer)) {
             currentActionPlayer = null;
         }
     }

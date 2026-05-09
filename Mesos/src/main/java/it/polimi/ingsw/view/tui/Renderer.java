@@ -76,6 +76,7 @@ public class Renderer {
 
         blank();
         footer(model);
+        System.out.flush();
     }
 
 

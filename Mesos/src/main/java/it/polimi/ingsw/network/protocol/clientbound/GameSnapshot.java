@@ -16,6 +16,7 @@ public class GameSnapshot implements Serializable {
     private final int roundNumber;
     private final Map<Character, String> totemOnTiles;
     private final List<String> turnOrder;
+    private final List<String> disconnectedPlayers;
 
     public GameSnapshot(List<PlayerSnapshot> players,
                         List<Integer> upperRowCharacterAndEventIds,
@@ -26,6 +27,28 @@ public class GameSnapshot implements Serializable {
                         int roundNumber,
                         Map<Character, String> totemOnTiles,
                         List<String> turnOrder) {
+        this(players,
+                upperRowCharacterAndEventIds,
+                lowerRowCharacterAndEventIds,
+                upperRowBuildingIds,
+                lowerRowBuildingIds,
+                currentEra,
+                roundNumber,
+                totemOnTiles,
+                turnOrder,
+                List.of());
+    }
+
+    public GameSnapshot(List<PlayerSnapshot> players,
+                        List<Integer> upperRowCharacterAndEventIds,
+                        List<Integer> lowerRowCharacterAndEventIds,
+                        List<Integer> upperRowBuildingIds,
+                        List<Integer> lowerRowBuildingIds,
+                        Era currentEra,
+                        int roundNumber,
+                        Map<Character, String> totemOnTiles,
+                        List<String> turnOrder,
+                        List<String> disconnectedPlayers) {
         this.players = List.copyOf(players);
         this.upperRowCharacterAndEventIds = List.copyOf(upperRowCharacterAndEventIds);
         this.lowerRowCharacterAndEventIds = List.copyOf(lowerRowCharacterAndEventIds);
@@ -35,6 +58,7 @@ public class GameSnapshot implements Serializable {
         this.roundNumber = roundNumber;
         this.totemOnTiles = Map.copyOf(totemOnTiles);
         this.turnOrder = List.copyOf(turnOrder);
+        this.disconnectedPlayers = List.copyOf(disconnectedPlayers);
     }
 
     public List<PlayerSnapshot> getPlayers() {
@@ -71,5 +95,9 @@ public class GameSnapshot implements Serializable {
 
     public List<String> getTurnOrder() {
         return turnOrder;
+    }
+
+    public List<String> getDisconnectedPlayers() {
+        return disconnectedPlayers;
     }
 }

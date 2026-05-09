@@ -31,6 +31,11 @@ public abstract class AbstractGameState implements GameState {
         // Default: do nothing
     }
 
+    @Override
+    public void onResume(GameController ctx) {
+        // Default: do nothing
+    }
+
     /**
      * Rejects an action that is not valid in the current state.
      *

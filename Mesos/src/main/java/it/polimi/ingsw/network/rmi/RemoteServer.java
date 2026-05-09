@@ -28,4 +28,10 @@ public interface RemoteServer extends Remote {
      * @throws RemoteException if the invocation fails
      */
     void disconnect(RemoteClient client) throws RemoteException;
+
+    /**
+     * Registers a remote client with the server before any message is sent.
+     * Triggers the same lobby registration path used by socket clients on accept.
+     */
+    void register(RemoteClient client) throws RemoteException;
 }
