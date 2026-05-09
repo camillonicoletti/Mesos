@@ -1,0 +1,41 @@
+{
+  "totems": {
+    "RED": "gui/assets/tokens/totem_red.png",
+    "BLUE": "gui/assets/tokens/totem_blue.png",
+    "PURPLE": "gui/assets/tokens/totem_purple.png",
+    "YELLOW": "gui/assets/tokens/totem_yellow.png",
+    "WHITE": "gui/assets/tokens/totem_white.png"
+  },
+  "offerTiles": {
+    "A": {
+      "letter": "A",
+      "asset": "gui/assets/board/offer_tile_a.png"
+    },
+    "B": {
+      "letter": "B",
+      "asset": "gui/assets/board/offer_tile_b.png"
+    },
+    "C": {
+      "letter": "C",
+      "asset": "gui/assets/board/offer_tile_c.png"
+    },
+    "D": {
+      "letter": "D",
+      "asset": "gui/assets/board/offer_tile_d.png"
+    },
+    "E": {
+      "letter": "E",
+      "asset": "gui/assets/board/offer_tile_e.png"
+    },
+    "F": {
+      "letter": "F",
+      "asset": "gui/assets/board/offer_tile_f.png"
+    },
+    "G": {
+      "letter": "G",
+      "asset": "gui/assets/board/offer_tile_g.png"
+    }
+  },
+  "food": "gui/assets/tokens/food.png",
+  "prestige": "gui/assets/tokens/prestige.png"
+}
