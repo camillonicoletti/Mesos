@@ -20,7 +20,7 @@ import java.util.function.Consumer;
  */
 public class SocketClientConnection implements ClientSideConnection {
 
-    private static final int HEARTBEAT_TIMEOUT_SECONDS = 15;
+    private static final int HEARTBEAT_TIMEOUT_SECONDS = 60;
     private static final int HEARTBEAT_CHECK_INTERVAL_SECONDS = 5;
 
     private final Socket socket;

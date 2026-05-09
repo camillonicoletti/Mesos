@@ -128,4 +128,9 @@ public class VirtualView implements GameListener {
     public void onGameSnapshotChanged() {
         connection.send(new GameSyncMessage(SnapshotBuilder.build(controller)));
     }
+    @Override
+    public void onEventResolved(int cardId, String title, String description,
+                                List<EventResolvedMessage.PlayerEffect> effects) {
+        connection.send(new EventResolvedMessage(cardId, title, description, effects));
+    }
 }

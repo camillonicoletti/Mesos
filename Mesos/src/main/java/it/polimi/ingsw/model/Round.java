@@ -260,7 +260,7 @@ public class Round implements Serializable {
 
 
 
-    private List<EventCard> getOrderedEventsForResolution(boolean includeUpperRow) {
+    public List<EventCard> getOrderedEventsForResolution(boolean includeUpperRow) {
         List<EventCard> eventsToResolve = new ArrayList<>();
 
         // 1. prendo eventi lower

@@ -18,7 +18,7 @@ import java.util.function.Consumer;
 public class RMIServerConnection implements ServerSideConnection {
 
     private static final int HEARTBEAT_INTERVAL_SECONDS = 5;
-    private static final int HEARTBEAT_TIMEOUT_SECONDS = 15;
+    private static final int HEARTBEAT_TIMEOUT_SECONDS = 60;
 
     private final RemoteClient remoteClient;
     private final ScheduledExecutorService heartbeatExecutor;

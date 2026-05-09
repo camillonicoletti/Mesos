@@ -53,6 +53,7 @@ public class ClientController {
         else if (message instanceof RoundEndedMessage m)    model.applyRoundEnded(m);
         else if (message instanceof GameEndedMessage m)     model.applyGameEnded(m);
         else if (message instanceof ErrorMessage m)         model.applyError(m);
+        else if (message instanceof EventResolvedMessage m)        model.applyEventResolved(m);
         else if (message instanceof CurrentPlayerChangedMessage m) model.applyCurrentPlayerChanged(m);
         else if (message instanceof PingMessage)            connection.send(new PongMessage());
         else if (message instanceof GameSuspendedMessage m)        model.applyGameSuspended(m);

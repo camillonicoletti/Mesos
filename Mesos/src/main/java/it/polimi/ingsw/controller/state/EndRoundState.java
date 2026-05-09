@@ -32,6 +32,13 @@ public class EndRoundState extends AbstractGameState {
 
             ctx.notifyListeners(l -> l.onRoundEnded(finishedRound));
             ctx.notifyListeners(GameListener::onGameSnapshotChanged);
+
+            try {
+                Thread.sleep(5_000L);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+
             ctx.changeState(new TotemPlacementState());
         }
     }

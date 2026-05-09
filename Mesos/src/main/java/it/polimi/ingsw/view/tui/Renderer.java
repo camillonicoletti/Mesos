@@ -91,8 +91,8 @@ public class Renderer {
             case "TotemPlacementState"   -> gameScreen(model, true);
             case "ActionResolutionState" -> gameScreen(model, false);
 
-            case "EventResolutionState"  -> simpleScreen("Il server sta risolvendo gli eventi...", model);
-            case "EndRoundState"         -> simpleScreen("Fine del round " + model.getRoundNumber() + ". Preparazione...", model);
+            case "EventResolutionState"  -> eventResolutionScreen(model);
+            case "EndRoundState"         -> endOfRoundScreen(model);
             case "SuspendedState"        -> suspendedScreen(model);
             case "EndGameState"          -> endGameScreen(model);
             default                      -> gameScreen(model, false);
@@ -311,6 +311,78 @@ public class Renderer {
         }
         blank();
     }
+    private void eventResolutionScreen(ClientModel model) {
+        blank();
+        String title = model.getLastResolvedEventTitle();
+        String desc  = model.getLastResolvedEventDescription();
+
+        if (title == null) {
+            row("  " + YLW + "Resolving events..." + RST);
+            blank();
+        } else {
+            printBox("EVENT RESOLVED — " + title, desc);
+            blank();
+            // Per-player breakdown for this event
+            for (var eff : model.getLastResolvedEventEffects()) {
+                String foodTxt = formatDelta(eff.getFoodDelta(), eff.getNewFood(), "c");
+                String ppTxt   = formatDelta(eff.getPointsDelta(), eff.getNewPoints(), "PP");
+                PlayerView p = model.getPlayers().get(eff.getNickname());
+                String col = p != null ? totemColor(p.getTotemColor()) : WHT;
+                row("  " + col + "● " + WHT + String.format("%-14s", eff.getNickname()) + RST
+                        + "  food " + foodTxt + "    points " + ppTxt);
+            }
+        }
+
+        blank();
+        for (PlayerView p : model.getPlayers().values()) {
+            String col = totemColor(p.getTotemColor());
+            row("  " + col + "●" + RST + " " + WHT + String.format("%-16s", p.getNickname()) + RST
+                    + "  " + YLW + p.getFood() + "c" + RST
+                    + "  " + foodBar(p.getFood(), 20)
+                    + "  " + GRN + p.getPrestigePoints() + " PP" + RST);
+        }
+        blank();
+    }
+
+    private String formatDelta(int delta, int total, String unit) {
+        String d;
+        if (delta > 0)      d = GRN + "+" + delta + RST;
+        else if (delta < 0) d = RED + String.valueOf(delta) + RST;
+        else                d = GRY + "0" + RST;
+        return d + " (" + total + unit + ")";
+    }
+
+    private void endOfRoundScreen(ClientModel model) {
+        blank();
+        int finishedRound = model.getLastFinishedRound();
+        if (finishedRound < 1) {
+            // Fallback: should rarely happen (only if EndRound state arrives
+            // before any RoundEnded message — i.e., game restored from disk)
+            finishedRound = Math.max(1, model.getRoundNumber() - 1);
+        }
+        printBox("ROUND " + finishedRound + " ENDED", "Preparing the next round...");
+        blank();
+        for (PlayerView p : model.getPlayers().values()) {
+            String col = totemColor(p.getTotemColor());
+            row("  " + col + "●" + RST + " " + WHT + String.format("%-16s", p.getNickname()) + RST
+                    + "  " + YLW + p.getFood() + "c" + RST
+                    + "  " + foodBar(p.getFood(), 20)
+                    + "  " + GRN + p.getPrestigePoints() + " PP" + RST);
+        }
+        blank();
+    }
+
+    private void printBox(String title, String body) {
+        int width = Math.max(title.length(), body.length()) + 6;
+        String border = "+" + "-".repeat(width - 2) + "+";
+        String pad = "|" + " ".repeat(width - 2) + "|";
+
+        row("  " + CYN + border + RST);
+        row("  " + CYN + "|" + RST + center(YLW + BOLD + title + RST, width - 2) + CYN + "|" + RST);
+        row("  " + CYN + pad + RST);
+        row("  " + CYN + "|" + RST + center(WHT + body + RST, width - 2) + CYN + "|" + RST);
+        row("  " + CYN + border + RST);
+    }
 
     private void gameScreen(ClientModel model, boolean totemPhase) {
         blank();
@@ -391,7 +463,7 @@ public class Renderer {
             return;
         }
 
-        int maxPer = ids.size();
+        int maxPer = Math.max(1, (W - 2) / (CARD_W + CARD_GAP));
 
         for (int start = 0; start < ids.size(); start += maxPer) {
             List<Integer> slice = ids.subList(start, Math.min(start + maxPer, ids.size()));

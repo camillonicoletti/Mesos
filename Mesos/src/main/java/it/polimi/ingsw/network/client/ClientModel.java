@@ -5,6 +5,8 @@ import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.protocol.clientbound.*;
 
 import java.util.*;
+import java.util.Collections;
+import java.util.List;
 
 public class ClientModel {
 
@@ -13,6 +15,11 @@ public class ClientModel {
     public interface Listener {
         void onModelChanged();
     }
+    private int lastFinishedRound = 0;
+    private int    lastResolvedEventCardId = -1;
+    private String lastResolvedEventTitle;
+    private String lastResolvedEventDescription;
+    private List<EventResolvedMessage.PlayerEffect> lastResolvedEventEffects = List.of();
 
     private boolean gameSuspended;
     private long suspensionDeadlineMillis = -1L;
@@ -155,6 +162,14 @@ public class ClientModel {
         notifyChanged();
     }
 
+    public void applyEventResolved(EventResolvedMessage m) {
+        lastResolvedEventCardId       = m.getCardId();
+        lastResolvedEventTitle        = m.getTitle();
+        lastResolvedEventDescription  = m.getDescription();
+        lastResolvedEventEffects     = m.getEffects() != null ? m.getEffects() : List.of();
+        notifyChanged();
+    }
+
     public void applyEraChanged(EraChangedMessage m) {
         currentEra = m.getNewEra();
         notifyChanged();
@@ -202,6 +217,7 @@ public class ClientModel {
 
     public void applyRoundEnded(RoundEndedMessage m) {
         roundNumber = m.getRoundNumber();
+        lastFinishedRound = m.getRoundNumber();   // ← ADD THIS
         notifyChanged();
     }
 
@@ -357,7 +373,17 @@ public class ClientModel {
     public boolean isGameEnded() {
         return "EndGameState".equals(gameState);
     }
-    
+
+    public int    getLastResolvedEventCardId()      { return lastResolvedEventCardId; }
+    public String getLastResolvedEventTitle()       { return lastResolvedEventTitle; }
+    public String getLastResolvedEventDescription() { return lastResolvedEventDescription; }
+
+    public List<EventResolvedMessage.PlayerEffect> getLastResolvedEventEffects() {
+        return Collections.unmodifiableList(lastResolvedEventEffects);
+    }
+
+    public int getLastFinishedRound() { return lastFinishedRound; }
+
     public String getCurrentTotemPlacementPlayer() {
         if (!"TotemPlacementState".equals(gameState)) {
             return null;
