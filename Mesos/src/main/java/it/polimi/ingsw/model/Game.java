@@ -13,7 +13,7 @@ import it.polimi.ingsw.model.card.CharacterCard;
 import it.polimi.ingsw.model.card.HunterCard;
 import it.polimi.ingsw.model.card.InventorCard;
 import it.polimi.ingsw.model.board.TurnSlot;
-
+import java.util.Collections;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -148,8 +148,8 @@ public class Game implements Serializable {
     }
 
     public void end() {
-        calculateFinalScores();
         gameEnded = true;
+        calculateFinalScores();
     }
 
     public boolean isGameOver() {
@@ -221,6 +221,36 @@ public class Game implements Serializable {
      * instead of calling apply() directly on the player, avoiding double counting
      * with the prestige points already accumulated during the game.
      */
+    /**
+     * Calculates and caches the final scores.
+     * This method is meant to be used once the game has ended.
+     */
+    /**
+     * Calculates the current score for a single player without updating the cached final score map.
+     *
+     * @param player the player whose score must be calculated
+     * @return the calculated score
+     */
+    private int calculateScoreForPlayer(Player player) {
+        int finalScore = player.getPrestigePoints();
+
+        finalScore += calculateInventorPoints(player);
+        finalScore += calculateArtistPoints(player);
+        finalScore += calculateBuilderPoints(player);
+
+        for (BuildingCard building : player.getTribe().getBuildingCards()) {
+            finalScore += building.getPointsEndOfMatch();
+        }
+
+        for (BuildingCard building : player.getTribe().getBuildingCards()) {
+            if (building.getEffect() instanceof EndGameEffect endEffect) {
+                finalScore += endEffect.calculatePoints(player);
+            }
+        }
+
+        return finalScore;
+    }
+
     public void calculateFinalScores() {
         if (finalScoresCalculated) {
             return;
@@ -229,30 +259,7 @@ public class Game implements Serializable {
         finalScores.clear();
 
         for (Player player : players) {
-            int finalScore = player.getPrestigePoints();
-
-            // inventor points — inventors * distinct icons
-            finalScore += calculateInventorPoints(player);
-
-            // artist points — 10 PP per pair of artists
-            finalScore += calculateArtistPoints(player);
-
-            // base builder points — always counted
-            finalScore += calculateBuilderPoints(player);
-
-            // base points printed on each building card
-            for (BuildingCard building : player.getTribe().getBuildingCards()) {
-                finalScore += building.getPointsEndOfMatch();
-            }
-            // end-of-game building effects: all BuildingCards implementing EndGameEffect
-            // use calculatePoints() to avoid modifying player state and double counting
-            for (BuildingCard building : player.getTribe().getBuildingCards()) {
-                if (building.getEffect() instanceof EndGameEffect endEffect) {
-                    finalScore += endEffect.calculatePoints(player);
-                }
-            }
-
-            finalScores.put(player, finalScore);
+            finalScores.put(player, calculateScoreForPlayer(player));
         }
 
         finalScoresCalculated = true;
@@ -310,7 +317,19 @@ public class Game implements Serializable {
             throw new IllegalArgumentException("Chosen character card is not in the selected row");
         }
 
-        row.remove(chosenCard);
+        List<CharacterCard> mutableRow;
+
+        if (currentRound.getUpperRowTribute().contains(chosenCard)
+                && row.equals(currentRound.getUpperRowTribute())) {
+            mutableRow = currentRound.mutableUpperRowTribute();
+        } else if (currentRound.getLowerRowTribute().contains(chosenCard)
+                && row.equals(currentRound.getLowerRowTribute())) {
+            mutableRow = currentRound.mutableLowerRowTribute();
+        } else {
+            throw new IllegalArgumentException("Selected row does not belong to the current round");
+        }
+
+        mutableRow.remove(chosenCard);
         player.addCharacterCard(chosenCard);
 
         applyCharacterImmediateEffects(player, chosenCard);
@@ -345,15 +364,25 @@ public class Game implements Serializable {
             throw new IllegalStateException("Player does not have enough food to take this building");
         }
 
+        List<BuildingCard> mutableRow;
+
+        if (currentRound.getUpperRowBuildings().contains(chosenCard)
+                && row.equals(currentRound.getUpperRowBuildings())) {
+            mutableRow = currentRound.mutableUpperRowBuildings();
+        } else if (currentRound.getLowerRowBuildings().contains(chosenCard)
+                && row.equals(currentRound.getLowerRowBuildings())) {
+            mutableRow = currentRound.mutableLowerRowBuildings();
+        } else {
+            throw new IllegalArgumentException("Selected row does not belong to the current round");
+        }
+
         player.spendFood(finalCost);
-        row.remove(chosenCard);
+        mutableRow.remove(chosenCard);
         player.addBuildingCard(chosenCard);
     }
-
     public boolean isLastRound() {
         return currentRoundNumber == MAX_ROUNDS;
     }
-
     private int getBuildingDiscount(Player player) {
         return player.getTribe().getBuildingDiscount();
     }
@@ -376,7 +405,7 @@ public class Game implements Serializable {
 
 
     public List<Player> getPlayers() {
-        return players;
+        return Collections.unmodifiableList(players);
     }
 
     public Era getCurrentEra() {
@@ -401,7 +430,19 @@ public class Game implements Serializable {
         return board;
     }
 
+    /**
+     * Returns the player's score.
+     * Before the game ends, this method returns a live score preview without caching it.
+     * After the game ends, it returns the cached final score.
+     *
+     * @param player the player whose score is requested
+     * @return the player's score
+     */
     public int getFinalScore(Player player) {
+        if (!gameEnded) {
+            return calculateScoreForPlayer(player);
+        }
+
         if (!finalScoresCalculated) {
             calculateFinalScores();
         }
@@ -410,18 +451,28 @@ public class Game implements Serializable {
     }
 
     public Map<Player, Integer> getFinalScores() {
+        if (!gameEnded) {
+            Map<Player, Integer> liveScores = new HashMap<>();
+
+            for (Player player : players) {
+                liveScores.put(player, calculateScoreForPlayer(player));
+            }
+
+            return liveScores;
+        }
+
         if (!finalScoresCalculated) {
             calculateFinalScores();
         }
 
         return new HashMap<>(finalScores);
     }
-
+    /**
+     * Returns the current winner according to score and food tie-breaker.
+     *
+     * @return the current winning player, or null if there are no players
+     */
     public Player getWinner() {
-        if (!finalScoresCalculated) {
-            calculateFinalScores();
-        }
-
         return players.stream()
                 .max(Comparator.comparingInt(this::getFinalScore)
                         .thenComparingInt(Player::getFood))

@@ -1,5 +1,11 @@
 package it.polimi.ingsw.controller;
-
+import it.polimi.ingsw.model.Round;
+import it.polimi.ingsw.model.board.ActionSlot;
+import it.polimi.ingsw.model.board.Board;
+import it.polimi.ingsw.model.board.FoodSlot;
+import it.polimi.ingsw.model.board.OfferTile;
+import it.polimi.ingsw.model.board.TurnOrderTile;
+import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.controller.action.JoinGameAction;
 import it.polimi.ingsw.controller.action.PlaceTotemAction;
 import it.polimi.ingsw.controller.action.ReadyAction;
@@ -207,18 +213,50 @@ public class GameControllerDisconnectionTest {
 
         controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
         controller.onMessageReceived("Bob", new JoinGameAction(createTotem(TotemColor.BLUE)));
-        controller.setGame(new Game(
-                controller.getLobbyPlayers(),
+
+        List<Player> players = new ArrayList<>(controller.getLobbyPlayers());
+
+        Board board = new Board(
+                new ArrayList<>(List.of(
+                        new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 0))),
+                        new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 0)))
+                )),
+                TurnOrderTile.createForPlayers(players.size())
+        );
+
+        Game game = new Game(
+                players,
                 1,
                 null,
+                Era.I,
                 null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-        ));
+                board,
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>()
+        );
+
+        Round round = new Round(
+                1,
+                game,
+                RoundPhase.TOTEM_PLACEMENT,
+                Era.I,
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>()
+        );
+
+        game.setCurrentRound(round);
+
+        for (Player player : players) {
+            player.setGame(game);
+        }
+
+        controller.setGame(game);
         controller.changeState(new TotemPlacementState());
 
         return controller;

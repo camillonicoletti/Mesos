@@ -153,7 +153,7 @@ public class ClientModel {
         String previousPlayer = currentActionPlayer;
         currentActionPlayer = m.getNickname();
         if (currentActionPlayer != null && !currentActionPlayer.equals(previousPlayer)) {
-            setTurnEvent("Turno passato a " + currentActionPlayer);
+            setTurnEvent("Turn passed to " + currentActionPlayer);
         }
         notifyChanged();
     }

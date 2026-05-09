@@ -22,7 +22,7 @@ public class ClientController {
         try {
             connection.send(message);
         } catch (RuntimeException exception) {
-            model.applyConnectionLost("Connessione al server interrotta");
+            model.applyConnectionLost("Connection to the server lost");
             throw exception;
         }
     }
@@ -34,7 +34,7 @@ public class ClientController {
             // If the socket is already down, we still want the client to terminate cleanly.
         } finally {
             connection.close();
-            model.applyConnectionLost("Connessione chiusa.");
+            model.applyConnectionLost("Connection closed.");
         }
     }
 

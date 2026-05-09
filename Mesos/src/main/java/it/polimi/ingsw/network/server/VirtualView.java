@@ -28,17 +28,17 @@ public class VirtualView implements GameListener {
 
     @Override
     public void onPlayerJoined(String nick) {
-        // Notifica gestita dal LobbyManager con LobbyUpdateMessage; qui non serve
+        // Notification handled by LobbyManager through LobbyUpdateMessage; nothing is needed here.
     }
 
     @Override
     public void onPlayersCountSet(int count) {
-        // Idem
+        // Same as above.
     }
 
     @Override
     public void onGameStarted() {
-        // Il GameStartedMessage con snapshot lo manda LobbyManager dopo aver costruito lo snapshot
+        // LobbyManager sends the GameStartedMessage with the snapshot after building it.
     }
 
     @Override

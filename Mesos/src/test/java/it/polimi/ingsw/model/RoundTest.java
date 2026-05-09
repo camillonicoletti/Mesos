@@ -114,7 +114,7 @@ public class RoundTest {
 
     @Test
     void testCheckEraTransitionAdvancesToEraII() {
-        round.getUpperRowTribute().add(new HunterCard(99, Era.II, 2, false));
+        round.mutableUpperRowTribute().add(new HunterCard(99, Era.II, 2, false));
         round.checkEraTransition();
         assertEquals(Era.II, game.getCurrentEra());
     }
@@ -129,8 +129,8 @@ public class RoundTest {
     void testCreateNextRoundHasIndependentLists() {
         Round round2 = round.createNextRound(2);
 
-        round.getUpperRowTribute().clear();
-        round.getLowerRowTribute().clear();
+        round.mutableUpperRowTribute().clear();
+        round.mutableLowerRowTribute().clear();
 
         assertNotSame(round.getUpperRowTribute(), round2.getUpperRowTribute());
         assertNotSame(round.getLowerRowTribute(), round2.getLowerRowTribute());

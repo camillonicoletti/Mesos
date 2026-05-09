@@ -40,17 +40,17 @@ public class GameControllerMoreLobbyEdgeTest {
     }
 
     @Test
-    void cannotChangePlayerCountAfterItWasChosen() {
+    void firstPlayerCanChangePlayerCountBeforeGameStarts() {
         GameController controller = new GameController();
 
         controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
         controller.onMessageReceived("Alice", new SetPlayerCountAction(3));
 
-        assertThrows(IllegalStateException.class, () ->
+        assertDoesNotThrow(() ->
                 controller.onMessageReceived("Alice", new SetPlayerCountAction(4))
         );
 
-        assertEquals(3, controller.getChosenPlayersCount());
+        assertEquals(4, controller.getChosenPlayersCount());
     }
 
     @Test
@@ -228,7 +228,8 @@ public class GameControllerMoreLobbyEdgeTest {
 
         assertEquals(1, controller.getLobbyPlayers().size());
         assertEquals("Bob", controller.getLobbyPlayers().get(0).getNickname());
-        assertEquals(-1, controller.getChosenPlayersCount());
+        assertEquals(3, controller.getChosenPlayersCount());
+        assertTrue(controller.isFirstPlayer("Bob"));
     }
 
     private GameController createStartedGameController() {

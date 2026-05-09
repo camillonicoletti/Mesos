@@ -50,38 +50,63 @@ public class Player implements Serializable {
         return totem;
     }
 
+    /**
+     * Adds food to the player.
+     *
+     * @param amount the amount of food to add
+     * @throws IllegalArgumentException if the amount is negative
+     */
     public void addFood(int amount) {
-        if (amount == 0) return;
-        food += amount;
-        if (game != null) game.notifyListeners
-                (l -> l.onFoodChanged(nickname, food, amount));
+        if (amount < 0) {
+            throw new IllegalArgumentException("Food amount cannot be negative.");
+        }
+        this.food += amount;
     }
 
+    /**
+     * Spends food from the player's personal reserve.
+     *
+     * @param amount the amount of food to spend
+     * @throws IllegalArgumentException if the amount is negative
+     * @throws IllegalStateException if the player does not have enough food
+     */
     public void spendFood(int amount) {
-        if (amount == 0) return;
-        if (amount < 0) throw new IllegalArgumentException("Cannot spend negative food");
-        if (amount > food) throw new IllegalStateException("Not enough food");
-        food -= amount;
-        if (game != null) game.notifyListeners
-                (l -> l.onFoodChanged(nickname, food, -amount));
+        if (amount < 0) {
+            throw new IllegalArgumentException("Food amount cannot be negative.");
+        }
+        if (amount > food) {
+            throw new IllegalStateException("Not enough food.");
+        }
+        this.food -= amount;
     }
-
     public boolean canAfford(int cost) {
         return food >= cost;
     }
 
+    /**
+     * Adds prestige points to the player.
+     *
+     * @param amount the amount of prestige points to add
+     * @throws IllegalArgumentException if the amount is negative
+     */
     public void addPrestigePoints(int amount) {
-        if (amount == 0) return;
-        prestigePoints += amount;
-        if (game != null) game.notifyListeners
-                (l -> l.onPointsChanged(nickname, prestigePoints, amount));
+        if (amount < 0) {
+            throw new IllegalArgumentException("Prestige point amount cannot be negative.");
+        }
+        this.prestigePoints += amount;
     }
 
+    /**
+     * Removes prestige points from the player.
+     *
+     * @param amount the amount of prestige points to remove
+     * @throws IllegalArgumentException if the amount is negative
+     */
     public void removePrestigePoints(int amount) {
-        if (amount == 0) return;
-        prestigePoints -= amount;
-        if (game != null) game.notifyListeners
-                (l -> l.onPointsChanged(nickname, prestigePoints, -amount));
+        if (amount < 0) {
+            throw new IllegalArgumentException("Prestige point amount cannot be negative.");
+        }
+        this.prestigePoints -= amount;
     }
 
     /**

@@ -129,15 +129,16 @@ public class GameControllerMegaEdgeCaseTest {
     }
 
     @Test
-    void firstPlayerCanChoosePlayerCountOnlyOnce() {
+    void firstPlayerCanChangePlayerCountBeforeGameStarts() {
         GameController controller = new GameController();
         controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
 
         controller.onMessageReceived("Alice", new SetPlayerCountAction(4));
 
         assertEquals(4, controller.getChosenPlayersCount());
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Alice", new SetPlayerCountAction(5)));
+
+        assertDoesNotThrow(() -> controller.onMessageReceived("Alice", new SetPlayerCountAction(5)));
+        assertEquals(5, controller.getChosenPlayersCount());
     }
 
     @Test
@@ -254,18 +255,22 @@ public class GameControllerMegaEdgeCaseTest {
 
     /** BUG-HUNTER / design decision: host leaves after choosing count. */
     @Test
-    void firstPlayerLeavingAfterChoosingCountShouldNotLeaveRemainingLobbyLockedToOldCount() {
+    void promotedFirstPlayerCanChangePreviouslyChosenCount() {
         GameController controller = new GameController();
 
         controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
-        controller.onMessageReceived("Alice", new SetPlayerCountAction(3));
         controller.onMessageReceived("Bob", new JoinGameAction(createTotem(TotemColor.BLUE)));
+        controller.onMessageReceived("Alice", new SetPlayerCountAction(3));
+
         controller.onPlayerDisconnection("Alice");
 
         assertEquals("Bob", controller.getLobbyPlayers().get(0).getNickname());
-        assertEquals(-1, controller.getChosenPlayersCount());
-    }
+        assertEquals(3, controller.getChosenPlayersCount());
+        assertTrue(controller.isFirstPlayer("Bob"));
 
+        assertDoesNotThrow(() -> controller.onMessageReceived("Bob", new SetPlayerCountAction(2)));
+        assertEquals(2, controller.getChosenPlayersCount());
+    }
     @Test
     void allPlayersLeavingLobbyResetsCountAndReadySet() {
         GameController controller = new GameController();
@@ -356,17 +361,22 @@ public class GameControllerMegaEdgeCaseTest {
     }
 
     @Test
-    void readyCheckRejectsActionsBelongingToOtherStates() {
+    void readyCheckRejectsGameActionsButAllowsFirstPlayerToChangeCount() {
         GameController controller = createReadyCheckController();
 
         assertThrows(IllegalStateException.class,
                 () -> controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.PURPLE))));
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Alice", new SetPlayerCountAction(2)));
+
+        assertDoesNotThrow(() -> controller.onMessageReceived("Alice", new SetPlayerCountAction(3)));
+        assertEquals(3, controller.getChosenPlayersCount());
+        assertInstanceOf(LobbyState.class, controller.getCurrentState());
+
         assertThrows(IllegalStateException.class,
                 () -> controller.onMessageReceived("Alice", new PlaceTotemAction('A')));
+
         assertThrows(IllegalStateException.class,
                 () -> controller.onMessageReceived("Alice", new PickCardAction("1", true)));
+
         assertThrows(IllegalStateException.class,
                 () -> controller.onMessageReceived("Alice", new PickBuildingAction("1", true)));
     }
@@ -863,11 +873,20 @@ public class GameControllerMegaEdgeCaseTest {
     void affordableBuildingIsTakenAndFoodIsSpent() {
         Player alice = new Player("Alice", createTotem(TotemColor.RED));
         Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
+
         alice.addFood(5);
+
         BuildingCard building = new BuildingCard(302, Era.I, 3, new EndPPEffect(), 0);
+
         OfferTile aliceTile = new OfferTile('A', 1, List.of(new ActionSlot(new UpperRowSlot(), 1)));
         OfferTile bobTile = new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 0)));
-        Round round = createRoundWithRows(new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), List.of(building));
+
+        Round round = createRoundWithRows(
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                List.of(building)
+        );
 
         GameController controller = createActionResolutionController(
                 List.of(alice, bob),
@@ -878,7 +897,10 @@ public class GameControllerMegaEdgeCaseTest {
 
         controller.onMessageReceived("Alice", new PickBuildingAction("302", true));
 
-        assertEquals(2, alice.getFood());
+        // Alice starts with 5 food, pays 3 for the building, then receives +1 food
+        // when her totem returns to the first turn-order slot.
+        assertEquals(3, alice.getFood());
+
         assertEquals(1, alice.getTribe().getBuildingCards().size());
         assertFalse(round.getUpperRowBuildings().contains(building));
     }

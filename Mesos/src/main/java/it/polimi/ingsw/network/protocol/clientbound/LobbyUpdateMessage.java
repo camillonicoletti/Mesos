@@ -8,10 +8,15 @@ public class LobbyUpdateMessage implements ServerMessage, Serializable {
     private final int expectedPlayers;
 
     public LobbyUpdateMessage(List<LobbyPlayerSnapshot> players, int expectedPlayers) {
-        this.players = players;
+        this.players = List.copyOf(players);
         this.expectedPlayers = expectedPlayers;
     }
 
-    public List<LobbyPlayerSnapshot> getPlayers() { return players; }
-    public int getExpectedPlayers() { return expectedPlayers; }
+    public List<LobbyPlayerSnapshot> getPlayers() {
+        return players;
+    }
+
+    public int getExpectedPlayers() {
+        return expectedPlayers;
+    }
 }

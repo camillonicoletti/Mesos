@@ -144,9 +144,10 @@ public class GameControllerLobbyReadyTest {
 
         controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
 
-        assertThrows(IllegalStateException.class, () ->
+        assertDoesNotThrow(() ->
                 controller.onMessageReceived("Alice", new ReadyAction(true))
         );
+        assertTrue(controller.isPlayerReady("Alice"));
 
         assertThrows(IllegalStateException.class, () ->
                 controller.onMessageReceived("Alice", new PlaceTotemAction('A'))

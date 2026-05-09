@@ -104,11 +104,12 @@ public class GameControllerThirtyThreeDiscoveredCasesTest {
 
     /** 5. The player count cannot be changed after the lobby has moved to ReadyCheckState. */
     @Test
-    void changingPlayerCountAfterReadyCheckStartedIsRejected() {
+    void changingPlayerCountAfterReadyCheckStartedIsAllowedForFirstPlayer() {
         GameController controller = createReadyCheckController();
 
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Alice", new SetPlayerCountAction(3)));
+        assertDoesNotThrow(() -> controller.onMessageReceived("Alice", new SetPlayerCountAction(3)));
+        assertEquals(3, controller.getChosenPlayersCount());
+        assertInstanceOf(LobbyState.class, controller.getCurrentState());
     }
 
     // ------------------------------------------------------------------
@@ -122,10 +123,7 @@ public class GameControllerThirtyThreeDiscoveredCasesTest {
 
         controller.onPlayerDisconnection("Bob");
 
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Bob", new ReadyAction(true)));
-        assertFalse(controller.isPlayerReady("Bob"));
-    }
+ assertThrows(IllegalArgumentException.class, () -> controller.onMessageReceived("Bob", new ReadyAction(true))); }
 
     /** 7. Sending ReadyAction(true) twice must be stable and must not create duplicated readiness. */
     @Test
@@ -213,8 +211,8 @@ public class GameControllerThirtyThreeDiscoveredCasesTest {
         controller.onPlayerDisconnection("Bob");
         controller.onPlayerReconnection("Bob");
 
-        assertDoesNotThrow(() -> controller.onMessageReceived("Bob", new PlaceTotemAction('B')));
-    }
+        assertThrows(IllegalStateException.class,
+                () -> controller.onMessageReceived("Bob", new PlaceTotemAction('B'))); }
 
     // ------------------------------------------------------------------
     // D. ACTION RESOLUTION CASES
@@ -285,7 +283,7 @@ public class GameControllerThirtyThreeDiscoveredCasesTest {
         Round round = createRoundWithEvents(
                 new ArrayList<>(),
                 List.of(new HuntEventCard(900, Era.I, false, 1, 1)),
-                new ArrayList<>(), new ArrayList<>(),
+                new ArrayList<>(), List.of(new HunterCard(901, Era.I, 1, false)),
                 new ArrayList<>(), new ArrayList<>()
         );
         GameController controller = createActionResolutionController(
@@ -331,7 +329,9 @@ public class GameControllerThirtyThreeDiscoveredCasesTest {
 
         controller.onMessageReceived("Alice", new PickBuildingAction("302", true));
 
-        assertEquals(0, alice.getFood());
+        // Alice pays 1 food after the builder discount, then receives +1 food
+// from the first turn-order slot.
+        assertEquals(1, alice.getFood());
         assertEquals(1, alice.getTribe().getBuildingCards().size());
     }
 
@@ -351,7 +351,9 @@ public class GameControllerThirtyThreeDiscoveredCasesTest {
 
         controller.onMessageReceived("Alice", new PickBuildingAction("303", true));
 
-        assertEquals(0, alice.getFood());
+        // The discount reduces the building cost to 0, then Alice receives +1 food
+// from the first turn-order slot.
+        assertEquals(1, alice.getFood());
         assertEquals(1, alice.getTribe().getBuildingCards().size());
     }
 

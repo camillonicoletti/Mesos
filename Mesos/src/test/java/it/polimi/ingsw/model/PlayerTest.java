@@ -88,17 +88,21 @@ public class PlayerTest {
         assertEquals(0, player.getFood());
     }
 
+    /**
+     * Spending more food than available must be rejected.
+     * Prestige penalties are handled by dedicated rule methods, not by generic food spending.
+     */
     @Test
-    void spendFoodShouldDeductPrestigeWhenNotAffordable() {
-        Player player = new Player("Luca", new Totem(TotemColor.PURPLE, "TURN_ORDER"));
+    void spendFoodShouldThrowWhenNotAffordable() {
+        Player player = new Player("Alice", new Totem(TotemColor.RED, "TURN_ORDER"));
+
         player.addFood(2);
 
-        player.spendFood(5);
+        assertThrows(IllegalStateException.class, () -> player.spendFood(5));
 
-        assertEquals(0, player.getFood());
-        assertEquals(-3, player.getPrestigePoints()); // 5 - 2 = 3 missing
+        assertEquals(2, player.getFood());
+        assertEquals(0, player.getPrestigePoints());
     }
-
     @Test
     void addPrestigePointsShouldIncreasePrestigePoints() {
         Player player = new Player("Luca", new Totem(TotemColor.BLUE, "TURN_ORDER"));

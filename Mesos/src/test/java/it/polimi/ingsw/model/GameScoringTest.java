@@ -1,8 +1,19 @@
 package it.polimi.ingsw.model;
 
-import it.polimi.ingsw.model.card.*;
-import it.polimi.ingsw.model.card.effect.*;
-import it.polimi.ingsw.model.enums.*;
+import it.polimi.ingsw.model.card.ArtistCard;
+import it.polimi.ingsw.model.card.BuilderCard;
+import it.polimi.ingsw.model.card.BuildingCard;
+import it.polimi.ingsw.model.card.GathererCard;
+import it.polimi.ingsw.model.card.HunterCard;
+import it.polimi.ingsw.model.card.InventorCard;
+import it.polimi.ingsw.model.card.ShamanCard;
+import it.polimi.ingsw.model.card.effect.EndBuilderPPEffect;
+import it.polimi.ingsw.model.card.effect.EndCharacterCountPPEffect;
+import it.polimi.ingsw.model.card.effect.EndFullSetPPEffect;
+import it.polimi.ingsw.model.card.effect.EndPPEffect;
+import it.polimi.ingsw.model.enums.Era;
+import it.polimi.ingsw.model.enums.InventorIcons;
+import it.polimi.ingsw.model.enums.TotemColor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -13,36 +24,50 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests for Game.calculateFinalScores() and getFinalScores().
+ * Tests for Game final score calculation and winner selection.
  *
- * calculateFinalScores() sums:
- *   - base prestige points (accumulated during the game)
- *   - inventor points     (inventors × distinct icons)
- *   - artist points       (pairs of artists × 10)
- *   - builder points      (sum of builder.getPointsEndOfMatch())
- *   - EndGameEffect buildings (via calculatePoints(), not apply())
+ * Final score includes:
+ * - base prestige points accumulated during the game;
+ * - inventor points: inventors multiplied by distinct invention icons;
+ * - artist points: pairs of artists multiplied by 10;
+ * - builder points: sum of builder end-game points;
+ * - building printed end-game points;
+ * - building EndGameEffect points.
  */
 public class GameScoringTest {
 
-    private Player player1, player2;
+    private Player player1;
+    private Player player2;
     private Game game;
 
-    /** Minimal Game with no board/round needed for scoring tests. */
+    /**
+     * Builds a minimal game for scoring tests.
+     * No board or round is needed because these tests only inspect players' tribes and scores.
+     */
     private Game buildGame(List<Player> players) {
-        return new Game(players, 1, null, Era.I, null, null,
+        return new Game(
+                players,
+                1,
+                null,
+                Era.I,
+                null,
+                null,
                 new ArrayList<>(),
-                new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>()
+        );
     }
 
     @BeforeEach
     void setUp() {
-        player1 = new Player("Alice", new Totem(TotemColor.RED,  "OFFER_TRACK"));
-        player2 = new Player("Bob",   new Totem(TotemColor.BLUE, "OFFER_TRACK"));
+        player1 = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
+        player2 = new Player("Bob", new Totem(TotemColor.BLUE, "OFFER_TRACK"));
         game = buildGame(List.of(player1, player2));
     }
 
     // -------------------------------------------------------
-    // base prestige points
+    // Base prestige points
     // -------------------------------------------------------
 
     @Test
@@ -63,12 +88,11 @@ public class GameScoringTest {
     }
 
     // -------------------------------------------------------
-    // inventor points — inventors × distinct icons
+    // Inventor points: inventors × distinct icons
     // -------------------------------------------------------
 
     @Test
     void testFinalScoreInventorPointsTwoInventorsSameIcon() {
-        // 2 inventors, 1 distinct icon → 2 * 1 = 2
         player1.addCharacterCard(new InventorCard(1, Era.I, 2, InventorIcons.INVENTION_1));
         player1.addCharacterCard(new InventorCard(2, Era.I, 2, InventorIcons.INVENTION_1));
 
@@ -77,7 +101,6 @@ public class GameScoringTest {
 
     @Test
     void testFinalScoreInventorPointsTwoInventorsDifferentIcons() {
-        // 2 inventors, 2 distinct icons → 2 * 2 = 4
         player1.addCharacterCard(new InventorCard(1, Era.I, 2, InventorIcons.INVENTION_1));
         player1.addCharacterCard(new InventorCard(2, Era.I, 2, InventorIcons.INVENTION_2));
 
@@ -85,12 +108,11 @@ public class GameScoringTest {
     }
 
     // -------------------------------------------------------
-    // artist points — pairs × 10
+    // Artist points: pairs × 10
     // -------------------------------------------------------
 
     @Test
     void testFinalScoreArtistPointsOnePair() {
-        // 2 artists → 1 pair → 10 PP
         player1.addCharacterCard(new ArtistCard(1, Era.I, 2));
         player1.addCharacterCard(new ArtistCard(2, Era.I, 2));
 
@@ -99,7 +121,6 @@ public class GameScoringTest {
 
     @Test
     void testFinalScoreArtistPointsThreeArtistsOneCompletePair() {
-        // 3 artists → 1 pair → 10 PP
         player1.addCharacterCard(new ArtistCard(1, Era.I, 2));
         player1.addCharacterCard(new ArtistCard(2, Era.I, 2));
         player1.addCharacterCard(new ArtistCard(3, Era.I, 2));
@@ -109,7 +130,6 @@ public class GameScoringTest {
 
     @Test
     void testFinalScoreArtistPointsFourArtistsTwoPairs() {
-        // 4 artists → 2 pairs → 20 PP
         player1.addCharacterCard(new ArtistCard(1, Era.I, 2));
         player1.addCharacterCard(new ArtistCard(2, Era.I, 2));
         player1.addCharacterCard(new ArtistCard(3, Era.I, 2));
@@ -119,12 +139,11 @@ public class GameScoringTest {
     }
 
     // -------------------------------------------------------
-    // builder base points — sum of getPointsEndOfMatch()
+    // Builder base points
     // -------------------------------------------------------
 
     @Test
     void testFinalScoreBuilderBasePoints() {
-        // 1 builder with 3 PP end of match → 3
         player1.addCharacterCard(new BuilderCard(1, Era.I, 2, 3, 0));
 
         assertEquals(3, game.getFinalScores().get(player1));
@@ -132,7 +151,6 @@ public class GameScoringTest {
 
     @Test
     void testFinalScoreTwoBuildersBasePoints() {
-        // 2 builders → 3 + 2 = 5
         player1.addCharacterCard(new BuilderCard(1, Era.I, 2, 3, 0));
         player1.addCharacterCard(new BuilderCard(2, Era.I, 2, 2, 0));
 
@@ -140,7 +158,26 @@ public class GameScoringTest {
     }
 
     // -------------------------------------------------------
-    // EndPPEffect — +25 PP fissi
+    // Building printed end-game points
+    // -------------------------------------------------------
+
+    @Test
+    void testFinalScoreIncludesBuildingPrintedEndPoints() {
+        player1.addBuildingCard(new BuildingCard(1, Era.I, 0, null, 8));
+
+        assertEquals(8, game.getFinalScores().get(player1));
+    }
+
+    @Test
+    void testFinalScoreIncludesMultipleBuildingPrintedEndPoints() {
+        player1.addBuildingCard(new BuildingCard(1, Era.I, 0, null, 8));
+        player1.addBuildingCard(new BuildingCard(2, Era.I, 0, null, 2));
+
+        assertEquals(10, game.getFinalScores().get(player1));
+    }
+
+    // -------------------------------------------------------
+    // EndPPEffect: +25 PP
     // -------------------------------------------------------
 
     @Test
@@ -155,11 +192,11 @@ public class GameScoringTest {
         player1.addPrestigePoints(5);
         player1.addBuildingCard(new BuildingCard(1, Era.I, 0, new EndPPEffect(), 0));
 
-        assertEquals(30, game.getFinalScores().get(player1)); // 5 + 25
+        assertEquals(30, game.getFinalScores().get(player1));
     }
 
     // -------------------------------------------------------
-    // EndFullSetPPEffect — 6 PP per set completo
+    // EndFullSetPPEffect: 6 PP per full set
     // -------------------------------------------------------
 
     @Test
@@ -172,28 +209,30 @@ public class GameScoringTest {
         player1.addCharacterCard(new InventorCard(5, Era.I, 2, InventorIcons.INVENTION_1));
         player1.addCharacterCard(new ShamanCard(6, Era.I, 1, 2));
 
-        // 1 set × 6 PP + inventor points (1×1=1) = 7
         assertEquals(7, game.getFinalScores().get(player1));
     }
 
     @Test
     void testFinalScoreWithEndFullSetPPEffectNoSet() {
         player1.addBuildingCard(new BuildingCard(1, Era.I, 0, new EndFullSetPPEffect(), 0));
-        // nessun set completo → 0 dal building
         player1.addCharacterCard(new ArtistCard(1, Era.I, 2));
 
         assertEquals(0, game.getFinalScores().get(player1));
     }
 
     // -------------------------------------------------------
-    // EndCharacterCountPPEffect — N carte del tipo × pointsPerCard
+    // EndCharacterCountPPEffect: matching cards × points per card
     // -------------------------------------------------------
 
     @Test
     void testFinalScoreWithEndCharacterCountPPEffectHunters() {
-        // 3 hunter × 2 PP = 6
-        player1.addBuildingCard(new BuildingCard(1, Era.I, 0,
-                new EndCharacterCountPPEffect(2, HunterCard.class), 0));
+        player1.addBuildingCard(new BuildingCard(
+                1,
+                Era.I,
+                0,
+                new EndCharacterCountPPEffect(2, HunterCard.class),
+                0
+        ));
         player1.addCharacterCard(new HunterCard(1, Era.I, 2, false));
         player1.addCharacterCard(new HunterCard(2, Era.I, 2, false));
         player1.addCharacterCard(new HunterCard(3, Era.I, 2, false));
@@ -203,23 +242,24 @@ public class GameScoringTest {
 
     @Test
     void testFinalScoreWithEndCharacterCountPPEffectNoMatchingCards() {
-        // building conta hunter, ma il player non ne ha → 0
-        player1.addBuildingCard(new BuildingCard(1, Era.I, 0,
-                new EndCharacterCountPPEffect(2, HunterCard.class), 0));
+        player1.addBuildingCard(new BuildingCard(
+                1,
+                Era.I,
+                0,
+                new EndCharacterCountPPEffect(2, HunterCard.class),
+                0
+        ));
         player1.addCharacterCard(new ArtistCard(1, Era.I, 2));
 
         assertEquals(0, game.getFinalScores().get(player1));
     }
 
     // -------------------------------------------------------
-    // EndBuilderPPEffect — raddoppia i punti dei builder
+    // EndBuilderPPEffect: doubles builder end-game points
     // -------------------------------------------------------
 
     @Test
     void testFinalScoreWithEndBuilderPPEffect() {
-        // builder con 3 PP: base (calculateBuilderPoints) = 3
-        //                   EndBuilderPPEffect.calculatePoints() = 3
-        //                   totale builder = 6
         player1.addBuildingCard(new BuildingCard(1, Era.I, 0, new EndBuilderPPEffect(), 0));
         player1.addCharacterCard(new BuilderCard(2, Era.I, 2, 3, 0));
 
@@ -227,17 +267,27 @@ public class GameScoringTest {
     }
 
     // -------------------------------------------------------
-    // idempotenza — calculateFinalScores chiamata due volte
+    // Final score cache lifecycle
     // -------------------------------------------------------
 
     @Test
-    void testCalculateFinalScoresIsIdempotent() {
+    void testFinalScoresAreLiveBeforeGameEnd() {
         player1.addPrestigePoints(10);
 
-        game.calculateFinalScores();
+        assertEquals(10, game.getFinalScores().get(player1));
+
+        player1.addPrestigePoints(99);
+
+        assertEquals(109, game.getFinalScores().get(player1));
+    }
+
+    @Test
+    void testCalculateFinalScoresIsIdempotentAfterGameEnd() {
+        player1.addPrestigePoints(10);
+
+        game.end();
         int firstResult = game.getFinalScores().get(player1);
 
-        // modifica ignorata dopo il lock
         player1.addPrestigePoints(99);
         game.calculateFinalScores();
 
@@ -245,25 +295,25 @@ public class GameScoringTest {
     }
 
     // -------------------------------------------------------
-    // due giocatori con punteggi diversi
+    // Multiple players
     // -------------------------------------------------------
 
     @Test
     void testFinalScoresForTwoPlayersAreIndependent() {
         player1.addPrestigePoints(15);
-        player1.addBuildingCard(new BuildingCard(1, Era.I, 0, new EndPPEffect(), 0)); // +25
+        player1.addBuildingCard(new BuildingCard(1, Era.I, 0, new EndPPEffect(), 0));
 
         player2.addPrestigePoints(5);
 
         Map<Player, Integer> scores = game.getFinalScores();
 
-        assertEquals(40, scores.get(player1)); // 15 + 25
-        assertEquals(5,  scores.get(player2));
+        assertEquals(40, scores.get(player1));
+        assertEquals(5, scores.get(player2));
     }
 
     // -------------------------------------------------------
-// getWinner
-// -------------------------------------------------------
+    // getWinner / getFinalScore
+    // -------------------------------------------------------
 
     @Test
     void testGetWinnerReturnsPlayerWithHighestScore() {
@@ -279,6 +329,7 @@ public class GameScoringTest {
         player2.addPrestigePoints(10);
 
         Player winner = game.getWinner();
+
         assertNotNull(winner);
         assertTrue(winner == player1 || winner == player2);
     }
@@ -292,10 +343,17 @@ public class GameScoringTest {
 
     @Test
     void testGetWinnerWithOnlyBuildingEffects() {
-        // player1 ha EndPPEffect (+25), player2 niente
         player1.addBuildingCard(new BuildingCard(1, Era.I, 0, new EndPPEffect(), 0));
 
         assertEquals(player1, game.getWinner());
     }
 
+    @Test
+    void testWinnerUsesFoodAsTieBreaker() {
+        player1.addPrestigePoints(10);
+        player2.addPrestigePoints(10);
+        player2.addFood(1);
+
+        assertEquals(player2, game.getWinner());
+    }
 }

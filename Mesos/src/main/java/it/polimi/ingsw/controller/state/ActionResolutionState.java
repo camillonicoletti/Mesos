@@ -155,6 +155,17 @@ public class ActionResolutionState extends AbstractGameState {
             return;
         }
 
+        Round round = ctx.getGame().getCurrentRound();
+
+        boolean upperRowEmpty = round.getUpperRowTribute().isEmpty()
+                && round.getUpperRowBuildings().isEmpty();
+
+        if (upperRowEmpty) {
+            extraPickIndex++;
+            prepareExtraPickPlayer(ctx);
+            return;
+        }
+
         Player player = extraPickQueue.get(extraPickIndex).getPlayer();
 
         if (ctx.isPlayerDisconnected(player.getNickname())) {
@@ -168,7 +179,6 @@ public class ActionResolutionState extends AbstractGameState {
         ctx.notifyListeners(l -> l.onCurrentPlayerChanged(player.getNickname()));
         ctx.notifyListeners(l -> l.onExtraCardPickAvailable(player.getNickname(), picks));
     }
-
     private boolean isInExtraPickPhase() {
         return extraPickQueue != null && extraPickIndex < extraPickQueue.size();
     }

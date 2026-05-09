@@ -54,13 +54,13 @@ public final class RMIServerMain {
         registry.rebind(bindingName, server);
 
         if (restored.isPresent()) {
-            System.out.println("Stato precedente ripristinato da disco — "
-                    + "in attesa che i giocatori si riconnettano.");
+            System.out.println("Previous state restored from disk — "
+                    + "waiting for players to reconnect.");
         } else if (freshStart) {
-            System.out.println("Avvio pulito richiesto — nessun salvataggio precedente verra ripristinato.");
+            System.out.println("Clean start requested — no previous save will be restored.");
         }
 
-        System.out.println("RMI server avviato sulla registry port " + registryPort
-                + " con nome '" + bindingName + "'");
+        System.out.println("RMI server started on registry port "
+                + " with name '" + bindingName + "'");
     }
 }

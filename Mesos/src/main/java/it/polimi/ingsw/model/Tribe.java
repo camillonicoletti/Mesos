@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Collections;
 
 public class Tribe implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -55,11 +56,11 @@ public class Tribe implements Serializable {
     }
 
     public List<CharacterCard> getCharacterCards() {
-        return characterCards;
+        return Collections.unmodifiableList(characterCards);
     }
 
     public List<BuildingCard> getBuildingCards() {
-        return buildingCards;
+        return Collections.unmodifiableList(buildingCards);
     }
 
     // Method used for FullSetFoodEffect and EndFullSetPPEffect

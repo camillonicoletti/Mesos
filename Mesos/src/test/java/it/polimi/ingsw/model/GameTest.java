@@ -1,17 +1,24 @@
 package it.polimi.ingsw.model;
 
-import it.polimi.ingsw.model.board.*;
+import it.polimi.ingsw.model.board.ActionSlot;
+import it.polimi.ingsw.model.board.Board;
+import it.polimi.ingsw.model.board.FoodSlot;
+import it.polimi.ingsw.model.board.NoSlotEffect;
+import it.polimi.ingsw.model.board.OfferTile;
+import it.polimi.ingsw.model.board.TurnOrderTile;
+import it.polimi.ingsw.model.board.TurnSlot;
+import it.polimi.ingsw.model.board.UpperRowSlot;
+import it.polimi.ingsw.model.card.BuilderCard;
 import it.polimi.ingsw.model.card.BuildingCard;
 import it.polimi.ingsw.model.card.Card;
+import it.polimi.ingsw.model.card.CharacterCard;
 import it.polimi.ingsw.model.card.HunterCard;
 import it.polimi.ingsw.model.card.effect.Effect;
-import it.polimi.ingsw.model.enums.*;
+import it.polimi.ingsw.model.enums.Era;
+import it.polimi.ingsw.model.enums.RoundPhase;
+import it.polimi.ingsw.model.enums.TotemColor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import it.polimi.ingsw.model.card.*;
-import it.polimi.ingsw.model.enums.Era;
-import it.polimi.ingsw.model.board.FoodSlot;
-import it.polimi.ingsw.model.board.UpperRowSlot;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,11 +29,15 @@ public class GameTest {
 
     private Game game;
     private Round round;
-    private Player player1, player2;
-    private OfferTile tileA, tileB;
+    private Player player1;
+    private Player player2;
+    private OfferTile tileA;
+    private OfferTile tileB;
     private Board board;
     private List<Card> tributeDeck;
-    private List<BuildingCard> era1Deck, era2Deck, era3Deck;
+    private List<BuildingCard> era1Deck;
+    private List<BuildingCard> era2Deck;
+    private List<BuildingCard> era3Deck;
 
     private final Effect noEffect = player -> {};
 
@@ -64,13 +75,24 @@ public class GameTest {
 
         game = new Game(
                 List.of(player1, player2),
-                1, null, Era.I, null,
-                board, tributeDeck,
-                era1Deck, era2Deck, era3Deck
+                1,
+                null,
+                Era.I,
+                null,
+                board,
+                tributeDeck,
+                era1Deck,
+                era2Deck,
+                era3Deck
         );
 
-        round = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
-                new ArrayList<>(), new ArrayList<>(),
+        round = new Round(
+                1,
+                game,
+                RoundPhase.TOTEM_PLACEMENT,
+                Era.I,
+                new ArrayList<>(),
+                new ArrayList<>(),
                 new ArrayList<>(List.of(
                         new HunterCard(30, Era.I, 2, false),
                         new HunterCard(31, Era.I, 2, false),
@@ -83,7 +105,8 @@ public class GameTest {
                         new HunterCard(36, Era.I, 2, false),
                         new HunterCard(37, Era.I, 2, false)
                 )),
-                new ArrayList<>(), new ArrayList<>()
+                new ArrayList<>(),
+                new ArrayList<>()
         );
 
         game.setCurrentRound(round);
@@ -129,12 +152,21 @@ public class GameTest {
     void testGetCurrentRoundAndSetCurrentRound() {
         assertEquals(round, game.getCurrentRound());
 
-        Round newRound = new Round(2, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
-                new ArrayList<>(), new ArrayList<>(),
-                new ArrayList<>(), new ArrayList<>(),
-                new ArrayList<>(), new ArrayList<>()
+        Round newRound = new Round(
+                2,
+                game,
+                RoundPhase.TOTEM_PLACEMENT,
+                Era.I,
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>()
         );
+
         game.setCurrentRound(newRound);
+
         assertEquals(newRound, game.getCurrentRound());
     }
 
@@ -153,9 +185,15 @@ public class GameTest {
     void testStartSetsStatusAndEraAndRound() {
         Game freshGame = new Game(
                 List.of(player1, player2),
-                0, null, null, null,
-                board, new ArrayList<>(tributeDeck),
-                new ArrayList<>(era1Deck), new ArrayList<>(era2Deck), new ArrayList<>(era3Deck)
+                0,
+                null,
+                null,
+                null,
+                board,
+                new ArrayList<>(tributeDeck),
+                new ArrayList<>(era1Deck),
+                new ArrayList<>(era2Deck),
+                new ArrayList<>(era3Deck)
         );
 
         freshGame.start();
@@ -177,6 +215,7 @@ public class GameTest {
     @Test
     void testEndSetsGameOver() {
         game.end();
+
         assertTrue(game.isGameOver());
     }
 
@@ -184,17 +223,33 @@ public class GameTest {
     void testIsGameOverTrueAtMaxRounds() {
         Game maxRoundGame = new Game(
                 List.of(player1, player2),
-                10, null, Era.I, null,
-                board, new ArrayList<>(tributeDeck),
-                new ArrayList<>(), new ArrayList<>(), new ArrayList<>()
+                10,
+                null,
+                Era.I,
+                null,
+                board,
+                new ArrayList<>(tributeDeck),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>()
         );
-        Round maxRound = new Round(10, maxRoundGame, RoundPhase.TOTEM_PLACEMENT, Era.I,
-                new ArrayList<>(), new ArrayList<>(),
-                new ArrayList<>(), new ArrayList<>(),
-                new ArrayList<>(), new ArrayList<>()
+
+        Round maxRound = new Round(
+                10,
+                maxRoundGame,
+                RoundPhase.TOTEM_PLACEMENT,
+                Era.I,
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>()
         );
+
         maxRoundGame.setCurrentRound(maxRound);
-        maxRoundGame.nextRound(); // a round 10 (MAX_ROUNDS), nextRound() chiama end()
+        maxRoundGame.nextRound();
+
         assertTrue(maxRoundGame.isGameOver());
     }
 
@@ -205,6 +260,7 @@ public class GameTest {
     @Test
     void testNextEraFromIToII() {
         game.nextEra();
+
         assertEquals(Era.II, game.getCurrentEra());
     }
 
@@ -212,6 +268,7 @@ public class GameTest {
     void testNextEraFromIIToIII() {
         game.nextEra();
         game.nextEra();
+
         assertEquals(Era.III, game.getCurrentEra());
     }
 
@@ -219,12 +276,14 @@ public class GameTest {
     void testNextEraFromIIIThrows() {
         game.nextEra();
         game.nextEra();
+
         assertThrows(IllegalStateException.class, () -> game.nextEra());
     }
 
     @Test
     void testEndEraFromIAdvancesToII() {
         game.endEra();
+
         assertEquals(Era.II, game.getCurrentEra());
     }
 
@@ -232,6 +291,7 @@ public class GameTest {
     void testEndEraFromIIAdvancesToIII() {
         game.nextEra();
         game.endEra();
+
         assertEquals(Era.III, game.getCurrentEra());
     }
 
@@ -240,45 +300,8 @@ public class GameTest {
         game.nextEra();
         game.nextEra();
         game.endEra();
+
         assertEquals(Era.III, game.getCurrentEra());
-    }
-
-    // =========================================================
-    // NEXT ROUND
-    // =========================================================
-
-    @Test
-    void testNextRoundIncrementsNumber() {
-        int before = game.getCurrentRound().getNumber();
-        game.nextRound();
-        assertEquals(before + 1, game.getCurrentRound().getNumber());
-    }
-
-    @Test
-    void testNextRoundCreatesNewRound() {
-        Round oldRound = game.getCurrentRound();
-        game.nextRound();
-        assertNotSame(oldRound, game.getCurrentRound());
-    }
-
-    @Test
-    void testNextRoundAtMaxRoundsEndsGame() {
-        Game maxGame = new Game(
-                List.of(player1, player2),
-                10, null, Era.I, null,
-                board, new ArrayList<>(tributeDeck),
-                new ArrayList<>(), new ArrayList<>(), new ArrayList<>()
-        );
-        Round maxRound = new Round(10, maxGame, RoundPhase.TOTEM_PLACEMENT, Era.I,
-                new ArrayList<>(), new ArrayList<>(),
-                new ArrayList<>(), new ArrayList<>(),
-                new ArrayList<>(), new ArrayList<>()
-        );
-        maxGame.setCurrentRound(maxRound);
-
-        maxGame.nextRound();
-
-        assertTrue(maxGame.isGameOver());
     }
 
     @Test
@@ -292,26 +315,99 @@ public class GameTest {
                 new BuildingCard(2, Era.II, 0, noEffect, 0)
         ));
 
-        Round eraIIRound = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.II,
-                new ArrayList<>(), new ArrayList<>(),
-                new ArrayList<>(), new ArrayList<>(),
-                lower, upper
+        Round eraIIRound = new Round(
+                1,
+                game,
+                RoundPhase.TOTEM_PLACEMENT,
+                Era.II,
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                lower,
+                upper
         );
-        game.setCurrentRound(eraIIRound);
 
+        game.setCurrentRound(eraIIRound);
         game.endEra();
 
         assertEquals(Era.III, game.getCurrentEra());
         assertEquals(1, eraIIRound.getLowerRowBuildings().size());
     }
 
+    // =========================================================
+    // NEXT ROUND
+    // =========================================================
+
+    @Test
+    void testNextRoundIncrementsNumber() {
+        int before = game.getCurrentRound().getNumber();
+
+        game.nextRound();
+
+        assertEquals(before + 1, game.getCurrentRound().getNumber());
+    }
+
+    @Test
+    void testNextRoundCreatesNewRound() {
+        Round oldRound = game.getCurrentRound();
+
+        game.nextRound();
+
+        assertNotSame(oldRound, game.getCurrentRound());
+    }
+
+    @Test
+    void testNextRoundAtMaxRoundsEndsGame() {
+        Game maxGame = new Game(
+                List.of(player1, player2),
+                10,
+                null,
+                Era.I,
+                null,
+                board,
+                new ArrayList<>(tributeDeck),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>()
+        );
+
+        Round maxRound = new Round(
+                10,
+                maxGame,
+                RoundPhase.TOTEM_PLACEMENT,
+                Era.I,
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>()
+        );
+
+        maxGame.setCurrentRound(maxRound);
+        maxGame.nextRound();
+
+        assertTrue(maxGame.isGameOver());
+    }
+
+    // =========================================================
+    // MISC
+    // =========================================================
+
     @Test
     void testGetBuildingsForEraReturnsEmptyListNotNull() {
         Game emptyGame = new Game(
                 List.of(player1, player2),
-                1, null, Era.I, null,
-                board, new ArrayList<>(),
-                new ArrayList<>(), new ArrayList<>(), new ArrayList<>()
+                1,
+                null,
+                Era.I,
+                null,
+                board,
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>()
         );
 
         assertNotNull(emptyGame.getBuildingsForEra(Era.I));
@@ -323,12 +419,14 @@ public class GameTest {
     @Test
     void testIsGameOverTrueWhenFinishedButRoundLow() {
         game.end();
+
         assertTrue(game.isGameOver());
     }
 
     @Test
     void testEndCalledTwiceDoesNotThrow() {
         game.end();
+
         assertDoesNotThrow(() -> game.end());
         assertTrue(game.isGameOver());
     }
@@ -340,7 +438,7 @@ public class GameTest {
     @Test
     void testTakeCharacterCardAddsCardToPlayerTribe() {
         HunterCard card = new HunterCard(99, Era.I, 2, false);
-        List<CharacterCard> row = new ArrayList<>(List.of(card));
+        List<CharacterCard> row = replaceLowerRowWith(card);
 
         game.takeCharacterCard(player1, row, card);
 
@@ -351,17 +449,18 @@ public class GameTest {
     @Test
     void testTakeCharacterCardRemovesCardFromRow() {
         HunterCard card = new HunterCard(99, Era.I, 2, false);
-        List<CharacterCard> row = new ArrayList<>(List.of(card));
+        List<CharacterCard> row = replaceLowerRowWith(card);
 
         game.takeCharacterCard(player1, row, card);
 
-        assertTrue(row.isEmpty());
+        assertFalse(round.getLowerRowTribute().contains(card));
+        assertEquals(0, round.getLowerRowTribute().size());
     }
 
     @Test
     void testTakeCharacterCardThrowsWhenCardNotInRow() {
         HunterCard card = new HunterCard(99, Era.I, 2, false);
-        List<CharacterCard> emptyRow = new ArrayList<>();
+        List<CharacterCard> emptyRow = emptyLowerRow();
 
         assertThrows(IllegalArgumentException.class,
                 () -> game.takeCharacterCard(player1, emptyRow, card));
@@ -370,11 +469,11 @@ public class GameTest {
     @Test
     void testTakeCharacterCardHunterWithFoodIconGivesFoodEqualToHunterCount() {
         HunterCard hunter = new HunterCard(99, Era.I, 2, true);
-        List<CharacterCard> row = new ArrayList<>(List.of(hunter));
+        List<CharacterCard> row = replaceLowerRowWith(hunter);
 
         game.takeCharacterCard(player1, row, hunter);
 
-        assertEquals(1, player1.getFood()); // 1 cacciatore in tribù → +1 cibo
+        assertEquals(1, player1.getFood());
     }
 
     @Test
@@ -383,17 +482,17 @@ public class GameTest {
         player1.addCharacterCard(new HunterCard(11, Era.I, 2, false));
 
         HunterCard newHunter = new HunterCard(99, Era.I, 2, true);
-        List<CharacterCard> row = new ArrayList<>(List.of(newHunter));
+        List<CharacterCard> row = replaceLowerRowWith(newHunter);
 
         game.takeCharacterCard(player1, row, newHunter);
 
-        assertEquals(3, player1.getFood()); // 3 cacciatori in tribù → +3 cibo
+        assertEquals(3, player1.getFood());
     }
 
     @Test
     void testTakeCharacterCardHunterWithoutFoodIconGivesNoFood() {
         HunterCard hunter = new HunterCard(99, Era.I, 2, false);
-        List<CharacterCard> row = new ArrayList<>(List.of(hunter));
+        List<CharacterCard> row = replaceLowerRowWith(hunter);
 
         game.takeCharacterCard(player1, row, hunter);
 
@@ -407,30 +506,31 @@ public class GameTest {
     @Test
     void testTakeBuildingCardSpendsCorrectFood() {
         player1.addFood(5);
-        BuildingCard building = new BuildingCard(99, Era.I, 3, p -> {}, 0);
-        List<BuildingCard> row = new ArrayList<>(List.of(building));
+        BuildingCard building = new BuildingCard(99, Era.I, 3, noEffect, 0);
+        List<BuildingCard> row = replaceUpperBuildingsWith(building);
 
         game.takeBuildingCard(player1, row, building);
 
         assertEquals(1, player1.getTribe().getBuildingCards().size());
-        assertEquals(2, player1.getFood()); // 5 - 3
+        assertEquals(2, player1.getFood());
     }
 
     @Test
     void testTakeBuildingCardRemovesCardFromRow() {
         player1.addFood(5);
-        BuildingCard building = new BuildingCard(99, Era.I, 3, p -> {}, 0);
-        List<BuildingCard> row = new ArrayList<>(List.of(building));
+        BuildingCard building = new BuildingCard(99, Era.I, 3, noEffect, 0);
+        List<BuildingCard> row = replaceUpperBuildingsWith(building);
 
         game.takeBuildingCard(player1, row, building);
 
-        assertTrue(row.isEmpty());
+        assertFalse(round.getUpperRowBuildings().contains(building));
+        assertEquals(0, round.getUpperRowBuildings().size());
     }
 
     @Test
     void testTakeBuildingCardThrowsWhenNotAffordable() {
-        BuildingCard building = new BuildingCard(99, Era.I, 3, p -> {}, 0);
-        List<BuildingCard> row = new ArrayList<>(List.of(building));
+        BuildingCard building = new BuildingCard(99, Era.I, 3, noEffect, 0);
+        List<BuildingCard> row = replaceUpperBuildingsWith(building);
 
         assertThrows(IllegalStateException.class,
                 () -> game.takeBuildingCard(player1, row, building));
@@ -439,32 +539,34 @@ public class GameTest {
     @Test
     void testTakeBuildingCardAppliesBuilderDiscount() {
         player1.addFood(3);
-        player1.addCharacterCard(new BuilderCard(10, Era.I, 2, 0, 2)); // sconto 2
-        BuildingCard building = new BuildingCard(99, Era.I, 3, p -> {}, 0);
-        List<BuildingCard> row = new ArrayList<>(List.of(building));
+        player1.addCharacterCard(new BuilderCard(10, Era.I, 2, 0, 2));
+
+        BuildingCard building = new BuildingCard(99, Era.I, 3, noEffect, 0);
+        List<BuildingCard> row = replaceUpperBuildingsWith(building);
 
         game.takeBuildingCard(player1, row, building);
 
-        assertEquals(2, player1.getFood()); // 3 - (3 - 2) = 2
+        assertEquals(2, player1.getFood());
     }
 
     @Test
     void testTakeBuildingCardDiscountCannotMakeCostNegative() {
         player1.addFood(3);
-        player1.addCharacterCard(new BuilderCard(10, Era.I, 2, 0, 5)); // sconto 5 > costo
-        BuildingCard building = new BuildingCard(99, Era.I, 2, p -> {}, 0);
-        List<BuildingCard> row = new ArrayList<>(List.of(building));
+        player1.addCharacterCard(new BuilderCard(10, Era.I, 2, 0, 5));
 
-        game.takeBuildingCard(player1, row, building); // costo finale = max(0, 2-5) = 0
+        BuildingCard building = new BuildingCard(99, Era.I, 2, noEffect, 0);
+        List<BuildingCard> row = replaceUpperBuildingsWith(building);
 
-        assertEquals(3, player1.getFood()); // non paga nulla
+        game.takeBuildingCard(player1, row, building);
+
+        assertEquals(3, player1.getFood());
     }
 
     @Test
     void testTakeBuildingCardThrowsWhenCardNotInRow() {
         player1.addFood(5);
-        BuildingCard building = new BuildingCard(99, Era.I, 3, p -> {}, 0);
-        List<BuildingCard> emptyRow = new ArrayList<>();
+        BuildingCard building = new BuildingCard(99, Era.I, 3, noEffect, 0);
+        List<BuildingCard> emptyRow = emptyUpperBuildings();
 
         assertThrows(IllegalArgumentException.class,
                 () -> game.takeBuildingCard(player1, emptyRow, building));
@@ -477,13 +579,42 @@ public class GameTest {
     @Test
     void testDrawTribeCardRemovesCardFromDeck() {
         int before = game.getRemainingTributeDeck();
+
         game.drawTribeCard();
+
         assertEquals(before - 1, game.getRemainingTributeDeck());
     }
 
     @Test
     void testDrawTribeCardReturnsNullWhenDeckIsEmpty() {
         game.getTributeDeck().clear();
+
         assertNull(game.drawTribeCard());
+    }
+
+    // =========================================================
+    // HELPERS
+    // =========================================================
+
+    private List<CharacterCard> replaceLowerRowWith(CharacterCard card) {
+        round.mutableLowerRowTribute().clear();
+        round.mutableLowerRowTribute().add(card);
+        return round.getLowerRowTribute();
+    }
+
+    private List<CharacterCard> emptyLowerRow() {
+        round.mutableLowerRowTribute().clear();
+        return round.getLowerRowTribute();
+    }
+
+    private List<BuildingCard> replaceUpperBuildingsWith(BuildingCard building) {
+        round.mutableUpperRowBuildings().clear();
+        round.mutableUpperRowBuildings().add(building);
+        return round.getUpperRowBuildings();
+    }
+
+    private List<BuildingCard> emptyUpperBuildings() {
+        round.mutableUpperRowBuildings().clear();
+        return round.getUpperRowBuildings();
     }
 }

@@ -7,6 +7,7 @@ import it.polimi.ingsw.model.card.effect.TotemSlotFoodBonusEffect;
 import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.Totem;
+import java.util.Collections;
 
 import java.io.Serializable;
 import java.util.*;
@@ -59,26 +60,53 @@ public class Round implements Serializable {
         return era;
     }
 
-    public List<EventCard> getLowerRowEvents() {
-        return lowerRowEventCards;
-    }
-
-    public List<EventCard> getUpperRowEvents() {
-        return upperRowEventCards;
-    }
-
-    public List<CharacterCard> getLowerRowTribute() {
+    List<CharacterCard> mutableLowerRowTribute() {
         return lowerRowTribute;
     }
 
-    public List<CharacterCard> getUpperRowTribute() {
+    List<CharacterCard> mutableUpperRowTribute() {
         return upperRowTribute;
     }
 
-    public List<BuildingCard> getUpperRowBuildings(){return upperRowBuildings; }
+    List<BuildingCard> mutableLowerRowBuildings() {
+        return lowerRowBuildings;
+    }
 
-    public List<BuildingCard> getLowerRowBuildings(){return lowerRowBuildings;}
+    List<BuildingCard> mutableUpperRowBuildings() {
+        return upperRowBuildings;
+    }
 
+    List<EventCard> mutableLowerRowEvents() {
+        return lowerRowEventCards;
+    }
+
+    List<EventCard> mutableUpperRowEvents() {
+        return upperRowEventCards;
+    }
+
+    public List<EventCard> getLowerRowEvents() {
+        return Collections.unmodifiableList(lowerRowEventCards);
+    }
+
+    public List<EventCard> getUpperRowEvents() {
+        return Collections.unmodifiableList(upperRowEventCards);
+    }
+
+    public List<CharacterCard> getLowerRowTribute() {
+        return Collections.unmodifiableList(lowerRowTribute);
+    }
+
+    public List<CharacterCard> getUpperRowTribute() {
+        return Collections.unmodifiableList(upperRowTribute);
+    }
+
+    public List<BuildingCard> getUpperRowBuildings() {
+        return Collections.unmodifiableList(upperRowBuildings);
+    }
+
+    public List<BuildingCard> getLowerRowBuildings() {
+        return Collections.unmodifiableList(lowerRowBuildings);
+    }
     // execute() currently handles the round flow correctly for all automatic actions;
     // once the controller is implemented, it will be refactored to delegate
     // player choices (card selection, extra card from upper row) to the controller

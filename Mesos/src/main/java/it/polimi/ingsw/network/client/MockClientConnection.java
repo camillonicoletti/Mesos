@@ -43,13 +43,13 @@ public class MockClientConnection implements ClientSideConnection {
         } else if (message instanceof GameActionMessage m) {
             handleAction(m);
         } else if (message instanceof DisconnectMessage) {
-            System.out.println("[MOCK] disconnessione richiesta");
+            System.out.println("[MOCK] disconnect requested");
         }
     }
 
     @Override
     public void close() {
-        System.out.println("[MOCK] connessione chiusa");
+        System.out.println("[MOCK] connection closed");
     }
 
     // -------------------------------------------------------
