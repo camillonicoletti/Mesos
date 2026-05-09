@@ -251,14 +251,14 @@ public class ClientModel {
         lastDisconnectedPlayer = m.getNickname();
         disconnectedPlayers.add(m.getNickname());
         clearCurrentActionPlayerIfActor(m.getNickname());
-        setConnectionEvent(m.getNickname() + " si è disconnesso");
+        setConnectionEvent(m.getNickname() + " disconnected");
         notifyChanged();
     }
 
     public void applyPlayerReconnected(PlayerReconnectedMessage m) {
         lastDisconnectedPlayer = null;
         disconnectedPlayers.remove(m.getNickname());
-        setConnectionEvent(m.getNickname() + " si è riconnesso");
+        setConnectionEvent(m.getNickname() + " reconnected");
         notifyChanged();
     }
 

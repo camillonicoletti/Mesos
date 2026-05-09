@@ -18,7 +18,7 @@ public class RMIClientApp {
 
     public static void main(String[] args) {
         if (args.length < 1) {
-            System.err.println("Uso: java RMIClientApp <host> [registryPort] [bindingName]");
+            System.err.println("Usage: java RMIClientApp <host> [registryPort] [bindingName]");
             System.exit(1);
         }
 
@@ -34,7 +34,7 @@ public class RMIClientApp {
         try {
             view.run();
         } catch (Exception exception) {
-            System.err.println("Errore: " + exception.getMessage());
+            System.err.println("Error: " + exception.getMessage());
             System.exit(1);
         } finally {
             connection.close();
@@ -44,17 +44,17 @@ public class RMIClientApp {
     private static View selectView(ClientController controller, ClientModel model) {
         Scanner scanner = new Scanner(System.in);
         while (true) {
-            System.out.println("Seleziona interfaccia:");
-            System.out.println("  1 — TUI (terminale)");
-            System.out.println("  2 — GUI (grafica)");
+            System.out.println("Select interface:");
+            System.out.println("  1 — TUI (terminal)");
+            System.out.println("  2 — GUI (graphical interface)");
             System.out.print("> ");
             String choice = scanner.nextLine().trim();
             switch (choice) {
                 case "1" -> {
                     return new Tui(controller, model);
                 }
-                case "2" -> System.out.println("GUI non ancora disponibile.");
-                default -> System.out.println("Scelta non valida, digita 1 o 2.");
+                case "2" -> System.out.println("GUI is not available yet.");
+                default -> System.out.println("Invalid choice, type 1 or 2.");
             }
         }
     }
@@ -65,7 +65,7 @@ public class RMIClientApp {
             RemoteServer remoteServer = (RemoteServer) registry.lookup(bindingName);
             return new RMIClientConnection(remoteServer);
         } catch (Exception exception) {
-            System.err.println("Impossibile connettersi alla registry RMI su "
+            System.err.println("Unable to connect to the RMI registry at "
                     + host + ":" + registryPort + " — " + exception.getMessage());
             System.exit(1);
             return null;

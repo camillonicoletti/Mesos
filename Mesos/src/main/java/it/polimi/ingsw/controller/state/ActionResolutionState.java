@@ -56,15 +56,15 @@ public class ActionResolutionState extends AbstractGameState {
         int getPicks() { return picks; }
     }
 
-    // giocatori ordinati per lettera tile (A < B < C)
+    // players ordered by tile letter (A < B < C)
     private List<OrderedPlayer> orderedPlayers;
     private int currentIndex;
 
-    // quante carte può ancora prendere il giocatore corrente
+    // how many cards the current player can still take
     private int remainingUpperPicks;
     private int remainingLowerPicks;
 
-    // fase extra pick
+    // extra pick phase
     private List<ExtraPick> extraPickQueue;
     private int extraPickIndex;
     private int remainingExtraPicks;
@@ -206,14 +206,14 @@ public class ActionResolutionState extends AbstractGameState {
         Round round = game.getCurrentRound();
 
         if (!currentPlayer.getNickname().equals(playerNickname)) {
-            throw new IllegalStateException("Non è il turno di " + playerNickname);
+            throw new IllegalStateException("It is not " + playerNickname + "'s turn");
         }
 
         if (action instanceof PickCardAction pickCard) {
             if (pickCard.isFromUpperRow() && remainingUpperPicks <= 0)
-                throw new IllegalStateException("Non puoi prendere altre carte dalla riga superiore");
+                throw new IllegalStateException("You cannot take any more cards from the upper row");
             if (!pickCard.isFromUpperRow() && remainingLowerPicks <= 0)
-                throw new IllegalStateException("Non puoi prendere altre carte dalla riga inferiore");
+                throw new IllegalStateException("You cannot take any more cards from the lower row");
 
             List<CharacterCard> row = pickCard.isFromUpperRow()
                     ? round.getUpperRowTribute()
@@ -221,7 +221,7 @@ public class ActionResolutionState extends AbstractGameState {
 
             CharacterCard card = findCharacterCard(row, pickCard.getCardId());
             if (card == null)
-                throw new IllegalArgumentException("Carta personaggio non trovata: " + pickCard.getCardId());
+                throw new IllegalArgumentException("Character card not found: " + pickCard.getCardId());
 
             game.takeCharacterCard(currentPlayer, row, card);
             ctx.notifyListeners(l -> l.onCharacterCardTaken(
@@ -232,9 +232,9 @@ public class ActionResolutionState extends AbstractGameState {
 
         } else if (action instanceof PickBuildingAction pickBuilding) {
             if (pickBuilding.isFromUpperRow() && remainingUpperPicks <= 0)
-                throw new IllegalStateException("Non puoi prendere altri edifici dalla riga superiore");
+                throw new IllegalStateException("You cannot take any more buildings from the upper row");
             if (!pickBuilding.isFromUpperRow() && remainingLowerPicks <= 0)
-                throw new IllegalStateException("Non puoi prendere altri edifici dalla riga inferiore");
+                throw new IllegalStateException("You cannot take any more buildings from the lower row");
 
             List<BuildingCard> row = pickBuilding.isFromUpperRow()
                     ? round.getUpperRowBuildings()
@@ -242,10 +242,10 @@ public class ActionResolutionState extends AbstractGameState {
 
             BuildingCard card = findBuildingCard(row, pickBuilding.getCardId());
             if (card == null)
-                throw new IllegalArgumentException("Edificio non trovato: " + pickBuilding.getCardId());
+                throw new IllegalArgumentException("Building not found: " + pickBuilding.getCardId());
 
             if (!game.canAffordBuilding(currentPlayer, card))
-                throw new IllegalStateException("Non hai abbastanza cibo per acquistare questo edificio");
+                throw new IllegalStateException("You do not have enough food to buy this building");
 
             game.takeBuildingCard(currentPlayer, row, card);
             ctx.notifyListeners(l -> l.onBuildingCardTaken(
@@ -289,7 +289,7 @@ public class ActionResolutionState extends AbstractGameState {
         Round round = game.getCurrentRound();
 
         if (!currentPlayer.getNickname().equals(playerNickname)) {
-            throw new IllegalStateException("Non è il turno di " + playerNickname);
+            throw new IllegalStateException("It is not " + playerNickname + "'s turn");
         }
 
         List<CharacterCard> upperTribute = round.getUpperRowTribute();
@@ -297,25 +297,25 @@ public class ActionResolutionState extends AbstractGameState {
 
         if (action instanceof PickCardAction pickCard) {
             if (!pickCard.isFromUpperRow())
-                throw new IllegalStateException("La carta extra deve essere presa dalla riga superiore");
+                throw new IllegalStateException("The extra card must be taken from the upper row");
 
             CharacterCard card = findCharacterCard(upperTribute, pickCard.getCardId());
             if (card == null)
-                throw new IllegalArgumentException("Carta personaggio non trovata: " + pickCard.getCardId());
+                throw new IllegalArgumentException("Character card not found: " + pickCard.getCardId());
 
             game.takeCharacterCard(currentPlayer, upperTribute, card);
             ctx.notifyListeners(l -> l.onCharacterCardTaken(playerNickname, pickCard.getCardId(), true));
 
         } else if (action instanceof PickBuildingAction pickBuilding) {
             if (!pickBuilding.isFromUpperRow())
-                throw new IllegalStateException("L'edificio extra deve essere preso dalla riga superiore");
+                throw new IllegalStateException("The extra building must be taken from the upper row");
 
             BuildingCard card = findBuildingCard(upperBuildings, pickBuilding.getCardId());
             if (card == null)
-                throw new IllegalArgumentException("Edificio non trovato: " + pickBuilding.getCardId());
+                throw new IllegalArgumentException("Building not found: " + pickBuilding.getCardId());
 
             if (!game.canAffordBuilding(currentPlayer, card))
-                throw new IllegalStateException("Non hai abbastanza cibo per acquistare questo edificio");
+                throw new IllegalStateException("You do not have enough food to buy this building");
 
             game.takeBuildingCard(currentPlayer, upperBuildings, card);
             ctx.notifyListeners(l -> l.onBuildingCardTaken(playerNickname, pickBuilding.getCardId(), true));

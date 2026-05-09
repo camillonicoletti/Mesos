@@ -12,11 +12,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import it.polimi.ingsw.model.board.TurnOrderTile;
+
 public class TotemPlacementState extends AbstractGameState {
 
     private static final long serialVersionUID = 1L;
 
-    // nicknames dei giocatori che hanno già piazzato il totem
+    // nicknames of the players who have already placed their totem
     private final Set<String> playersWhoPlaced = new HashSet<>();
     private final List<String> placementOrder = new ArrayList<>();
     private int currentTurnIndex;
@@ -58,46 +59,46 @@ public class TotemPlacementState extends AbstractGameState {
 
         String currentPlayerNickname = getCurrentPlayerNickname(ctx);
         if (currentPlayerNickname == null) {
-            throw new IllegalStateException("Nessun giocatore disponibile per il piazzamento");
+            throw new IllegalStateException("No player available for placement");
         }
         if (!currentPlayerNickname.equals(playerNickname)) {
-            throw new IllegalStateException("Non è il turno di " + playerNickname);
+            throw new IllegalStateException("It is not " + playerNickname + "'s turn");
         }
 
-        // verifica che il giocatore non abbia già piazzato
+        // checks that the player has not already placed
         if (playersWhoPlaced.contains(playerNickname)) {
-            throw new IllegalStateException(playerNickname + " ha già piazzato il totem");
+            throw new IllegalStateException(playerNickname + " has already placed the totem");
         }
 
-        // trova il giocatore nel model
+        // finds the player in the model
         Player player = findPlayer(ctx, playerNickname);
         if (player == null) {
-            throw new IllegalStateException("Giocatore non trovato: " + playerNickname);
+            throw new IllegalStateException("Player not found: " + playerNickname);
         }
 
-        // trova la tile scelta sulla board
+        // finds the chosen tile on the board
         OfferTile tile = findTile(ctx, placeTotem.getTileId());
         if (tile == null) {
             if (isKnownTileId(placeTotem.getTileId())) {
                 throw new IllegalArgumentException(
-                        "Tile " + placeTotem.getTileId() + " non disponibile per questa partita");
+                        "Tile " + placeTotem.getTileId() + " not available for this game");
             }
-            throw new IllegalArgumentException("Tile non valida: " + placeTotem.getTileId());
+            throw new IllegalArgumentException("Invalid tile: " + placeTotem.getTileId());
         }
 
-        // chiama il model
+        // calls the model
         boolean placed = ctx.getGame().getCurrentRound().placeTotemOffer(player, tile);
         if (!placed) {
-            throw new IllegalStateException("Tile " + placeTotem.getTileId() + " occupata o non disponibile");
+            throw new IllegalStateException("Tile " + placeTotem.getTileId() + " occupied or not available");
         }
 
         playersWhoPlaced.add(playerNickname);
-        //listener
+        // listener
         ctx.notifyListeners(l -> l.onTotemPlaced(playerNickname, placeTotem.getTileId()));
         currentTurnIndex++;
         advanceToNextConnectedPlayer(ctx);
 
-        // se tutti hanno piazzato → passa ad ActionResolutionState
+        // if everyone has placed → move to ActionResolutionState
         if (haveAllConnectedPlayersPlaced(ctx)) {
             ctx.changeState(new ActionResolutionState());
         } else {

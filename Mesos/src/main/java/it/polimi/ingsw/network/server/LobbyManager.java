@@ -39,6 +39,7 @@ public class LobbyManager {
     private final Map<String, VirtualView> views = new HashMap<>();
     private final List<ServerSideConnection> pendingConnections = new ArrayList<>();
     private final ScheduledExecutorService suspensionTimeoutExecutor;
+
     /**
      * Creates a fresh lobby manager with a brand-new controller.
      * Used on a clean server start with no save file on disk.
@@ -95,20 +96,20 @@ public class LobbyManager {
         String nickname = message.getNickname();
 
         if (nickname == null || nickname.isBlank()) {
-            connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, "Nickname non valido"));
+            connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, "Invalid nickname"));
             return;
         }
         if (connections.containsKey(nickname)) {
-            connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, "Nickname già in uso"));
+            connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, "Nickname already in use"));
             return;
         }
         if (gameController.containsLobbyPlayer(nickname) || gameController.containsGamePlayer(nickname)) {
             connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED,
-                    "Nickname già registrato (usa reconnect)"));
+                    "Nickname already registered (use reconnect)"));
             return;
         }
         if (gameController.getGame() != null) {
-            connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, "La partita è già iniziata"));
+            connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, "The game has already started"));
             return;
         }
 
@@ -131,20 +132,20 @@ public class LobbyManager {
         String nickname = message.getNickname();
 
         if (nickname == null || nickname.isBlank()) {
-            connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, "Nickname non valido"));
+            connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, "Invalid nickname"));
             return;
         }
         if (!gameController.containsGamePlayer(nickname)) {
-            connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, "Player sconosciuto"));
+            connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, "Unknown player"));
             return;
         }
         if (connections.containsKey(nickname)) {
-            connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, "Player già connesso"));
+            connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, "Player already connected"));
             return;
         }
         if (!gameController.isPlayerDisconnected(nickname)) {
             connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED,
-                    "Player non risulta disconnesso"));
+                    "Player does not appear to be disconnected"));
             return;
         }
 
@@ -286,7 +287,7 @@ public class LobbyManager {
         try {
             gameController.checkSuspensionTimeout();
         } catch (RuntimeException exception) {
-            System.err.println("Errore durante il controllo del timeout di sospensione: "
+            System.err.println("Error while checking the suspension timeout: "
                     + exception.getMessage());
         }
     }

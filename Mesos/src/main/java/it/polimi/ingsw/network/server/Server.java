@@ -33,16 +33,16 @@ public class Server {
                 .orElseGet(LobbyManager::new);
 
         if (restored.isPresent()) {
-            System.out.println("Stato precedente ripristinato da disco — "
-                    + "in attesa che i giocatori si riconnettano.");
+            System.out.println("Previous state restored from disk — "
+                    + "waiting for players to reconnect.");
         } else if (freshStart) {
-            System.out.println("Avvio pulito richiesto — nessun salvataggio precedente verra ripristinato.");
+            System.out.println("Clean startup requested — no previous save will be restored.");
         }
 
         MessageDispatcher dispatcher = new MessageDispatcher(lobby);
 
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            System.out.println("Server avviato su porta " + port);
+            System.out.println("Server started on port " + port);
 
             while (true) {
                 Socket socket = serverSocket.accept();
@@ -60,7 +60,7 @@ public class Server {
 
                 lobby.registerPendingConnection(conn);
 
-                System.out.println("Nuova connessione: " + socket.getRemoteSocketAddress());
+                System.out.println("New connection: " + socket.getRemoteSocketAddress());
             }
         }
     }
