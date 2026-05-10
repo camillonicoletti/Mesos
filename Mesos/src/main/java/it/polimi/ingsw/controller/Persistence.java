@@ -142,6 +142,13 @@ public final class Persistence {
                 Files.newInputStream(source))) {
             Object read = in.readObject();
             if (read instanceof GameController controller) {
+                // Re-wire the transient Game.notifier that serialization stripped:
+                // without this, every model-emitted event after restore (food/PP
+                // changes from takeBuildingCard, slot effects, era changes...)
+                // would be silently lost.
+                if (controller.getGame() != null) {
+                    controller.getGame().setNotifier(controller::notifyListeners);
+                }
                 return Optional.of(controller);
             }
             System.err.println("[Persistence] save file does not contain a "

@@ -53,5 +53,9 @@ class RMIConnectionTest {
         @Override
         public void disconnect(RemoteClient client) {
         }
+
+        @Override
+        public void register(RemoteClient client) {
+        }
     }
 }

@@ -329,10 +329,22 @@ public class Game implements Serializable {
             throw new IllegalArgumentException("Selected row does not belong to the current round");
         }
 
+        int foodBefore = player.getFood();
+        int ppBefore   = player.getPrestigePoints();
+
         mutableRow.remove(chosenCard);
         player.addCharacterCard(chosenCard);
 
         applyCharacterImmediateEffects(player, chosenCard);
+
+        int foodDelta = player.getFood() - foodBefore;
+        int ppDelta   = player.getPrestigePoints() - ppBefore;
+        if (foodDelta != 0) {
+            notifyListeners(l -> l.onFoodChanged(player.getNickname(), player.getFood(), foodDelta));
+        }
+        if (ppDelta != 0) {
+            notifyListeners(l -> l.onPointsChanged(player.getNickname(), player.getPrestigePoints(), ppDelta));
+        }
     }
 
     private void applyCharacterImmediateEffects(Player player, CharacterCard card) {
@@ -377,6 +389,9 @@ public class Game implements Serializable {
         }
 
         player.spendFood(finalCost);
+        if (finalCost > 0) {
+            notifyListeners(l -> l.onFoodChanged(player.getNickname(), player.getFood(), -finalCost));
+        }
         mutableRow.remove(chosenCard);
         player.addBuildingCard(chosenCard);
     }
@@ -423,7 +438,7 @@ public class Game implements Serializable {
     }
 
     public List<Card> getTributeDeck() {
-        return tributeDeck;
+        return Collections.unmodifiableList(tributeDeck);
     }
 
     public Board getBoard() {

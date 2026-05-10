@@ -138,7 +138,9 @@ public class RoundTest {
 
     @Test
     void testRefillUpperRowStopsWhenTributeDeckIsEmpty() {
-        game.getTributeDeck().clear();
+        while (game.drawTribeCard() != null) {
+            // drain the deck via the public API
+        }
         assertDoesNotThrow(() -> round.refillUpperRow());
     }
 

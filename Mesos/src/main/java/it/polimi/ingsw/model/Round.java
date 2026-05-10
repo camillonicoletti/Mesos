@@ -274,6 +274,9 @@ public class Round implements Serializable {
 
         targetSlot.placeTotem(player.getTotem());
 
+        int foodBefore = player.getFood();
+        int ppBefore   = player.getPrestigePoints();
+
         targetSlot.getEffect().apply(player);
 
         // building effect TotemSlotFoodBonusEffect
@@ -283,6 +286,15 @@ public class Round implements Serializable {
                     building.getEffect().apply(player);
                 }
             }
+        }
+
+        int foodDelta = player.getFood() - foodBefore;
+        int ppDelta   = player.getPrestigePoints() - ppBefore;
+        if (foodDelta != 0) {
+            game.notifyListeners(l -> l.onFoodChanged(player.getNickname(), player.getFood(), foodDelta));
+        }
+        if (ppDelta != 0) {
+            game.notifyListeners(l -> l.onPointsChanged(player.getNickname(), player.getPrestigePoints(), ppDelta));
         }
     }
 
@@ -370,11 +382,13 @@ public class Round implements Serializable {
     }
 
     public void refillUpperRow() {
-        List<Card> tributeDeck = game.getTributeDeck();
         int targetSize = game.getPlayers().size() + 4;
 
-        while (getUpperTributeRowSize() < targetSize && !tributeDeck.isEmpty()) {
-            Card drawnCard = tributeDeck.remove(0);
+        while (getUpperTributeRowSize() < targetSize) {
+            Card drawnCard = game.drawTribeCard();
+            if (drawnCard == null) {
+                return;
+            }
 
             if (drawnCard instanceof EventCard eventCard) {
                 upperRowEventCards.add(eventCard);

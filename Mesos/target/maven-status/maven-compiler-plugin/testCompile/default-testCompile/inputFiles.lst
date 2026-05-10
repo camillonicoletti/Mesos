@@ -1,30 +1,58 @@
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/AppTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/GameControllerDisconnectionTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/GameControllerEdgeCaseTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/GameControllerLobbyReadyTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/GameControllerLobbyValidationTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/GameControllerMegaEdgeCaseTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/GameControllerMoreLobbyEdgeTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/GameControllerStateTransitionTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/GameControllerThirtyThreeDiscoveredCasesTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/GameControllerTotemPlacementEdgeTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/PersistenceClearTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/PersistenceListenerTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/PersistenceLoadTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/PersistenceSaveTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/BoardFactoryTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/BoardTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/BuildingEffectsTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/CardFactoryTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/CharacterCardTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/EventCardTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/GameScoringTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/GameTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/OfferTileTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/PlayerTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/RoundTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/ShamanicRitualEventCardTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/TotemTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/TribeTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/TurnSlotTest.java
-/Users/admin/Desktop/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/network/server/LobbyManagerTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/AppTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/CharacterTakeNotificationsBugHunterTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/EventResolvedDeltaConsistencyTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/GameControllerBugHunterReplayTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/GameControllerCardPickingStrongTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/GameControllerClientSyncTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/GameControllerDisconnectionTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/GameControllerEdgeCaseTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/GameControllerInitialSetupStrongTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/GameControllerInvalidActionsStrongTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/GameControllerLobbyReadyTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/GameControllerLobbyValidationTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/GameControllerMegaEdgeCaseTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/GameControllerMoreLobbyEdgeTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/GameControllerRulesRegressionStrongTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/GameControllerStateTransitionTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/GameControllerThirtyThreeDiscoveredCasesTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/GameControllerTotemPlacementEdgeTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/GameControllerTotemPlacementStrongTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/PersistenceAndSyncBugHunterTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/PersistenceClearTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/PersistenceListenerTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/PersistenceLoadTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/controller/PersistenceSaveTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/BoardFactoryTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/BoardTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/BuildingEffectsTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/CardFactoryTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/CharacterCardTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/EventCardTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/FinalScoringBugHunterTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/FinalScoringIdempotencyTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/GameAndClientMutabilityBugHunterTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/GameEndRoundStrongTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/GameEventResolutionStrongTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/GameFinalScoringStrongTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/GameScoringTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/GameTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/MesosRulesEdgeCaseTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/ModelEncapsulationBugHunterTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/ModelRobustnessStrongTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/OfferTileTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/PlayerFoodBugHunterTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/PlayerTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/RoundEncapsulationBugHunterTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/RoundTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/ShamanicRitualEventCardTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/TotemTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/TribeTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/model/TurnSlotTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/network/client/ClientModelTurnSyncTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/network/protocol/clientbound/SnapshotImmutabilityBugHunterTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/network/rmi/RMIConnectionTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/network/server/LobbyManagerBugHunterTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/network/server/LobbyManagerTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/network/transport/SocketConnectionTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/view/tui/CommandParserBugHunterTest.java
+/Users/benedettooliva/Desktop/progetto ingsoft/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/Mesos/src/test/java/it/polimi/ingsw/view/tui/CommandParserDeepBugHunterTest.java

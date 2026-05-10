@@ -587,7 +587,10 @@ public class GameTest {
 
     @Test
     void testDrawTribeCardReturnsNullWhenDeckIsEmpty() {
-        game.getTributeDeck().clear();
+        // Drain the deck via the public API rather than mutating the internal list directly.
+        while (game.drawTribeCard() != null) {
+            // intentionally empty
+        }
 
         assertNull(game.drawTribeCard());
     }

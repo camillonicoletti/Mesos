@@ -902,7 +902,7 @@ public class GameControllerMegaEdgeCaseTest {
         assertEquals(3, alice.getFood());
 
         assertEquals(1, alice.getTribe().getBuildingCards().size());
-        assertFalse(round.getUpperRowBuildings().contains(building));
+        assertFalse(controller.getGame().getCurrentRound().getUpperRowBuildings().contains(building));
     }
 
     @Test
