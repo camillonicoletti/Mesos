@@ -1,125 +1,276 @@
 .app {
     -fx-font-family: "Helvetica Neue", Arial, sans-serif;
-    -fx-background-color: #f4f1ea;
+    -fx-background-color: #2f382e;
 }
 
 .topbar {
-    -fx-background-color: #2f3b30;
+    -fx-background-color: linear-gradient(to right, #243126, #3f4b34);
+    -fx-border-color: #776343;
+    -fx-border-width: 0 0 1px 0;
 }
 
 .title {
-    -fx-font-size: 26px;
-    -fx-font-weight: 700;
-    -fx-text-fill: #f8f2e5;
+    -fx-font-size: 27px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #f7ecd6;
 }
 
 .topbar .muted {
-    -fx-text-fill: #d8d0c2;
+    -fx-text-fill: #dacbb0;
 }
 
 .muted {
-    -fx-text-fill: #706b63;
+    -fx-text-fill: #7f7564;
 }
 
 .login-panel {
-    -fx-background-color: #fffaf0;
-    -fx-padding: 28px;
-    -fx-border-color: #d8cdb7;
+    -fx-background-color: #f5ead3;
+    -fx-padding: 30px;
+    -fx-border-color: #b9935a;
     -fx-border-radius: 8px;
     -fx-background-radius: 8px;
+    -fx-effect: dropshadow(three-pass-box, rgba(24, 24, 18, .28), 18, 0, 0, 8);
 }
 
 .login-panel .title {
-    -fx-text-fill: #263226;
+    -fx-text-fill: #263126;
 }
 
 .side-panel {
-    -fx-background-color: #fffaf0;
-    -fx-border-color: #d8cdb7;
+    -fx-background-color: #eadcc2;
+    -fx-border-color: #b9935a;
     -fx-border-width: 0 1px 0 0;
 }
 
+.game-board {
+    -fx-background-color: radial-gradient(center 50% 45%, radius 90%, #80633d, #4f442f 58%, #30392d);
+}
+
+.center-track {
+    -fx-background-color: rgba(245, 234, 211, .88);
+    -fx-border-color: #b9935a;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 16px;
+    -fx-effect: dropshadow(three-pass-box, rgba(24, 24, 18, .24), 18, 0, 0, 5);
+}
+
+.turn-panel,
+.offer-panel,
+.card-row {
+    -fx-background-color: rgba(250, 240, 220, .82);
+    -fx-border-color: rgba(100, 78, 45, .42);
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 12px;
+}
+
+.turn-panel {
+    -fx-min-width: 310px;
+    -fx-pref-width: 340px;
+}
+
+.offer-panel {
+    -fx-min-width: 520px;
+}
+
 .section-title {
-    -fx-font-size: 14px;
-    -fx-font-weight: 700;
-    -fx-text-fill: #263226;
+    -fx-font-size: 13px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #263126;
+}
+
+.font-icon {
+    -fx-icon-color: #4c3b24;
+}
+
+.primary-button .font-icon {
+    -fx-icon-color: #fff7e8;
+}
+
+.secondary-button .font-icon {
+    -fx-icon-color: #263126;
+}
+
+.info-row {
+    -fx-spacing: 8px;
+}
+
+.info-row .font-icon {
+    -fx-icon-color: #6b5528;
 }
 
 .primary-button {
-    -fx-background-color: #426b4f;
-    -fx-text-fill: white;
-    -fx-font-weight: 700;
-    -fx-background-radius: 6px;
+    -fx-background-color: #476948;
+    -fx-text-fill: #fff7e8;
+    -fx-font-weight: 800;
+    -fx-background-radius: 7px;
+    -fx-padding: 8px 14px;
+}
+
+.primary-button:hover {
+    -fx-background-color: #5c7d55;
 }
 
 .secondary-button {
-    -fx-background-color: #e7dbc6;
-    -fx-text-fill: #263226;
-    -fx-background-radius: 6px;
+    -fx-background-color: #d9c49d;
+    -fx-text-fill: #263126;
+    -fx-background-radius: 7px;
+    -fx-padding: 8px 12px;
+}
+
+.secondary-button:hover {
+    -fx-background-color: #e6d3ad;
 }
 
 .card {
-    -fx-background-color: #fffaf0;
-    -fx-border-color: #b9ab90;
+    -fx-background-color: #f8edd7;
+    -fx-border-color: #ad8750;
+    -fx-border-width: 1.5px;
     -fx-border-radius: 7px;
     -fx-background-radius: 7px;
-    -fx-padding: 8px;
+    -fx-padding: 6px;
+    -fx-effect: dropshadow(three-pass-box, rgba(20, 16, 10, .22), 7, 0, 0, 2);
 }
 
 .card:hover {
-    -fx-border-color: #426b4f;
-    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, .22), 8, 0, 0, 2);
+    -fx-border-color: #e0bb6f;
+    -fx-effect: dropshadow(three-pass-box, rgba(18, 14, 8, .35), 14, 0, 0, 4);
+}
+
+.card:disabled {
+    -fx-opacity: .54;
 }
 
 .player-card {
-    -fx-background-color: #fffaf0;
-    -fx-border-color: #d0c3aa;
+    -fx-background-color: #f8edd7;
+    -fx-border-color: #b9935a;
     -fx-border-radius: 8px;
     -fx-background-radius: 8px;
     -fx-padding: 14px;
-    -fx-min-width: 150px;
+    -fx-min-width: 160px;
 }
 
-.chip {
-    -fx-background-color: #e7dbc6;
-    -fx-padding: 6px 10px;
-    -fx-background-radius: 99px;
+.turn-slot,
+.turn-slot-active {
+    -fx-background-radius: 7px;
+    -fx-border-radius: 7px;
+    -fx-padding: 8px 10px;
 }
 
-.chip-active {
-    -fx-background-color: #426b4f;
-    -fx-text-fill: white;
-    -fx-padding: 6px 10px;
+.turn-slot {
+    -fx-background-color: #e0cfad;
+    -fx-border-color: #bd9b65;
+}
+
+.turn-slot-active {
+    -fx-background-color: #476948;
+    -fx-border-color: #dfbd72;
+    -fx-effect: dropshadow(three-pass-box, rgba(45, 75, 48, .45), 10, 0, 0, 3);
+}
+
+.turn-slot-active .label {
+    -fx-text-fill: #fff7e8;
+}
+
+.turn-position {
+    -fx-font-size: 12px;
+    -fx-font-weight: 900;
+    -fx-min-width: 24px;
+    -fx-alignment: center;
+}
+
+.turn-name {
+    -fx-font-weight: 800;
+}
+
+.turn-effect {
+    -fx-font-size: 11px;
+}
+
+.totem-dot {
+    -fx-min-width: 14px;
+    -fx-min-height: 14px;
+    -fx-max-width: 14px;
+    -fx-max-height: 14px;
     -fx-background-radius: 99px;
+    -fx-border-color: rgba(37, 34, 28, .55);
+    -fx-border-radius: 99px;
+}
+
+.offer-tile,
+.offer-tile-occupied {
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+    -fx-padding: 10px;
+    -fx-text-fill: #263126;
+}
+
+.offer-tile {
+    -fx-background-color: linear-gradient(to bottom, #f6e5c5, #d7bb81);
+    -fx-border-color: #a67d45;
+}
+
+.offer-tile:hover {
+    -fx-border-color: #e0bb6f;
+    -fx-background-color: linear-gradient(to bottom, #fff0cf, #e4c98f);
+}
+
+.offer-tile-occupied {
+    -fx-background-color: linear-gradient(to bottom, #d3c0a0, #a99571);
+    -fx-border-color: #6f5837;
+}
+
+.offer-tile:disabled,
+.offer-tile-occupied:disabled {
+    -fx-opacity: .7;
+}
+
+.offer-letter {
+    -fx-font-size: 42px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #4a3520;
+}
+
+.offer-effect {
+    -fx-font-size: 11px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #4a3520;
+}
+
+.offer-owner {
+    -fx-background-color: rgba(255, 247, 232, .65);
+    -fx-background-radius: 99px;
+    -fx-padding: 4px 8px;
 }
 
 .player-row {
-    -fx-text-fill: #263226;
+    -fx-text-fill: #263126;
 }
 
 .disconnected {
-    -fx-text-fill: #9b2f28;
+    -fx-text-fill: #9b352c;
     -fx-strikethrough: true;
 }
 
 .ok {
     -fx-text-fill: #2f6b3f;
-    -fx-font-weight: 700;
+    -fx-font-weight: 800;
 }
 
 .error {
-    -fx-text-fill: #9b2f28;
-    -fx-font-weight: 700;
+    -fx-text-fill: #9b352c;
+    -fx-font-weight: 800;
 }
 
 .notice {
-    -fx-text-fill: #6b5528;
-    -fx-font-weight: 700;
+    -fx-text-fill: #785928;
+    -fx-font-weight: 800;
 }
 
 .timer {
-    -fx-text-fill: #f8f2e5;
-    -fx-font-weight: 700;
+    -fx-text-fill: #f8edd7;
+    -fx-font-weight: 800;
 }
 
 .timer-alert {
@@ -127,6 +278,6 @@
 }
 
 .scroll {
-    -fx-background: #f4f1ea;
-    -fx-background-color: #f4f1ea;
+    -fx-background: #30392d;
+    -fx-background-color: #30392d;
 }

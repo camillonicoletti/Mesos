@@ -55,6 +55,19 @@ def optimize_copy(src, dst):
     image.save(dst, optimize=True)
 
 
+def crop_by_ratio(src, dst, ratio_box):
+    image = Image.open(src).convert("RGB")
+    width, height = image.size
+    box = (
+        int(width * ratio_box[0]),
+        int(height * ratio_box[1]),
+        int(width * ratio_box[2]),
+        int(height * ratio_box[3]),
+    )
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    image.crop(box).save(dst, optimize=True)
+
+
 def card_output_path(card_id):
     if 1 <= card_id <= 84:
         return ASSETS / "cards" / "characters" / f"card_{card_id:03d}.png"
@@ -119,6 +132,23 @@ def extract_reference_pages(source_dir, dpi):
                 optimize_copy(rendered, output_prefix.parent / f"{output_prefix.name}_{suffix}.png")
 
 
+def extract_offer_tiles(source_dir):
+    fustelle_front = source_dir / "fustelle_front.pdf"
+    if not fustelle_front.exists():
+        return
+
+    with tempfile.TemporaryDirectory(prefix="mesos_offer_tiles_") as tmp_name:
+        tmp = Path(tmp_name)
+        rendered = render_pdf_page(fustelle_front, 1, tmp / "fustelle_front_1", 300)
+
+        # Tile E is the "1 upper + 1 lower" offer tile.
+        crop_by_ratio(
+            rendered,
+            ASSETS / "board" / "offer_E.png",
+            (0.332, 0.386, 0.535, 0.735),
+        )
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Extract Mesos GUI assets from professor PDFs.")
     parser.add_argument("--source", type=Path, default=DEFAULT_SOURCE)
@@ -133,6 +163,7 @@ def main():
     extract_cards(args.source, args.card_dpi)
     if not args.skip_references:
         extract_reference_pages(args.source, args.reference_dpi)
+        extract_offer_tiles(args.source)
     run(["python3", str(ROOT / "scripts" / "gui" / "generate_asset_manifest.py")])
 
 

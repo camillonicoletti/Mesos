@@ -10,6 +10,7 @@
 # Ignore game assets
 assets/*
 src/main/resources/assets/
+mesos-savestate.bin
 
 # Professor-provided GUI assets must stay local and must not be pushed.
 src/main/resources/gui/assets/**/*.png
