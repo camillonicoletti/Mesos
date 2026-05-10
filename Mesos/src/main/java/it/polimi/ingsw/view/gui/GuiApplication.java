@@ -314,13 +314,37 @@ public final class GuiApplication extends Application {
         pane.getChildren().add(sectionTitle("Tessere offerta"));
         for (char tile = 'A'; tile <= 'G'; tile++) {
             String owner = model.getTotemOnTiles().get(tile);
-            Button button = secondaryButton(tile + (owner == null ? "" : " - " + owner));
+            Button button = offerTileButton(tile, owner);
             char selectedTile = tile;
             button.setDisable(!model.isMyTotemPlacementTurn() || owner != null);
             button.setOnAction(event -> controller.send(new GameActionMessage(new PlaceTotemAction(selectedTile))));
             pane.getChildren().add(button);
         }
         return pane;
+    }
+    private Button offerTileButton(char tile, String owner) {
+        String path = "gui/assets/board/offer_" + tile + ".png";
+
+        try (InputStream stream = assetCatalog.openResource(path).orElse(null)) {
+            if (stream != null) {
+                Image image = new Image(stream);
+                ImageView view = new ImageView(image);
+                view.setPreserveRatio(true);
+                view.setFitWidth(120);
+                view.setFitHeight(80);
+
+                Button button = secondaryButton(owner == null ? "" : owner);
+                button.setGraphic(view);
+                button.setContentDisplay(javafx.scene.control.ContentDisplay.TOP);
+                button.setPrefWidth(130);
+                button.setPrefHeight(110);
+                return button;
+            }
+        } catch (Exception ignored) {
+            // fallback below
+        }
+
+        return secondaryButton(tile + (owner == null ? "" : " - " + owner));
     }
 
     private VBox cardRowsPanel() {
