@@ -11,6 +11,29 @@
 assets/*
 src/main/resources/assets/
 
+# Professor-provided GUI assets must stay local and must not be pushed.
+src/main/resources/gui/assets/**/*.png
+src/main/resources/gui/assets/**/*.jpg
+src/main/resources/gui/assets/**/*.jpeg
+src/main/resources/gui/assets/**/*.pdf
+src/main/resources/gui/assets/**/*.webp
+Risorse Grafiche Mesos/
+**/Risorse Grafiche Mesos/
+Box_ITA_ART.pdf
+Cards_total_back_NO PROMO.pdf
+Cards_total_front_NO PROMO.pdf
+fustelle_back_prev.pdf
+fustelle_back.pdf
+fustelle_DIECUT.pdf
+fustelle_front_prev.pdf
+fustelle_front.pdf
+pedine_specs.pdf
+
+# Keep lightweight GUI metadata tracked.
+!src/main/resources/gui/assets/README.md
+!src/main/resources/gui/assets/manifest/
+!src/main/resources/gui/assets/manifest/*.json
+
 # User-specific stuff
 .idea/**/workspace.xml
 .idea/**/tasks.xml

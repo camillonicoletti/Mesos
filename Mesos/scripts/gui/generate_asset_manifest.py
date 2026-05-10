@@ -22,6 +22,28 @@ def card_path(kind, card_id):
     return f"gui/assets/cards/{folders[kind]}/card_{card_id:03d}.png"
 
 
+def era_key(era):
+    return {
+        "I": "era_i",
+        "II": "era_ii",
+        "III": "era_iii",
+    }[era]
+
+
+def character_back_path(era):
+    return f"gui/assets/cards/backs/back_character_{era_key(era)}.png"
+
+
+def building_back_path(era):
+    return f"gui/assets/cards/backs/back_building_{era_key(era)}.png"
+
+
+def event_back_path(card):
+    if card.get("closeEvent"):
+        return "gui/assets/cards/backs/back_event_final.png"
+    return character_back_path(card.get("era"))
+
+
 def build_cards_manifest():
     cards = {}
 
@@ -33,6 +55,7 @@ def build_cards_manifest():
             "type": card.get("type"),
             "era": card.get("era"),
             "asset": card_path("character", card_id),
+            "backAsset": character_back_path(card.get("era")),
         }
 
     for card in load_json("events.json"):
@@ -43,6 +66,7 @@ def build_cards_manifest():
             "type": card.get("type"),
             "era": card.get("era"),
             "asset": card_path("event", card_id),
+            "backAsset": event_back_path(card),
         }
 
     for card in load_json("buildings.json"):
@@ -52,10 +76,20 @@ def build_cards_manifest():
             "kind": "building",
             "era": card.get("era"),
             "asset": card_path("building", card_id),
+            "backAsset": building_back_path(card.get("era")),
         }
 
     return {
-        "cardBack": "gui/assets/cards/backs/card_back.png",
+        "backs": {
+            "characterEraI": character_back_path("I"),
+            "characterEraII": character_back_path("II"),
+            "characterEraIII": character_back_path("III"),
+            "buildingEraI": building_back_path("I"),
+            "buildingEraII": building_back_path("II"),
+            "buildingEraIII": building_back_path("III"),
+            "eventFinal": "gui/assets/cards/backs/back_event_final.png",
+        },
+        "defaultCardBack": character_back_path("I"),
         "cards": dict(sorted(cards.items(), key=lambda item: int(item[0]))),
     }
 
@@ -68,20 +102,38 @@ def build_components_manifest():
         if letter:
             tiles[letter] = {
                 "letter": letter,
-                "asset": f"gui/assets/board/offer_tile_{letter.lower()}.png",
+                "asset": None,
             }
 
     return {
         "totems": {
-            "RED": "gui/assets/tokens/totem_red.png",
-            "BLUE": "gui/assets/tokens/totem_blue.png",
-            "PURPLE": "gui/assets/tokens/totem_purple.png",
-            "YELLOW": "gui/assets/tokens/totem_yellow.png",
-            "WHITE": "gui/assets/tokens/totem_white.png",
+            "RED": {"asset": None, "fallbackColor": "#c8342f"},
+            "BLUE": {"asset": None, "fallbackColor": "#2f67b1"},
+            "PURPLE": {"asset": None, "fallbackColor": "#7b3f98"},
+            "YELLOW": {"asset": None, "fallbackColor": "#e5b72f"},
+            "WHITE": {"asset": None, "fallbackColor": "#f4efe6"},
         },
         "offerTiles": tiles,
-        "food": "gui/assets/tokens/food.png",
-        "prestige": "gui/assets/tokens/prestige.png",
+        "food": {"asset": None, "fallbackText": "food"},
+        "prestige": {"asset": None, "fallbackText": "prestige"},
+        "referenceSheets": {
+            "fustelleFront": [
+                "gui/assets/board/fustelle_front_1.png",
+                "gui/assets/board/fustelle_front_2.png",
+                "gui/assets/board/fustelle_front_3.png"
+            ],
+            "fustelleBack": [
+                "gui/assets/board/fustelle_back_1.png",
+                "gui/assets/board/fustelle_back_2.png",
+                "gui/assets/board/fustelle_back_3.png"
+            ],
+            "diecut": [
+                "gui/assets/board/fustelle_diecut_1.png",
+                "gui/assets/board/fustelle_diecut_2.png",
+                "gui/assets/board/fustelle_diecut_3.png"
+            ],
+            "pedineSpecs": ["gui/assets/tokens/pedine_specs_1.png"]
+        },
     }
 
 

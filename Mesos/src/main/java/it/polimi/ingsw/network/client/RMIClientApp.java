@@ -5,6 +5,7 @@ import it.polimi.ingsw.network.rmi.RMIServerMain;
 import it.polimi.ingsw.network.rmi.RemoteServer;
 import it.polimi.ingsw.network.transport.ClientSideConnection;
 import it.polimi.ingsw.view.View;
+import it.polimi.ingsw.view.gui.Gui;
 import it.polimi.ingsw.view.tui.Tui;
 
 import java.rmi.registry.LocateRegistry;
@@ -58,7 +59,9 @@ public class RMIClientApp {
                 case "1" -> {
                     return new Tui(controller, model);
                 }
-                case "2" -> System.out.println("GUI is not available yet.");
+                case "2" -> {
+                    return new Gui(controller, model);
+                }
                 default -> System.out.println("Invalid choice, type 1 or 2.");
             }
         }

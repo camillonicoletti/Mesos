@@ -1,41 +1,82 @@
 {
   "totems": {
-    "RED": "gui/assets/tokens/totem_red.png",
-    "BLUE": "gui/assets/tokens/totem_blue.png",
-    "PURPLE": "gui/assets/tokens/totem_purple.png",
-    "YELLOW": "gui/assets/tokens/totem_yellow.png",
-    "WHITE": "gui/assets/tokens/totem_white.png"
+    "RED": {
+      "asset": null,
+      "fallbackColor": "#c8342f"
+    },
+    "BLUE": {
+      "asset": null,
+      "fallbackColor": "#2f67b1"
+    },
+    "PURPLE": {
+      "asset": null,
+      "fallbackColor": "#7b3f98"
+    },
+    "YELLOW": {
+      "asset": null,
+      "fallbackColor": "#e5b72f"
+    },
+    "WHITE": {
+      "asset": null,
+      "fallbackColor": "#f4efe6"
+    }
   },
   "offerTiles": {
     "A": {
       "letter": "A",
-      "asset": "gui/assets/board/offer_tile_a.png"
+      "asset": null
     },
     "B": {
       "letter": "B",
-      "asset": "gui/assets/board/offer_tile_b.png"
+      "asset": null
     },
     "C": {
       "letter": "C",
-      "asset": "gui/assets/board/offer_tile_c.png"
+      "asset": null
     },
     "D": {
       "letter": "D",
-      "asset": "gui/assets/board/offer_tile_d.png"
+      "asset": null
     },
     "E": {
       "letter": "E",
-      "asset": "gui/assets/board/offer_tile_e.png"
+      "asset": null
     },
     "F": {
       "letter": "F",
-      "asset": "gui/assets/board/offer_tile_f.png"
+      "asset": null
     },
     "G": {
       "letter": "G",
-      "asset": "gui/assets/board/offer_tile_g.png"
+      "asset": null
     }
   },
-  "food": "gui/assets/tokens/food.png",
-  "prestige": "gui/assets/tokens/prestige.png"
+  "food": {
+    "asset": null,
+    "fallbackText": "food"
+  },
+  "prestige": {
+    "asset": null,
+    "fallbackText": "prestige"
+  },
+  "referenceSheets": {
+    "fustelleFront": [
+      "gui/assets/board/fustelle_front_1.png",
+      "gui/assets/board/fustelle_front_2.png",
+      "gui/assets/board/fustelle_front_3.png"
+    ],
+    "fustelleBack": [
+      "gui/assets/board/fustelle_back_1.png",
+      "gui/assets/board/fustelle_back_2.png",
+      "gui/assets/board/fustelle_back_3.png"
+    ],
+    "diecut": [
+      "gui/assets/board/fustelle_diecut_1.png",
+      "gui/assets/board/fustelle_diecut_2.png",
+      "gui/assets/board/fustelle_diecut_3.png"
+    ],
+    "pedineSpecs": [
+      "gui/assets/tokens/pedine_specs_1.png"
+    ]
+  }
 }
