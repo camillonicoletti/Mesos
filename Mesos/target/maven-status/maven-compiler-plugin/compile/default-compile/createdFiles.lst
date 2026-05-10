@@ -24,6 +24,7 @@ it/polimi/ingsw/network/protocol/serverbound/PongMessage.class
 it/polimi/ingsw/controller/state/TotemPlacementState.class
 it/polimi/ingsw/model/card/CardFactory$1.class
 it/polimi/ingsw/controller/state/ActionResolutionState$OrderedPlayer.class
+it/polimi/ingsw/view/gui/Gui.class
 it/polimi/ingsw/network/client/ClientModel$Listener.class
 it/polimi/ingsw/controller/action/GameAction.class
 it/polimi/ingsw/model/card/effect/EndPPEffect.class
@@ -37,6 +38,8 @@ it/polimi/ingsw/model/board/BoardFactory.class
 it/polimi/ingsw/network/rmi/RMIServerConnection.class
 it/polimi/ingsw/model/board/TurnSlotEffect.class
 it/polimi/ingsw/model/card/BuildingCard.class
+it/polimi/ingsw/view/gui/asset/CardAsset.class
+it/polimi/ingsw/view/gui/asset/GuiAssetCatalog.class
 it/polimi/ingsw/model/board/PayFoodSlotEffect.class
 it/polimi/ingsw/network/transport/ServerSideConnection.class
 it/polimi/ingsw/model/card/effect/EndGameEffect.class
@@ -102,6 +105,7 @@ it/polimi/ingsw/model/card/CardFactory.class
 it/polimi/ingsw/view/tui/Renderer$1.class
 it/polimi/ingsw/model/card/effect/ShamanicRitualImmunityEffect.class
 it/polimi/ingsw/controller/Persistence.class
+it/polimi/ingsw/network/server/ServerLauncher.class
 it/polimi/ingsw/model/Player.class
 it/polimi/ingsw/network/protocol/serverbound/DisconnectMessage.class
 it/polimi/ingsw/network/protocol/clientbound/PlayerDisconnectedMessage.class
@@ -122,6 +126,7 @@ it/polimi/ingsw/controller/state/GameState.class
 it/polimi/ingsw/model/card/BuilderCard.class
 it/polimi/ingsw/network/protocol/clientbound/CurrentPlayerChangedMessage.class
 it/polimi/ingsw/model/card/ShamanicRitualEventCard.class
+it/polimi/ingsw/view/gui/GuiApplication$LaunchContext.class
 it/polimi/ingsw/network/protocol/clientbound/ServerMessage.class
 it/polimi/ingsw/network/server/MessageDispatcher.class
 it/polimi/ingsw/model/card/effect/ShamanicRitualDoublePPEffect.class
@@ -136,6 +141,7 @@ it/polimi/ingsw/controller/listener/PersistenceListener.class
 it/polimi/ingsw/controller/state/SuspendedState.class
 it/polimi/ingsw/network/protocol/serverbound/ReconnectMessage.class
 it/polimi/ingsw/network/server/VirtualView.class
+it/polimi/ingsw/view/gui/GuiApplication.class
 it/polimi/ingsw/network/client/ClientApp.class
 it/polimi/ingsw/network/protocol/clientbound/GameResumedMessage.class
 it/polimi/ingsw/model/card/effect/ExtraCardUpperRowEffect.class

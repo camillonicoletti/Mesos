@@ -277,24 +277,70 @@ public class Renderer {
     }
 
     private void endGameScreen(ClientModel model) {
-        blank();
-        row(center(YLW + BOLD + "GAME OVER" + RST, W));
-        blank();
-        row("  Winner:  " + GRN + BOLD + model.getWinnerNickname() + RST);
-        blank();
+        final int panelW = 88;
+        String winner = model.getWinnerNickname() == null ? "UNKNOWN" : model.getWinnerNickname();
 
+        blank();
+        row(center(GRY + DIM + "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓" + RST, W));
+        row(center(RED + BOLD + " ██████╗  █████╗ ███╗   ███╗███████╗     ██████╗ ██╗   ██╗███████╗██████╗ " + RST, W));
+        row(center(RED + BOLD + "██╔════╝ ██╔══██╗████╗ ████║██╔════╝    ██╔═══██╗██║   ██║██╔════╝██╔══██╗" + RST, W));
+        row(center(RED + BOLD + "██║  ███╗███████║██╔████╔██║█████╗      ██║   ██║██║   ██║█████╗  ██████╔╝" + RST, W));
+        row(center(RED + BOLD + "██║   ██║██╔══██║██║╚██╔╝██║██╔══╝      ██║   ██║╚██╗ ██╔╝██╔══╝  ██╔══██╗" + RST, W));
+        row(center(RED + BOLD + "╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗    ╚██████╔╝ ╚████╔╝ ███████╗██║  ██║" + RST, W));
+        row(center(RED + BOLD + " ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝     ╚═════╝   ╚═══╝  ╚══════╝╚═╝  ╚═╝" + RST, W));
+        row(center(GRY + DIM + "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓" + RST, W));
+
+        blank();
+        row(center(CYN + BOLD + "╔" + "═".repeat(panelW) + "╗" + RST, W));
+        row(center(CYN + BOLD + "║" + RST + center(YLW + BOLD + "◆  WINNER DETECTED  ◆" + RST, panelW) + CYN + BOLD + "║" + RST, W));
+        row(center(CYN + BOLD + "║" + RST + center(GRN + BOLD + winner.toUpperCase() + RST, panelW) + CYN + BOLD + "║" + RST, W));
+        row(center(CYN + BOLD + "║" + RST + center(GRY + "FINAL STANDINGS" + RST, panelW) + CYN + BOLD + "║" + RST, W));
+        row(center(CYN + BOLD + "╠" + "═".repeat(panelW) + "╣" + RST, W));
+
+        row(center(CYN + BOLD + "║" + RST
+                + "  " + GRY + "RK" + RST
+                + "  " + GRY + padRight("PLAYER", 18) + RST
+                + "  " + GRY + padRight("PRESTIGE", 12) + RST
+                + "  " + GRY + padRight("FOOD", 8) + RST
+                + "  " + GRY + padRight("STATUS", 17) + RST
+                + "  " + CYN + BOLD + "║" + RST, W));
+        row(center(CYN + BOLD + "╟" + "─".repeat(panelW) + "╢" + RST, W));
+
+        List<Map.Entry<String, Integer>> standings = model.getFinalScores().entrySet()
+                .stream().sorted(Map.Entry.<String, Integer>comparingByValue().reversed()).toList();
         int rank = 1;
-        for (Map.Entry<String, Integer> e : model.getFinalScores().entrySet()
-                .stream().sorted(Map.Entry.<String, Integer>comparingByValue().reversed()).toList()) {
-            String medal = switch (rank) {
-                case 1  -> YLW + "1. " + RST;
-                case 2  -> GRY + "2. " + RST;
-                default -> DIM + rank + ". " + RST;
-            };
-            row("  " + medal + WHT + String.format("%-16s", e.getKey()) + RST + "  " + YLW + e.getValue() + " PP" + RST);
+        for (Map.Entry<String, Integer> e : standings) {
+            row(center(endGameScoreLine(model, e.getKey(), e.getValue(), rank, panelW), W));
             rank++;
         }
+
+        row(center(CYN + BOLD + "╚" + "═".repeat(panelW) + "╝" + RST, W));
         blank();
+        row(center(GRY + DIM + "> PRESS ENTER TO CONTINUE" + RST, W));
+        blank();
+    }
+
+    private String endGameScoreLine(ClientModel model, String nickname, int score, int rank, int panelW) {
+        PlayerView player = model.getPlayers().get(nickname);
+        String playerColor = player != null ? totemColor(player.getTotemColor()) : WHT;
+        int food = player != null ? player.getFood() : 0;
+        boolean me = nickname.equals(model.getMyNickname());
+        boolean winner = nickname.equals(model.getWinnerNickname());
+        String rankColor = rank == 1 ? YLW + BOLD : rank == 2 ? WHT : GRY;
+        String scoreColor = score < 0 ? RED : YLW;
+        String status = winner ? "★ WINNER" : "";
+        if (me) {
+            status = status.isBlank() ? "<< YOU" : status + "  << YOU";
+        }
+
+        String content = "  "
+                + rankColor + String.format("%02d", rank) + RST
+                + "  " + playerColor + BOLD + padRight(ellipsize(nickname.toUpperCase(), 18), 18) + RST
+                + "  " + scoreColor + BOLD + padRight(score + " PP", 12) + RST
+                + "  " + GRN + padRight(food + " food", 8) + RST
+                + "  " + CYN + BOLD + padRight(status, 17) + RST
+                + "  ";
+        return CYN + BOLD + "║" + RST + padRight(content, panelW) + CYN + BOLD + "║" + RST;
     }
 
     private void simpleScreen(String msg, ClientModel model) {
