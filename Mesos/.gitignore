@@ -117,3 +117,14 @@ Icon?
 
 Mesos/mesos-savestate.bin
 Mesos/target/
+
+# Maven build output
+target/
+
+# macOS
+.DS_Store
+__MACOSX/
+._*
+
+# temporary archives
+src/test.zip
