@@ -53,6 +53,7 @@ it/polimi/ingsw/model/card/effect/SustenanceFoodDiscountEffect.class
 it/polimi/ingsw/model/card/effect/Shaman3ExtraStarsEffect.class
 it/polimi/ingsw/view/View.class
 it/polimi/ingsw/network/protocol/serverbound/GameActionMessage.class
+it/polimi/ingsw/network/protocol/clientbound/EventResolvedMessage$PlayerEffect.class
 it/polimi/ingsw/App.class
 it/polimi/ingsw/network/protocol/serverbound/LoginMessage.class
 it/polimi/ingsw/network/client/MockClientConnection.class
@@ -72,6 +73,7 @@ it/polimi/ingsw/model/card/effect/EndFullSetPPEffect.class
 it/polimi/ingsw/controller/listener/GameListener.class
 it/polimi/ingsw/network/protocol/clientbound/GameSnapshot.class
 it/polimi/ingsw/network/protocol/clientbound/PlayerReconnectedMessage.class
+it/polimi/ingsw/network/protocol/clientbound/EventResolvedMessage.class
 it/polimi/ingsw/controller/state/LobbyState.class
 it/polimi/ingsw/network/protocol/clientbound/PointsChangedMessage.class
 it/polimi/ingsw/network/protocol/clientbound/EraChangedMessage.class
@@ -118,6 +120,7 @@ it/polimi/ingsw/network/protocol/clientbound/DummyServerMessage.class
 it/polimi/ingsw/model/card/effect/EndBuilderPPEffect.class
 it/polimi/ingsw/controller/state/GameState.class
 it/polimi/ingsw/model/card/BuilderCard.class
+it/polimi/ingsw/network/protocol/clientbound/CurrentPlayerChangedMessage.class
 it/polimi/ingsw/model/card/ShamanicRitualEventCard.class
 it/polimi/ingsw/network/protocol/clientbound/ServerMessage.class
 it/polimi/ingsw/network/server/MessageDispatcher.class
