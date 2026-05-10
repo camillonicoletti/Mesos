@@ -279,6 +279,8 @@ public class Renderer {
     private void endGameScreen(ClientModel model) {
         final int panelW = 88;
         String winner = model.getWinnerNickname() == null ? "UNKNOWN" : model.getWinnerNickname();
+        List<Map.Entry<String, Integer>> standings = model.getFinalScores().entrySet()
+                .stream().sorted(Map.Entry.<String, Integer>comparingByValue().reversed()).toList();
 
         blank();
         row(center(GRY + DIM + "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓" + RST, W));
@@ -306,8 +308,6 @@ public class Renderer {
                 + "  " + CYN + BOLD + "║" + RST, W));
         row(center(CYN + BOLD + "╟" + "─".repeat(panelW) + "╢" + RST, W));
 
-        List<Map.Entry<String, Integer>> standings = model.getFinalScores().entrySet()
-                .stream().sorted(Map.Entry.<String, Integer>comparingByValue().reversed()).toList();
         int rank = 1;
         for (Map.Entry<String, Integer> e : standings) {
             row(center(endGameScoreLine(model, e.getKey(), e.getValue(), rank, panelW), W));
