@@ -5,6 +5,9 @@ import it.polimi.ingsw.network.protocol.serverbound.ClientMessage;
 import it.polimi.ingsw.network.transport.ClientSideConnection;
 
 import java.rmi.RemoteException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
@@ -12,11 +15,16 @@ import java.util.function.Consumer;
  */
 public class RMIClientConnection implements ClientSideConnection {
 
+    private static final int HEARTBEAT_TIMEOUT_SECONDS = 60;
+    private static final int HEARTBEAT_CHECK_INTERVAL_SECONDS = 5;
+
     private final RemoteServer remoteServer;
     private final RMIClientCallback callback;
+    private final ScheduledExecutorService heartbeatExecutor;
 
     private volatile boolean alive;
     private volatile boolean disconnectNotified;
+    private volatile long lastReceivedAtMillis;
     private volatile Consumer<ServerMessage> onMessage;
     private volatile Runnable onDisconnect;
 
@@ -29,9 +37,21 @@ public class RMIClientConnection implements ClientSideConnection {
         this.callback = new RMIClientCallback(this);
         this.alive = true;
         this.disconnectNotified = false;
+        this.lastReceivedAtMillis = System.currentTimeMillis();
         this.onMessage = message -> { };
         this.onDisconnect = () -> { };
-
+        // Message to client
+        this.heartbeatExecutor = Executors.newSingleThreadScheduledExecutor(runnable -> {
+            Thread thread = new Thread(runnable, "rmi-client-heartbeat");
+            thread.setDaemon(true);
+            return thread;
+        });
+        this.heartbeatExecutor.scheduleAtFixedRate(
+                this::heartbeatTick,
+                HEARTBEAT_CHECK_INTERVAL_SECONDS,
+                HEARTBEAT_CHECK_INTERVAL_SECONDS,
+                TimeUnit.SECONDS
+        );
     }
     public void register() throws RemoteException {
         remoteServer.register(callback);
@@ -50,6 +70,7 @@ public class RMIClientConnection implements ClientSideConnection {
             remoteServer.send(callback, message);
         } catch (RemoteException exception) {
             alive = false;
+            heartbeatExecutor.shutdownNow();
             notifyDisconnect();
             throw new IllegalStateException("Unable to reach the RMI server", exception);
         }
@@ -58,11 +79,13 @@ public class RMIClientConnection implements ClientSideConnection {
     @Override
     public void close() {
         if (!alive) {
+            heartbeatExecutor.shutdownNow();
             callback.shutdown();
             return;
         }
 
         alive = false;
+        heartbeatExecutor.shutdownNow();
         try {
             remoteServer.disconnect(callback);
         } catch (RemoteException ignored) {
@@ -86,7 +109,31 @@ public class RMIClientConnection implements ClientSideConnection {
         if (!alive) {
             return;
         }
+        lastReceivedAtMillis = System.currentTimeMillis();
         onMessage.accept(message);
+    }
+
+    private void heartbeatTick() {
+        if (!alive) {
+            return;
+        }
+
+        try {
+            remoteServer.ping();
+            lastReceivedAtMillis = System.currentTimeMillis();
+        } catch (RemoteException exception) {
+            alive = false;
+            heartbeatExecutor.shutdownNow();
+            notifyDisconnect();
+            return;
+        }
+
+        long silenceMillis = System.currentTimeMillis() - lastReceivedAtMillis;
+        if (silenceMillis >= HEARTBEAT_TIMEOUT_SECONDS * 1000L) {
+            alive = false;
+            heartbeatExecutor.shutdownNow();
+            notifyDisconnect();
+        }
     }
 
     private void notifyDisconnect() {

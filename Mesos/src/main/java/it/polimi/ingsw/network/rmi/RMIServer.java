@@ -73,6 +73,11 @@ public class RMIServer extends UnicastRemoteObject implements RemoteServer {
         }
     }
 
+    @Override
+    public void ping() {
+        // No-op: clients use this only to verify the server is reachable.
+    }
+
     private RMIServerConnection getOrCreateConnection(RemoteClient client) {
         RMIServerConnection existing = connections.get(client);
         if (existing != null) {
@@ -97,4 +102,5 @@ public class RMIServer extends UnicastRemoteObject implements RemoteServer {
         connections.put(client, created);
         return created;
     }
+
 }

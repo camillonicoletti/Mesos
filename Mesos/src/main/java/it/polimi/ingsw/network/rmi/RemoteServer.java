@@ -34,4 +34,11 @@ public interface RemoteServer extends Remote {
      * Triggers the same lobby registration path used by socket clients on accept.
      */
     void register(RemoteClient client) throws RemoteException;
+
+    /**
+     * Lightweight liveness probe used by clients to detect server crashes.
+     * The implementation must be a no-op: clients only care whether the call
+     * returns normally or raises a {@link RemoteException}.
+     */
+    void ping() throws RemoteException;
 }
