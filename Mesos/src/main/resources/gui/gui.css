@@ -60,6 +60,10 @@
     -fx-background-color: #29161f;
 }
 
+.game-board-layer {
+    -fx-background-color: #29161f;
+}
+
 .lobby-root {
     -fx-background-color: #29161f;
     -fx-background-image: url("assets/ui/game_background.jpeg");
@@ -187,7 +191,6 @@
 .offer-strip {
     -fx-background-color: transparent;
     -fx-padding: 0;
-    -fx-min-width: 760px;
 }
 
 /* ── Section titles ───────────────────────────────────────────────────────── */
@@ -267,8 +270,18 @@
     -fx-effect: dropshadow(three-pass-box, rgba(240, 206, 100, .64), 18, 0, 0, 4);
 }
 
+.card-pickable {
+    -fx-effect: dropshadow(three-pass-box, rgba(240, 206, 100, .45), 14, 0, 0, 3);
+}
+
 .card:disabled {
     -fx-opacity: .54;
+}
+
+.mini-card {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-effect: dropshadow(three-pass-box, rgba(20, 16, 10, .30), 6, 0, 0, 2);
 }
 
 /* ── Player card (sidebar) ────────────────────────────────────────────────── */
@@ -408,6 +421,60 @@
     -fx-padding: 4px 8px;
 }
 
+.tile-totem-marker {
+    -fx-min-width: 42px;
+    -fx-min-height: 52px;
+    -fx-max-width: 42px;
+    -fx-max-height: 52px;
+    -fx-effect: dropshadow(three-pass-box, rgba(20, 8, 5, .60), 6, 0, 0, 2);
+}
+
+.tile-totem-body {
+    -fx-min-width: 34px;
+    -fx-min-height: 34px;
+    -fx-max-width: 34px;
+    -fx-max-height: 34px;
+    -fx-background-radius: 99px;
+    -fx-border-color: rgba(255, 242, 207, .80);
+    -fx-border-radius: 99px;
+    -fx-border-width: 2px;
+}
+
+/* ── Current tribe ────────────────────────────────────────────────────────── */
+
+.current-tribe-panel {
+    -fx-background-color: transparent;
+    -fx-padding: 0 12px;
+}
+
+.current-tribe-cards {
+    -fx-padding: 2px 0 0 0;
+}
+
+.tribe-title {
+    -fx-text-fill: #fff2cf;
+    -fx-font-size: 14px;
+    -fx-font-weight: 900;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .75), 4, 0, 0, 1);
+}
+
+.tribe-resources {
+    -fx-text-fill: #f0ce64;
+    -fx-font-size: 12px;
+    -fx-font-weight: 900;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .75), 4, 0, 0, 1);
+}
+
+.tribe-summary-pill {
+    -fx-background-color: rgba(20, 10, 8, .24);
+    -fx-background-radius: 99px;
+    -fx-padding: 4px 10px;
+    -fx-text-fill: #f7ddac;
+    -fx-font-size: 11px;
+    -fx-font-weight: 800;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .55), 3, 0, 0, 1);
+}
+
 /* ── Player dock ──────────────────────────────────────────────────────────── */
 
 .player-dock {
@@ -539,8 +606,8 @@
 /* ── Tribe deck ───────────────────────────────────────────────────────────── */
 
 .deck-view {
-    -fx-min-width: 110px;
-    -fx-max-width: 110px;
+    -fx-min-width: 128px;
+    -fx-max-width: 128px;
     -fx-padding: 0 8px;
 }
 
@@ -562,6 +629,83 @@
     -fx-font-weight: 800;
     -fx-text-fill: #f0ce64;
     -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .72), 3, 0, 0, 1);
+}
+
+/* ── Inline detail panels ─────────────────────────────────────────────────── */
+
+.inline-overlay {
+    -fx-background-color: rgba(20, 8, 12, .18);
+}
+
+.inline-panel {
+    -fx-background-color: rgba(43, 23, 32, .92);
+    -fx-background-radius: 8px;
+    -fx-border-color: rgba(255, 226, 168, .20);
+    -fx-border-radius: 8px;
+    -fx-padding: 16px;
+    -fx-max-width: 760px;
+    -fx-effect: dropshadow(three-pass-box, rgba(18, 8, 12, .48), 24, 0, 0, 8);
+}
+
+.inline-panel-title {
+    -fx-text-fill: #fff2cf;
+    -fx-font-size: 18px;
+    -fx-font-weight: 900;
+}
+
+.inline-panel-subtitle {
+    -fx-text-fill: #f0ce64;
+    -fx-font-size: 13px;
+    -fx-font-weight: 800;
+}
+
+.inline-button,
+.inline-button-primary {
+    -fx-background-radius: 99px;
+    -fx-border-radius: 99px;
+    -fx-font-weight: 900;
+    -fx-padding: 8px 16px;
+}
+
+.inline-button {
+    -fx-background-color: rgba(255, 242, 207, .18);
+    -fx-border-color: rgba(255, 242, 207, .24);
+    -fx-text-fill: #fff2cf;
+}
+
+.inline-button-primary {
+    -fx-background-color: rgba(47, 143, 132, .82);
+    -fx-border-color: rgba(143, 224, 216, .40);
+    -fx-text-fill: #fff7e8;
+}
+
+.card-detail-content {
+    -fx-padding: 8px;
+}
+
+.card-detail-lines {
+    -fx-padding: 8px 0;
+    -fx-min-width: 260px;
+}
+
+.card-detail-line {
+    -fx-text-fill: #fff2cf;
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+}
+
+.tribe-panel-content {
+    -fx-padding: 14px;
+    -fx-background-color: transparent;
+}
+
+.tribe-panel-scroll {
+    -fx-background: transparent;
+    -fx-background-color: transparent;
+}
+
+.tribe-panel-scroll > .viewport {
+    -fx-background-color: transparent;
 }
 
 /* ── Label inheritance for dark panels ───────────────────────────────────── */

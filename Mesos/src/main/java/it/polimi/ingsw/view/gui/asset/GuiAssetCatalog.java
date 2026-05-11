@@ -1,6 +1,7 @@
 package it.polimi.ingsw.view.gui.asset;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -17,10 +18,12 @@ public final class GuiAssetCatalog {
     private static final String COMPONENTS_MANIFEST = "gui/assets/manifest/components.json";
 
     private final Map<Integer, CardAsset> cards;
+    private final Map<Integer, JsonObject> cardDetails;
     private final JsonObject components;
 
-    private GuiAssetCatalog(Map<Integer, CardAsset> cards, JsonObject components) {
+    private GuiAssetCatalog(Map<Integer, CardAsset> cards, Map<Integer, JsonObject> cardDetails, JsonObject components) {
         this.cards = Collections.unmodifiableMap(new LinkedHashMap<>(cards));
+        this.cardDetails = Collections.unmodifiableMap(new LinkedHashMap<>(cardDetails));
         this.components = components.deepCopy();
     }
 
@@ -47,7 +50,12 @@ public final class GuiAssetCatalog {
             ));
         }
 
-        return new GuiAssetCatalog(cards, componentsManifest);
+        Map<Integer, JsonObject> cardDetails = new LinkedHashMap<>();
+        cardDetails.putAll(loadDetailMap("characters.json"));
+        cardDetails.putAll(loadDetailMap("events.json"));
+        cardDetails.putAll(loadDetailMap("buildings.json"));
+
+        return new GuiAssetCatalog(cards, cardDetails, componentsManifest);
     }
 
     public Optional<CardAsset> findCard(int cardId) {
@@ -64,6 +72,11 @@ public final class GuiAssetCatalog {
 
     public Map<Integer, CardAsset> getCards() {
         return cards;
+    }
+
+    public Optional<JsonObject> findCardDetails(int cardId) {
+        JsonObject details = cardDetails.get(cardId);
+        return details == null ? Optional.empty() : Optional.of(details.deepCopy());
     }
 
     public JsonObject getComponents() {
@@ -97,6 +110,27 @@ public final class GuiAssetCatalog {
             return JsonParser.parseReader(reader).getAsJsonObject();
         } catch (Exception exception) {
             throw new IllegalStateException("Cannot read GUI asset manifest: " + resourcePath, exception);
+        }
+    }
+
+    private static Map<Integer, JsonObject> loadDetailMap(String resourcePath) {
+        InputStream stream = classLoader().getResourceAsStream(resourcePath);
+        if (stream == null) {
+            return Map.of();
+        }
+        try (InputStreamReader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
+            JsonArray array = JsonParser.parseReader(reader).getAsJsonArray();
+            Map<Integer, JsonObject> result = new LinkedHashMap<>();
+            for (JsonElement element : array) {
+                JsonObject object = element.getAsJsonObject();
+                JsonElement id = object.get("id");
+                if (id != null && !id.isJsonNull()) {
+                    result.put(id.getAsInt(), object.deepCopy());
+                }
+            }
+            return result;
+        } catch (Exception exception) {
+            throw new IllegalStateException("Cannot read card detail resource: " + resourcePath, exception);
         }
     }
 
