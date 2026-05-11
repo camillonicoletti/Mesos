@@ -8,6 +8,7 @@ import it.polimi.ingsw.network.protocol.clientbound.PlayerDisconnectedMessage;
 import it.polimi.ingsw.network.protocol.clientbound.PlayerReconnectedMessage;
 import it.polimi.ingsw.network.protocol.clientbound.PlayerSnapshot;
 import it.polimi.ingsw.network.protocol.clientbound.StateChangedMessage;
+import it.polimi.ingsw.network.protocol.clientbound.TotemPlacedMessage;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -53,6 +54,32 @@ class ClientModelTurnSyncTest {
 
         assertTrue(model.isPlayerDisconnected("Alice"));
         assertFalse(model.isPlayerDisconnected("Bob"));
+        assertEquals("Bob", model.getCurrentTotemPlacementPlayer());
+    }
+
+    @Test
+    void placingTotemRemovesPlayerFromVisibleTurnOrder() {
+        ClientModel model = new ClientModel();
+
+        model.applyStateChanged(new StateChangedMessage("TotemPlacementState"));
+        model.applySnapshot(new GameSnapshot(
+                List.of(
+                        player("Alice", TotemColor.RED),
+                        player("Bob", TotemColor.BLUE)
+                ),
+                List.of(), List.of(),
+                List.of(), List.of(),
+                Era.I,
+                1,
+                new HashMap<>(),
+                List.of("Alice", "Bob"),
+                List.of()
+        ));
+
+        model.applyTotemPlaced(new TotemPlacedMessage("Alice", 'B'));
+
+        assertEquals(List.of("Bob"), model.getTurnOrder());
+        assertEquals("Alice", model.getTotemOnTiles().get('B'));
         assertEquals("Bob", model.getCurrentTotemPlacementPlayer());
     }
 

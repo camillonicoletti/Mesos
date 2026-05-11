@@ -252,6 +252,7 @@ public class Round implements Serializable {
             return false;
         if (chosenTile.isOccupied())
             return false;
+        removeTotemFromTurnOrder(player.getTotem());
         chosenTile.placeTotem(player.getTotem());
         // Saves the player's choice so that execute() can resolve actions for each player
         // using their chosen OfferTile during ACTION_RESOLUTION phase
@@ -272,6 +273,7 @@ public class Round implements Serializable {
         }
         if (targetSlot == null) return;
 
+        removeTotemFromOfferTiles(player.getTotem());
         targetSlot.placeTotem(player.getTotem());
 
         int foodBefore = player.getFood();
@@ -295,6 +297,32 @@ public class Round implements Serializable {
         }
         if (ppDelta != 0) {
             game.notifyListeners(l -> l.onPointsChanged(player.getNickname(), player.getPrestigePoints(), ppDelta));
+        }
+        game.notifyListeners(l -> l.onGameSnapshotChanged());
+    }
+
+    private void removeTotemFromTurnOrder(Totem totem) {
+        if (totem == null) {
+            return;
+        }
+        TurnOrderTile turnOrderTile = game.getBoard().getTurnOrderTile();
+        for (TurnSlot slot : turnOrderTile.getSlots()) {
+            if (slot.getOccupiedBy() == totem) {
+                slot.removeTotem();
+                return;
+            }
+        }
+    }
+
+    private void removeTotemFromOfferTiles(Totem totem) {
+        if (totem == null) {
+            return;
+        }
+        for (OfferTile tile : game.getBoard().getOfferTiles()) {
+            if (tile.getTotemSlot() == totem) {
+                tile.removeTotem();
+                return;
+            }
         }
     }
 

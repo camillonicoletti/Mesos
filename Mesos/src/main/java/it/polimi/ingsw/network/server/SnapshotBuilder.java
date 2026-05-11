@@ -90,7 +90,7 @@ public final class SnapshotBuilder {
                 }
             }
         }
-        if (turnOrder.isEmpty()) {
+        if (turnOrder.isEmpty() && totemOnTiles.isEmpty()) {
             for (Player p : game.getPlayers()) turnOrder.add(p.getNickname());
         }
 

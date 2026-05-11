@@ -422,10 +422,6 @@
 }
 
 .tile-totem-marker {
-    -fx-min-width: 42px;
-    -fx-min-height: 52px;
-    -fx-max-width: 42px;
-    -fx-max-height: 52px;
     -fx-effect: dropshadow(three-pass-box, rgba(20, 8, 5, .60), 6, 0, 0, 2);
 }
 
@@ -647,6 +643,14 @@
     -fx-effect: dropshadow(three-pass-box, rgba(18, 8, 12, .48), 24, 0, 0, 8);
 }
 
+.card-focus-panel {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 10px 18px;
+    -fx-max-width: 960px;
+    -fx-effect: dropshadow(three-pass-box, rgba(18, 8, 12, .56), 22, 0, 0, 7);
+}
+
 .inline-panel-title {
     -fx-text-fill: #fff2cf;
     -fx-font-size: 18px;
@@ -680,18 +684,22 @@
 }
 
 .card-detail-content {
-    -fx-padding: 8px;
+    -fx-padding: 4px 8px 10px 8px;
+    -fx-alignment: center;
 }
 
 .card-detail-lines {
-    -fx-padding: 8px 0;
-    -fx-min-width: 260px;
+    -fx-padding: 2px 12px;
+    -fx-max-width: 760px;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
 }
 
 .card-detail-line {
     -fx-text-fill: #fff2cf;
-    -fx-font-size: 13px;
+    -fx-font-size: 14px;
     -fx-font-weight: 700;
+    -fx-effect: dropshadow(three-pass-box, rgba(20, 8, 12, .92), 5, 0, 0, 1);
 }
 
 .tribe-panel-content {

@@ -19,7 +19,6 @@ import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -50,9 +49,8 @@ public final class GameBoardView {
     private static final double TILE_HEIGHT = 190;
     private static final double MINI_CARD_WIDTH = 48;
     private static final double MINI_CARD_HEIGHT = 68;
-    private static final double DETAIL_CARD_WIDTH = 245;
-    private static final double DETAIL_CARD_HEIGHT = 345;
-    private static final String TOTEM_SHEET = "gui/assets/tokens/pedine_specs_1.png";
+    private static final double DETAIL_CARD_WIDTH = 380;
+    private static final double DETAIL_CARD_HEIGHT = 535;
 
     private static final List<Character> TILE_ORDER = List.of('A', 'B', 'C', 'D', 'E', 'F', 'G');
 
@@ -167,6 +165,8 @@ public final class GameBoardView {
             tile.getChildren().add(fallback);
         }
 
+        addTurnOrderTotems(tile);
+
         return tile;
     }
 
@@ -272,11 +272,12 @@ public final class GameBoardView {
             PlayerView player = model.getPlayers().get(owner);
             TotemColor color = player == null ? null : player.getTotemColor();
 
-            StackPane badge = totemMarker(color, owner);
-            badge.setTranslateY(-10);
+            StackPane badge = totemMarker(color, owner, 42);
+            badge.setTranslateX(4);
+            badge.setTranslateY(-44);
 
             content.getChildren().add(badge);
-            StackPane.setAlignment(badge, Pos.TOP_CENTER);
+            StackPane.setAlignment(badge, Pos.CENTER);
         }
 
         Button button = new Button();
@@ -285,6 +286,36 @@ public final class GameBoardView {
         button.setPrefSize(TILE_WIDTH + 8, TILE_HEIGHT + 8);
 
         return button;
+    }
+
+    private void addTurnOrderTotems(StackPane tile) {
+        List<String> order = model.getTurnOrder();
+        if (order.isEmpty()) {
+            return;
+        }
+
+        double[] offsets = turnOrderTotemOffsets(turnOrderTilePlayers());
+        int count = Math.min(order.size(), offsets.length);
+        for (int index = 0; index < count; index++) {
+            PlayerView player = model.getPlayers().get(order.get(index));
+            if (player == null) {
+                continue;
+            }
+
+            StackPane marker = totemMarker(player.getTotemColor(), player.getNickname(), 30);
+            marker.setTranslateY(offsets[index]);
+            tile.getChildren().add(marker);
+            StackPane.setAlignment(marker, Pos.CENTER);
+        }
+    }
+
+    private double[] turnOrderTotemOffsets(int players) {
+        return switch (players) {
+            case 2 -> new double[]{-34, -2};
+            case 3 -> new double[]{-36, -3, 29};
+            case 4 -> new double[]{-51, -22, 8, 39};
+            default -> new double[]{-59, -29, 1, 31, 60};
+        };
     }
 
     private HBox playerDock() {
@@ -323,9 +354,9 @@ public final class GameBoardView {
     }
 
     private Node currentTribePanel() {
-        PlayerView player = model.getPlayers().get(currentTurnNickname());
+        PlayerView player = model.getPlayers().get(model.getMyNickname());
         if (player == null) {
-            player = model.getPlayers().get(model.getMyNickname());
+            player = model.getPlayers().get(currentTurnNickname());
         }
         if (player == null) {
             Region empty = new Region();
@@ -529,6 +560,7 @@ public final class GameBoardView {
 
     private void showCardPanel(int cardId, boolean canTake, Runnable takeAction) {
         VBox panel = inlinePanel(canTake ? "Conferma carta" : "Dettagli carta");
+        panel.getStyleClass().add("card-focus-panel");
         Label prompt = new Label(canTake
                 ? "Vuoi prendere questa carta?"
                 : "Carta selezionata");
@@ -551,18 +583,18 @@ public final class GameBoardView {
         }
 
         panel.getChildren().addAll(prompt, cardDetailContent(cardId), actions);
-        showInlinePanel(panel, Pos.CENTER_RIGHT);
+        showInlinePanel(panel, Pos.CENTER);
     }
 
     private Node cardDetailContent(int cardId) {
-        HBox content = new HBox(18);
-        content.setAlignment(Pos.CENTER_LEFT);
+        VBox content = new VBox(12);
+        content.setAlignment(Pos.CENTER);
         content.getStyleClass().add("card-detail-content");
 
         Node image = cardImageNode(cardId, DETAIL_CARD_WIDTH, DETAIL_CARD_HEIGHT);
         VBox details = new VBox(8);
         details.getStyleClass().add("card-detail-lines");
-        for (String line : cardDetailLines(cardId)) {
+        for (String line : cardRuleLines(cardId)) {
             Label label = new Label(line);
             label.setWrapText(true);
             label.getStyleClass().add("card-detail-line");
@@ -571,6 +603,103 @@ public final class GameBoardView {
 
         content.getChildren().addAll(image, details);
         return content;
+    }
+
+    private List<String> cardRuleLines(int cardId) {
+        List<String> lines = new ArrayList<>();
+        Optional<CardAsset> asset = assetCatalog.findCard(cardId);
+        Optional<JsonObject> details = assetCatalog.findCardDetails(cardId);
+
+        asset.ifPresent(card -> {
+            StringBuilder header = new StringBuilder(labelForKind(card.getKind()));
+            card.getType().ifPresent(type -> header.append(" - ").append(labelForType(type)));
+            card.getEra().ifPresent(era -> header.append(" | Era ").append(era));
+            lines.add(header.toString());
+        });
+
+        if (asset.isPresent() && details.isPresent()) {
+            CardAsset card = asset.get();
+            JsonObject data = details.get();
+            switch (card.getKind()) {
+                case "character" -> lines.add(characterRuleText(data));
+                case "building" -> {
+                    lines.add(buildingRuleText(data));
+                    lines.add("Costo: " + intDetail(data, "foodCost") + " cibo. Punti a fine partita: "
+                            + intDetail(data, "pointsEndOfMatch") + ".");
+                }
+                case "event" -> lines.add(eventRuleText(data));
+                default -> lines.addAll(cardDetailLines(cardId));
+            }
+        } else {
+            lines.addAll(cardDetailLines(cardId));
+        }
+
+        if (cardId == model.getLastResolvedEventCardId()
+                && model.getLastResolvedEventDescription() != null) {
+            lines.add("Ultimo effetto risolto: " + model.getLastResolvedEventDescription());
+        }
+
+        return lines;
+    }
+
+    private String characterRuleText(JsonObject data) {
+        String type = stringDetail(data, "type");
+        return switch (type) {
+            case "hunter" -> boolDetail(data, "foodIcon")
+                    ? "Cacciatore: conta negli eventi di caccia e mostra anche un'icona cibo."
+                    : "Cacciatore: conta negli eventi di caccia.";
+            case "builder" -> "Costruttore: riduce di " + intDetail(data, "foodDiscount")
+                    + " il costo degli edifici e vale " + intDetail(data, "pointsEndOfMatch")
+                    + " PP a fine partita.";
+            case "gatherer" -> "Raccoglitore: conta per gli effetti e gli edifici legati ai raccoglitori.";
+            case "artist" -> "Artista: conta nelle pitture rupestri e negli effetti legati agli artisti.";
+            case "inventor" -> "Inventore: porta l'icona invenzione " + stringDetail(data, "inventionIcon")
+                    + " per set, coppie ed effetti degli inventori.";
+            case "shaman" -> "Sciamano: aggiunge " + intDetail(data, "stars")
+                    + " stelle nei rituali sciamanici.";
+            default -> "Carta personaggio.";
+        };
+    }
+
+    private String buildingRuleText(JsonObject data) {
+        JsonElement effect = data.get("effect");
+        String effectName = effectName(effect);
+        return switch (effectName) {
+            case "FullSetFood" -> "Edificio: quando completi set di personaggi diversi, ottieni cibo bonus.";
+            case "SustenanceFoodDiscount" -> "Edificio: durante il sostentamento riduce il cibo richiesto per "
+                    + labelForType(effectTarget(effect)) + ".";
+            case "ShamanicRitualImmunity" -> "Edificio: ti protegge dagli effetti negativi del rituale sciamanico.";
+            case "TotemSlotFoodBonus" -> "Edificio: fornisce cibo bonus in base allo slot/tessera totem scelta.";
+            case "InventorPairFood" -> "Edificio: da cibo per le coppie di inventori nella tua tribu.";
+            case "ShamanicRitualDoublePP" -> "Edificio: raddoppia i PP guadagnati nei rituali sciamanici.";
+            case "Shaman3ExtraStars" -> "Edificio: aumenta le stelle dei tuoi sciamani.";
+            case "Hunt1Food1PP" -> "Edificio: durante la caccia aggiunge 1 cibo e 1 PP.";
+            case "EndBuilderPP" -> "Edificio: a fine partita da PP in base ai costruttori.";
+            case "CavePaintingsFood" -> "Edificio: durante le pitture rupestri fornisce cibo bonus.";
+            case "ExtraCardUpperRow" -> "Edificio: permette di ottenere una carta extra dalla fila alta.";
+            case "EndPP" -> "Edificio: assegna PP finali secondo il suo effetto.";
+            case "EndCharacterCountPP" -> "Edificio: a fine partita da " + effectInt(effect, "pointsPerCard")
+                    + " PP per ogni " + labelForType(effectTarget(effect)) + ".";
+            default -> "Edificio: " + formatDetailValue(effect) + ".";
+        };
+    }
+
+    private String eventRuleText(JsonObject data) {
+        String suffix = boolDetail(data, "closeEvent") ? " Questo e un evento finale." : "";
+        return switch (stringDetail(data, "type")) {
+            case "hunt" -> "Caccia: ogni cacciatore fornisce " + intDetail(data, "foodPerHunter")
+                    + " cibo e " + intDetail(data, "ppPerHunter") + " PP." + suffix;
+            case "sustenance" -> "Sostentamento: ogni personaggio non nutrito causa -"
+                    + intDetail(data, "ppPenaltyPerUnfed") + " PP." + suffix;
+            case "shamanicRitual" -> "Rituale sciamanico: chi ha piu stelle guadagna "
+                    + intDetail(data, "ppGain") + " PP, chi ne ha meno perde "
+                    + intDetail(data, "ppLoss") + " PP." + suffix;
+            case "cavePaintings" -> "Pitture rupestri: servono almeno " + intDetail(data, "minArtists")
+                    + " artisti; se non li hai perdi " + intDetail(data, "ppPenalty")
+                    + " PP, altrimenti ottieni " + intDetail(data, "ppPerArtist")
+                    + " PP per artista." + suffix;
+            default -> "Evento." + suffix;
+        };
     }
 
     private List<String> cardDetailLines(int cardId) {
@@ -665,6 +794,11 @@ public final class GameBoardView {
         StackPane overlay = new StackPane(panel);
         overlay.getStyleClass().add("inline-overlay");
         overlay.setPadding(new Insets(24));
+        overlay.setOnMouseClicked(event -> {
+            if (event.getTarget() == overlay) {
+                hideInlinePanel();
+            }
+        });
         StackPane.setAlignment(panel, alignment);
         rootLayer.getChildren().add(overlay);
 
@@ -720,15 +854,22 @@ public final class GameBoardView {
     }
 
     private StackPane totemMarker(TotemColor color, String owner) {
+        return totemMarker(color, owner, 52);
+    }
+
+    private StackPane totemMarker(TotemColor color, String owner, double fitHeight) {
         StackPane marker = new StackPane();
         marker.getStyleClass().add("tile-totem-marker");
+        double width = Math.max(18, fitHeight * 0.72);
+        marker.setMinSize(width, fitHeight);
+        marker.setPrefSize(width, fitHeight);
+        marker.setMaxSize(width, fitHeight);
 
-        try (InputStream stream = assetCatalog.openResource(TOTEM_SHEET).orElse(null)) {
+        try (InputStream stream = assetCatalog.openResource(totemAssetPath(color)).orElse(null)) {
             if (stream != null) {
                 ImageView image = new ImageView(new Image(stream));
-                image.setViewport(totemViewport(color));
                 image.setPreserveRatio(true);
-                image.setFitHeight(44);
+                image.setFitHeight(fitHeight);
                 marker.getChildren().add(image);
                 return marker;
             }
@@ -738,19 +879,71 @@ public final class GameBoardView {
 
         Region body = new Region();
         body.getStyleClass().add("tile-totem-body");
+        double fallbackSize = Math.max(16, fitHeight * 0.64);
+        body.setMinSize(fallbackSize, fallbackSize);
+        body.setPrefSize(fallbackSize, fallbackSize);
+        body.setMaxSize(fallbackSize, fallbackSize);
         body.setStyle("-fx-background-color: " + totemColorHex(color) + ";");
         marker.getChildren().add(body);
         return marker;
     }
 
-    private Rectangle2D totemViewport(TotemColor color) {
+    private String totemAssetPath(TotemColor color) {
         return switch (color == null ? TotemColor.WHITE : color) {
-            case RED -> new Rectangle2D(315, 670, 92, 160);
-            case YELLOW -> new Rectangle2D(482, 670, 92, 160);
-            case BLUE -> new Rectangle2D(642, 670, 94, 160);
-            case PURPLE -> new Rectangle2D(806, 670, 94, 160);
-            case WHITE -> new Rectangle2D(970, 670, 92, 160);
+            case RED -> "gui/assets/tokens/totem_red.png";
+            case YELLOW -> "gui/assets/tokens/totem_yellow.png";
+            case BLUE -> "gui/assets/tokens/totem_blue.png";
+            case PURPLE -> "gui/assets/tokens/totem_purple.png";
+            case WHITE -> "gui/assets/tokens/totem_white.png";
         };
+    }
+
+    private String stringDetail(JsonObject object, String key) {
+        JsonElement value = object.get(key);
+        if (value == null || value.isJsonNull()) {
+            return "";
+        }
+        return value.getAsString();
+    }
+
+    private int intDetail(JsonObject object, String key) {
+        JsonElement value = object.get(key);
+        if (value == null || value.isJsonNull()) {
+            return 0;
+        }
+        return value.getAsInt();
+    }
+
+    private boolean boolDetail(JsonObject object, String key) {
+        JsonElement value = object.get(key);
+        return value != null && !value.isJsonNull() && value.getAsBoolean();
+    }
+
+    private String effectName(JsonElement effect) {
+        if (effect == null || effect.isJsonNull()) {
+            return "";
+        }
+        if (effect.isJsonObject()) {
+            JsonElement name = effect.getAsJsonObject().get("name");
+            return name == null || name.isJsonNull() ? "" : name.getAsString();
+        }
+        return effect.getAsString();
+    }
+
+    private String effectTarget(JsonElement effect) {
+        if (effect == null || !effect.isJsonObject()) {
+            return "";
+        }
+        JsonElement target = effect.getAsJsonObject().get("targetType");
+        return target == null || target.isJsonNull() ? "" : target.getAsString();
+    }
+
+    private int effectInt(JsonElement effect, String key) {
+        if (effect == null || !effect.isJsonObject()) {
+            return 0;
+        }
+        JsonElement value = effect.getAsJsonObject().get(key);
+        return value == null || value.isJsonNull() ? 0 : value.getAsInt();
     }
 
     private String labelForKind(String kind) {

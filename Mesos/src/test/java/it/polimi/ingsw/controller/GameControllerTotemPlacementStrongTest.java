@@ -111,6 +111,7 @@ class GameControllerTotemPlacementStrongTest {
         OfferTile tileB = findOfferTile(controller, 'B');
         assertNotNull(tileB);
         assertTrue(tileB.isOccupied());
+        assertFalse(isTotemOnTurnOrder(controller, firstPlayer));
         assertEquals(1, controller.getGame().getCurrentRound().getPlayerChoices().size());
         assertEquals(secondPlayer, controller.getCurrentTurnPlayerNickname());
         assertInstanceOf(TotemPlacementState.class, controller.getCurrentState());
@@ -192,5 +193,15 @@ class GameControllerTotemPlacementStrongTest {
         return controller.getGame().getBoard().getOfferTiles()
                 .stream()
                 .anyMatch(OfferTile::isOccupied);
+    }
+
+    private boolean isTotemOnTurnOrder(GameController controller, String nickname) {
+        Totem totem = controller.getGame().getPlayers().stream()
+                .filter(player -> player.getNickname().equals(nickname))
+                .findFirst()
+                .orElseThrow()
+                .getTotem();
+        return controller.getGame().getBoard().getTurnOrderTile().getSlots().stream()
+                .anyMatch(slot -> slot.getOccupiedBy() == totem);
     }
 }
