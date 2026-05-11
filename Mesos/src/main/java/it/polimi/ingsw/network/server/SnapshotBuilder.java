@@ -110,7 +110,8 @@ public final class SnapshotBuilder {
                 totemOnTiles,
                 turnOrder,
                 disconnectedPlayers,
-                upperEvents, lowerEvents
+                upperEvents, lowerEvents,
+                game.getRemainingTributeDeck()
         );
     }
 }

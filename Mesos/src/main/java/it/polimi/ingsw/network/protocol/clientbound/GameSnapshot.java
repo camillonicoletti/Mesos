@@ -19,6 +19,7 @@ public class GameSnapshot implements Serializable {
     private final List<String> disconnectedPlayers;
     private final List<Integer> upperRowEventIds;
     private final List<Integer> lowerRowEventIds;
+    private final int remainingTribeDeckCards;
 
     public GameSnapshot(List<PlayerSnapshot> players,
                         List<Integer> upperRowCharacterAndEventIds,
@@ -77,6 +78,25 @@ public class GameSnapshot implements Serializable {
                         List<String> disconnectedPlayers,
                         List<Integer> upperRowEventIds,
                         List<Integer> lowerRowEventIds) {
+        this(players, upperRowCharacterAndEventIds, lowerRowCharacterAndEventIds,
+                upperRowBuildingIds, lowerRowBuildingIds, currentEra, roundNumber,
+                totemOnTiles, turnOrder, disconnectedPlayers,
+                upperRowEventIds, lowerRowEventIds, -1);
+    }
+
+    public GameSnapshot(List<PlayerSnapshot> players,
+                        List<Integer> upperRowCharacterAndEventIds,
+                        List<Integer> lowerRowCharacterAndEventIds,
+                        List<Integer> upperRowBuildingIds,
+                        List<Integer> lowerRowBuildingIds,
+                        Era currentEra,
+                        int roundNumber,
+                        Map<Character, String> totemOnTiles,
+                        List<String> turnOrder,
+                        List<String> disconnectedPlayers,
+                        List<Integer> upperRowEventIds,
+                        List<Integer> lowerRowEventIds,
+                        int remainingTribeDeckCards) {
         this.players = List.copyOf(players);
         this.upperRowCharacterAndEventIds = List.copyOf(upperRowCharacterAndEventIds);
         this.lowerRowCharacterAndEventIds = List.copyOf(lowerRowCharacterAndEventIds);
@@ -89,6 +109,7 @@ public class GameSnapshot implements Serializable {
         this.disconnectedPlayers = List.copyOf(disconnectedPlayers);
         this.upperRowEventIds = List.copyOf(upperRowEventIds);
         this.lowerRowEventIds = List.copyOf(lowerRowEventIds);
+        this.remainingTribeDeckCards = remainingTribeDeckCards;
     }
 
     public List<PlayerSnapshot> getPlayers() {
@@ -137,5 +158,9 @@ public class GameSnapshot implements Serializable {
 
     public List<Integer> getLowerRowEventIds() {
         return lowerRowEventIds;
+    }
+
+    public int getRemainingTribeDeckCards() {
+        return remainingTribeDeckCards;
     }
 }

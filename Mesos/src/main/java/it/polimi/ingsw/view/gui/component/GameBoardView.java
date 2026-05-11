@@ -129,7 +129,7 @@ public final class GameBoardView {
         track.setAlignment(Pos.CENTER);
         track.setFillHeight(true);
 
-        track.getChildren().addAll(turnOrderPanel(), totemPlacementPanel());
+        track.getChildren().addAll(turnOrderPanel(), deckPanel(), totemPlacementPanel());
 
         return track;
     }
@@ -182,7 +182,7 @@ public final class GameBoardView {
                 Label done = new Label("✓");
                 done.getStyleClass().add("turn-effect");
                 row.getChildren().add(done);
-            } else {
+            } else if ("ActionResolutionState".equals(model.getGameState())) {
                 Label effect = new Label(turnEffectLabel(i + 1));
                 effect.getStyleClass().add("turn-effect");
                 row.getChildren().add(effect);
@@ -226,6 +226,47 @@ public final class GameBoardView {
 
         panel.getChildren().add(pane);
 
+        return panel;
+    }
+
+    private VBox deckPanel() {
+        VBox panel = new VBox(8);
+        panel.getStyleClass().add("deck-view");
+        panel.setAlignment(Pos.CENTER);
+        panel.getChildren().add(sectionTitle("Mazzo Tribù"));
+
+        StackPane cardBack = new StackPane();
+        cardBack.getStyleClass().add("deck-placeholder");
+        cardBack.setPrefSize(84, 118);
+
+        String eraKey = eraBackKey(model.getCurrentEra());
+        String backPath = "gui/assets/cards/backs/" + eraKey + ".png";
+
+        boolean backLoaded = false;
+        try (InputStream stream = assetCatalog.openResource(backPath).orElse(null)) {
+            if (stream != null) {
+                ImageView img = new ImageView(new Image(stream));
+                img.setFitWidth(84);
+                img.setFitHeight(118);
+                img.setPreserveRatio(true);
+                cardBack.getChildren().add(img);
+                backLoaded = true;
+            }
+        } catch (Exception ignored) {}
+
+        if (!backLoaded) {
+            String eraLabel = model.getCurrentEra() == null ? "TRIBÙ" : "ERA " + model.getCurrentEra().name();
+            Label placeholder = new Label(eraLabel);
+            placeholder.getStyleClass().add("deck-placeholder-label");
+            cardBack.getChildren().add(placeholder);
+        }
+
+        int remaining = model.getRemainingTribeDeckCards();
+        String countText = remaining < 0 ? "?" : String.valueOf(remaining);
+        Label count = new Label(countText + " carte");
+        count.getStyleClass().add("deck-count");
+
+        panel.getChildren().addAll(cardBack, count);
         return panel;
     }
 
@@ -405,7 +446,7 @@ public final class GameBoardView {
                 }
             });
 
-            card.setDisable(isEvent || !model.isMyTurn() || !canPickFromRow(upper));
+            card.setDisable(isEvent);
 
             GuiAnimations.addHoverScale(card);
             cards.getChildren().add(card);
@@ -580,6 +621,15 @@ public final class GameBoardView {
         dot.setStyle("-fx-background-color: " + totemColorHex(color) + ";");
 
         return dot;
+    }
+
+    private String eraBackKey(it.polimi.ingsw.model.enums.Era era) {
+        if (era == null) return "back_character_era_i";
+        return switch (era) {
+            case I   -> "back_character_era_i";
+            case II  -> "back_character_era_ii";
+            case III -> "back_character_era_iii";
+        };
     }
 
     private String totemColorHex(TotemColor color) {

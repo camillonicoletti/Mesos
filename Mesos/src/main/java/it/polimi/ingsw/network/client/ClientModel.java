@@ -55,6 +55,7 @@ public class ClientModel {
     private List<Integer> upperRowBuildingIds   = new ArrayList<>();
     private List<Integer> lowerRowBuildingIds   = new ArrayList<>();
     private Set<Integer> eventCardIds = new HashSet<>();
+    private int remainingTribeDeckCards = -1;
 
     private Map<String, PlayerView> players = new LinkedHashMap<>();
 
@@ -141,6 +142,7 @@ public class ClientModel {
         eventCardIds = new HashSet<>();
         eventCardIds.addAll(snap.getUpperRowEventIds());
         eventCardIds.addAll(snap.getLowerRowEventIds());
+        remainingTribeDeckCards = snap.getRemainingTribeDeckCards();
         clearCurrentActionPlayerIfDisconnected();
         notifyChanged();
     }
@@ -337,6 +339,7 @@ public class ClientModel {
     public List<Integer> getUpperRowBuildingIds()  { return Collections.unmodifiableList(upperRowBuildingIds); }
     public List<Integer> getLowerRowBuildingIds()  { return Collections.unmodifiableList(lowerRowBuildingIds); }
     public boolean isEventCard(int id)             { return eventCardIds.contains(id); }
+    public int getRemainingTribeDeckCards()        { return remainingTribeDeckCards; }
     public String getWinnerNickname()              { return winnerNickname; }
     public Map<String, Integer> getFinalScores()   { return Collections.unmodifiableMap(finalScores); }
     public boolean isGameSuspended()               { return gameSuspended; }

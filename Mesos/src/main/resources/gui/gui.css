@@ -23,6 +23,8 @@
     -fx-text-fill: #7f7564;
 }
 
+/* ── Login ────────────────────────────────────────────────────────────────── */
+
 .login-panel {
     -fx-background-color: rgba(91, 37, 53, .92);
     -fx-padding: 30px;
@@ -36,14 +38,19 @@
     -fx-text-fill: #fff2cf;
 }
 
+/* ── Panels ───────────────────────────────────────────────────────────────── */
+
 .side-panel {
     -fx-background-color: #592436;
     -fx-border-color: rgba(143, 216, 223, .72);
     -fx-border-width: 0 0 0 4px;
 }
 
+/* ── Game board ───────────────────────────────────────────────────────────── */
+
 .game-board {
-    -fx-background-color: #29161f;
+    -fx-background-color: radial-gradient(center 40% 38%, radius 80%,
+        #7a3020, #5c2318 38%, #3b1810 65%, #22100c);
     -fx-background-image: url("assets/ui/game_background.jpeg");
     -fx-background-size: cover;
     -fx-background-position: center center;
@@ -64,14 +71,19 @@
     -fx-background-color: rgba(64, 27, 42, .54);
 }
 
+/* ── Board instruction banner ─────────────────────────────────────────────── */
+
 .board-instruction {
-    -fx-background-color: transparent;
-    -fx-padding: 6px 22px 10px 22px;
-    -fx-text-fill: #fff4d6;
-    -fx-font-size: 20px;
-    -fx-font-weight: 900;
-    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .88), 9, 0, 0, 2);
+    -fx-background-color: rgba(24, 52, 50, .82);
+    -fx-background-radius: 6px;
+    -fx-padding: 9px 26px 9px 26px;
+    -fx-text-fill: #e8f7f5;
+    -fx-font-size: 15px;
+    -fx-font-weight: 800;
+    -fx-effect: dropshadow(three-pass-box, rgba(10, 30, 28, .75), 10, 0, 0, 2);
 }
+
+/* ── Market layout ────────────────────────────────────────────────────────── */
 
 .market-band {
     -fx-background-color: transparent;
@@ -88,6 +100,8 @@
     -fx-padding: 0;
 }
 
+/* ── Turn order strip ─────────────────────────────────────────────────────── */
+
 .turn-strip {
     -fx-background-color: transparent;
     -fx-padding: 0;
@@ -95,23 +109,31 @@
     -fx-pref-width: 275px;
 }
 
+/* ── Offer strip ──────────────────────────────────────────────────────────── */
+
 .offer-strip {
     -fx-background-color: transparent;
     -fx-padding: 0;
     -fx-min-width: 760px;
 }
 
+/* ── Section titles ───────────────────────────────────────────────────────── */
+
 .card-row .section-title,
-.turn-strip .section-title {
-    -fx-text-fill: #fff2cf;
-    -fx-opacity: .86;
+.turn-strip .section-title,
+.offer-strip .section-title {
+    -fx-text-fill: #ffe8a0;
+    -fx-opacity: .90;
 }
 
 .section-title {
-    -fx-font-size: 13px;
-    -fx-font-weight: 800;
-    -fx-text-fill: #fff2cf;
+    -fx-font-size: 12px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #ffe8a0;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .70), 4, 0, 0, 1);
 }
+
+/* ── Icon colors ──────────────────────────────────────────────────────────── */
 
 .font-icon {
     -fx-icon-color: #f0ce64;
@@ -132,6 +154,8 @@
 .info-row .font-icon {
     -fx-icon-color: #f0ce64;
 }
+
+/* ── Buttons ──────────────────────────────────────────────────────────────── */
 
 .primary-button {
     -fx-background-color: #2f8f84;
@@ -156,20 +180,28 @@
     -fx-background-color: #fff1cf;
 }
 
+/* ── Cards ────────────────────────────────────────────────────────────────── */
+
 .card {
-    -fx-background-color: transparent;
-    -fx-border-color: transparent;
+    -fx-background-color: #c8a86a;
+    -fx-border-color: #8a6030;
+    -fx-border-width: 2px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
     -fx-padding: 0;
-    -fx-effect: dropshadow(three-pass-box, rgba(20, 16, 10, .34), 9, 0, 0, 3);
+    -fx-effect: dropshadow(three-pass-box, rgba(20, 10, 5, .55), 10, 0, 0, 4);
 }
 
 .card:hover {
-    -fx-effect: dropshadow(three-pass-box, rgba(240, 206, 100, .64), 18, 0, 0, 4);
+    -fx-border-color: #f0ce64;
+    -fx-effect: dropshadow(three-pass-box, rgba(240, 206, 100, .72), 20, 0, 0, 4);
 }
 
 .card:disabled {
     -fx-opacity: .54;
 }
+
+/* ── Player card (sidebar) ────────────────────────────────────────────────── */
 
 .player-card {
     -fx-background-color: rgba(255, 233, 202, .14);
@@ -189,6 +221,8 @@
     -fx-min-width: 160px;
     -fx-opacity: .72;
 }
+
+/* ── Turn order slots ─────────────────────────────────────────────────────── */
 
 .turn-slot,
 .turn-slot-active,
@@ -220,13 +254,16 @@
 }
 
 .turn-position {
-    -fx-font-size: 12px;
+    -fx-font-size: 13px;
     -fx-font-weight: 900;
-    -fx-min-width: 24px;
+    -fx-min-width: 22px;
     -fx-alignment: center;
+    -fx-text-fill: #f0ce64;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .72), 3, 0, 0, 1);
 }
 
 .turn-name {
+    -fx-font-size: 13px;
     -fx-font-weight: 800;
     -fx-text-fill: #fff2cf;
     -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .72), 4, 0, 0, 1);
@@ -234,9 +271,11 @@
 
 .turn-effect {
     -fx-font-size: 11px;
-    -fx-text-fill: #fff2cf;
+    -fx-text-fill: #ddc8a0;
     -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .72), 4, 0, 0, 1);
 }
+
+/* ── Totem dot ────────────────────────────────────────────────────────────── */
 
 .totem-dot {
     -fx-min-width: 14px;
@@ -248,12 +287,13 @@
     -fx-border-radius: 99px;
 }
 
+/* ── Offer tiles ──────────────────────────────────────────────────────────── */
+
 .offer-tile,
 .offer-tile-occupied {
     -fx-background-radius: 8px;
     -fx-border-radius: 8px;
     -fx-padding: 0;
-    -fx-text-fill: #263126;
 }
 
 .offer-tile {
@@ -281,13 +321,15 @@
 .offer-letter {
     -fx-font-size: 42px;
     -fx-font-weight: 900;
-    -fx-text-fill: #4a3520;
+    -fx-text-fill: #fff2cf;
+    -fx-effect: dropshadow(three-pass-box, rgba(20, 8, 5, .75), 6, 0, 0, 2);
 }
 
 .offer-effect {
     -fx-font-size: 11px;
     -fx-font-weight: 800;
-    -fx-text-fill: #4a3520;
+    -fx-text-fill: #fff2cf;
+    -fx-effect: dropshadow(three-pass-box, rgba(20, 8, 5, .75), 4, 0, 0, 1);
 }
 
 .offer-owner {
@@ -295,6 +337,8 @@
     -fx-background-radius: 99px;
     -fx-padding: 4px 8px;
 }
+
+/* ── Player dock ──────────────────────────────────────────────────────────── */
 
 .player-dock {
     -fx-background-color: transparent;
@@ -314,60 +358,75 @@
 
 .table-status-value {
     -fx-text-fill: #fff2cf;
-    -fx-font-size: 13px;
+    -fx-font-size: 14px;
     -fx-font-weight: 800;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .65), 3, 0, 0, 1);
 }
+
+/* ── Player summary cards ─────────────────────────────────────────────────── */
 
 .player-summary-flow {
     -fx-column-halignment: center;
 }
 
 .player-summary {
-    -fx-background-color: transparent;
+    -fx-background-color: rgba(20, 10, 8, .40);
+    -fx-background-radius: 8px;
     -fx-padding: 9px 12px;
     -fx-min-width: 190px;
 }
 
 .player-summary-me {
-    -fx-background-color: rgba(240, 206, 100, .16);
+    -fx-background-color: rgba(240, 206, 100, .18);
     -fx-background-radius: 8px;
+    -fx-border-color: rgba(240, 206, 100, .30);
+    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
 }
 
 .player-summary-current {
-    -fx-background-color: rgba(70, 180, 165, .18);
+    -fx-background-color: rgba(47, 143, 132, .22);
     -fx-background-radius: 8px;
+    -fx-border-color: rgba(100, 220, 200, .28);
+    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
 }
 
 .player-summary-disconnected {
-    -fx-opacity: .58;
+    -fx-opacity: .55;
 }
 
 .player-summary-name {
+    -fx-font-size: 13px;
     -fx-text-fill: #fff2cf;
     -fx-font-weight: 900;
     -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .75), 4, 0, 0, 1);
 }
 
 .player-summary-stat {
-    -fx-text-fill: #dcc8b5;
-    -fx-font-size: 12px;
+    -fx-text-fill: #c8b89a;
+    -fx-font-size: 11px;
     -fx-font-weight: 700;
-    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .72), 4, 0, 0, 1);
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .65), 3, 0, 0, 1);
 }
 
+/* ── Dock exit button ─────────────────────────────────────────────────────── */
+
 .dock-exit {
-    -fx-background-color: rgba(255, 242, 207, .18);
+    -fx-background-color: rgba(180, 50, 45, .55);
     -fx-background-radius: 99px;
-    -fx-border-color: rgba(255, 242, 207, .24);
+    -fx-border-color: rgba(255, 130, 110, .30);
     -fx-border-radius: 99px;
-    -fx-text-fill: #fff2cf;
+    -fx-text-fill: #ffcfc8;
     -fx-font-weight: 800;
-    -fx-padding: 8px 14px;
+    -fx-padding: 8px 16px;
 }
 
 .dock-exit:hover {
-    -fx-background-color: rgba(255, 242, 207, .30);
+    -fx-background-color: rgba(200, 65, 55, .72);
 }
+
+/* ── Status labels ────────────────────────────────────────────────────────── */
 
 .player-row {
     -fx-text-fill: #fff2cf;
@@ -375,7 +434,7 @@
 }
 
 .disconnected {
-    -fx-text-fill: #9b352c;
+    -fx-text-fill: #ff8070;
     -fx-strikethrough: true;
 }
 
@@ -403,6 +462,8 @@
     -fx-text-fill: #ffd166;
 }
 
+/* ── Scrollbars ───────────────────────────────────────────────────────────── */
+
 .scroll {
     -fx-background: #29161f;
     -fx-background-color: #29161f;
@@ -411,6 +472,39 @@
 .scroll > .viewport {
     -fx-background-color: #29161f;
 }
+
+/* ── Tribe deck ───────────────────────────────────────────────────────────── */
+
+.deck-view {
+    -fx-min-width: 110px;
+    -fx-max-width: 110px;
+    -fx-padding: 0 8px;
+}
+
+.deck-placeholder {
+    -fx-background-color: #3a2418;
+    -fx-border-color: #7a5530;
+    -fx-border-width: 2px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-effect: dropshadow(three-pass-box, rgba(20, 10, 5, .55), 10, 0, 0, 4);
+}
+
+.deck-placeholder-label {
+    -fx-font-size: 11px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #c8a86a;
+    -fx-effect: dropshadow(three-pass-box, rgba(20, 8, 5, .75), 4, 0, 0, 1);
+}
+
+.deck-count {
+    -fx-font-size: 12px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #f0ce64;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .72), 3, 0, 0, 1);
+}
+
+/* ── Label inheritance for dark panels ───────────────────────────────────── */
 
 .side-panel .label,
 .lobby-root .label,
