@@ -62,15 +62,6 @@ public final class GameBoardView {
     }
 
     public Node render() {
-        if (model.getPlayers().isEmpty()) {
-            VBox waiting = new VBox();
-            waiting.getStyleClass().add("game-board");
-            waiting.setPadding(new Insets(22));
-            Label label = new Label("Loading game...");
-            label.getStyleClass().add("muted");
-            waiting.getChildren().add(label);
-            return waiting;
-        }
         VBox board = new VBox(18);
         board.getStyleClass().add("game-board");
         board.setPadding(new Insets(22));
@@ -234,7 +225,7 @@ public final class GameBoardView {
         for (Integer id : ids) {
             boolean isEvent = !building && model.isEventCard(id);
             Node card = cardNode(id, () -> {
-                if (isEvent || !model.isMyTurn() || !canPickFromRow(upper)) {
+                if (isEvent || !model.isMyTurn()) {
                     return;
                 }
                 if (building) {
@@ -243,7 +234,7 @@ public final class GameBoardView {
                     controller.send(new GameActionMessage(new PickCardAction(String.valueOf(id), upper)));
                 }
             });
-            card.setDisable(isEvent);
+            card.setDisable(isEvent || !canPickFromRow(upper));
             GuiAnimations.addHoverScale(card);
             cards.getChildren().add(card);
         }
