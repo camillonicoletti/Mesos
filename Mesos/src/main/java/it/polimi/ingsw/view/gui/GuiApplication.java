@@ -105,7 +105,9 @@ public final class GuiApplication extends Application {
     }
 
     private void renderLobby() {
-        BorderPane layout = shell("Lobby", "Preparazione partita");
+        BorderPane layout = new BorderPane();
+        layout.getStyleClass().add("lobby-shell");
+        timerLabel = null;
         layout.setCenter(new LobbyView(controller, model).render());
         root.setCenter(layout);
     }

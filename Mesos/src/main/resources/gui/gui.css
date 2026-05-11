@@ -61,26 +61,93 @@
 }
 
 .lobby-root {
-    -fx-background-color: rgba(41, 22, 31, .74);
-    -fx-background-image: url("assets/ui/box_art_2.png");
+    -fx-background-color: #29161f;
+    -fx-background-image: url("assets/ui/game_background.jpeg");
     -fx-background-size: cover;
     -fx-background-position: center center;
 }
 
+.lobby-shell {
+    -fx-background-color: #29161f;
+}
+
 .lobby-center {
-    -fx-background-color: rgba(64, 27, 42, .54);
+    -fx-background-color: transparent;
+}
+
+.lobby-stage {
+    -fx-background-color: transparent;
+}
+
+.lobby-title {
+    -fx-text-fill: #fff4d6;
+    -fx-font-size: 46px;
+    -fx-font-weight: 900;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .88), 10, 0, 0, 2);
+}
+
+.lobby-subtitle {
+    -fx-text-fill: #f0ce64;
+    -fx-font-size: 18px;
+    -fx-font-weight: 900;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .82), 7, 0, 0, 1);
+}
+
+.lobby-players {
+    -fx-padding: 8px 0 0 0;
+}
+
+.lobby-player-card {
+    -fx-background-color: transparent;
+    -fx-padding: 12px 18px;
+    -fx-min-width: 160px;
+}
+
+.lobby-player-ready {
+    -fx-background-color: rgba(70, 180, 165, .16);
+    -fx-background-radius: 8px;
+}
+
+.lobby-player-name {
+    -fx-text-fill: #fff2cf;
+    -fx-font-size: 17px;
+    -fx-font-weight: 900;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .78), 5, 0, 0, 1);
+}
+
+.lobby-color-dot {
+    -fx-min-width: 20px;
+    -fx-min-height: 20px;
+    -fx-max-width: 20px;
+    -fx-max-height: 20px;
+    -fx-background-radius: 99px;
+    -fx-border-color: rgba(255, 242, 207, .62);
+    -fx-border-radius: 99px;
+}
+
+.lobby-bottom {
+    -fx-background-color: transparent;
+}
+
+.lobby-status,
+.lobby-controls {
+    -fx-background-color: transparent;
+}
+
+.lobby-status .label,
+.lobby-controls .label {
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .70), 4, 0, 0, 1);
 }
 
 /* ── Board instruction banner ─────────────────────────────────────────────── */
 
 .board-instruction {
-    -fx-background-color: rgba(24, 52, 50, .82);
-    -fx-background-radius: 6px;
-    -fx-padding: 9px 26px 9px 26px;
-    -fx-text-fill: #e8f7f5;
-    -fx-font-size: 15px;
+    -fx-background-color: transparent;
+    -fx-padding: 6px 22px 10px 22px;
+    -fx-text-fill: #fff4d6;
+    -fx-font-size: 20px;
     -fx-font-weight: 800;
-    -fx-effect: dropshadow(three-pass-box, rgba(10, 30, 28, .75), 10, 0, 0, 2);
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .88), 9, 0, 0, 2);
 }
 
 /* ── Market layout ────────────────────────────────────────────────────────── */
@@ -110,6 +177,12 @@
 }
 
 /* ── Offer strip ──────────────────────────────────────────────────────────── */
+
+.turn-order-tile {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-effect: dropshadow(three-pass-box, rgba(17, 8, 10, .34), 9, 0, 0, 3);
+}
 
 .offer-strip {
     -fx-background-color: transparent;
@@ -183,18 +256,15 @@
 /* ── Cards ────────────────────────────────────────────────────────────────── */
 
 .card {
-    -fx-background-color: #c8a86a;
-    -fx-border-color: #8a6030;
-    -fx-border-width: 2px;
-    -fx-border-radius: 6px;
-    -fx-background-radius: 6px;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
     -fx-padding: 0;
-    -fx-effect: dropshadow(three-pass-box, rgba(20, 10, 5, .55), 10, 0, 0, 4);
+    -fx-effect: dropshadow(three-pass-box, rgba(20, 16, 10, .34), 9, 0, 0, 3);
 }
 
 .card:hover {
-    -fx-border-color: #f0ce64;
-    -fx-effect: dropshadow(three-pass-box, rgba(240, 206, 100, .72), 20, 0, 0, 4);
+    -fx-border-color: transparent;
+    -fx-effect: dropshadow(three-pass-box, rgba(240, 206, 100, .64), 18, 0, 0, 4);
 }
 
 .card:disabled {
@@ -370,26 +440,19 @@
 }
 
 .player-summary {
-    -fx-background-color: rgba(20, 10, 8, .40);
-    -fx-background-radius: 8px;
+    -fx-background-color: transparent;
     -fx-padding: 9px 12px;
     -fx-min-width: 190px;
 }
 
 .player-summary-me {
-    -fx-background-color: rgba(240, 206, 100, .18);
+    -fx-background-color: rgba(240, 206, 100, .16);
     -fx-background-radius: 8px;
-    -fx-border-color: rgba(240, 206, 100, .30);
-    -fx-border-radius: 8px;
-    -fx-border-width: 1px;
 }
 
 .player-summary-current {
-    -fx-background-color: rgba(47, 143, 132, .22);
+    -fx-background-color: rgba(70, 180, 165, .18);
     -fx-background-radius: 8px;
-    -fx-border-color: rgba(100, 220, 200, .28);
-    -fx-border-radius: 8px;
-    -fx-border-width: 1px;
 }
 
 .player-summary-disconnected {
@@ -482,11 +545,8 @@
 }
 
 .deck-placeholder {
-    -fx-background-color: #3a2418;
-    -fx-border-color: #7a5530;
-    -fx-border-width: 2px;
-    -fx-border-radius: 6px;
-    -fx-background-radius: 6px;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
     -fx-effect: dropshadow(three-pass-box, rgba(20, 10, 5, .55), 10, 0, 0, 4);
 }
 

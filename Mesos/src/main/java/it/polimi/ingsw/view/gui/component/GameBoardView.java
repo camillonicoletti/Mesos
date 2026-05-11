@@ -11,13 +11,11 @@ import it.polimi.ingsw.network.protocol.serverbound.GameActionMessage;
 import it.polimi.ingsw.view.gui.asset.CardAsset;
 import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
 import it.polimi.ingsw.view.gui.util.GuiAnimations;
-import it.polimi.ingsw.view.gui.util.GuiIcons;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
-import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -29,12 +27,9 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 import java.io.InputStream;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public final class GameBoardView {
@@ -49,16 +44,6 @@ public final class GameBoardView {
             'F', 2,
             'G', 4
     );
-
-    private static final Map<Character, String> TILE_EFFECTS = new LinkedHashMap<>() {{
-        put('A', "+3 cibo");
-        put('B', "1 carta sotto");
-        put('C', "1 carta sopra");
-        put('D', "2 carte sotto");
-        put('E', "1 sopra + 1 sotto");
-        put('F', "2 carte sopra");
-        put('G', "2 sopra + 1 sotto");
-    }};
 
     private final ClientController controller;
     private final ClientModel model;
@@ -124,7 +109,7 @@ public final class GameBoardView {
     }
 
     private HBox centerTrackPanel() {
-        HBox track = new HBox(18);
+        HBox track = new HBox(10);
         track.getStyleClass().add("center-track");
         track.setAlignment(Pos.CENTER);
         track.setFillHeight(true);
@@ -134,76 +119,37 @@ public final class GameBoardView {
         return track;
     }
 
-    private VBox turnOrderPanel() {
-        VBox panel = new VBox(10);
-        panel.getStyleClass().add("turn-strip");
-        panel.getChildren().add(sectionTitle("Ordine turno"));
+    private Node turnOrderPanel() {
+        StackPane tile = new StackPane();
+        tile.getStyleClass().add("turn-order-tile");
+        String path = "gui/assets/board/turn_order_" + turnOrderTilePlayers() + ".png";
 
-        List<String> order = visibleTurnOrder();
-        String current = currentTurnNickname();
-        Set<String> placedPlayers = new HashSet<>(model.getTotemOnTiles().values());
-        boolean isTotemPhase = "TotemPlacementState".equals(model.getGameState());
-
-        if (order.isEmpty()) {
-            Label empty = new Label("In attesa dei piazzamenti");
-            empty.getStyleClass().add("muted");
-            panel.getChildren().add(empty);
-            return panel;
+        try (InputStream stream = assetCatalog.openResource(path).orElse(null)) {
+            if (stream != null) {
+                ImageView image = new ImageView(new Image(stream));
+                image.setPreserveRatio(true);
+                image.setFitWidth(148);
+                image.setFitHeight(218);
+                tile.getChildren().add(image);
+            }
+        } catch (Exception ignored) {
+            // Fallback text is added below.
         }
 
-        for (int i = 0; i < order.size(); i++) {
-            String nickname = order.get(i);
-            PlayerView player = model.getPlayers().get(nickname);
-
-            HBox row = new HBox(8);
-            row.setAlignment(Pos.CENTER_LEFT);
-
-            boolean hasPlaced = isTotemPhase && placedPlayers.contains(nickname);
-
-            String slotStyle = nickname.equals(current)
-                    ? "turn-slot-active"
-                    : hasPlaced
-                    ? "turn-slot-done"
-                    : "turn-slot";
-
-            row.getStyleClass().add(slotStyle);
-
-            Label position = new Label(String.valueOf(i + 1));
-            position.getStyleClass().add("turn-position");
-
-            Region totem = totemDot(player == null ? null : player.getTotemColor());
-
-            Label name = new Label(nickname);
-            name.getStyleClass().add("turn-name");
-
-            row.getChildren().addAll(position, totem, name, spacer());
-
-            if (hasPlaced) {
-                Label done = new Label("✓");
-                done.getStyleClass().add("turn-effect");
-                row.getChildren().add(done);
-            } else if ("ActionResolutionState".equals(model.getGameState())) {
-                Label effect = new Label(turnEffectLabel(i + 1));
-                effect.getStyleClass().add("turn-effect");
-                row.getChildren().add(effect);
-            }
-
-            if (nickname.equals(current)) {
-                GuiAnimations.pulse(row);
-            }
-
-            panel.getChildren().add(row);
+        if (tile.getChildren().isEmpty()) {
+            Label fallback = new Label("Turno");
+            fallback.getStyleClass().add("turn-name");
+            tile.getChildren().add(fallback);
         }
 
-        return panel;
+        return tile;
     }
 
     private VBox totemPlacementPanel() {
         VBox panel = new VBox(8);
         panel.getStyleClass().add("offer-strip");
-        panel.getChildren().add(sectionTitle("Tessere offerta"));
 
-        FlowPane pane = new FlowPane(4, 4);
+        HBox pane = new HBox(2);
         pane.setAlignment(Pos.CENTER);
 
         for (char tile : activeOfferTiles()) {
@@ -273,9 +219,6 @@ public final class GameBoardView {
     private Button offerTileButton(char tile, String owner) {
         String path = "gui/assets/board/offer_" + tile + ".png";
 
-        VBox wrapper = new VBox(4);
-        wrapper.setAlignment(Pos.CENTER);
-
         StackPane content = new StackPane();
         content.setAlignment(Pos.CENTER);
 
@@ -321,17 +264,10 @@ public final class GameBoardView {
             StackPane.setAlignment(badge, Pos.TOP_CENTER);
         }
 
-        Label effect = new Label(TILE_EFFECTS.getOrDefault(tile, ""));
-        effect.setGraphic(GuiIcons.tileIcon(tile));
-        effect.setContentDisplay(ContentDisplay.LEFT);
-        effect.getStyleClass().add("offer-effect");
-
-        wrapper.getChildren().addAll(content, effect);
-
         Button button = new Button();
         button.getStyleClass().add(owner == null ? "offer-tile" : "offer-tile-occupied");
-        button.setGraphic(wrapper);
-        button.setPrefSize(228, 178);
+        button.setGraphic(content);
+        button.setPrefSize(228, 154);
 
         return button;
     }
@@ -427,8 +363,7 @@ public final class GameBoardView {
     private VBox cardRow(String title, List<Integer> ids, boolean upper, boolean building) {
         VBox box = new VBox(8);
         box.getStyleClass().add("card-row");
-
-        FlowPane cards = new FlowPane(12, 12);
+        HBox cards = new HBox(12);
         cards.setAlignment(Pos.CENTER);
 
         for (Integer id : ids) {
@@ -455,6 +390,14 @@ public final class GameBoardView {
         box.getChildren().add(cards);
 
         return box;
+    }
+
+    private int turnOrderTilePlayers() {
+        int players = model.getPlayers().isEmpty()
+                ? model.getExpectedPlayers()
+                : model.getPlayers().size();
+        players = Math.max(players, model.getTurnOrder().size());
+        return Math.max(2, Math.min(5, players));
     }
 
     private Node cardNode(int cardId, Runnable action) {
@@ -531,45 +474,6 @@ public final class GameBoardView {
         return TILE_ORDER.stream()
                 .filter(tile -> TILE_MIN_PLAYERS.get(tile) <= players)
                 .collect(Collectors.toList());
-    }
-
-    private List<String> visibleTurnOrder() {
-        if ("ActionResolutionState".equals(model.getGameState())) {
-            List<String> ordered = actionResolutionOrder();
-            return ordered.isEmpty() ? model.getTurnOrder() : ordered;
-        }
-
-        return model.getTurnOrder().stream()
-                .filter(name -> !model.isPlayerDisconnected(name))
-                .collect(Collectors.toList());
-    }
-
-    private List<String> actionResolutionOrder() {
-        return TILE_ORDER.stream()
-                .map(tile -> model.getTotemOnTiles().get(tile))
-                .filter(nickname -> nickname != null && !model.isPlayerDisconnected(nickname))
-                .distinct()
-                .collect(Collectors.toList());
-    }
-
-    private String turnEffectLabel(int position) {
-        int numPlayers = Math.max(2, Math.max(model.getPlayers().size(), model.getTurnOrder().size()));
-
-        if (numPlayers == 2) {
-            return position == 1 ? "+2 cibo" : "ultimo: -1 cibo o -2 PP";
-        }
-
-        if (numPlayers == 3) {
-            return position == 1 ? "+2 cibo" : position == 3 ? "ultimo: -1 cibo o -2 PP" : "-";
-        }
-
-        return switch (position) {
-            case 1 -> "+2 cibo";
-            case 3 -> "-1 cibo +3 PP";
-            case 4 -> numPlayers == 4 ? "ultimo: -1 cibo o -2 PP" : "-";
-            case 5 -> "ultimo: -1 cibo o -2 PP";
-            default -> "-";
-        };
     }
 
     private String currentTurnNickname() {
@@ -653,10 +557,4 @@ public final class GameBoardView {
         return label;
     }
 
-    private Region spacer() {
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        return spacer;
-    }
 }

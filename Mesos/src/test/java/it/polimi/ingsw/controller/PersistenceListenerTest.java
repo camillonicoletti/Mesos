@@ -1,7 +1,6 @@
-package it.polimi.ingsw.controller.listener;
+package it.polimi.ingsw.controller;
 
-import it.polimi.ingsw.controller.GameController;
-import it.polimi.ingsw.controller.Persistence;
+import it.polimi.ingsw.controller.listener.PersistenceListener;
 import it.polimi.ingsw.controller.state.TotemPlacementState;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
