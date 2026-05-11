@@ -7,7 +7,6 @@ import it.polimi.ingsw.model.card.effect.ShamanicRitualDoublePPEffect;
 import it.polimi.ingsw.model.card.effect.ShamanicRitualImmunityEffect;
 import it.polimi.ingsw.model.enums.Era;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -69,17 +68,16 @@ public class ShamanicRitualEventCard extends EventCard {
             if (stars == minStars) playersWithLeastStars.add(player);
         }
 
-        // award PP to players with most stars — doubled only if strictly alone at the top
-        boolean soloLeader = playersWithMostStars.size() == 1;
+        // award PP to players with most stars — doubled if they have ShamanicRitualDoublePPEffect
         for (Player player : playersWithMostStars) {
             int pp = ppGain;
-            if (soloLeader) {
-                for (BuildingCard building : player.getTribe().getBuildingCards()) {
-                    if (building.getEffect() instanceof ShamanicRitualDoublePPEffect) {
-                        pp *= 2;
-                    }
+
+            for (BuildingCard building : player.getTribe().getBuildingCards()) {
+                if (building.getEffect() instanceof ShamanicRitualDoublePPEffect) {
+                    pp *= 2;
                 }
             }
+
             player.addPrestigePoints(pp);
         }
 
