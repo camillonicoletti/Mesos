@@ -36,14 +36,17 @@ public final class LobbyView {
 
     public Node render() {
         BorderPane layout = new BorderPane();
+        layout.getStyleClass().add("lobby-root");
 
         VBox left = sidePanel();
         left.getChildren().addAll(lobbyStatusBlock(), new Separator(), lobbyControls());
 
         VBox center = new VBox(18);
         center.setPadding(new Insets(22));
+        center.getStyleClass().add("lobby-center");
         center.getChildren().add(sectionTitle("Giocatori"));
         FlowPane players = new FlowPane(12, 12);
+        players.setAlignment(Pos.CENTER);
         for (String nickname : model.getLobbyPlayers()) {
             players.getChildren().add(playerLobbyCard(nickname));
         }

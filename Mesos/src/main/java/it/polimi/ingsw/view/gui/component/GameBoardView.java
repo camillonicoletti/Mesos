@@ -62,31 +62,54 @@ public final class GameBoardView {
     }
 
     public Node render() {
-        VBox board = new VBox(18);
+        VBox board = new VBox(20);
         board.getStyleClass().add("game-board");
-        board.setPadding(new Insets(22));
+        board.setPadding(new Insets(22, 26, 28, 26));
         board.getChildren().addAll(
-                cardRow("Personaggi / Eventi - fila alta", model.getUpperRowCharacterIds(), true, false),
-                cardRow("Edifici - fila alta", model.getUpperRowBuildingIds(), true, true),
+                instructionBanner(),
+                marketBand("Fila alta",
+                        cardRow("Personaggi / Eventi", model.getUpperRowCharacterIds(), true, false),
+                        cardRow("Edifici", model.getUpperRowBuildingIds(), true, true)),
                 centerTrackPanel(),
-                cardRow("Personaggi / Eventi - fila bassa", model.getLowerRowCharacterIds(), false, false),
-                cardRow("Edifici - fila bassa", model.getLowerRowBuildingIds(), false, true)
+                marketBand("Fila bassa",
+                        cardRow("Personaggi / Eventi", model.getLowerRowCharacterIds(), false, false),
+                        cardRow("Edifici", model.getLowerRowBuildingIds(), false, true)),
+                playerDock()
         );
         return board;
+    }
+
+    private Label instructionBanner() {
+        Label banner = new Label(actionInstruction());
+        banner.getStyleClass().add("board-instruction");
+        banner.setMaxWidth(Double.MAX_VALUE);
+        banner.setAlignment(Pos.CENTER);
+        return banner;
+    }
+
+    private HBox marketBand(String title, VBox characters, VBox buildings) {
+        HBox band = new HBox(16);
+        band.getStyleClass().add("market-band");
+        band.setAlignment(Pos.CENTER);
+        band.getChildren().addAll(characters, buildings);
+        HBox.setHgrow(characters, Priority.ALWAYS);
+        HBox.setHgrow(buildings, Priority.ALWAYS);
+        return band;
     }
 
     private HBox centerTrackPanel() {
         HBox track = new HBox(18);
         track.getStyleClass().add("center-track");
         track.setAlignment(Pos.CENTER);
+        track.setFillHeight(true);
         track.getChildren().addAll(turnOrderPanel(), totemPlacementPanel());
         return track;
     }
 
     private VBox turnOrderPanel() {
         VBox panel = new VBox(10);
-        panel.getStyleClass().add("turn-panel");
-        panel.getChildren().add(sectionTitle("Tessera turno"));
+        panel.getStyleClass().add("turn-strip");
+        panel.getChildren().add(sectionTitle("Ordine turno"));
 
         List<String> order = visibleTurnOrder();
         String current = currentTurnNickname();
@@ -140,12 +163,11 @@ public final class GameBoardView {
     }
 
     private VBox totemPlacementPanel() {
-        VBox panel = new VBox(10);
-        panel.getStyleClass().add("offer-panel");
-        panel.getChildren().add(sectionTitle("Tessere offerta"));
+        VBox panel = new VBox(8);
+        panel.getStyleClass().add("offer-strip");
 
         FlowPane pane = new FlowPane(12, 12);
-        pane.setAlignment(Pos.CENTER_LEFT);
+        pane.setAlignment(Pos.CENTER);
         for (char tile : activeOfferTiles()) {
             String owner = model.getTotemOnTiles().get(tile);
             Button button = offerTileButton(tile, owner);
@@ -170,8 +192,8 @@ public final class GameBoardView {
                 Image image = new Image(stream);
                 ImageView view = new ImageView(image);
                 view.setPreserveRatio(true);
-                view.setFitWidth(120);
-                view.setFitHeight(80);
+                view.setFitWidth(156);
+                view.setFitHeight(92);
                 content.getChildren().add(view);
             }
         } catch (Exception ignored) {
@@ -212,8 +234,83 @@ public final class GameBoardView {
         Button button = new Button();
         button.getStyleClass().add(owner == null ? "offer-tile" : "offer-tile-occupied");
         button.setGraphic(content);
-        button.setPrefSize(154, 146);
+        button.setPrefSize(188, 148);
         return button;
+    }
+
+    private HBox playerDock() {
+        HBox dock = new HBox(14);
+        dock.getStyleClass().add("player-dock");
+        dock.setAlignment(Pos.CENTER);
+
+        VBox status = new VBox(4);
+        status.getStyleClass().add("table-status");
+        status.getChildren().addAll(
+                smallStatus("Era", nullSafe(model.getCurrentEra())),
+                smallStatus("Round", String.valueOf(model.getRoundNumber())),
+                smallStatus("Turno", nullSafe(currentTurnNickname()))
+        );
+
+        FlowPane players = new FlowPane(10, 10);
+        players.setAlignment(Pos.CENTER);
+        players.getStyleClass().add("player-summary-flow");
+        for (PlayerView player : model.getPlayers().values()) {
+            players.getChildren().add(playerSummary(player));
+        }
+
+        Button exit = new Button("Esci");
+        exit.getStyleClass().add("dock-exit");
+        exit.setOnAction(event -> {
+            controller.disconnect();
+            javafx.application.Platform.exit();
+        });
+
+        dock.getChildren().addAll(status, players, exit);
+        HBox.setHgrow(players, Priority.ALWAYS);
+        return dock;
+    }
+
+    private Node playerSummary(PlayerView player) {
+        boolean disconnected = model.isPlayerDisconnected(player.getNickname());
+        boolean current = player.getNickname().equals(currentTurnNickname());
+        boolean me = player.getNickname().equals(model.getMyNickname());
+
+        VBox card = new VBox(5);
+        card.getStyleClass().add("player-summary");
+        if (current) {
+            card.getStyleClass().add("player-summary-current");
+        }
+        if (me) {
+            card.getStyleClass().add("player-summary-me");
+        }
+        if (disconnected) {
+            card.getStyleClass().add("player-summary-disconnected");
+        }
+
+        HBox head = new HBox(7);
+        head.setAlignment(Pos.CENTER_LEFT);
+        Label name = new Label((me ? "Tu · " : "") + player.getNickname());
+        name.getStyleClass().add("player-summary-name");
+        head.getChildren().addAll(totemDot(player.getTotemColor()), name);
+
+        Label resources = new Label("Cibo " + player.getFood() + "   PP " + player.getPrestigePoints());
+        resources.getStyleClass().add("player-summary-stat");
+        Label cards = new Label("Personaggi " + player.getCharacterCardIds().size()
+                + "   Edifici " + player.getBuildingCardIds().size());
+        cards.getStyleClass().add("player-summary-stat");
+
+        card.getChildren().addAll(head, resources, cards);
+        return card;
+    }
+
+    private HBox smallStatus(String label, String value) {
+        Label key = new Label(label);
+        key.getStyleClass().add("table-status-key");
+        Label val = new Label(value);
+        val.getStyleClass().add("table-status-value");
+        HBox row = new HBox(8, key, val);
+        row.setAlignment(Pos.CENTER_LEFT);
+        return row;
     }
 
     private VBox cardRow(String title, List<Integer> ids, boolean upper, boolean building) {
@@ -221,7 +318,7 @@ public final class GameBoardView {
         box.getStyleClass().add("card-row");
         box.getChildren().add(sectionTitle(title));
         FlowPane cards = new FlowPane(12, 12);
-        cards.setAlignment(Pos.CENTER_LEFT);
+        cards.setAlignment(Pos.CENTER);
         for (Integer id : ids) {
             boolean isEvent = !building && model.isEventCard(id);
             Node card = cardNode(id, () -> {
@@ -246,15 +343,15 @@ public final class GameBoardView {
         Optional<CardAsset> asset = assetCatalog.findCard(cardId);
         StackPane card = new StackPane();
         card.getStyleClass().add("card");
-        card.setPrefSize(124, 176);
+        card.setPrefSize(112, 158);
         card.setOnMouseClicked(event -> action.run());
 
         if (asset.isPresent() && asset.get().isFrontAvailable()) {
             try (InputStream stream = assetCatalog.openResource(asset.get().getFrontPath()).orElse(null)) {
                 if (stream != null) {
                     ImageView image = new ImageView(new Image(stream));
-                    image.setFitWidth(124);
-                    image.setFitHeight(176);
+                    image.setFitWidth(112);
+                    image.setFitHeight(158);
                     image.setPreserveRatio(true);
                     card.getChildren().add(image);
                     return card;
@@ -344,6 +441,28 @@ public final class GameBoardView {
             return model.getCurrentActionResolutionPlayer();
         }
         return null;
+    }
+
+    private String nullSafe(Object value) {
+        return value == null ? "-" : String.valueOf(value);
+    }
+
+    private String actionInstruction() {
+        String current = currentTurnNickname();
+        boolean myTurn = current != null && current.equals(model.getMyNickname());
+        if ("TotemPlacementState".equals(model.getGameState())) {
+            if (myTurn) {
+                return "Scegli una Tessera Offerta su cui posizionare il tuo totem";
+            }
+            return current == null ? "In attesa del piazzamento dei totem" : "Attendi il piazzamento di " + current;
+        }
+        if ("ActionResolutionState".equals(model.getGameState())) {
+            if (myTurn) {
+                return "Scegli una carta disponibile dalla fila indicata dalla tua tessera";
+            }
+            return current == null ? "Risoluzione azioni in corso" : "Turno di " + current;
+        }
+        return "Tabellone di gioco";
     }
 
     private Region totemDot(TotemColor color) {

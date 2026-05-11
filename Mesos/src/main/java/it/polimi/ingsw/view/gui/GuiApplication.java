@@ -8,7 +8,6 @@ import it.polimi.ingsw.view.gui.component.EndGameView;
 import it.polimi.ingsw.view.gui.component.GameBoardView;
 import it.polimi.ingsw.view.gui.component.LoginView;
 import it.polimi.ingsw.view.gui.component.LobbyView;
-import it.polimi.ingsw.view.gui.component.PlayerSidebar;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
@@ -117,7 +116,6 @@ public final class GuiApplication extends Application {
         ScrollPane scroll = new ScrollPane(new GameBoardView(controller, model, assetCatalog).render());
         scroll.setFitToWidth(true);
         scroll.getStyleClass().add("scroll");
-        layout.setLeft(new PlayerSidebar(controller, model).render());
         layout.setCenter(scroll);
         root.setCenter(layout);
     }

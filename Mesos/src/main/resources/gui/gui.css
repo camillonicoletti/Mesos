@@ -1,11 +1,11 @@
 .app {
     -fx-font-family: "Helvetica Neue", Arial, sans-serif;
-    -fx-background-color: #2f382e;
+    -fx-background-color: #1b2730;
 }
 
 .topbar {
-    -fx-background-color: linear-gradient(to right, #243126, #3f4b34);
-    -fx-border-color: #776343;
+    -fx-background-color: linear-gradient(to right, #5b2535, #d94e33);
+    -fx-border-color: rgba(255, 220, 137, .35);
     -fx-border-width: 0 0 1px 0;
 }
 
@@ -16,7 +16,7 @@
 }
 
 .topbar .muted {
-    -fx-text-fill: #dacbb0;
+    -fx-text-fill: #ffe4b8;
 }
 
 .muted {
@@ -24,64 +24,98 @@
 }
 
 .login-panel {
-    -fx-background-color: #f5ead3;
+    -fx-background-color: rgba(91, 37, 53, .92);
     -fx-padding: 30px;
-    -fx-border-color: #b9935a;
+    -fx-border-color: rgba(255, 218, 130, .55);
     -fx-border-radius: 8px;
     -fx-background-radius: 8px;
     -fx-effect: dropshadow(three-pass-box, rgba(24, 24, 18, .28), 18, 0, 0, 8);
 }
 
 .login-panel .title {
-    -fx-text-fill: #263126;
+    -fx-text-fill: #fff2cf;
 }
 
 .side-panel {
-    -fx-background-color: #eadcc2;
-    -fx-border-color: #b9935a;
-    -fx-border-width: 0 1px 0 0;
+    -fx-background-color: #592436;
+    -fx-border-color: rgba(143, 216, 223, .72);
+    -fx-border-width: 0 0 0 4px;
 }
 
 .game-board {
-    -fx-background-color: radial-gradient(center 50% 45%, radius 90%, #80633d, #4f442f 58%, #30392d);
+    -fx-background-color: rgba(41, 22, 31, .68);
+    -fx-background-image: url("assets/ui/box_art_1.png");
+    -fx-background-size: cover;
+    -fx-background-position: center center;
+}
+
+.lobby-root {
+    -fx-background-color: rgba(41, 22, 31, .74);
+    -fx-background-image: url("assets/ui/box_art_2.png");
+    -fx-background-size: cover;
+    -fx-background-position: center center;
+}
+
+.lobby-center {
+    -fx-background-color: rgba(64, 27, 42, .54);
+}
+
+.board-instruction {
+    -fx-background-color: linear-gradient(to right, rgba(216, 73, 49, .94), rgba(232, 89, 47, .92));
+    -fx-background-radius: 7px;
+    -fx-border-color: rgba(255, 199, 105, .2);
+    -fx-border-radius: 7px;
+    -fx-padding: 13px 22px;
+    -fx-text-fill: #fff4d6;
+    -fx-font-size: 19px;
+    -fx-font-weight: 900;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .36), 16, 0, 0, 5);
+}
+
+.market-band {
+    -fx-background-color: transparent;
+    -fx-padding: 0 4px;
 }
 
 .center-track {
-    -fx-background-color: rgba(245, 234, 211, .88);
-    -fx-border-color: #b9935a;
-    -fx-border-radius: 8px;
-    -fx-background-radius: 8px;
-    -fx-padding: 16px;
-    -fx-effect: dropshadow(three-pass-box, rgba(24, 24, 18, .24), 18, 0, 0, 5);
+    -fx-background-color: transparent;
+    -fx-padding: 0 12px;
 }
 
-.turn-panel,
-.offer-panel,
 .card-row {
-    -fx-background-color: rgba(250, 240, 220, .82);
-    -fx-border-color: rgba(100, 78, 45, .42);
-    -fx-border-radius: 8px;
+    -fx-background-color: rgba(255, 229, 215, .14);
     -fx-background-radius: 8px;
-    -fx-padding: 12px;
+    -fx-padding: 10px;
 }
 
-.turn-panel {
-    -fx-min-width: 310px;
-    -fx-pref-width: 340px;
+.turn-strip {
+    -fx-background-color: rgba(55, 22, 34, .42);
+    -fx-background-radius: 8px;
+    -fx-padding: 10px;
+    -fx-min-width: 280px;
+    -fx-pref-width: 315px;
 }
 
-.offer-panel {
-    -fx-min-width: 520px;
+.offer-strip {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-min-width: 720px;
+}
+
+.card-row .section-title,
+.turn-strip .section-title {
+    -fx-text-fill: #fff2cf;
+    -fx-opacity: .86;
 }
 
 .section-title {
     -fx-font-size: 13px;
     -fx-font-weight: 800;
-    -fx-text-fill: #263126;
+    -fx-text-fill: #fff2cf;
 }
 
 .font-icon {
-    -fx-icon-color: #4c3b24;
+    -fx-icon-color: #f0ce64;
 }
 
 .primary-button .font-icon {
@@ -97,11 +131,11 @@
 }
 
 .info-row .font-icon {
-    -fx-icon-color: #6b5528;
+    -fx-icon-color: #f0ce64;
 }
 
 .primary-button {
-    -fx-background-color: #476948;
+    -fx-background-color: #2f8f84;
     -fx-text-fill: #fff7e8;
     -fx-font-weight: 800;
     -fx-background-radius: 7px;
@@ -109,23 +143,23 @@
 }
 
 .primary-button:hover {
-    -fx-background-color: #5c7d55;
+    -fx-background-color: #3fb3a5;
 }
 
 .secondary-button {
-    -fx-background-color: #d9c49d;
-    -fx-text-fill: #263126;
+    -fx-background-color: rgba(255, 234, 190, .88);
+    -fx-text-fill: #552435;
     -fx-background-radius: 7px;
     -fx-padding: 8px 12px;
 }
 
 .secondary-button:hover {
-    -fx-background-color: #e6d3ad;
+    -fx-background-color: #fff1cf;
 }
 
 .card {
-    -fx-background-color: #f8edd7;
-    -fx-border-color: #ad8750;
+    -fx-background-color: rgba(255, 244, 218, .95);
+    -fx-border-color: rgba(255, 244, 218, .86);
     -fx-border-width: 1.5px;
     -fx-border-radius: 7px;
     -fx-background-radius: 7px;
@@ -134,8 +168,8 @@
 }
 
 .card:hover {
-    -fx-border-color: #e0bb6f;
-    -fx-effect: dropshadow(three-pass-box, rgba(18, 14, 8, .35), 14, 0, 0, 4);
+    -fx-border-color: #f0ce64;
+    -fx-effect: dropshadow(three-pass-box, rgba(240, 206, 100, .50), 18, 0, 0, 4);
 }
 
 .card:disabled {
@@ -143,12 +177,22 @@
 }
 
 .player-card {
-    -fx-background-color: #f8edd7;
-    -fx-border-color: #b9935a;
+    -fx-background-color: rgba(255, 233, 202, .14);
+    -fx-border-color: rgba(255, 233, 202, .35);
     -fx-border-radius: 8px;
     -fx-background-radius: 8px;
     -fx-padding: 14px;
     -fx-min-width: 160px;
+}
+
+.player-card-disconnected {
+    -fx-background-color: rgba(64, 23, 35, .70);
+    -fx-border-color: rgba(255, 118, 96, .35);
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 14px;
+    -fx-min-width: 160px;
+    -fx-opacity: .72;
 }
 
 .turn-slot,
@@ -160,20 +204,20 @@
 }
 
 .turn-slot-done {
-    -fx-background-color: #c8bfa6;
-    -fx-border-color: #a08a60;
+    -fx-background-color: rgba(255, 233, 202, .16);
+    -fx-border-color: rgba(255, 233, 202, .24);
     -fx-opacity: 0.6;
 }
 
 .turn-slot {
-    -fx-background-color: #e0cfad;
-    -fx-border-color: #bd9b65;
+    -fx-background-color: rgba(255, 233, 202, .20);
+    -fx-border-color: rgba(255, 233, 202, .35);
 }
 
 .turn-slot-active {
-    -fx-background-color: #476948;
-    -fx-border-color: #dfbd72;
-    -fx-effect: dropshadow(three-pass-box, rgba(45, 75, 48, .45), 10, 0, 0, 3);
+    -fx-background-color: rgba(47, 143, 132, .88);
+    -fx-border-color: #f0ce64;
+    -fx-effect: dropshadow(three-pass-box, rgba(47, 143, 132, .48), 12, 0, 0, 3);
 }
 
 .turn-slot-active .label {
@@ -209,23 +253,24 @@
 .offer-tile-occupied {
     -fx-background-radius: 8px;
     -fx-border-radius: 8px;
-    -fx-padding: 10px;
+    -fx-padding: 2px;
     -fx-text-fill: #263126;
 }
 
 .offer-tile {
-    -fx-background-color: linear-gradient(to bottom, #f6e5c5, #d7bb81);
-    -fx-border-color: #a67d45;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-effect: dropshadow(three-pass-box, rgba(17, 8, 10, .28), 8, 0, 0, 3);
 }
 
 .offer-tile:hover {
-    -fx-border-color: #e0bb6f;
-    -fx-background-color: linear-gradient(to bottom, #fff0cf, #e4c98f);
+    -fx-border-color: rgba(240, 206, 100, .72);
+    -fx-background-color: rgba(255, 241, 207, .20);
 }
 
 .offer-tile-occupied {
-    -fx-background-color: linear-gradient(to bottom, #d3c0a0, #a99571);
-    -fx-border-color: #6f5837;
+    -fx-background-color: rgba(35, 17, 24, .22);
+    -fx-border-color: rgba(255, 226, 168, .35);
 }
 
 .offer-tile:disabled,
@@ -246,13 +291,86 @@
 }
 
 .offer-owner {
-    -fx-background-color: rgba(255, 247, 232, .65);
+    -fx-background-color: rgba(255, 247, 232, .72);
     -fx-background-radius: 99px;
     -fx-padding: 4px 8px;
 }
 
+.player-dock {
+    -fx-background-color: rgba(58, 24, 37, .52);
+    -fx-background-radius: 10px;
+    -fx-padding: 12px 14px;
+    -fx-effect: dropshadow(three-pass-box, rgba(18, 8, 12, .25), 16, 0, 0, 5);
+}
+
+.table-status {
+    -fx-min-width: 180px;
+    -fx-padding: 0 8px 0 0;
+}
+
+.table-status-key {
+    -fx-text-fill: #f0ce64;
+    -fx-font-size: 11px;
+    -fx-font-weight: 900;
+}
+
+.table-status-value {
+    -fx-text-fill: #fff2cf;
+    -fx-font-size: 13px;
+    -fx-font-weight: 800;
+}
+
+.player-summary-flow {
+    -fx-column-halignment: center;
+}
+
+.player-summary {
+    -fx-background-color: rgba(255, 232, 207, .16);
+    -fx-background-radius: 8px;
+    -fx-padding: 9px 12px;
+    -fx-min-width: 190px;
+}
+
+.player-summary-me {
+    -fx-background-color: rgba(240, 206, 100, .24);
+}
+
+.player-summary-current {
+    -fx-background-color: rgba(70, 180, 165, .28);
+}
+
+.player-summary-disconnected {
+    -fx-opacity: .58;
+}
+
+.player-summary-name {
+    -fx-text-fill: #fff2cf;
+    -fx-font-weight: 900;
+}
+
+.player-summary-stat {
+    -fx-text-fill: #dcc8b5;
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+}
+
+.dock-exit {
+    -fx-background-color: rgba(255, 242, 207, .18);
+    -fx-background-radius: 99px;
+    -fx-border-color: rgba(255, 242, 207, .24);
+    -fx-border-radius: 99px;
+    -fx-text-fill: #fff2cf;
+    -fx-font-weight: 800;
+    -fx-padding: 8px 14px;
+}
+
+.dock-exit:hover {
+    -fx-background-color: rgba(255, 242, 207, .30);
+}
+
 .player-row {
-    -fx-text-fill: #263126;
+    -fx-text-fill: #fff2cf;
+    -fx-font-weight: 800;
 }
 
 .disconnected {
@@ -261,17 +379,17 @@
 }
 
 .ok {
-    -fx-text-fill: #2f6b3f;
+    -fx-text-fill: #8fe0d8;
     -fx-font-weight: 800;
 }
 
 .error {
-    -fx-text-fill: #9b352c;
+    -fx-text-fill: #ffb099;
     -fx-font-weight: 800;
 }
 
 .notice {
-    -fx-text-fill: #785928;
+    -fx-text-fill: #f0ce64;
     -fx-font-weight: 800;
 }
 
@@ -285,6 +403,18 @@
 }
 
 .scroll {
-    -fx-background: #30392d;
-    -fx-background-color: #30392d;
+    -fx-background: #29161f;
+    -fx-background-color: #29161f;
+}
+
+.side-panel .label,
+.lobby-root .label,
+.login-panel .label {
+    -fx-text-fill: #fff2cf;
+}
+
+.side-panel .muted,
+.lobby-root .muted,
+.login-panel .muted {
+    -fx-text-fill: #d8c0af;
 }
