@@ -55,7 +55,6 @@ public class ClientController {
             connection.send(new PongMessage());
             return;
         }
-        System.out.println("[DIAG][CC] nick=" + model.getMyNickname() + " recv=" + message.getClass().getSimpleName());
         dispatcher.accept(() -> dispatch(message));
     }
 
