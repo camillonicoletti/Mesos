@@ -43,10 +43,14 @@
 }
 
 .game-board {
-    -fx-background-color: rgba(41, 22, 31, .68);
-    -fx-background-image: url("assets/ui/box_art_1.png");
+    -fx-background-color: #29161f;
+    -fx-background-image: url("assets/ui/game_background.jpeg");
     -fx-background-size: cover;
     -fx-background-position: center center;
+}
+
+.game-shell {
+    -fx-background-color: #29161f;
 }
 
 .lobby-root {
@@ -61,15 +65,12 @@
 }
 
 .board-instruction {
-    -fx-background-color: linear-gradient(to right, rgba(216, 73, 49, .94), rgba(232, 89, 47, .92));
-    -fx-background-radius: 7px;
-    -fx-border-color: rgba(255, 199, 105, .2);
-    -fx-border-radius: 7px;
-    -fx-padding: 13px 22px;
+    -fx-background-color: transparent;
+    -fx-padding: 6px 22px 10px 22px;
     -fx-text-fill: #fff4d6;
-    -fx-font-size: 19px;
+    -fx-font-size: 20px;
     -fx-font-weight: 900;
-    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .36), 16, 0, 0, 5);
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .88), 9, 0, 0, 2);
 }
 
 .market-band {
@@ -83,23 +84,21 @@
 }
 
 .card-row {
-    -fx-background-color: rgba(255, 229, 215, .14);
-    -fx-background-radius: 8px;
-    -fx-padding: 10px;
+    -fx-background-color: transparent;
+    -fx-padding: 0;
 }
 
 .turn-strip {
-    -fx-background-color: rgba(55, 22, 34, .42);
-    -fx-background-radius: 8px;
-    -fx-padding: 10px;
-    -fx-min-width: 280px;
-    -fx-pref-width: 315px;
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-min-width: 240px;
+    -fx-pref-width: 275px;
 }
 
 .offer-strip {
     -fx-background-color: transparent;
     -fx-padding: 0;
-    -fx-min-width: 720px;
+    -fx-min-width: 760px;
 }
 
 .card-row .section-title,
@@ -158,18 +157,14 @@
 }
 
 .card {
-    -fx-background-color: rgba(255, 244, 218, .95);
-    -fx-border-color: rgba(255, 244, 218, .86);
-    -fx-border-width: 1.5px;
-    -fx-border-radius: 7px;
-    -fx-background-radius: 7px;
-    -fx-padding: 6px;
-    -fx-effect: dropshadow(three-pass-box, rgba(20, 16, 10, .22), 7, 0, 0, 2);
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+    -fx-effect: dropshadow(three-pass-box, rgba(20, 16, 10, .34), 9, 0, 0, 3);
 }
 
 .card:hover {
-    -fx-border-color: #f0ce64;
-    -fx-effect: dropshadow(three-pass-box, rgba(240, 206, 100, .50), 18, 0, 0, 4);
+    -fx-effect: dropshadow(three-pass-box, rgba(240, 206, 100, .64), 18, 0, 0, 4);
 }
 
 .card:disabled {
@@ -198,26 +193,26 @@
 .turn-slot,
 .turn-slot-active,
 .turn-slot-done {
-    -fx-background-radius: 7px;
-    -fx-border-radius: 7px;
-    -fx-padding: 8px 10px;
+    -fx-background-radius: 99px;
+    -fx-border-radius: 99px;
+    -fx-padding: 6px 9px;
 }
 
 .turn-slot-done {
-    -fx-background-color: rgba(255, 233, 202, .16);
-    -fx-border-color: rgba(255, 233, 202, .24);
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
     -fx-opacity: 0.6;
 }
 
 .turn-slot {
-    -fx-background-color: rgba(255, 233, 202, .20);
-    -fx-border-color: rgba(255, 233, 202, .35);
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
 }
 
 .turn-slot-active {
-    -fx-background-color: rgba(47, 143, 132, .88);
-    -fx-border-color: #f0ce64;
-    -fx-effect: dropshadow(three-pass-box, rgba(47, 143, 132, .48), 12, 0, 0, 3);
+    -fx-background-color: rgba(47, 143, 132, .72);
+    -fx-border-color: rgba(255, 244, 218, .35);
+    -fx-effect: dropshadow(three-pass-box, rgba(47, 143, 132, .55), 12, 0, 0, 3);
 }
 
 .turn-slot-active .label {
@@ -233,10 +228,14 @@
 
 .turn-name {
     -fx-font-weight: 800;
+    -fx-text-fill: #fff2cf;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .72), 4, 0, 0, 1);
 }
 
 .turn-effect {
     -fx-font-size: 11px;
+    -fx-text-fill: #fff2cf;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .72), 4, 0, 0, 1);
 }
 
 .totem-dot {
@@ -253,7 +252,7 @@
 .offer-tile-occupied {
     -fx-background-radius: 8px;
     -fx-border-radius: 8px;
-    -fx-padding: 2px;
+    -fx-padding: 0;
     -fx-text-fill: #263126;
 }
 
@@ -265,12 +264,13 @@
 
 .offer-tile:hover {
     -fx-border-color: rgba(240, 206, 100, .72);
-    -fx-background-color: rgba(255, 241, 207, .20);
+    -fx-background-color: transparent;
+    -fx-effect: dropshadow(three-pass-box, rgba(240, 206, 100, .70), 18, 0, 0, 4);
 }
 
 .offer-tile-occupied {
-    -fx-background-color: rgba(35, 17, 24, .22);
-    -fx-border-color: rgba(255, 226, 168, .35);
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
 }
 
 .offer-tile:disabled,
@@ -297,10 +297,8 @@
 }
 
 .player-dock {
-    -fx-background-color: rgba(58, 24, 37, .52);
-    -fx-background-radius: 10px;
-    -fx-padding: 12px 14px;
-    -fx-effect: dropshadow(three-pass-box, rgba(18, 8, 12, .25), 16, 0, 0, 5);
+    -fx-background-color: transparent;
+    -fx-padding: 6px 8px 0 8px;
 }
 
 .table-status {
@@ -325,18 +323,19 @@
 }
 
 .player-summary {
-    -fx-background-color: rgba(255, 232, 207, .16);
-    -fx-background-radius: 8px;
+    -fx-background-color: transparent;
     -fx-padding: 9px 12px;
     -fx-min-width: 190px;
 }
 
 .player-summary-me {
-    -fx-background-color: rgba(240, 206, 100, .24);
+    -fx-background-color: rgba(240, 206, 100, .16);
+    -fx-background-radius: 8px;
 }
 
 .player-summary-current {
-    -fx-background-color: rgba(70, 180, 165, .28);
+    -fx-background-color: rgba(70, 180, 165, .18);
+    -fx-background-radius: 8px;
 }
 
 .player-summary-disconnected {
@@ -346,12 +345,14 @@
 .player-summary-name {
     -fx-text-fill: #fff2cf;
     -fx-font-weight: 900;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .75), 4, 0, 0, 1);
 }
 
 .player-summary-stat {
     -fx-text-fill: #dcc8b5;
     -fx-font-size: 12px;
     -fx-font-weight: 700;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .72), 4, 0, 0, 1);
 }
 
 .dock-exit {
@@ -404,6 +405,10 @@
 
 .scroll {
     -fx-background: #29161f;
+    -fx-background-color: #29161f;
+}
+
+.scroll > .viewport {
     -fx-background-color: #29161f;
 }
 

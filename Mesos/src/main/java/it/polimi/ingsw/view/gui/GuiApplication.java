@@ -111,10 +111,13 @@ public final class GuiApplication extends Application {
     }
 
     private void renderGame() {
-        BorderPane layout = shell("Partita", stateLabel());
+        BorderPane layout = new BorderPane();
+        layout.getStyleClass().add("game-shell");
+        timerLabel = null;
 
         ScrollPane scroll = new ScrollPane(new GameBoardView(controller, model, assetCatalog).render());
         scroll.setFitToWidth(true);
+        scroll.setFitToHeight(true);
         scroll.getStyleClass().add("scroll");
         layout.setCenter(scroll);
         root.setCenter(layout);

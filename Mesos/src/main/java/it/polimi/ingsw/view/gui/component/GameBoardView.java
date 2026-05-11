@@ -11,12 +11,10 @@ import it.polimi.ingsw.network.protocol.serverbound.GameActionMessage;
 import it.polimi.ingsw.view.gui.asset.CardAsset;
 import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
 import it.polimi.ingsw.view.gui.util.GuiAnimations;
-import it.polimi.ingsw.view.gui.util.GuiIcons;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
-import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -29,7 +27,6 @@ import javafx.scene.layout.VBox;
 
 import java.io.InputStream;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -41,16 +38,6 @@ public final class GameBoardView {
     private static final Map<Character, Integer> TILE_MIN_PLAYERS = Map.of(
             'A', 5, 'B', 2, 'C', 2, 'D', 3, 'E', 2, 'F', 2, 'G', 4
     );
-    private static final Map<Character, String> TILE_EFFECTS = new LinkedHashMap<>() {{
-        put('A', "+3 cibo");
-        put('B', "1 carta sotto");
-        put('C', "1 carta sopra");
-        put('D', "2 carte sotto");
-        put('E', "1 sopra + 1 sotto");
-        put('F', "2 carte sopra");
-        put('G', "2 sopra + 1 sotto");
-    }};
-
     private final ClientController controller;
     private final ClientModel model;
     private final GuiAssetCatalog assetCatalog;
@@ -166,7 +153,7 @@ public final class GameBoardView {
         VBox panel = new VBox(8);
         panel.getStyleClass().add("offer-strip");
 
-        FlowPane pane = new FlowPane(12, 12);
+        FlowPane pane = new FlowPane(4, 4);
         pane.setAlignment(Pos.CENTER);
         for (char tile : activeOfferTiles()) {
             String owner = model.getTotemOnTiles().get(tile);
@@ -184,7 +171,7 @@ public final class GameBoardView {
 
     private Button offerTileButton(char tile, String owner) {
         String path = "gui/assets/board/offer_" + tile + ".png";
-        VBox content = new VBox(6);
+        StackPane content = new StackPane();
         content.setAlignment(Pos.CENTER);
 
         try (InputStream stream = assetCatalog.openResource(path).orElse(null)) {
@@ -192,8 +179,8 @@ public final class GameBoardView {
                 Image image = new Image(stream);
                 ImageView view = new ImageView(image);
                 view.setPreserveRatio(true);
-                view.setFitWidth(156);
-                view.setFitHeight(92);
+                view.setFitWidth(215);
+                view.setFitHeight(138);
                 content.getChildren().add(view);
             }
         } catch (Exception ignored) {
@@ -205,12 +192,6 @@ public final class GameBoardView {
             letter.getStyleClass().add("offer-letter");
             content.getChildren().add(letter);
         }
-
-        Label effect = new Label(TILE_EFFECTS.getOrDefault(tile, ""));
-        effect.setGraphic(GuiIcons.tileIcon(tile));
-        effect.setContentDisplay(ContentDisplay.LEFT);
-        effect.getStyleClass().add("offer-effect");
-        content.getChildren().add(effect);
 
         if (owner != null) {
             PlayerView player = model.getPlayers().get(owner);
@@ -224,17 +205,14 @@ public final class GameBoardView {
             Label initial = new Label(owner.isEmpty() ? "?" : String.valueOf(owner.charAt(0)).toUpperCase());
             initial.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14;");
             badge.getChildren().addAll(circle, initial);
-            Label ownerLabel = new Label(owner);
-            ownerLabel.getStyleClass().add("offer-owner");
-            VBox ownerBox = new VBox(3, badge, ownerLabel);
-            ownerBox.setAlignment(Pos.CENTER);
-            content.getChildren().add(ownerBox);
+            content.getChildren().add(badge);
+            StackPane.setAlignment(badge, Pos.TOP_CENTER);
         }
 
         Button button = new Button();
         button.getStyleClass().add(owner == null ? "offer-tile" : "offer-tile-occupied");
         button.setGraphic(content);
-        button.setPrefSize(188, 148);
+        button.setPrefSize(228, 154);
         return button;
     }
 
@@ -316,7 +294,6 @@ public final class GameBoardView {
     private VBox cardRow(String title, List<Integer> ids, boolean upper, boolean building) {
         VBox box = new VBox(8);
         box.getStyleClass().add("card-row");
-        box.getChildren().add(sectionTitle(title));
         FlowPane cards = new FlowPane(12, 12);
         cards.setAlignment(Pos.CENTER);
         for (Integer id : ids) {
