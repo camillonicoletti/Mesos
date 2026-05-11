@@ -49,11 +49,19 @@ public final class SnapshotBuilder {
         List<Integer> lowerCharAndEvent = new ArrayList<>();
         List<Integer> upperBuild = new ArrayList<>();
         List<Integer> lowerBuild = new ArrayList<>();
+        List<Integer> upperEvents = new ArrayList<>();
+        List<Integer> lowerEvents = new ArrayList<>();
         if (round != null) {
             for (CharacterCard c : round.getUpperRowTribute()) upperCharAndEvent.add(c.getId());
-            for (EventCard e : round.getUpperRowEvents())     upperCharAndEvent.add(e.getId());
+            for (EventCard e : round.getUpperRowEvents()) {
+                upperCharAndEvent.add(e.getId());
+                upperEvents.add(e.getId());
+            }
             for (CharacterCard c : round.getLowerRowTribute()) lowerCharAndEvent.add(c.getId());
-            for (EventCard e : round.getLowerRowEvents())     lowerCharAndEvent.add(e.getId());
+            for (EventCard e : round.getLowerRowEvents()) {
+                lowerCharAndEvent.add(e.getId());
+                lowerEvents.add(e.getId());
+            }
             for (BuildingCard b : round.getUpperRowBuildings()) upperBuild.add(b.getId());
             for (BuildingCard b : round.getLowerRowBuildings()) lowerBuild.add(b.getId());
         }
@@ -101,7 +109,8 @@ public final class SnapshotBuilder {
                 round != null ? round.getNumber() : 0,
                 totemOnTiles,
                 turnOrder,
-                disconnectedPlayers
+                disconnectedPlayers,
+                upperEvents, lowerEvents
         );
     }
 }

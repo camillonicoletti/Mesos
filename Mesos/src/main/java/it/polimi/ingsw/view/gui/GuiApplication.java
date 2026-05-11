@@ -52,12 +52,13 @@ public final class GuiApplication extends Application {
 
         controller = launchContext.controller();
         model = launchContext.model();
+        controller.setDispatcher(Platform::runLater);
         assetCatalog = GuiAssetCatalog.loadDefault();
         root = new BorderPane();
         root.getStyleClass().add("app");
         Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
 
-        model.addListener(() -> Platform.runLater(this::render));
+        model.addListener(this::render);
 
         Scene scene = new Scene(root, 1280, 820);
         scene.getStylesheets().add(cssResource());

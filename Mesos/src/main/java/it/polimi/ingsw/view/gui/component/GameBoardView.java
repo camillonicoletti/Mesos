@@ -28,10 +28,12 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 import java.io.InputStream;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public final class GameBoardView {
@@ -88,6 +90,8 @@ public final class GameBoardView {
 
         List<String> order = visibleTurnOrder();
         String current = currentTurnNickname();
+        Set<String> placedPlayers = new HashSet<>(model.getTotemOnTiles().values());
+        boolean isTotemPhase = "TotemPlacementState".equals(model.getGameState());
 
         if (order.isEmpty()) {
             Label empty = new Label("In attesa dei piazzamenti");
@@ -101,7 +105,12 @@ public final class GameBoardView {
             PlayerView player = model.getPlayers().get(nickname);
             HBox row = new HBox(8);
             row.setAlignment(Pos.CENTER_LEFT);
-            row.getStyleClass().add(nickname.equals(current) ? "turn-slot-active" : "turn-slot");
+
+            boolean hasPlaced = isTotemPhase && placedPlayers.contains(nickname);
+            String slotStyle = nickname.equals(current) ? "turn-slot-active"
+                    : hasPlaced ? "turn-slot-done"
+                    : "turn-slot";
+            row.getStyleClass().add(slotStyle);
 
             Label position = new Label(String.valueOf(i + 1));
             position.getStyleClass().add("turn-position");
@@ -109,10 +118,19 @@ public final class GameBoardView {
             Region totem = totemDot(player == null ? null : player.getTotemColor());
             Label name = new Label(nickname);
             name.getStyleClass().add("turn-name");
-            Label effect = new Label(turnEffectLabel(i + 1));
-            effect.getStyleClass().add("turn-effect");
 
-            row.getChildren().addAll(position, totem, name, spacer(), effect);
+            row.getChildren().addAll(position, totem, name, spacer());
+
+            if (hasPlaced) {
+                Label done = new Label("✓");
+                done.getStyleClass().add("turn-effect");
+                row.getChildren().add(done);
+            } else {
+                Label effect = new Label(turnEffectLabel(i + 1));
+                effect.getStyleClass().add("turn-effect");
+                row.getChildren().add(effect);
+            }
+
             if (nickname.equals(current)) {
                 GuiAnimations.pulse(row);
             }
@@ -174,9 +192,20 @@ public final class GameBoardView {
 
         if (owner != null) {
             PlayerView player = model.getPlayers().get(owner);
-            HBox ownerBox = new HBox(6, totemDot(player == null ? null : player.getTotemColor()), new Label(owner));
+            TotemColor color = player == null ? null : player.getTotemColor();
+            StackPane badge = new StackPane();
+            Region circle = new Region();
+            circle.setPrefSize(36, 36);
+            circle.setMinSize(36, 36);
+            circle.setStyle("-fx-background-color: " + totemColorHex(color) + ";"
+                    + "-fx-background-radius: 18;");
+            Label initial = new Label(owner.isEmpty() ? "?" : String.valueOf(owner.charAt(0)).toUpperCase());
+            initial.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14;");
+            badge.getChildren().addAll(circle, initial);
+            Label ownerLabel = new Label(owner);
+            ownerLabel.getStyleClass().add("offer-owner");
+            VBox ownerBox = new VBox(3, badge, ownerLabel);
             ownerBox.setAlignment(Pos.CENTER);
-            ownerBox.getStyleClass().add("offer-owner");
             content.getChildren().add(ownerBox);
         }
 
@@ -194,8 +223,9 @@ public final class GameBoardView {
         FlowPane cards = new FlowPane(12, 12);
         cards.setAlignment(Pos.CENTER_LEFT);
         for (Integer id : ids) {
+            boolean isEvent = !building && model.isEventCard(id);
             Node card = cardNode(id, () -> {
-                if (!model.isMyTurn()) {
+                if (isEvent || !model.isMyTurn()) {
                     return;
                 }
                 if (building) {
@@ -204,7 +234,7 @@ public final class GameBoardView {
                     controller.send(new GameActionMessage(new PickCardAction(String.valueOf(id), upper)));
                 }
             });
-            card.setDisable(!model.isMyTurn());
+            card.setDisable(isEvent || !canPickFromRow(upper));
             GuiAnimations.addHoverScale(card);
             cards.getChildren().add(card);
         }
@@ -241,6 +271,26 @@ public final class GameBoardView {
         return card;
     }
 
+    private char getMyCurrentTile() {
+        String me = model.getMyNickname();
+        if (me == null) return 0;
+        for (Map.Entry<Character, String> entry : model.getTotemOnTiles().entrySet()) {
+            if (me.equals(entry.getValue())) return entry.getKey();
+        }
+        return 0;
+    }
+
+    private boolean canPickFromRow(boolean upper) {
+        if (!model.isMyTurn()) return false;
+        char tile = getMyCurrentTile();
+        return switch (tile) {
+            case 'B', 'D' -> !upper;
+            case 'C', 'F' -> upper;
+            case 'E', 'G' -> true;
+            default -> false;
+        };
+    }
+
     private List<Character> activeOfferTiles() {
         int players = Math.max(2, model.getPlayers().isEmpty()
                 ? model.getExpectedPlayers()
@@ -256,9 +306,7 @@ public final class GameBoardView {
             return ordered.isEmpty() ? model.getTurnOrder() : ordered;
         }
 
-        List<String> placedPlayers = List.copyOf(model.getTotemOnTiles().values());
         return model.getTurnOrder().stream()
-                .filter(name -> !placedPlayers.contains(name))
                 .filter(name -> !model.isPlayerDisconnected(name))
                 .collect(Collectors.toList());
     }
@@ -274,16 +322,16 @@ public final class GameBoardView {
     private String turnEffectLabel(int position) {
         int numPlayers = Math.max(2, Math.max(model.getPlayers().size(), model.getTurnOrder().size()));
         if (numPlayers == 2) {
-            return position == 1 ? "+2 cibo" : "-";
+            return position == 1 ? "+2 cibo" : "ultimo: -1 cibo o -2 PP";
         }
         if (numPlayers == 3) {
-            return position == 1 ? "+2 cibo" : position == 3 ? "-1 cibo +3 PP" : "-";
+            return position == 1 ? "+2 cibo" : position == 3 ? "ultimo: -1 cibo o -2 PP" : "-";
         }
         return switch (position) {
             case 1 -> "+2 cibo";
             case 3 -> "-1 cibo +3 PP";
-            case 4 -> "-";
-            case 5 -> "-2 cibo +6 PP";
+            case 4 -> numPlayers == 4 ? "ultimo: -1 cibo o -2 PP" : "-";
+            case 5 -> "ultimo: -1 cibo o -2 PP";
             default -> "-";
         };
     }

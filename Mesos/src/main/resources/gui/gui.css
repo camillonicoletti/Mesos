@@ -152,10 +152,17 @@
 }
 
 .turn-slot,
-.turn-slot-active {
+.turn-slot-active,
+.turn-slot-done {
     -fx-background-radius: 7px;
     -fx-border-radius: 7px;
     -fx-padding: 8px 10px;
+}
+
+.turn-slot-done {
+    -fx-background-color: #c8bfa6;
+    -fx-border-color: #a08a60;
+    -fx-opacity: 0.6;
 }
 
 .turn-slot {

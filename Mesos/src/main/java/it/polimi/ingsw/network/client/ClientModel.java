@@ -54,6 +54,7 @@ public class ClientModel {
     private List<Integer> lowerRowCharacterIds = new ArrayList<>();
     private List<Integer> upperRowBuildingIds   = new ArrayList<>();
     private List<Integer> lowerRowBuildingIds   = new ArrayList<>();
+    private Set<Integer> eventCardIds = new HashSet<>();
 
     private Map<String, PlayerView> players = new LinkedHashMap<>();
 
@@ -137,6 +138,9 @@ public class ClientModel {
         lowerRowCharacterIds = new ArrayList<>(snap.getLowerRowCharacterAndEventIds());
         upperRowBuildingIds  = new ArrayList<>(snap.getUpperRowBuildingIds());
         lowerRowBuildingIds  = new ArrayList<>(snap.getLowerRowBuildingIds());
+        eventCardIds = new HashSet<>();
+        eventCardIds.addAll(snap.getUpperRowEventIds());
+        eventCardIds.addAll(snap.getLowerRowEventIds());
         clearCurrentActionPlayerIfDisconnected();
         notifyChanged();
     }
@@ -168,10 +172,16 @@ public class ClientModel {
 
     public void applyEventResolved(EventResolvedMessage m) {
         lastError = null;
-        lastResolvedEventCardId       = m.getCardId();
-        lastResolvedEventTitle        = m.getTitle();
-        lastResolvedEventDescription  = m.getDescription();
+        lastResolvedEventCardId      = m.getCardId();
+        lastResolvedEventTitle       = m.getTitle();
+        lastResolvedEventDescription = m.getDescription();
         lastResolvedEventEffects     = m.getEffects() != null ? m.getEffects() : List.of();
+        for (EventResolvedMessage.PlayerEffect effect : lastResolvedEventEffects) {
+            replacePlayer(effect.getNickname(), old -> new PlayerView(
+                    old.getNickname(), old.getTotemColor(),
+                    effect.getNewFood(), effect.getNewPoints(),
+                    old.getCharacterCardIds(), old.getBuildingCardIds()));
+        }
         notifyChanged();
     }
 
@@ -326,6 +336,7 @@ public class ClientModel {
     public List<Integer> getLowerRowCharacterIds() { return Collections.unmodifiableList(lowerRowCharacterIds); }
     public List<Integer> getUpperRowBuildingIds()  { return Collections.unmodifiableList(upperRowBuildingIds); }
     public List<Integer> getLowerRowBuildingIds()  { return Collections.unmodifiableList(lowerRowBuildingIds); }
+    public boolean isEventCard(int id)             { return eventCardIds.contains(id); }
     public String getWinnerNickname()              { return winnerNickname; }
     public Map<String, Integer> getFinalScores()   { return Collections.unmodifiableMap(finalScores); }
     public boolean isGameSuspended()               { return gameSuspended; }

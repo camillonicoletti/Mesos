@@ -6,16 +6,28 @@ import it.polimi.ingsw.network.protocol.serverbound.DisconnectMessage;
 import it.polimi.ingsw.network.protocol.serverbound.PongMessage;
 import it.polimi.ingsw.network.transport.ClientSideConnection;
 
+import java.util.function.Consumer;
+
 public class ClientController {
 
     private final ClientModel model;
     private final ClientSideConnection connection;
+    private Consumer<Runnable> dispatcher = Runnable::run;
 
     public ClientController(ClientModel model, ClientSideConnection connection) {
         this.model = model;
         this.connection = connection;
         connection.setOnMessage(this::onMessage);
         connection.setOnDisconnect(this::onDisconnect);
+    }
+
+    /**
+     * Sets the executor used to apply incoming server messages to the model.
+     * The GUI sets this to Platform::runLater so all model writes happen on
+     * the JavaFX thread and can never race with concurrent reads in render().
+     */
+    public void setDispatcher(Consumer<Runnable> dispatcher) {
+        this.dispatcher = dispatcher;
     }
 
     public void send(ClientMessage message) {
@@ -39,6 +51,14 @@ public class ClientController {
     }
 
     public void onMessage(ServerMessage message) {
+        if (message instanceof PingMessage) {
+            connection.send(new PongMessage());
+            return;
+        }
+        dispatcher.accept(() -> dispatch(message));
+    }
+
+    private void dispatch(ServerMessage message) {
         if (message instanceof LoginAckMessage m)           model.applyLoginAck(m);
         else if (message instanceof LobbyUpdateMessage m)   model.applyLobbyUpdate(m);
         else if (message instanceof GameStartedMessage m)   model.applyGameStarted(m);
@@ -55,7 +75,6 @@ public class ClientController {
         else if (message instanceof ErrorMessage m)         model.applyError(m);
         else if (message instanceof EventResolvedMessage m)        model.applyEventResolved(m);
         else if (message instanceof CurrentPlayerChangedMessage m) model.applyCurrentPlayerChanged(m);
-        else if (message instanceof PingMessage)            connection.send(new PongMessage());
         else if (message instanceof GameSuspendedMessage m)        model.applyGameSuspended(m);
         else if (message instanceof GameResumedMessage m)          model.applyGameResumed(m);
         else if (message instanceof PlayerDisconnectedMessage m)   model.applyPlayerDisconnected(m);
@@ -64,6 +83,6 @@ public class ClientController {
     }
 
     private void onDisconnect() {
-        model.applyConnectionLost("Connessione al server interrotta");
+        dispatcher.accept(() -> model.applyConnectionLost("Connessione al server interrotta"));
     }
 }

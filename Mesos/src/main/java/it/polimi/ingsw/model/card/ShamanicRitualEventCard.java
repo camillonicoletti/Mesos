@@ -69,12 +69,15 @@ public class ShamanicRitualEventCard extends EventCard {
             if (stars == minStars) playersWithLeastStars.add(player);
         }
 
-        // award PP to players with most stars — doubled if they have ShamanicRitualDoublePPEffect
+        // award PP to players with most stars — doubled only if strictly alone at the top
+        boolean soloLeader = playersWithMostStars.size() == 1;
         for (Player player : playersWithMostStars) {
             int pp = ppGain;
-            for (BuildingCard building : player.getTribe().getBuildingCards()) {
-                if (building.getEffect() instanceof ShamanicRitualDoublePPEffect) {
-                    pp *= 2;
+            if (soloLeader) {
+                for (BuildingCard building : player.getTribe().getBuildingCards()) {
+                    if (building.getEffect() instanceof ShamanicRitualDoublePPEffect) {
+                        pp *= 2;
+                    }
                 }
             }
             player.addPrestigePoints(pp);

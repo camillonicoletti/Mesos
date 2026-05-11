@@ -72,14 +72,30 @@ public final class PlayerSidebar {
         VBox box = new VBox(10);
         box.getChildren().add(sectionTitle("Giocatori"));
         for (PlayerView player : model.getPlayers().values()) {
-            Label label = new Label(player.getNickname() + "  cibo " + player.getFood()
-                    + "  PP " + player.getPrestigePoints());
-            label.setGraphic(GuiIcons.icon(model.isPlayerDisconnected(player.getNickname())
-                    ? MaterialDesignA.ACCOUNT_OFF
-                    : MaterialDesignA.ACCOUNT, 15));
-            label.setContentDisplay(ContentDisplay.LEFT);
-            label.getStyleClass().add(model.isPlayerDisconnected(player.getNickname()) ? "disconnected" : "player-row");
-            box.getChildren().add(label);
+            boolean disconnected = model.isPlayerDisconnected(player.getNickname());
+            VBox card = new VBox(3);
+            card.getStyleClass().add(disconnected ? "player-card-disconnected" : "player-card");
+
+            Label name = new Label(player.getNickname());
+            name.setGraphic(GuiIcons.icon(disconnected ? MaterialDesignA.ACCOUNT_OFF : MaterialDesignA.ACCOUNT, 15));
+            name.setContentDisplay(ContentDisplay.LEFT);
+            name.getStyleClass().add(disconnected ? "disconnected" : "player-row");
+
+            Label resources = new Label("Cibo: " + player.getFood() + "   PP: " + player.getPrestigePoints());
+            resources.getStyleClass().add("muted");
+
+            Label characters = new Label("Personaggi: " + player.getCharacterCardIds().size());
+            characters.setGraphic(GuiIcons.icon(MaterialDesignA.ACCOUNT_MULTIPLE, 13));
+            characters.setContentDisplay(ContentDisplay.LEFT);
+            characters.getStyleClass().add("muted");
+
+            Label buildings = new Label("Edifici: " + player.getBuildingCardIds().size());
+            buildings.setGraphic(GuiIcons.icon(MaterialDesignP.PINE_TREE, 13));
+            buildings.setContentDisplay(ContentDisplay.LEFT);
+            buildings.getStyleClass().add("muted");
+
+            card.getChildren().addAll(name, resources, characters, buildings);
+            box.getChildren().add(card);
         }
         return box;
     }
