@@ -23,15 +23,15 @@ class GuiAssetCatalogTest {
     void resolvesSemanticBacksByCardTypeAndEra() {
         GuiAssetCatalog catalog = GuiAssetCatalog.loadDefault();
 
-        assertEquals("gui/assets/cards/backs/back_character_era_i.png",
+        assertEquals("assets/cards/backs/back_character_era_i.png",
                 catalog.getCard(1).getBackPath());
-        assertEquals("gui/assets/cards/backs/back_character_era_ii.png",
+        assertEquals("assets/cards/backs/back_character_era_ii.png",
                 catalog.getCard(30).getBackPath());
-        assertEquals("gui/assets/cards/backs/back_character_era_iii.png",
+        assertEquals("assets/cards/backs/back_character_era_iii.png",
                 catalog.getCard(58).getBackPath());
-        assertEquals("gui/assets/cards/backs/back_event_final.png",
+        assertEquals("assets/cards/backs/back_event_final.png",
                 catalog.getCard(95).getBackPath());
-        assertEquals("gui/assets/cards/backs/back_building_era_iii.png",
+        assertEquals("assets/cards/backs/back_building_era_iii.png",
                 catalog.getCard(117).getBackPath());
     }
 
@@ -40,7 +40,7 @@ class GuiAssetCatalogTest {
         GuiAssetCatalog catalog = GuiAssetCatalog.loadDefault();
         CardAsset card = catalog.getCard(1);
 
-        assertEquals("gui/assets/cards/characters/card_001.png", card.getFrontPath());
+        assertEquals("assets/cards/characters/card_001.png", card.getFrontPath());
         assertFalse(catalog.placeholderLabelFor(card).isBlank());
     }
 }

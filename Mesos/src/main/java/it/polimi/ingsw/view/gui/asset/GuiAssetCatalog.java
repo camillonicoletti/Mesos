@@ -14,8 +14,8 @@ import java.util.Map;
 import java.util.Optional;
 
 public final class GuiAssetCatalog {
-    private static final String CARDS_MANIFEST = "gui/assets/manifest/cards.json";
-    private static final String COMPONENTS_MANIFEST = "gui/assets/manifest/components.json";
+    private static final String CARDS_MANIFEST = "assets/manifest/cards.json";
+    private static final String COMPONENTS_MANIFEST = "assets/manifest/components.json";
 
     private final Map<Integer, CardAsset> cards;
     private final Map<Integer, JsonObject> cardDetails;

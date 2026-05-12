@@ -1,0 +1,929 @@
+{
+  "backs": {
+    "characterEraI": "assets/cards/backs/back_character_era_i.png",
+    "characterEraII": "assets/cards/backs/back_character_era_ii.png",
+    "characterEraIII": "assets/cards/backs/back_character_era_iii.png",
+    "buildingEraI": "assets/cards/backs/back_building_era_i.png",
+    "buildingEraII": "assets/cards/backs/back_building_era_ii.png",
+    "buildingEraIII": "assets/cards/backs/back_building_era_iii.png",
+    "eventFinal": "assets/cards/backs/back_event_final.png"
+  },
+  "defaultCardBack": "assets/cards/backs/back_character_era_i.png",
+  "cards": {
+    "1": {
+      "id": 1,
+      "kind": "character",
+      "type": "hunter",
+      "era": "I",
+      "asset": "assets/cards/characters/card_001.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "2": {
+      "id": 2,
+      "kind": "character",
+      "type": "hunter",
+      "era": "I",
+      "asset": "assets/cards/characters/card_002.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "3": {
+      "id": 3,
+      "kind": "character",
+      "type": "hunter",
+      "era": "I",
+      "asset": "assets/cards/characters/card_003.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "4": {
+      "id": 4,
+      "kind": "character",
+      "type": "hunter",
+      "era": "I",
+      "asset": "assets/cards/characters/card_004.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "5": {
+      "id": 5,
+      "kind": "character",
+      "type": "hunter",
+      "era": "I",
+      "asset": "assets/cards/characters/card_005.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "6": {
+      "id": 6,
+      "kind": "character",
+      "type": "builder",
+      "era": "I",
+      "asset": "assets/cards/characters/card_006.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "7": {
+      "id": 7,
+      "kind": "character",
+      "type": "builder",
+      "era": "I",
+      "asset": "assets/cards/characters/card_007.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "8": {
+      "id": 8,
+      "kind": "character",
+      "type": "builder",
+      "era": "I",
+      "asset": "assets/cards/characters/card_008.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "9": {
+      "id": 9,
+      "kind": "character",
+      "type": "builder",
+      "era": "I",
+      "asset": "assets/cards/characters/card_009.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "10": {
+      "id": 10,
+      "kind": "character",
+      "type": "gatherer",
+      "era": "I",
+      "asset": "assets/cards/characters/card_010.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "11": {
+      "id": 11,
+      "kind": "character",
+      "type": "gatherer",
+      "era": "I",
+      "asset": "assets/cards/characters/card_011.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "12": {
+      "id": 12,
+      "kind": "character",
+      "type": "gatherer",
+      "era": "I",
+      "asset": "assets/cards/characters/card_012.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "13": {
+      "id": 13,
+      "kind": "character",
+      "type": "gatherer",
+      "era": "I",
+      "asset": "assets/cards/characters/card_013.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "14": {
+      "id": 14,
+      "kind": "character",
+      "type": "artist",
+      "era": "I",
+      "asset": "assets/cards/characters/card_014.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "15": {
+      "id": 15,
+      "kind": "character",
+      "type": "artist",
+      "era": "I",
+      "asset": "assets/cards/characters/card_015.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "16": {
+      "id": 16,
+      "kind": "character",
+      "type": "artist",
+      "era": "I",
+      "asset": "assets/cards/characters/card_016.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "17": {
+      "id": 17,
+      "kind": "character",
+      "type": "artist",
+      "era": "I",
+      "asset": "assets/cards/characters/card_017.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "18": {
+      "id": 18,
+      "kind": "character",
+      "type": "artist",
+      "era": "I",
+      "asset": "assets/cards/characters/card_018.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "19": {
+      "id": 19,
+      "kind": "character",
+      "type": "inventor",
+      "era": "I",
+      "asset": "assets/cards/characters/card_019.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "20": {
+      "id": 20,
+      "kind": "character",
+      "type": "inventor",
+      "era": "I",
+      "asset": "assets/cards/characters/card_020.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "21": {
+      "id": 21,
+      "kind": "character",
+      "type": "inventor",
+      "era": "I",
+      "asset": "assets/cards/characters/card_021.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "22": {
+      "id": 22,
+      "kind": "character",
+      "type": "inventor",
+      "era": "I",
+      "asset": "assets/cards/characters/card_022.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "23": {
+      "id": 23,
+      "kind": "character",
+      "type": "inventor",
+      "era": "I",
+      "asset": "assets/cards/characters/card_023.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "24": {
+      "id": 24,
+      "kind": "character",
+      "type": "inventor",
+      "era": "I",
+      "asset": "assets/cards/characters/card_024.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "25": {
+      "id": 25,
+      "kind": "character",
+      "type": "inventor",
+      "era": "I",
+      "asset": "assets/cards/characters/card_025.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "26": {
+      "id": 26,
+      "kind": "character",
+      "type": "shaman",
+      "era": "I",
+      "asset": "assets/cards/characters/card_026.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "27": {
+      "id": 27,
+      "kind": "character",
+      "type": "shaman",
+      "era": "I",
+      "asset": "assets/cards/characters/card_027.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "28": {
+      "id": 28,
+      "kind": "character",
+      "type": "shaman",
+      "era": "I",
+      "asset": "assets/cards/characters/card_028.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "29": {
+      "id": 29,
+      "kind": "character",
+      "type": "shaman",
+      "era": "I",
+      "asset": "assets/cards/characters/card_029.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "30": {
+      "id": 30,
+      "kind": "character",
+      "type": "hunter",
+      "era": "II",
+      "asset": "assets/cards/characters/card_030.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "31": {
+      "id": 31,
+      "kind": "character",
+      "type": "hunter",
+      "era": "II",
+      "asset": "assets/cards/characters/card_031.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "32": {
+      "id": 32,
+      "kind": "character",
+      "type": "hunter",
+      "era": "II",
+      "asset": "assets/cards/characters/card_032.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "33": {
+      "id": 33,
+      "kind": "character",
+      "type": "hunter",
+      "era": "II",
+      "asset": "assets/cards/characters/card_033.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "34": {
+      "id": 34,
+      "kind": "character",
+      "type": "hunter",
+      "era": "II",
+      "asset": "assets/cards/characters/card_034.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "35": {
+      "id": 35,
+      "kind": "character",
+      "type": "hunter",
+      "era": "II",
+      "asset": "assets/cards/characters/card_035.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "36": {
+      "id": 36,
+      "kind": "character",
+      "type": "builder",
+      "era": "II",
+      "asset": "assets/cards/characters/card_036.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "37": {
+      "id": 37,
+      "kind": "character",
+      "type": "builder",
+      "era": "II",
+      "asset": "assets/cards/characters/card_037.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "38": {
+      "id": 38,
+      "kind": "character",
+      "type": "builder",
+      "era": "II",
+      "asset": "assets/cards/characters/card_038.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "39": {
+      "id": 39,
+      "kind": "character",
+      "type": "builder",
+      "era": "II",
+      "asset": "assets/cards/characters/card_039.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "40": {
+      "id": 40,
+      "kind": "character",
+      "type": "gatherer",
+      "era": "II",
+      "asset": "assets/cards/characters/card_040.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "41": {
+      "id": 41,
+      "kind": "character",
+      "type": "gatherer",
+      "era": "II",
+      "asset": "assets/cards/characters/card_041.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "42": {
+      "id": 42,
+      "kind": "character",
+      "type": "gatherer",
+      "era": "II",
+      "asset": "assets/cards/characters/card_042.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "43": {
+      "id": 43,
+      "kind": "character",
+      "type": "gatherer",
+      "era": "II",
+      "asset": "assets/cards/characters/card_043.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "44": {
+      "id": 44,
+      "kind": "character",
+      "type": "artist",
+      "era": "II",
+      "asset": "assets/cards/characters/card_044.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "45": {
+      "id": 45,
+      "kind": "character",
+      "type": "artist",
+      "era": "II",
+      "asset": "assets/cards/characters/card_045.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "46": {
+      "id": 46,
+      "kind": "character",
+      "type": "artist",
+      "era": "II",
+      "asset": "assets/cards/characters/card_046.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "47": {
+      "id": 47,
+      "kind": "character",
+      "type": "artist",
+      "era": "II",
+      "asset": "assets/cards/characters/card_047.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "48": {
+      "id": 48,
+      "kind": "character",
+      "type": "inventor",
+      "era": "II",
+      "asset": "assets/cards/characters/card_048.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "49": {
+      "id": 49,
+      "kind": "character",
+      "type": "inventor",
+      "era": "II",
+      "asset": "assets/cards/characters/card_049.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "50": {
+      "id": 50,
+      "kind": "character",
+      "type": "inventor",
+      "era": "II",
+      "asset": "assets/cards/characters/card_050.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "51": {
+      "id": 51,
+      "kind": "character",
+      "type": "inventor",
+      "era": "II",
+      "asset": "assets/cards/characters/card_051.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "52": {
+      "id": 52,
+      "kind": "character",
+      "type": "inventor",
+      "era": "II",
+      "asset": "assets/cards/characters/card_052.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "53": {
+      "id": 53,
+      "kind": "character",
+      "type": "inventor",
+      "era": "II",
+      "asset": "assets/cards/characters/card_053.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "54": {
+      "id": 54,
+      "kind": "character",
+      "type": "shaman",
+      "era": "II",
+      "asset": "assets/cards/characters/card_054.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "55": {
+      "id": 55,
+      "kind": "character",
+      "type": "shaman",
+      "era": "II",
+      "asset": "assets/cards/characters/card_055.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "56": {
+      "id": 56,
+      "kind": "character",
+      "type": "shaman",
+      "era": "II",
+      "asset": "assets/cards/characters/card_056.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "57": {
+      "id": 57,
+      "kind": "character",
+      "type": "shaman",
+      "era": "II",
+      "asset": "assets/cards/characters/card_057.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "58": {
+      "id": 58,
+      "kind": "character",
+      "type": "hunter",
+      "era": "III",
+      "asset": "assets/cards/characters/card_058.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "59": {
+      "id": 59,
+      "kind": "character",
+      "type": "hunter",
+      "era": "III",
+      "asset": "assets/cards/characters/card_059.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "60": {
+      "id": 60,
+      "kind": "character",
+      "type": "hunter",
+      "era": "III",
+      "asset": "assets/cards/characters/card_060.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "61": {
+      "id": 61,
+      "kind": "character",
+      "type": "hunter",
+      "era": "III",
+      "asset": "assets/cards/characters/card_061.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "62": {
+      "id": 62,
+      "kind": "character",
+      "type": "builder",
+      "era": "III",
+      "asset": "assets/cards/characters/card_062.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "63": {
+      "id": 63,
+      "kind": "character",
+      "type": "builder",
+      "era": "III",
+      "asset": "assets/cards/characters/card_063.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "64": {
+      "id": 64,
+      "kind": "character",
+      "type": "builder",
+      "era": "III",
+      "asset": "assets/cards/characters/card_064.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "65": {
+      "id": 65,
+      "kind": "character",
+      "type": "builder",
+      "era": "III",
+      "asset": "assets/cards/characters/card_065.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "66": {
+      "id": 66,
+      "kind": "character",
+      "type": "gatherer",
+      "era": "III",
+      "asset": "assets/cards/characters/card_066.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "67": {
+      "id": 67,
+      "kind": "character",
+      "type": "gatherer",
+      "era": "III",
+      "asset": "assets/cards/characters/card_067.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "68": {
+      "id": 68,
+      "kind": "character",
+      "type": "gatherer",
+      "era": "III",
+      "asset": "assets/cards/characters/card_068.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "69": {
+      "id": 69,
+      "kind": "character",
+      "type": "artist",
+      "era": "III",
+      "asset": "assets/cards/characters/card_069.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "70": {
+      "id": 70,
+      "kind": "character",
+      "type": "artist",
+      "era": "III",
+      "asset": "assets/cards/characters/card_070.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "71": {
+      "id": 71,
+      "kind": "character",
+      "type": "artist",
+      "era": "III",
+      "asset": "assets/cards/characters/card_071.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "72": {
+      "id": 72,
+      "kind": "character",
+      "type": "artist",
+      "era": "III",
+      "asset": "assets/cards/characters/card_072.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "73": {
+      "id": 73,
+      "kind": "character",
+      "type": "inventor",
+      "era": "III",
+      "asset": "assets/cards/characters/card_073.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "74": {
+      "id": 74,
+      "kind": "character",
+      "type": "inventor",
+      "era": "III",
+      "asset": "assets/cards/characters/card_074.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "75": {
+      "id": 75,
+      "kind": "character",
+      "type": "inventor",
+      "era": "III",
+      "asset": "assets/cards/characters/card_075.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "76": {
+      "id": 76,
+      "kind": "character",
+      "type": "inventor",
+      "era": "III",
+      "asset": "assets/cards/characters/card_076.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "77": {
+      "id": 77,
+      "kind": "character",
+      "type": "inventor",
+      "era": "III",
+      "asset": "assets/cards/characters/card_077.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "78": {
+      "id": 78,
+      "kind": "character",
+      "type": "inventor",
+      "era": "III",
+      "asset": "assets/cards/characters/card_078.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "79": {
+      "id": 79,
+      "kind": "character",
+      "type": "inventor",
+      "era": "III",
+      "asset": "assets/cards/characters/card_079.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "80": {
+      "id": 80,
+      "kind": "character",
+      "type": "shaman",
+      "era": "III",
+      "asset": "assets/cards/characters/card_080.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "81": {
+      "id": 81,
+      "kind": "character",
+      "type": "shaman",
+      "era": "III",
+      "asset": "assets/cards/characters/card_081.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "82": {
+      "id": 82,
+      "kind": "character",
+      "type": "shaman",
+      "era": "III",
+      "asset": "assets/cards/characters/card_082.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "83": {
+      "id": 83,
+      "kind": "character",
+      "type": "shaman",
+      "era": "III",
+      "asset": "assets/cards/characters/card_083.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "84": {
+      "id": 84,
+      "kind": "character",
+      "type": "shaman",
+      "era": "III",
+      "asset": "assets/cards/characters/card_084.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "85": {
+      "id": 85,
+      "kind": "event",
+      "type": "hunt",
+      "era": "I",
+      "asset": "assets/cards/events/card_085.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "86": {
+      "id": 86,
+      "kind": "event",
+      "type": "sustenance",
+      "era": "I",
+      "asset": "assets/cards/events/card_086.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "87": {
+      "id": 87,
+      "kind": "event",
+      "type": "shamanicRitual",
+      "era": "I",
+      "asset": "assets/cards/events/card_087.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "88": {
+      "id": 88,
+      "kind": "event",
+      "type": "cavePaintings",
+      "era": "I",
+      "asset": "assets/cards/events/card_088.png",
+      "backAsset": "assets/cards/backs/back_character_era_i.png"
+    },
+    "89": {
+      "id": 89,
+      "kind": "event",
+      "type": "hunt",
+      "era": "II",
+      "asset": "assets/cards/events/card_089.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "90": {
+      "id": 90,
+      "kind": "event",
+      "type": "sustenance",
+      "era": "II",
+      "asset": "assets/cards/events/card_090.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "91": {
+      "id": 91,
+      "kind": "event",
+      "type": "shamanicRitual",
+      "era": "II",
+      "asset": "assets/cards/events/card_091.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "92": {
+      "id": 92,
+      "kind": "event",
+      "type": "cavePaintings",
+      "era": "II",
+      "asset": "assets/cards/events/card_092.png",
+      "backAsset": "assets/cards/backs/back_character_era_ii.png"
+    },
+    "93": {
+      "id": 93,
+      "kind": "event",
+      "type": "hunt",
+      "era": "III",
+      "asset": "assets/cards/events/card_093.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "94": {
+      "id": 94,
+      "kind": "event",
+      "type": "cavePaintings",
+      "era": "III",
+      "asset": "assets/cards/events/card_094.png",
+      "backAsset": "assets/cards/backs/back_character_era_iii.png"
+    },
+    "95": {
+      "id": 95,
+      "kind": "event",
+      "type": "sustenance",
+      "era": "III",
+      "asset": "assets/cards/events/card_095.png",
+      "backAsset": "assets/cards/backs/back_event_final.png"
+    },
+    "96": {
+      "id": 96,
+      "kind": "event",
+      "type": "shamanicRitual",
+      "era": "III",
+      "asset": "assets/cards/events/card_096.png",
+      "backAsset": "assets/cards/backs/back_event_final.png"
+    },
+    "97": {
+      "id": 97,
+      "kind": "building",
+      "era": "I",
+      "asset": "assets/cards/buildings/card_097.png",
+      "backAsset": "assets/cards/backs/back_building_era_i.png"
+    },
+    "98": {
+      "id": 98,
+      "kind": "building",
+      "era": "I",
+      "asset": "assets/cards/buildings/card_098.png",
+      "backAsset": "assets/cards/backs/back_building_era_i.png"
+    },
+    "99": {
+      "id": 99,
+      "kind": "building",
+      "era": "I",
+      "asset": "assets/cards/buildings/card_099.png",
+      "backAsset": "assets/cards/backs/back_building_era_i.png"
+    },
+    "100": {
+      "id": 100,
+      "kind": "building",
+      "era": "I",
+      "asset": "assets/cards/buildings/card_100.png",
+      "backAsset": "assets/cards/backs/back_building_era_i.png"
+    },
+    "101": {
+      "id": 101,
+      "kind": "building",
+      "era": "I",
+      "asset": "assets/cards/buildings/card_101.png",
+      "backAsset": "assets/cards/backs/back_building_era_i.png"
+    },
+    "102": {
+      "id": 102,
+      "kind": "building",
+      "era": "I",
+      "asset": "assets/cards/buildings/card_102.png",
+      "backAsset": "assets/cards/backs/back_building_era_i.png"
+    },
+    "103": {
+      "id": 103,
+      "kind": "building",
+      "era": "II",
+      "asset": "assets/cards/buildings/card_103.png",
+      "backAsset": "assets/cards/backs/back_building_era_ii.png"
+    },
+    "104": {
+      "id": 104,
+      "kind": "building",
+      "era": "II",
+      "asset": "assets/cards/buildings/card_104.png",
+      "backAsset": "assets/cards/backs/back_building_era_ii.png"
+    },
+    "105": {
+      "id": 105,
+      "kind": "building",
+      "era": "II",
+      "asset": "assets/cards/buildings/card_105.png",
+      "backAsset": "assets/cards/backs/back_building_era_ii.png"
+    },
+    "106": {
+      "id": 106,
+      "kind": "building",
+      "era": "II",
+      "asset": "assets/cards/buildings/card_106.png",
+      "backAsset": "assets/cards/backs/back_building_era_ii.png"
+    },
+    "107": {
+      "id": 107,
+      "kind": "building",
+      "era": "II",
+      "asset": "assets/cards/buildings/card_107.png",
+      "backAsset": "assets/cards/backs/back_building_era_ii.png"
+    },
+    "108": {
+      "id": 108,
+      "kind": "building",
+      "era": "II",
+      "asset": "assets/cards/buildings/card_108.png",
+      "backAsset": "assets/cards/backs/back_building_era_ii.png"
+    },
+    "109": {
+      "id": 109,
+      "kind": "building",
+      "era": "II",
+      "asset": "assets/cards/buildings/card_109.png",
+      "backAsset": "assets/cards/backs/back_building_era_ii.png"
+    },
+    "110": {
+      "id": 110,
+      "kind": "building",
+      "era": "III",
+      "asset": "assets/cards/buildings/card_110.png",
+      "backAsset": "assets/cards/backs/back_building_era_iii.png"
+    },
+    "111": {
+      "id": 111,
+      "kind": "building",
+      "era": "III",
+      "asset": "assets/cards/buildings/card_111.png",
+      "backAsset": "assets/cards/backs/back_building_era_iii.png"
+    },
+    "112": {
+      "id": 112,
+      "kind": "building",
+      "era": "III",
+      "asset": "assets/cards/buildings/card_112.png",
+      "backAsset": "assets/cards/backs/back_building_era_iii.png"
+    },
+    "113": {
+      "id": 113,
+      "kind": "building",
+      "era": "III",
+      "asset": "assets/cards/buildings/card_113.png",
+      "backAsset": "assets/cards/backs/back_building_era_iii.png"
+    },
+    "114": {
+      "id": 114,
+      "kind": "building",
+      "era": "III",
+      "asset": "assets/cards/buildings/card_114.png",
+      "backAsset": "assets/cards/backs/back_building_era_iii.png"
+    },
+    "115": {
+      "id": 115,
+      "kind": "building",
+      "era": "III",
+      "asset": "assets/cards/buildings/card_115.png",
+      "backAsset": "assets/cards/backs/back_building_era_iii.png"
+    },
+    "116": {
+      "id": 116,
+      "kind": "building",
+      "era": "III",
+      "asset": "assets/cards/buildings/card_116.png",
+      "backAsset": "assets/cards/backs/back_building_era_iii.png"
+    },
+    "117": {
+      "id": 117,
+      "kind": "building",
+      "era": "III",
+      "asset": "assets/cards/buildings/card_117.png",
+      "backAsset": "assets/cards/backs/back_building_era_iii.png"
+    }
+  }
+}

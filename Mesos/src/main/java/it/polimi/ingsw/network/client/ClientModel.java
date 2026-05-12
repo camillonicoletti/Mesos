@@ -173,6 +173,7 @@ public class ClientModel {
 
     public void applyTotemPlaced(TotemPlacedMessage m) {
         lastError = null;
+        turnOrder.remove(m.getNickname());
         totemOnTiles.put(m.getTileId(), m.getNickname());
         notifyChanged();
     }

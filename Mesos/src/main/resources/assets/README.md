@@ -26,13 +26,12 @@ Expected layout:
 - manifest/cards.json
 - manifest/components.json
 
-The current component manifest uses extracted reference sheets for fustelle and
-pedine. Individual token and offer-tile images can be added later after manual
-crop validation; until then GUI code should use the fallback color/text values.
+Image files in this folder are professor-provided local assets and are ignored
+by git. The tracked manifest files document the expected runtime names; keep
+the local PNG/JPEG files next to them when running the GUI.
 
 Original source PDFs currently live outside the project at:
 
 /Users/giorgio/Desktop/Risorse Grafiche Mesos
 
-Keep those as source material, but commit only the extracted assets needed by
-the GUI.
+Keep those as source material. Do not commit the extracted PNG/JPEG assets.

@@ -9,15 +9,14 @@
 
 # Ignore game assets
 assets/*
-src/main/resources/assets/
 mesos-savestate.bin
 
-# Professor-provided GUI assets must stay local and must not be pushed.
-src/main/resources/gui/assets/**/*.png
-src/main/resources/gui/assets/**/*.jpg
-src/main/resources/gui/assets/**/*.jpeg
-src/main/resources/gui/assets/**/*.pdf
-src/main/resources/gui/assets/**/*.webp
+# Professor-provided assets must stay local and must not be pushed.
+src/main/resources/assets/**/*.png
+src/main/resources/assets/**/*.jpg
+src/main/resources/assets/**/*.jpeg
+src/main/resources/assets/**/*.pdf
+src/main/resources/assets/**/*.webp
 Risorse Grafiche Mesos/
 **/Risorse Grafiche Mesos/
 Box_ITA_ART.pdf
@@ -30,10 +29,10 @@ fustelle_front_prev.pdf
 fustelle_front.pdf
 pedine_specs.pdf
 
-# Keep lightweight GUI metadata tracked.
-!src/main/resources/gui/assets/README.md
-!src/main/resources/gui/assets/manifest/
-!src/main/resources/gui/assets/manifest/*.json
+# Keep lightweight metadata tracked.
+!src/main/resources/assets/README.md
+!src/main/resources/assets/manifest/
+!src/main/resources/assets/manifest/*.json
 
 # User-specific stuff
 .idea/**/workspace.xml

@@ -145,7 +145,7 @@ public final class GameBoardView {
     private Node turnOrderPanel() {
         StackPane tile = new StackPane();
         tile.getStyleClass().add("turn-order-tile");
-        String path = "gui/assets/board/turn_order_" + turnOrderTilePlayers() + ".png";
+        String path = "assets/board/turn_order_" + turnOrderTilePlayers() + ".png";
 
         try (InputStream stream = assetCatalog.openResource(path).orElse(null)) {
             if (stream != null) {
@@ -211,7 +211,7 @@ public final class GameBoardView {
         cardBack.setPrefSize(CARD_WIDTH, CARD_HEIGHT);
 
         String eraKey = eraBackKey(model.getCurrentEra());
-        String backPath = "gui/assets/cards/backs/" + eraKey + ".png";
+        String backPath = "assets/cards/backs/" + eraKey + ".png";
 
         boolean backLoaded = false;
         try (InputStream stream = assetCatalog.openResource(backPath).orElse(null)) {
@@ -242,7 +242,7 @@ public final class GameBoardView {
     }
 
     private Button offerTileButton(char tile, String owner) {
-        String path = "gui/assets/board/offer_" + tile + ".png";
+        String path = "assets/board/offer_" + tile + ".png";
 
         StackPane content = new StackPane();
         content.setAlignment(Pos.CENTER);
@@ -890,11 +890,11 @@ public final class GameBoardView {
 
     private String totemAssetPath(TotemColor color) {
         return switch (color == null ? TotemColor.WHITE : color) {
-            case RED -> "gui/assets/tokens/totem_red.png";
-            case YELLOW -> "gui/assets/tokens/totem_yellow.png";
-            case BLUE -> "gui/assets/tokens/totem_blue.png";
-            case PURPLE -> "gui/assets/tokens/totem_purple.png";
-            case WHITE -> "gui/assets/tokens/totem_white.png";
+            case RED -> "assets/tokens/totem_red.png";
+            case YELLOW -> "assets/tokens/totem_yellow.png";
+            case BLUE -> "assets/tokens/totem_blue.png";
+            case PURPLE -> "assets/tokens/totem_purple.png";
+            case WHITE -> "assets/tokens/totem_white.png";
         };
     }
 
