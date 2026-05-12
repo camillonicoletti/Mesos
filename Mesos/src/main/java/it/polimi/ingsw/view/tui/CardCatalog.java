@@ -23,10 +23,41 @@ public final class CardCatalog {
         public final String detail;    // short qualifier, e.g. "+", "[9]", "2★", "+3 -1c", "FullSet"
         public final int foodCost;     // buildings only, 0 otherwise
         public final int pointsEnd;    // buildings only, 0 otherwise
+        public final String buildingEffectName;
+        public final String buildingEffectTarget;
+        public final int buildingEffectPointsPerCard;
         public final String eventTag;  // events only, e.g. "Hunt", "Cave", ...
+        public final int eventFood;
+        public final int eventPoints;
+        public final int eventRequired;
+        public final int eventPenalty;
 
         CardInfo(int id, Kind kind, String era, String typeName, String detail,
                  int foodCost, int pointsEnd, String eventTag) {
+            this(id, kind, era, typeName, detail, foodCost, pointsEnd,
+                    "", "", 0, eventTag, 0, 0, 0, 0);
+        }
+
+        CardInfo(int id, Kind kind, String era, String typeName, String detail,
+                 int foodCost, int pointsEnd, String eventTag, int eventFood, int eventPoints) {
+            this(id, kind, era, typeName, detail, foodCost, pointsEnd,
+                    "", "", 0, eventTag, eventFood, eventPoints, 0, 0);
+        }
+
+        CardInfo(int id, Kind kind, String era, String typeName, String detail,
+                 int foodCost, int pointsEnd,
+                 String buildingEffectName, String buildingEffectTarget, int buildingEffectPointsPerCard,
+                 String eventTag) {
+            this(id, kind, era, typeName, detail, foodCost, pointsEnd,
+                    buildingEffectName, buildingEffectTarget, buildingEffectPointsPerCard,
+                    eventTag, 0, 0, 0, 0);
+        }
+
+        CardInfo(int id, Kind kind, String era, String typeName, String detail,
+                 int foodCost, int pointsEnd,
+                 String buildingEffectName, String buildingEffectTarget, int buildingEffectPointsPerCard,
+                 String eventTag,
+                 int eventFood, int eventPoints, int eventRequired, int eventPenalty) {
             this.id = id;
             this.kind = kind;
             this.era = era;
@@ -34,7 +65,14 @@ public final class CardCatalog {
             this.detail = detail;
             this.foodCost = foodCost;
             this.pointsEnd = pointsEnd;
+            this.buildingEffectName = buildingEffectName;
+            this.buildingEffectTarget = buildingEffectTarget;
+            this.buildingEffectPointsPerCard = buildingEffectPointsPerCard;
             this.eventTag = eventTag;
+            this.eventFood = eventFood;
+            this.eventPoints = eventPoints;
+            this.eventRequired = eventRequired;
+            this.eventPenalty = eventPenalty;
         }
     }
 
@@ -101,11 +139,23 @@ public final class CardCatalog {
             int cost = o.get("foodCost").getAsInt();
             int pp = o.get("pointsEndOfMatch").getAsInt();
             JsonElement effect = o.get("effect");
-            String fxName = effect.isJsonPrimitive()
-                    ? effect.getAsString()
-                    : effect.getAsJsonObject().get("name").getAsString();
+            String fxName;
+            String targetType = "";
+            int pointsPerCard = 0;
+            if (effect.isJsonPrimitive()) {
+                fxName = effect.getAsString();
+            } else {
+                JsonObject fx = effect.getAsJsonObject();
+                fxName = fx.get("name").getAsString();
+                if (fx.has("targetType")) {
+                    targetType = fx.get("targetType").getAsString();
+                }
+                if (fx.has("pointsPerCard")) {
+                    pointsPerCard = fx.get("pointsPerCard").getAsInt();
+                }
+            }
             CARDS.put(id, new CardInfo(id, Kind.BUILDING, era, "Bldg",
-                    shortFx(fxName), cost, pp, ""));
+                    shortFx(fxName), cost, pp, fxName, targetType, pointsPerCard, ""));
         }
     }
 
@@ -118,7 +168,22 @@ public final class CardCatalog {
             boolean close = o.get("closeEvent").getAsBoolean();
             String tag = shortEvType(type);
             String detail = close ? tag + "★" : tag;
-            CARDS.put(id, new CardInfo(id, Kind.EVENT, era, "Event", detail, 0, 0, tag));
+            int eventFood = "hunt".equals(type) ? o.get("foodPerHunter").getAsInt() : 0;
+            int eventPoints = switch (type) {
+                case "hunt" -> o.get("ppPerHunter").getAsInt();
+                case "cavePaintings" -> o.get("ppPerArtist").getAsInt();
+                case "shamanicRitual" -> o.get("ppGain").getAsInt();
+                default -> 0;
+            };
+            int eventRequired = "cavePaintings".equals(type) ? o.get("minArtists").getAsInt() : 0;
+            int eventPenalty = switch (type) {
+                case "cavePaintings" -> o.get("ppPenalty").getAsInt();
+                case "sustenance" -> o.get("ppPenaltyPerUnfed").getAsInt();
+                case "shamanicRitual" -> o.get("ppLoss").getAsInt();
+                default -> 0;
+            };
+            CARDS.put(id, new CardInfo(id, Kind.EVENT, era, "Event", detail, 0, 0,
+                    "", "", 0, tag, eventFood, eventPoints, eventRequired, eventPenalty));
         }
     }
 

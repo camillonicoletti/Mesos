@@ -11,6 +11,7 @@ import java.util.Scanner;
 public class Tui implements View {
 
     private static final long TRIBE_VISIBLE_MILLIS = 10_000L;
+    private static final long BUILDING_EFFECT_VISIBLE_MILLIS = 8_000L;
 
     private final ClientController controller;
     private final ClientModel model;
@@ -20,7 +21,9 @@ public class Tui implements View {
     private final Renderer renderer;
     private volatile String activePrompt;
     private volatile long tribeVisibleUntilMillis = -1L;
+    private volatile long buildingEffectVisibleUntilMillis = -1L;
     private volatile int visibleTribeNumber;
+    private volatile int visibleBuildingEffectId;
 
     public Tui(ClientController controller, ClientModel model) {
         this.controller = controller;
@@ -162,11 +165,17 @@ public class Tui implements View {
             if (line.isBlank()) {
                 if (renderer.isTribeVisible()) {
                     closeTribe();
+                } else if (renderer.isBuildingEffectVisible()) {
+                    closeBuildingEffect();
                 }
                 continue;
             }
 
             String state = model.getGameState();
+            if (isSeeEffectCommand(line)) {
+                handleSeeEffectCommand(line, state);
+                continue;
+            }
             if (isShowTribeCommand(line)) {
                 handleShowTribeCommand(line, state);
                 continue;
@@ -344,9 +353,78 @@ public class Tui implements View {
         System.out.println("  place <letter>         — place totem");
         System.out.println("  pick <id> upper|lower  — take character card");
         System.out.println("  build <id> upper|lower — take building card");
+        System.out.println("  see effect <id>        — show a building effect locally");
         System.out.println("  show tribe <n>         — show one other tribe locally");
         System.out.println("  quit                   — disconnect");
         System.out.println("  help                   — show available commands");
+    }
+
+    private boolean isSeeEffectCommand(String line) {
+        return line != null && line.trim().toLowerCase().matches("see\\s+effect\\s+\\d+");
+    }
+
+    private void handleSeeEffectCommand(String line, String state) {
+        if (!isBoardVisibleState(state)) {
+            System.out.println("[ERROR] see effect is available only while the board is visible.");
+            return;
+        }
+
+        int buildingId = parseSeeEffectId(line);
+        CardCatalog.CardInfo card = CardCatalog.get(buildingId);
+        if (card.kind != CardCatalog.Kind.BUILDING) {
+            System.out.println("[ERROR] " + buildingId + " is not a building card.");
+            return;
+        }
+        if (!model.getUpperRowBuildingIds().contains(buildingId)
+                && !model.getLowerRowBuildingIds().contains(buildingId)) {
+            System.out.println("[ERROR] Building " + buildingId + " is not visible on the board.");
+            return;
+        }
+
+        long deadline = System.currentTimeMillis() + BUILDING_EFFECT_VISIBLE_MILLIS;
+        buildingEffectVisibleUntilMillis = deadline;
+        visibleBuildingEffectId = buildingId;
+        renderer.setVisibleBuildingEffectId(buildingId);
+        renderer.render(model);
+        scheduleBuildingEffectClose(deadline, buildingId);
+    }
+
+    private boolean isBoardVisibleState(String state) {
+        return "StartGameState".equals(state)
+                || "TotemPlacementState".equals(state)
+                || "ActionResolutionState".equals(state)
+                || "SuspendedState".equals(state);
+    }
+
+    private int parseSeeEffectId(String line) {
+        String[] parts = line.trim().split("\\s+");
+        return Integer.parseInt(parts[2]);
+    }
+
+    private void scheduleBuildingEffectClose(long deadline, int buildingId) {
+        Thread closer = new Thread(() -> {
+            while (true) {
+                try {
+                    Thread.sleep(1_000L);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+
+                if (!renderer.isBuildingEffectVisible()
+                        || buildingEffectVisibleUntilMillis != deadline
+                        || visibleBuildingEffectId != buildingId) {
+                    return;
+                }
+
+                if (System.currentTimeMillis() >= deadline) {
+                    closeBuildingEffect();
+                    return;
+                }
+            }
+        });
+        closer.setDaemon(true);
+        closer.start();
     }
 
     private boolean isShowTribeCommand(String line) {
@@ -440,6 +518,16 @@ public class Tui implements View {
         tribeVisibleUntilMillis = -1L;
         visibleTribeNumber = 0;
         renderer.setVisibleTribeNumber(0, 0);
+        renderer.render(model);
+        if (activePrompt != null) {
+            System.out.print(activePrompt);
+        }
+    }
+
+    private void closeBuildingEffect() {
+        buildingEffectVisibleUntilMillis = -1L;
+        visibleBuildingEffectId = 0;
+        renderer.setVisibleBuildingEffectId(0);
         renderer.render(model);
         if (activePrompt != null) {
             System.out.print(activePrompt);

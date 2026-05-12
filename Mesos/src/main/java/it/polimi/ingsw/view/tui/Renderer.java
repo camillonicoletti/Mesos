@@ -61,6 +61,7 @@ public class Renderer {
 
     private volatile int visibleTribeNumber;
     private volatile int visibleTribeCountdownSeconds;
+    private volatile int visibleBuildingEffectId;
     private List<String> activeSideBox = List.of();
     private int activeSideBoxIndex;
     private int activeSideBoxColumnStart = -1;
@@ -74,6 +75,14 @@ public class Renderer {
 
     public boolean isTribeVisible() {
         return visibleTribeNumber > 0;
+    }
+
+    public void setVisibleBuildingEffectId(int buildingId) {
+        this.visibleBuildingEffectId = Math.max(0, buildingId);
+    }
+
+    public boolean isBuildingEffectVisible() {
+        return visibleBuildingEffectId > 0;
     }
 
     public void render(ClientModel model) {
@@ -104,8 +113,10 @@ public class Renderer {
             row("  " + RED + "!  " + model.getLastError() + RST);
         }
 
-        blank();
-        footer(model);
+        if (!"EndRoundState".equals(state) && !"EventResolutionState".equals(state)) {
+            blank();
+            footer(model);
+        }
         System.out.flush();
     }
 
@@ -1148,6 +1159,24 @@ public class Renderer {
         if (c.kind == CardCatalog.Kind.CHARACTER) {
             return drawCharacterCard(c);
         }
+        if (c.kind == CardCatalog.Kind.BUILDING) {
+            if (c.id == visibleBuildingEffectId) {
+                return drawBuildingEffectCard(c);
+            }
+            return drawBuildingCard(c);
+        }
+        if (c.kind == CardCatalog.Kind.EVENT && "Hunt".equals(c.eventTag)) {
+            return drawHuntEventCard(c);
+        }
+        if (c.kind == CardCatalog.Kind.EVENT && "Cave".equals(c.eventTag)) {
+            return drawCavePaintEventCard(c);
+        }
+        if (c.kind == CardCatalog.Kind.EVENT && "Sust".equals(c.eventTag)) {
+            return drawSustenanceEventCard(c);
+        }
+        if (c.kind == CardCatalog.Kind.EVENT && "Sham".equals(c.eventTag)) {
+            return drawShamanicRitualEventCard(c);
+        }
 
         String bc = switch (c.kind) {
             case CHARACTER -> WHT;
@@ -1185,6 +1214,166 @@ public class Renderer {
         }
 
         out[9] = bc + "+" + "-".repeat(CARD_W) + "+" + RST;
+        return out;
+    }
+
+    private String[] drawBuildingCard(CardCatalog.CardInfo c) {
+        String[] out = new String[CARD_H];
+        String bc = YLW;
+
+        out[0] = makeCardTopBorder("#" + c.id, CARD_W, bc);
+        out[1] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
+        out[2] = bc + "|" + RST + BOLD + bc + centerVisual("BUILDING", CARD_W) + RST + bc + "|" + RST;
+        out[3] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
+        out[4] = bc + "|" + RST + GRY + BOLD
+                + centerVisual(c.foodCost + "🍖  +" + c.pointsEnd + "🌟", CARD_W)
+                + RST + bc + "|" + RST;
+        out[5] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
+        out[6] = bc + "|" + RST + DIM + centerVisual("type see effect", CARD_W) + RST + bc + "|" + RST;
+        out[7] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
+        out[8] = bc + "|" + RST + DIM + centerVisual("Era " + c.era, CARD_W) + RST + bc + "|" + RST;
+        out[9] = bc + "+" + "-".repeat(CARD_W) + "+" + RST;
+
+        return out;
+    }
+
+    private String[] drawBuildingEffectCard(CardCatalog.CardInfo c) {
+        String[] out = new String[CARD_H];
+        String bc = YLW;
+        List<String> lines = buildingEffectLines(c);
+
+        out[0] = makeCardTopBorder("#" + c.id, CARD_W, bc);
+        out[1] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
+        out[2] = bc + "|" + RST + BOLD + bc + centerVisual("EFFECT", CARD_W) + RST + bc + "|" + RST;
+        out[3] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
+        out[4] = buildingEffectLine(lines, 0, WHT + BOLD);
+        out[5] = buildingEffectLine(lines, 1, WHT + BOLD);
+        out[6] = buildingEffectLine(lines, 2, YLW + BOLD);
+        out[7] = buildingEffectLine(lines, 3, YLW + BOLD);
+        out[8] = bc + "|" + RST + DIM + centerVisual("Era " + c.era, CARD_W) + RST + bc + "|" + RST;
+        out[9] = bc + "+" + "-".repeat(CARD_W) + "+" + RST;
+
+        return out;
+    }
+
+    private String buildingEffectLine(List<String> lines, int index, String color) {
+        String text = index < lines.size() ? lines.get(index) : "";
+        return YLW + "|" + RST + color + centerVisual(text, CARD_W) + RST + YLW + "|" + RST;
+    }
+
+    private List<String> buildingEffectLines(CardCatalog.CardInfo c) {
+        String target = buildingTargetName(c.buildingEffectTarget);
+        return switch (c.buildingEffectName) {
+            case "FullSetFood" -> List.of("FULL SET", "+5🍖");
+            case "SustenanceFoodDiscount" -> List.of("SUSTENANCE", target, "-1🍖 EACH");
+            case "ShamanicRitualImmunity" -> List.of("SHAMANIC", "NO LOSS");
+            case "TotemSlotFoodBonus" -> List.of("TOTEM SLOT", "+1🍖");
+            case "InventorPairFood" -> List.of("INVENTOR PAIR", "+3🍖");
+            case "ShamanicRitualDoublePP" -> List.of("SHAMANIC", "DOUBLE 🌟");
+            case "Shaman3ExtraStars" -> List.of("SHAMAN", "+3🌟");
+            case "Hunt1Food1PP" -> List.of("HUNT", "EACH HUNTER", "+1🍖 +1🌟");
+            case "EndBuilderPP" -> List.of("END GAME", "BUILDER 🌟");
+            case "CavePaintingsFood" -> List.of("CAVE PAINT", "EACH ARTIST", "+1🍖");
+            case "EndCharacterCountPP" -> List.of("END GAME", target, "+" + c.buildingEffectPointsPerCard + "🌟 EACH");
+            case "ExtraCardUpperRow" -> List.of("UPPER ROW", "+1 CARD");
+            case "EndPP" -> List.of("END GAME", "+25🌟");
+            default -> List.of("SPECIAL", "EFFECT");
+        };
+    }
+
+    private String buildingTargetName(String target) {
+        if (target == null || target.isBlank()) {
+            return "";
+        }
+        return target.toUpperCase();
+    }
+
+    private String[] drawHuntEventCard(CardCatalog.CardInfo c) {
+        String[] out = new String[CARD_H];
+        String bc = MGN;
+
+        out[0] = makeCardTopBorder("#" + c.id, CARD_W, bc);
+        out[1] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
+        out[2] = bc + "|" + RST + BOLD + bc + centerVisual("EVENT", CARD_W) + RST + bc + "|" + RST;
+        out[3] = bc + "|" + RST + BOLD + bc + centerVisual("HUNT", CARD_W) + RST + bc + "|" + RST;
+        out[4] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
+        out[5] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
+        out[6] = bc + "|" + RST + YLW + BOLD
+                + centerVisual("+" + c.eventFood + "🍖 +" + c.eventPoints + "🌟", CARD_W)
+                + RST + bc + "|" + RST;
+        out[7] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
+        out[8] = bc + "|" + RST + DIM + centerVisual("Era " + c.era, CARD_W) + RST + bc + "|" + RST;
+        out[9] = bc + "+" + "-".repeat(CARD_W) + "+" + RST;
+
+        return out;
+    }
+
+    private String[] drawCavePaintEventCard(CardCatalog.CardInfo c) {
+        String[] out = new String[CARD_H];
+        String bc = MGN;
+
+        out[0] = makeCardTopBorder("#" + c.id, CARD_W, bc);
+        out[1] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
+        out[2] = bc + "|" + RST + BOLD + bc + centerVisual("EVENT", CARD_W) + RST + bc + "|" + RST;
+        out[3] = bc + "|" + RST + BOLD + bc + centerVisual("CAVE PAINT", CARD_W) + RST + bc + "|" + RST;
+        out[4] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
+        out[5] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
+        out[6] = bc + "|" + RST + YLW + BOLD
+                + centerVisual(c.eventRequired + "🎨  +" + c.eventPoints + "🌟", CARD_W)
+                + RST + bc + "|" + RST;
+        out[7] = bc + "|" + RST + RED + BOLD
+                + centerVisual("OR -" + c.eventPenalty + "🌟", CARD_W)
+                + RST + bc + "|" + RST;
+        out[8] = bc + "|" + RST + DIM + centerVisual("Era " + c.era, CARD_W) + RST + bc + "|" + RST;
+        out[9] = bc + "+" + "-".repeat(CARD_W) + "+" + RST;
+
+        return out;
+    }
+
+    private String[] drawSustenanceEventCard(CardCatalog.CardInfo c) {
+        String[] out = new String[CARD_H];
+        String bc = MGN;
+
+        out[0] = makeCardTopBorder("#" + c.id, CARD_W, bc);
+        out[1] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
+        out[2] = bc + "|" + RST + BOLD + bc + centerVisual("EVENT", CARD_W) + RST + bc + "|" + RST;
+        out[3] = bc + "|" + RST + BOLD + bc + centerVisual("SUSTENANCE", CARD_W) + RST + bc + "|" + RST;
+        out[4] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
+        out[5] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
+        out[6] = bc + "|" + RST + RED + BOLD
+                + centerVisual("-" + c.eventPenalty + "🌟", CARD_W)
+                + RST + bc + "|" + RST;
+        out[7] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
+        out[8] = bc + "|" + RST + DIM + centerVisual("Era " + c.era, CARD_W) + RST + bc + "|" + RST;
+        out[9] = bc + "+" + "-".repeat(CARD_W) + "+" + RST;
+
+        return out;
+    }
+
+    private String[] drawShamanicRitualEventCard(CardCatalog.CardInfo c) {
+        String[] out = new String[CARD_H];
+        String bc = MGN;
+
+        out[0] = makeCardTopBorder("#" + c.id, CARD_W, bc);
+        out[1] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
+        out[2] = bc + "|" + RST + BOLD + bc + centerVisual("EVENT", CARD_W) + RST + bc + "|" + RST;
+        out[3] = bc + "|" + RST + BOLD + bc + centerVisual("SHAMANIC", CARD_W) + RST + bc + "|" + RST;
+        out[4] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
+        out[5] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
+        String gain = "+" + c.eventPoints + "🌟";
+        String loss = "-" + c.eventPenalty + "🌟";
+        int gap = Math.max(1, CARD_W - visualWidth(gain) - visualWidth(loss) - 3);
+        out[6] = bc + "|" + RST
+                + " ".repeat(gap / 2)
+                + YLW + BOLD + gain + RST
+                + WHT + BOLD + " / " + RST
+                + RED + BOLD + loss + RST
+                + " ".repeat(gap - gap / 2)
+                + bc + "|" + RST;
+        out[7] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
+        out[8] = bc + "|" + RST + DIM + centerVisual("Era " + c.era, CARD_W) + RST + bc + "|" + RST;
+        out[9] = bc + "+" + "-".repeat(CARD_W) + "+" + RST;
+
         return out;
     }
 
@@ -2075,6 +2264,7 @@ public class Renderer {
             case "StartGameState", "TotemPlacementState" -> {
                 List<String[]> cmds = new java.util.ArrayList<>(List.of(
                         new String[]{"place <tile>", "place your totem on a tile, e.g. place B"},
+                        new String[]{"see effect <id>", "show a building effect locally"},
                         new String[]{"show tribe <n>", "show one other tribe locally"},
                         new String[]{"help", "show quick help"},
                         new String[]{"quit", "leave the match"}
@@ -2092,6 +2282,7 @@ public class Renderer {
                         new String[]{"pick <id> lower", "take a character/event card from the lower row"},
                         new String[]{"build <id> upper", "take a building card from the upper row"},
                         new String[]{"build <id> lower", "take a building card from the lower row"},
+                        new String[]{"see effect <id>", "show a building effect locally"},
                         new String[]{"show tribe <n>", "show one other tribe locally"},
                         new String[]{"help", "show quick help"},
                         new String[]{"quit", "leave the match"}
@@ -2116,6 +2307,7 @@ public class Renderer {
 
             case "SuspendedState" -> List.of(
                     new String[]{"wait", "timer active: the only connected player wins when it expires"},
+                    new String[]{"see effect <id>", "show a building effect locally"},
                     new String[]{"show tribe <n>", "show one other tribe locally"},
                     new String[]{"quit", "leave the match"}
             );
