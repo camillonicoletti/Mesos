@@ -29,6 +29,7 @@ import javafx.util.Duration;
 
 public final class GuiApplication extends Application {
     private static LaunchContext launchContext;
+    
 
     private ClientController controller;
     private ClientModel model;
