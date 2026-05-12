@@ -57,5 +57,9 @@ class RMIConnectionTest {
         @Override
         public void register(RemoteClient client) {
         }
+
+        @Override
+        public void ping() {
+        }
     }
 }

@@ -25,3 +25,11 @@ replay_pid*
 
 .DS_Store
 Icon
+
+# Professor-provided graphics. Keep local only, never push.
+/assets/
+/Mesos/src/main/resources/gui/assets/**/*.png
+/Mesos/src/main/resources/gui/assets/**/*.jpg
+/Mesos/src/main/resources/gui/assets/**/*.jpeg
+/Mesos/src/main/resources/gui/assets/**/*.pdf
+/Mesos/src/main/resources/gui/assets/**/*.webp
