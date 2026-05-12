@@ -398,6 +398,136 @@ public class ActionResolutionState extends AbstractGameState {
         }
     }
 
+    // ── DEBUG ────────────────────────────────────────────────
+
+    public void debugAutoComplete(GameController ctx) {
+        if (isInExtraPickPhase()) {
+            autoCompleteExtraPickPhase(ctx);
+            return;
+        }
+        autoCompleteFromCurrentIndex(ctx);
+    }
+
+    private void autoCompleteFromCurrentIndex(GameController ctx) {
+        Game game = ctx.getGame();
+        Round round = game.getCurrentRound();
+
+        if (currentIndex < orderedPlayers.size()) {
+            Player player = orderedPlayers.get(currentIndex).getPlayer();
+            autoPickForPlayer(ctx, game, round, player, remainingUpperPicks, remainingLowerPicks);
+            round.placeTotemOrderForPlayer(player);
+            currentIndex++;
+        }
+
+        while (currentIndex < orderedPlayers.size()) {
+            Player player = orderedPlayers.get(currentIndex).getPlayer();
+            OfferTile tile = orderedPlayers.get(currentIndex).getTile();
+
+            int upperPicks = 0;
+            int lowerPicks = 0;
+
+            for (ActionSlot slot : tile.getSlots()) {
+                if (slot.getEffect() instanceof FoodSlot) {
+                    int amount = slot.getAmount();
+                    player.addFood(amount);
+                    final Player fp = player;
+                    ctx.notifyListeners(l -> l.onFoodChanged(fp.getNickname(), fp.getFood(), amount));
+                } else if (slot.getEffect() instanceof UpperRowSlot) {
+                    upperPicks += slot.getAmount();
+                } else if (slot.getEffect() instanceof LowerRowSlot) {
+                    lowerPicks += slot.getAmount();
+                }
+            }
+
+            boolean upperEmpty = round.getUpperRowTribute().isEmpty() && round.getUpperRowBuildings().isEmpty();
+            boolean lowerEmpty = round.getLowerRowTribute().isEmpty() && round.getLowerRowBuildings().isEmpty();
+            if (upperEmpty) upperPicks = 0;
+            if (lowerEmpty) lowerPicks = 0;
+
+            autoPickForPlayer(ctx, game, round, player, upperPicks, lowerPicks);
+            round.placeTotemOrderForPlayer(player);
+            currentIndex++;
+        }
+
+        startExtraPickPhase(ctx);
+    }
+
+    private void autoPickForPlayer(GameController ctx, Game game, Round round,
+                                   Player player, int upperPicks, int lowerPicks) {
+        while (upperPicks > 0) {
+            if (!round.getUpperRowTribute().isEmpty()) {
+                CharacterCard card = round.getUpperRowTribute().get(0);
+                game.takeCharacterCard(player, round.getUpperRowTribute(), card);
+                String cardId = String.valueOf(card.getId());
+                final Player fp = player;
+                ctx.notifyListeners(l -> l.onCharacterCardTaken(fp.getNickname(), cardId, true));
+            } else if (!round.getUpperRowBuildings().isEmpty()) {
+                BuildingCard card = round.getUpperRowBuildings().get(0);
+                if (!game.canAffordBuilding(player, card)) break;
+                game.takeBuildingCard(player, round.getUpperRowBuildings(), card);
+                String cardId = String.valueOf(card.getId());
+                final Player fp = player;
+                ctx.notifyListeners(l -> l.onBuildingCardTaken(fp.getNickname(), cardId, true));
+            } else {
+                break;
+            }
+            upperPicks--;
+        }
+
+        while (lowerPicks > 0) {
+            if (!round.getLowerRowTribute().isEmpty()) {
+                CharacterCard card = round.getLowerRowTribute().get(0);
+                game.takeCharacterCard(player, round.getLowerRowTribute(), card);
+                String cardId = String.valueOf(card.getId());
+                final Player fp = player;
+                ctx.notifyListeners(l -> l.onCharacterCardTaken(fp.getNickname(), cardId, false));
+            } else if (!round.getLowerRowBuildings().isEmpty()) {
+                BuildingCard card = round.getLowerRowBuildings().get(0);
+                if (!game.canAffordBuilding(player, card)) break;
+                game.takeBuildingCard(player, round.getLowerRowBuildings(), card);
+                String cardId = String.valueOf(card.getId());
+                final Player fp = player;
+                ctx.notifyListeners(l -> l.onBuildingCardTaken(fp.getNickname(), cardId, false));
+            } else {
+                break;
+            }
+            lowerPicks--;
+        }
+    }
+
+    private void autoCompleteExtraPickPhase(GameController ctx) {
+        Game game = ctx.getGame();
+        Round round = game.getCurrentRound();
+
+        while (extraPickIndex < extraPickQueue.size()) {
+            Player player = extraPickQueue.get(extraPickIndex).getPlayer();
+            int picks = extraPickQueue.get(extraPickIndex).getPicks();
+
+            while (picks > 0) {
+                if (!round.getUpperRowTribute().isEmpty()) {
+                    CharacterCard card = round.getUpperRowTribute().get(0);
+                    game.takeCharacterCard(player, round.getUpperRowTribute(), card);
+                    String cardId = String.valueOf(card.getId());
+                    final Player fp = player;
+                    ctx.notifyListeners(l -> l.onCharacterCardTaken(fp.getNickname(), cardId, true));
+                } else if (!round.getUpperRowBuildings().isEmpty()) {
+                    BuildingCard card = round.getUpperRowBuildings().get(0);
+                    if (!game.canAffordBuilding(player, card)) break;
+                    game.takeBuildingCard(player, round.getUpperRowBuildings(), card);
+                    String cardId = String.valueOf(card.getId());
+                    final Player fp = player;
+                    ctx.notifyListeners(l -> l.onBuildingCardTaken(fp.getNickname(), cardId, true));
+                } else {
+                    break;
+                }
+                picks--;
+            }
+            extraPickIndex++;
+        }
+
+        ctx.changeState(new EventResolutionState());
+    }
+
     // ── HELPERS ──────────────────────────────────────────────
 
     private CharacterCard findCharacterCard(List<CharacterCard> row, String cardId) {

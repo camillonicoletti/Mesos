@@ -97,6 +97,12 @@ public class CommandParser {
                         isUpperRow(parts[2])
                 ));
 
+            case "skip":
+                return new GameActionMessage(new DebugSkipRoundAction());
+
+            case "endgame":
+                return new GameActionMessage(new DebugSkipToEndAction());
+
             case "quit":
                 if (parts.length != 1) {
                     System.out.println("Usage: quit");

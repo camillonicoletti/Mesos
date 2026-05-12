@@ -41,12 +41,14 @@ public class ClientModel {
     private int expectedPlayers;
 
     private String gameState;
+    private boolean gameEndedReceived = false;
     private String currentActionPlayer;
     private String lastTurnEvent;
     private long lastTurnEventExpiresAtMillis = -1L;
     private Era currentEra;
     private int roundNumber;
     private List<String> turnOrder = new ArrayList<>();
+    private List<String> actionResolvedPlayers = new ArrayList<>();
     private Map<Character, String> totemOnTiles = new HashMap<>();
     private Set<String> disconnectedPlayers = new HashSet<>();
 
@@ -153,6 +155,9 @@ public class ClientModel {
                 && !"TotemPlacementState".equals(gameState)) {
             currentActionPlayer = null;
         }
+        if ("ActionResolutionState".equals(gameState) || "TotemPlacementState".equals(gameState)) {
+            actionResolvedPlayers = new ArrayList<>();
+        }
         lastError = null;
         notifyChanged();
     }
@@ -168,16 +173,15 @@ public class ClientModel {
 
     public void applyTotemPlaced(TotemPlacedMessage m) {
         lastError = null;
-        turnOrder.remove(m.getNickname());
         totemOnTiles.put(m.getTileId(), m.getNickname());
         notifyChanged();
     }
 
     public void applyEventResolved(EventResolvedMessage m) {
         lastError = null;
-        lastResolvedEventCardId      = m.getCardId();
-        lastResolvedEventTitle       = m.getTitle();
-        lastResolvedEventDescription = m.getDescription();
+        lastResolvedEventCardId       = m.getCardId();
+        lastResolvedEventTitle        = m.getTitle();
+        lastResolvedEventDescription  = m.getDescription();
         lastResolvedEventEffects     = m.getEffects() != null ? m.getEffects() : List.of();
         for (EventResolvedMessage.PlayerEffect effect : lastResolvedEventEffects) {
             replacePlayer(effect.getNickname(), old -> new PlayerView(
@@ -212,6 +216,7 @@ public class ClientModel {
         if (m.isFromUpperRow()) upperRowCharacterIds.remove(Integer.valueOf(m.getCardId()));
         else                    lowerRowCharacterIds.remove(Integer.valueOf(m.getCardId()));
         clearCurrentActionPlayerIfActor(m.getNickname());
+        markActionResolved(m.getNickname());
 
         replacePlayer(m.getNickname(), old -> {
             List<Integer> cards = new ArrayList<>(old.getCharacterCardIds());
@@ -225,6 +230,7 @@ public class ClientModel {
         if (m.isFromUpperRow()) upperRowBuildingIds.remove(Integer.valueOf(m.getCardId()));
         else                    lowerRowBuildingIds.remove(Integer.valueOf(m.getCardId()));
         clearCurrentActionPlayerIfActor(m.getNickname());
+        markActionResolved(m.getNickname());
 
         replacePlayer(m.getNickname(), old -> {
             List<Integer> cards = new ArrayList<>(old.getBuildingCardIds());
@@ -244,6 +250,7 @@ public class ClientModel {
         winnerNickname = m.getWinnerNickname();
         finalScores    = new HashMap<>(m.getFinalScores());
         gameState      = "EndGameState";
+        gameEndedReceived = true;
         notifyChanged();
     }
 
@@ -333,6 +340,7 @@ public class ClientModel {
     public Era getCurrentEra()                     { return currentEra; }
     public int getRoundNumber()                    { return roundNumber; }
     public List<String> getTurnOrder()             { return Collections.unmodifiableList(turnOrder); }
+    public List<String> getActionResolvedPlayers() { return Collections.unmodifiableList(actionResolvedPlayers); }
     public Map<Character, String> getTotemOnTiles(){ return Collections.unmodifiableMap(totemOnTiles); }
     public Map<String, PlayerView> getPlayers()    { return Collections.unmodifiableMap(players); }
     public List<Integer> getUpperRowCharacterIds() { return Collections.unmodifiableList(upperRowCharacterIds); }
@@ -392,7 +400,7 @@ public class ClientModel {
     }
 
     public boolean isGameEnded() {
-        return "EndGameState".equals(gameState);
+        return gameEndedReceived;
     }
 
     public int    getLastResolvedEventCardId()      { return lastResolvedEventCardId; }
@@ -452,6 +460,16 @@ public class ClientModel {
         if (currentActionPlayer != null
                 && currentActionPlayer.equals(nickname)) {
             currentActionPlayer = null;
+        }
+    }
+
+    private void markActionResolved(String nickname) {
+        if (!"ActionResolutionState".equals(gameState) || nickname == null) {
+            return;
+        }
+        totemOnTiles.entrySet().removeIf(e -> nickname.equals(e.getValue()));
+        if (!actionResolvedPlayers.contains(nickname)) {
+            actionResolvedPlayers.add(nickname);
         }
     }
 

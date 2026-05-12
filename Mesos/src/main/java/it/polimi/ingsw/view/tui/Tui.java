@@ -10,6 +10,8 @@ import java.util.Scanner;
 
 public class Tui implements View {
 
+    private static final long TRIBE_VISIBLE_MILLIS = 10_000L;
+
     private final ClientController controller;
     private final ClientModel model;
     private final CommandParser parser;
@@ -17,6 +19,8 @@ public class Tui implements View {
     private final Object modelLock = new Object();
     private final Renderer renderer;
     private volatile String activePrompt;
+    private volatile long tribeVisibleUntilMillis = -1L;
+    private volatile int visibleTribeNumber;
 
     public Tui(ClientController controller, ClientModel model) {
         this.controller = controller;
@@ -155,9 +159,19 @@ public class Tui implements View {
             } catch (Exception e) {
                 return;
             }
-            if (line.isBlank()) continue;
+            if (line.isBlank()) {
+                if (renderer.isTribeVisible()) {
+                    closeTribe();
+                }
+                continue;
+            }
 
             String state = model.getGameState();
+            if (isShowTribeCommand(line)) {
+                handleShowTribeCommand(line, state);
+                continue;
+            }
+
             if (state == null || "LobbyState".equals(state) || "ReadyCheckState".equals(state)) {
                 handlePreGameCommand(line);
                 continue;
@@ -330,7 +344,105 @@ public class Tui implements View {
         System.out.println("  place <letter>         — place totem");
         System.out.println("  pick <id> upper|lower  — take character card");
         System.out.println("  build <id> upper|lower — take building card");
+        System.out.println("  show tribe <n>         — show one other tribe locally");
         System.out.println("  quit                   — disconnect");
         System.out.println("  help                   — show available commands");
+    }
+
+    private boolean isShowTribeCommand(String line) {
+        return line != null && line.trim().toLowerCase().matches("show\\s+tribe\\s+\\d+");
+    }
+
+    private void handleShowTribeCommand(String line, String state) {
+        if (state == null || "LobbyState".equals(state) || "ReadyCheckState".equals(state)) {
+            System.out.println("[ERROR] show tribe is available only during the match.");
+            return;
+        }
+        if ("EventResolutionState".equals(state)) {
+            System.out.println("[ERROR] show tribe is not available during event resolution.");
+            return;
+        }
+        if ("EndGameState".equals(state)) {
+            System.out.println("[ERROR] The game is already over.");
+            return;
+        }
+
+        int tribeNumber = parseShowTribeNumber(line);
+        int maxTribeNumber = otherTribeCount();
+        if (tribeNumber < 1 || tribeNumber > maxTribeNumber) {
+            System.out.println("[ERROR] Unknown tribe number. Use show tribe <1-" + maxTribeNumber + ">.");
+            return;
+        }
+
+        long deadline = System.currentTimeMillis() + TRIBE_VISIBLE_MILLIS;
+        tribeVisibleUntilMillis = deadline;
+        visibleTribeNumber = tribeNumber;
+        renderer.setVisibleTribeNumber(tribeNumber, countdownSeconds(deadline));
+        renderer.render(model);
+        scheduleTribeClose(deadline, tribeNumber);
+    }
+
+    private int parseShowTribeNumber(String line) {
+        String[] parts = line.trim().split("\\s+");
+        return Integer.parseInt(parts[2]);
+    }
+
+    private int otherTribeCount() {
+        String myNick = model.getMyNickname();
+        int count = 0;
+        for (String nickname : model.getPlayers().keySet()) {
+            if (!nickname.equals(myNick)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private void scheduleTribeClose(long deadline, int tribeNumber) {
+        Thread closer = new Thread(() -> {
+            while (true) {
+                try {
+                    Thread.sleep(1_000L);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+
+                if (!renderer.isTribeVisible()
+                        || tribeVisibleUntilMillis != deadline
+                        || visibleTribeNumber != tribeNumber) {
+                    return;
+                }
+
+                int remaining = countdownSeconds(deadline);
+                if (System.currentTimeMillis() >= deadline) {
+                    closeTribe();
+                    return;
+                }
+
+                renderer.setVisibleTribeNumber(tribeNumber, remaining);
+                renderer.render(model);
+                if (activePrompt != null) {
+                    System.out.print(activePrompt);
+                }
+            }
+        });
+        closer.setDaemon(true);
+        closer.start();
+    }
+
+    private int countdownSeconds(long deadline) {
+        long remainingMillis = Math.max(0L, deadline - System.currentTimeMillis());
+        return (int) Math.ceil(remainingMillis / 1000.0);
+    }
+
+    private void closeTribe() {
+        tribeVisibleUntilMillis = -1L;
+        visibleTribeNumber = 0;
+        renderer.setVisibleTribeNumber(0, 0);
+        renderer.render(model);
+        if (activePrompt != null) {
+            System.out.print(activePrompt);
+        }
     }
 }

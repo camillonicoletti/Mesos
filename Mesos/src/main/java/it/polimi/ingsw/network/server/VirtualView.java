@@ -86,7 +86,8 @@ public class VirtualView implements GameListener {
     public void onGameEnded(Player winner, Map<Player, Integer> finalScores) {
         Map<String, Integer> scoresByNickname = finalScores.entrySet().stream()
                 .collect(Collectors.toMap(e -> e.getKey().getNickname(), Map.Entry::getValue));
-        connection.send(new GameEndedMessage(winner.getNickname(), scoresByNickname));
+        String winnerNickname = winner != null ? winner.getNickname() : null;
+        connection.send(new GameEndedMessage(winnerNickname, scoresByNickname));
     }
     @Override
     public void onPlayerDisconnected(String nick) {

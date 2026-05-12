@@ -4,6 +4,8 @@ import it.polimi.ingsw.controller.action.GameAction;
 import it.polimi.ingsw.controller.listener.GameListener;
 import it.polimi.ingsw.controller.state.GameState;
 import it.polimi.ingsw.controller.state.ActionResolutionState;
+import it.polimi.ingsw.controller.state.EndGameState;
+import it.polimi.ingsw.controller.state.EndRoundState;
 import it.polimi.ingsw.controller.state.LobbyState;
 import it.polimi.ingsw.controller.state.SuspendedState;
 import it.polimi.ingsw.controller.state.TotemPlacementState;
@@ -75,6 +77,17 @@ public class GameController implements Serializable {
         String normalizedNickname = normalizePlayerNickname(playerNickname);
         if (action == null) {
             throw new IllegalArgumentException("Action cannot be null");
+        }
+
+        if (Boolean.getBoolean("game.debug") && game != null) {
+            if (action instanceof it.polimi.ingsw.controller.action.DebugSkipToEndAction) {
+                changeState(new EndGameState());
+                return;
+            }
+            if (action instanceof it.polimi.ingsw.controller.action.DebugSkipRoundAction) {
+                debugSkipRound(normalizedNickname);
+                return;
+            }
         }
 
         currentState.handleAction(this, normalizedNickname, action);
@@ -607,6 +620,34 @@ public class GameController implements Serializable {
         listeners = new ArrayList<>();
         if (suspensionTimeoutMillis <= 0L) {
             suspensionTimeoutMillis = DEFAULT_SUSPENSION_TIMEOUT_MILLIS;
+        }
+    }
+
+    // ── DEBUG ────────────────────────────────────────────────────────────────
+
+    private void debugSkipRound(String senderNickname) {
+        GameState state = currentState;
+        if (state instanceof SuspendedState s) state = s.getSuspendedState();
+
+        if (state instanceof TotemPlacementState) {
+            java.util.List<it.polimi.ingsw.model.board.OfferTile> tiles =
+                    game.getBoard().getOfferTiles();
+            int maxAttempts = game.getPlayers().size() * tiles.size() + 1;
+            int attempts = 0;
+            while (currentState instanceof TotemPlacementState && attempts++ < maxAttempts) {
+                TotemPlacementState cur = (TotemPlacementState) currentState;
+                String who = cur.getCurrentPlayerNickname(this);
+                if (who == null) break;
+                for (it.polimi.ingsw.model.board.OfferTile tile : tiles) {
+                    try {
+                        currentState.handleAction(this, who,
+                                new it.polimi.ingsw.controller.action.PlaceTotemAction(tile.getLetter()));
+                        break;
+                    } catch (Exception ignored) { }
+                }
+            }
+        } else if (state instanceof ActionResolutionState actionState) {
+            actionState.debugAutoComplete(this);
         }
     }
 

@@ -11,6 +11,7 @@ import java.io.Serial;
 public class EndRoundState extends AbstractGameState {
     @Serial
     private static final long serialVersionUID = 1L;
+    private static final long END_ROUND_DISPLAY_MILLIS = 5_000L;
 
     @Override
     public void onEnter(GameController ctx) {
@@ -34,7 +35,7 @@ public class EndRoundState extends AbstractGameState {
             ctx.notifyListeners(GameListener::onGameSnapshotChanged);
 
             try {
-                Thread.sleep(5_000L);
+                Thread.sleep(END_ROUND_DISPLAY_MILLIS);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 import it.polimi.ingsw.controller.listener.GameListener;
 import java.util.function.Consumer;
 
@@ -487,11 +488,32 @@ public class Game implements Serializable {
      *
      * @return the current winning player, or null if there are no players
      */
+    /**
+     * Returns all co-winners applying the official tiebreaker chain:
+     * 1. Most PP; 2. Most food among PP-tied players; 3. Shared victory.
+     */
+    public List<Player> getWinners() {
+        if (players.isEmpty()) return List.of();
+
+        int maxScore = players.stream().mapToInt(this::getFinalScore).max().orElse(0);
+
+        List<Player> topScorers = players.stream()
+                .filter(p -> getFinalScore(p) == maxScore)
+                .collect(Collectors.toList());
+
+        if (topScorers.size() == 1) return topScorers;
+
+        int maxFood = topScorers.stream().mapToInt(Player::getFood).max().orElse(0);
+
+        return topScorers.stream()
+                .filter(p -> p.getFood() == maxFood)
+                .collect(Collectors.toList());
+    }
+
+    /** Returns the single winner, or null when multiple players share the victory. */
     public Player getWinner() {
-        return players.stream()
-                .max(Comparator.comparingInt(this::getFinalScore)
-                        .thenComparingInt(Player::getFood))
-                .orElse(null);
+        List<Player> winners = getWinners();
+        return winners.size() == 1 ? winners.get(0) : null;
     }
     // LISTENER
     public void setNotifier(Consumer<Consumer<GameListener>> notifier) {
