@@ -1,25 +1,35 @@
 package it.polimi.ingsw.network.rmi;
 
-import it.polimi.ingsw.network.protocol.serverbound.ClientMessage;
+import it.polimi.ingsw.controller.action.GameAction;
+import it.polimi.ingsw.model.enums.TotemColor;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 /**
  * Remote entrypoint exposed by the server.
- * Clients push {@link ClientMessage}s through this interface and receive
+ * Clients invoke domain-level operations through this interface and receive
  * asynchronous updates via {@link RemoteClient}.
  */
 public interface RemoteServer extends Remote {
 
     /**
-     * Delivers a client-side message to the server.
-     *
-     * @param client  the remote callback associated with the sender
-     * @param message the message to process
-     * @throws RemoteException if the invocation fails
+     * Registers a remote client with the server before any operation is invoked.
+     * Triggers the same lobby registration path used by socket clients on accept.
      */
-    void send(RemoteClient client, ClientMessage message) throws RemoteException;
+    void register(RemoteClient client) throws RemoteException;
+
+    void login(RemoteClient client, String nickname, TotemColor color) throws RemoteException;
+
+    void reconnect(RemoteClient client, String nickname) throws RemoteException;
+
+    void setPlayersCount(RemoteClient client, int count) throws RemoteException;
+
+    void setReady(RemoteClient client, boolean ready) throws RemoteException;
+
+    void performAction(RemoteClient client, GameAction action) throws RemoteException;
+
+    void pong(RemoteClient client) throws RemoteException;
 
     /**
      * Explicitly disconnects a client callback from the server.
@@ -28,12 +38,6 @@ public interface RemoteServer extends Remote {
      * @throws RemoteException if the invocation fails
      */
     void disconnect(RemoteClient client) throws RemoteException;
-
-    /**
-     * Registers a remote client with the server before any message is sent.
-     * Triggers the same lobby registration path used by socket clients on accept.
-     */
-    void register(RemoteClient client) throws RemoteException;
 
     /**
      * Lightweight liveness probe used by clients to detect server crashes.

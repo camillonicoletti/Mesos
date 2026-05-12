@@ -51,7 +51,7 @@
 .game-board {
     -fx-background-color: radial-gradient(center 40% 38%, radius 80%,
         #7a3020, #5c2318 38%, #3b1810 65%, #22100c);
-    -fx-background-image: url("assets/ui/game_background.jpeg");
+    -fx-background-image: url("../assets/ui/game_background.jpeg");
     -fx-background-size: cover;
     -fx-background-position: center center;
 }
@@ -66,7 +66,7 @@
 
 .lobby-root {
     -fx-background-color: #29161f;
-    -fx-background-image: url("assets/ui/game_background.jpeg");
+    -fx-background-image: url("../assets/ui/game_background.jpeg");
     -fx-background-size: cover;
     -fx-background-position: center center;
 }
@@ -107,11 +107,6 @@
     -fx-min-width: 160px;
 }
 
-.lobby-player-ready {
-    -fx-background-color: rgba(70, 180, 165, .16);
-    -fx-background-radius: 8px;
-}
-
 .lobby-player-name {
     -fx-text-fill: #fff2cf;
     -fx-font-size: 17px;
@@ -129,6 +124,39 @@
     -fx-border-radius: 99px;
 }
 
+.lobby-totem-marker {
+    -fx-min-width: 28px;
+    -fx-min-height: 38px;
+    -fx-max-width: 28px;
+    -fx-max-height: 38px;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .62), 5, 0, 0, 2);
+}
+
+.lobby-ready-status {
+    -fx-padding: 1px 0 0 0;
+}
+
+.lobby-ready-dot {
+    -fx-min-width: 11px;
+    -fx-min-height: 11px;
+    -fx-max-width: 11px;
+    -fx-max-height: 11px;
+    -fx-background-radius: 99px;
+    -fx-border-radius: 99px;
+    -fx-border-width: 1px;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .62), 3, 0, 0, 1);
+}
+
+.lobby-ready-off {
+    -fx-background-color: #8e8679;
+    -fx-border-color: rgba(255, 242, 207, .35);
+}
+
+.lobby-ready-on {
+    -fx-background-color: #46b4a5;
+    -fx-border-color: rgba(209, 255, 238, .70);
+}
+
 .lobby-bottom {
     -fx-background-color: transparent;
 }
@@ -141,6 +169,55 @@
 .lobby-status .label,
 .lobby-controls .label {
     -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .70), 4, 0, 0, 1);
+}
+
+.player-count-selector {
+    -fx-padding: 0 4px;
+}
+
+.player-count-label {
+    -fx-text-fill: #f0ce64;
+    -fx-font-size: 11px;
+    -fx-font-weight: 900;
+}
+
+.player-count-choice {
+    -fx-background-color: rgba(255, 242, 207, .16);
+    -fx-background-radius: 8px;
+    -fx-border-color: rgba(255, 242, 207, .28);
+    -fx-border-radius: 8px;
+    -fx-text-fill: #fff2cf;
+    -fx-font-size: 15px;
+    -fx-font-weight: 900;
+    -fx-min-width: 38px;
+    -fx-min-height: 36px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .45), 5, 0, 0, 2);
+}
+
+.player-count-choice:hover {
+    -fx-background-color: rgba(255, 242, 207, .26);
+    -fx-border-color: rgba(240, 206, 100, .58);
+}
+
+.player-count-choice-selected {
+    -fx-background-color: rgba(240, 206, 100, .92);
+    -fx-border-color: rgba(255, 244, 195, .95);
+    -fx-text-fill: #361724;
+    -fx-scale-x: 1.08;
+    -fx-scale-y: 1.08;
+}
+
+.player-count-choice:disabled {
+    -fx-opacity: .35;
+}
+
+.ready-toggle-on {
+    -fx-border-color: rgba(255, 207, 200, .35);
+}
+
+.ready-toggle-off {
+    -fx-border-color: rgba(143, 224, 216, .42);
 }
 
 /* ── Board instruction banner ─────────────────────────────────────────────── */
@@ -471,6 +548,95 @@
     -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .55), 3, 0, 0, 1);
 }
 
+.tribe-stat-grid {
+    -fx-padding: 3px 0 1px 0;
+    -fx-column-halignment: center;
+}
+
+.tribe-stat-grid-compact {
+    -fx-max-width: 420px;
+}
+
+.tribe-stat-cell {
+    -fx-background-color: rgba(53, 22, 24, .32);
+    -fx-background-radius: 7px;
+    -fx-border-color: rgba(255, 242, 207, .12);
+    -fx-border-radius: 7px;
+    -fx-padding: 9px 10px;
+    -fx-min-width: 116px;
+    -fx-min-height: 112px;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .38), 5, 0, 0, 2);
+}
+
+.tribe-stat-cell-wide {
+    -fx-min-width: 178px;
+}
+
+.tribe-stat-grid-compact .tribe-stat-cell {
+    -fx-min-width: 104px;
+    -fx-min-height: 104px;
+    -fx-padding: 8px 8px;
+}
+
+.tribe-stat-grid-compact .tribe-stat-cell-wide {
+    -fx-min-width: 164px;
+}
+
+.tribe-stat-gatherer {
+    -fx-border-color: rgba(238, 128, 48, .34);
+}
+
+.tribe-stat-hunter {
+    -fx-border-color: rgba(231, 80, 62, .30);
+}
+
+.tribe-stat-builder {
+    -fx-border-color: rgba(92, 42, 44, .34);
+}
+
+.tribe-stat-shaman {
+    -fx-border-color: rgba(196, 132, 154, .34);
+}
+
+.tribe-stat-artist {
+    -fx-border-color: rgba(237, 210, 69, .34);
+}
+
+.tribe-stat-inventor {
+    -fx-border-color: rgba(89, 203, 183, .34);
+}
+
+.tribe-stat-icons {
+    -fx-alignment: center;
+}
+
+.tribe-stat-icon {
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .48), 3, 0, 0, 1);
+}
+
+.tribe-stat-icon-fallback {
+    -fx-min-width: 18px;
+    -fx-min-height: 18px;
+    -fx-max-width: 18px;
+    -fx-max-height: 18px;
+    -fx-background-color: rgba(255, 242, 207, .55);
+    -fx-background-radius: 99px;
+}
+
+.tribe-stat-main {
+    -fx-text-fill: #fff2cf;
+    -fx-font-size: 18px;
+    -fx-font-weight: 900;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .70), 3, 0, 0, 1);
+}
+
+.tribe-stat-sub {
+    -fx-text-fill: #f0ce64;
+    -fx-font-size: 16px;
+    -fx-font-weight: 900;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .70), 3, 0, 0, 1);
+}
+
 /* ── Player dock ──────────────────────────────────────────────────────────── */
 
 .player-dock {
@@ -504,8 +670,8 @@
 
 .player-summary {
     -fx-background-color: transparent;
-    -fx-padding: 9px 12px;
-    -fx-min-width: 190px;
+    -fx-padding: 9px 10px;
+    -fx-min-width: 360px;
 }
 
 .player-summary-me {
@@ -534,6 +700,10 @@
     -fx-font-size: 11px;
     -fx-font-weight: 700;
     -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .65), 3, 0, 0, 1);
+}
+
+.player-summary-cards {
+    -fx-padding: 2px 0 0 0;
 }
 
 /* ── Dock exit button ─────────────────────────────────────────────────────── */
@@ -586,6 +756,66 @@
 
 .timer-alert {
     -fx-text-fill: #ffd166;
+}
+
+/* ── Suspension overlay ───────────────────────────────────────────────────── */
+
+.suspension-overlay {
+    -fx-background-color: rgba(43, 23, 32, .93);
+    -fx-background-radius: 8px;
+    -fx-border-color: rgba(255, 226, 168, .34);
+    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+    -fx-padding: 24px 30px;
+    -fx-effect: dropshadow(three-pass-box, rgba(18, 8, 12, .56), 28, 0, 0, 9);
+}
+
+.suspension-title {
+    -fx-text-fill: #fff2cf;
+    -fx-font-size: 28px;
+    -fx-font-weight: 900;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .88), 7, 0, 0, 2);
+}
+
+.suspension-message {
+    -fx-text-fill: #f7ddac;
+    -fx-font-size: 15px;
+    -fx-font-weight: 800;
+    -fx-text-alignment: center;
+}
+
+.suspension-timer {
+    -fx-text-fill: #ffd166;
+    -fx-font-size: 22px;
+    -fx-font-weight: 900;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .78), 5, 0, 0, 1);
+}
+
+/* ── Toast messages ───────────────────────────────────────────────────────── */
+
+.toast-host {
+    -fx-alignment: bottom-right;
+}
+
+.gui-toast {
+    -fx-background-color: rgba(43, 23, 32, .92);
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+    -fx-padding: 12px 16px;
+    -fx-text-fill: #fff2cf;
+    -fx-font-size: 13px;
+    -fx-font-weight: 800;
+    -fx-effect: dropshadow(three-pass-box, rgba(18, 8, 12, .50), 18, 0, 0, 7);
+}
+
+.gui-toast-info {
+    -fx-border-color: rgba(143, 224, 216, .56);
+}
+
+.gui-toast-error {
+    -fx-border-color: rgba(255, 128, 112, .62);
+    -fx-text-fill: #ffcfc8;
 }
 
 /* ── Scrollbars ───────────────────────────────────────────────────────────── */

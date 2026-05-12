@@ -8,8 +8,13 @@ import it.polimi.ingsw.view.gui.component.EndGameView;
 import it.polimi.ingsw.view.gui.component.GameBoardView;
 import it.polimi.ingsw.view.gui.component.LoginView;
 import it.polimi.ingsw.view.gui.component.LobbyView;
+import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
+import javafx.animation.ParallelTransition;
+import javafx.animation.PauseTransition;
+import javafx.animation.SequentialTransition;
 import javafx.animation.Timeline;
+import javafx.animation.TranslateTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -28,16 +33,25 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 public final class GuiApplication extends Application {
+    private static final Duration TOAST_VISIBLE_DURATION = Duration.seconds(10);
+    private static final Duration TOAST_ANIMATION_DURATION = Duration.millis(180);
+
     private static LaunchContext launchContext;
     
 
     private ClientController controller;
     private ClientModel model;
     private GuiAssetCatalog assetCatalog;
+    private StackPane sceneRoot;
     private BorderPane root;
+    private VBox suspensionOverlay;
+    private Label suspensionTimerLabel;
+    private VBox toastHost;
     private Label timerLabel;
     private String pendingNickname;
     private Timeline timer;
+    private long shownConnectionEventVersion;
+    private long shownErrorVersion;
 
     static void launchWith(ClientController controller, ClientModel model) {
         launchContext = new LaunchContext(controller, model);
@@ -56,11 +70,19 @@ public final class GuiApplication extends Application {
         assetCatalog = GuiAssetCatalog.loadDefault();
         root = new BorderPane();
         root.getStyleClass().add("app");
+        suspensionOverlay = createSuspensionOverlay();
+        toastHost = new VBox(10);
+        toastHost.getStyleClass().add("toast-host");
+        toastHost.setPickOnBounds(false);
+        sceneRoot = new StackPane(root, suspensionOverlay, toastHost);
+        StackPane.setAlignment(suspensionOverlay, Pos.CENTER);
+        StackPane.setAlignment(toastHost, Pos.BOTTOM_RIGHT);
+        StackPane.setMargin(toastHost, new Insets(0, 22, 22, 0));
         Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
 
         model.addListener(this::render);
 
-        Scene scene = new Scene(root, 1280, 820);
+        Scene scene = new Scene(sceneRoot, 1280, 820);
         scene.getStylesheets().add(cssResource());
         stage.setTitle("Mesos");
         stage.setMinWidth(980);
@@ -99,6 +121,7 @@ public final class GuiApplication extends Application {
             renderGame();
         }
         refreshTimer();
+        showPendingToasts();
     }
 
     private void renderLogin() {
@@ -158,6 +181,7 @@ public final class GuiApplication extends Application {
     }
 
     private void refreshTimer() {
+        refreshSuspensionOverlay();
         if (timerLabel == null) {
             return;
         }
@@ -169,6 +193,96 @@ public final class GuiApplication extends Application {
             timerLabel.setText("Connessione attiva");
             timerLabel.getStyleClass().setAll("timer");
         }
+    }
+
+    private VBox createSuspensionOverlay() {
+        VBox overlay = new VBox(10);
+        overlay.getStyleClass().add("suspension-overlay");
+        overlay.setAlignment(Pos.CENTER);
+        overlay.setMaxWidth(520);
+        overlay.setVisible(false);
+        overlay.setManaged(false);
+
+        Label title = new Label("Partita sospesa");
+        title.getStyleClass().add("suspension-title");
+
+        Label message = new Label("E rimasto un solo giocatore connesso. La partita riprende quando rientra almeno un altro giocatore.");
+        message.getStyleClass().add("suspension-message");
+        message.setWrapText(true);
+        message.setMaxWidth(460);
+        message.setAlignment(Pos.CENTER);
+
+        suspensionTimerLabel = new Label();
+        suspensionTimerLabel.getStyleClass().add("suspension-timer");
+
+        overlay.getChildren().addAll(title, message, suspensionTimerLabel);
+        return overlay;
+    }
+
+    private void refreshSuspensionOverlay() {
+        if (suspensionOverlay == null) {
+            return;
+        }
+        boolean suspended = model.isGameSuspended();
+        suspensionOverlay.setVisible(suspended);
+        if (!suspended) {
+            return;
+        }
+
+        long remaining = model.getSuspensionRemainingMillis();
+        String countdown = remaining >= 0L ? formatMillis(remaining) : "--:--";
+        suspensionTimerLabel.setText("Vittoria automatica tra " + countdown);
+    }
+
+    private void showPendingToasts() {
+        long connectionVersion = model.getLastConnectionEventVersion();
+        String connectionEvent = model.getLastConnectionEvent();
+        if (connectionVersion > shownConnectionEventVersion && connectionEvent != null) {
+            shownConnectionEventVersion = connectionVersion;
+            showToast(connectionEvent, false);
+        }
+
+        long errorVersion = model.getLastErrorVersion();
+        String error = model.getLastError();
+        if (errorVersion > shownErrorVersion && error != null && !error.isBlank()) {
+            shownErrorVersion = errorVersion;
+            showToast(error, true);
+        }
+    }
+
+    private void showToast(String message, boolean error) {
+        Label toast = new Label(message);
+        toast.setWrapText(true);
+        toast.setMaxWidth(360);
+        toast.getStyleClass().addAll("gui-toast", error ? "gui-toast-error" : "gui-toast-info");
+        toast.setOpacity(0);
+        toast.setTranslateX(24);
+
+        toastHost.getChildren().add(toast);
+
+        FadeTransition fadeIn = new FadeTransition(TOAST_ANIMATION_DURATION, toast);
+        fadeIn.setFromValue(0);
+        fadeIn.setToValue(1);
+        TranslateTransition slideIn = new TranslateTransition(TOAST_ANIMATION_DURATION, toast);
+        slideIn.setFromX(24);
+        slideIn.setToX(0);
+
+        PauseTransition wait = new PauseTransition(TOAST_VISIBLE_DURATION);
+
+        FadeTransition fadeOut = new FadeTransition(TOAST_ANIMATION_DURATION, toast);
+        fadeOut.setFromValue(1);
+        fadeOut.setToValue(0);
+        TranslateTransition slideOut = new TranslateTransition(TOAST_ANIMATION_DURATION, toast);
+        slideOut.setFromX(0);
+        slideOut.setToX(24);
+
+        SequentialTransition animation = new SequentialTransition(
+                new ParallelTransition(fadeIn, slideIn),
+                wait,
+                new ParallelTransition(fadeOut, slideOut)
+        );
+        animation.setOnFinished(event -> toastHost.getChildren().remove(toast));
+        animation.play();
     }
 
     private String stateLabel() {

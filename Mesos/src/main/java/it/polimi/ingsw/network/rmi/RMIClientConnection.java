@@ -2,6 +2,13 @@ package it.polimi.ingsw.network.rmi;
 
 import it.polimi.ingsw.network.protocol.clientbound.ServerMessage;
 import it.polimi.ingsw.network.protocol.serverbound.ClientMessage;
+import it.polimi.ingsw.network.protocol.serverbound.DisconnectMessage;
+import it.polimi.ingsw.network.protocol.serverbound.GameActionMessage;
+import it.polimi.ingsw.network.protocol.serverbound.LoginMessage;
+import it.polimi.ingsw.network.protocol.serverbound.PongMessage;
+import it.polimi.ingsw.network.protocol.serverbound.ReadyMessage;
+import it.polimi.ingsw.network.protocol.serverbound.ReconnectMessage;
+import it.polimi.ingsw.network.protocol.serverbound.SetPlayersCountMessage;
 import it.polimi.ingsw.network.transport.ClientSideConnection;
 
 import java.rmi.RemoteException;
@@ -67,12 +74,33 @@ public class RMIClientConnection implements ClientSideConnection {
         }
 
         try {
-            remoteServer.send(callback, message);
+            invokeRemoteOperation(message);
         } catch (RemoteException exception) {
             alive = false;
             heartbeatExecutor.shutdownNow();
             notifyDisconnect();
             throw new IllegalStateException("Unable to reach the RMI server", exception);
+        }
+    }
+
+    private void invokeRemoteOperation(ClientMessage message) throws RemoteException {
+        if (message instanceof LoginMessage login) {
+            remoteServer.login(callback, login.getNickname(), login.getTotemColor());
+        } else if (message instanceof ReconnectMessage reconnect) {
+            remoteServer.reconnect(callback, reconnect.getNickname());
+        } else if (message instanceof SetPlayersCountMessage setPlayersCount) {
+            remoteServer.setPlayersCount(callback, setPlayersCount.getCount());
+        } else if (message instanceof ReadyMessage ready) {
+            remoteServer.setReady(callback, ready.isReady());
+        } else if (message instanceof GameActionMessage gameAction) {
+            remoteServer.performAction(callback, gameAction.getAction());
+        } else if (message instanceof PongMessage) {
+            remoteServer.pong(callback);
+        } else if (message instanceof DisconnectMessage) {
+            remoteServer.disconnect(callback);
+        } else {
+            throw new IllegalArgumentException("Unsupported RMI operation message: "
+                    + message.getClass().getSimpleName());
         }
     }
 

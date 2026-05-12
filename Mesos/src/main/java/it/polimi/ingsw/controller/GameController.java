@@ -32,7 +32,7 @@ import java.io.ObjectInputStream;
 public class GameController implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    private static final long DEFAULT_SUSPENSION_TIMEOUT_MILLIS = 5 * 60 * 1000;
+    private static final long DEFAULT_SUSPENSION_TIMEOUT_MILLIS = 60 * 1000;
 
     private Game game;
     private GameState currentState;

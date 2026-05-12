@@ -10,7 +10,7 @@ import java.util.List;
 
 public class ClientModel {
 
-    private static final long CONNECTION_EVENT_VISIBLE_MILLIS = 5_000L;
+    private static final long CONNECTION_EVENT_VISIBLE_MILLIS = 10_000L;
 
     public interface Listener {
         void onModelChanged();
@@ -27,12 +27,14 @@ public class ClientModel {
     private String lastDisconnectedPlayer;
     private String lastConnectionEvent;
     private long lastConnectionEventExpiresAtMillis = -1L;
+    private long lastConnectionEventVersion = 0L;
     private Map<String, TotemColor> lobbyPlayerColors = new LinkedHashMap<>();
     private boolean promotedToLobbyLeader;
 
 
     private boolean loginSuccess;
     private String lastError;
+    private long lastErrorVersion = 0L;
 
     private String myNickname;
 
@@ -78,6 +80,9 @@ public class ClientModel {
         connected = true;
         loginSuccess = m.isSuccess();
         lastError = m.isSuccess() ? null : m.getErrorReason();
+        if (lastError != null) {
+            lastErrorVersion++;
+        }
         notifyChanged();
     }
 
@@ -257,6 +262,7 @@ public class ClientModel {
 
     public void applyError(ErrorMessage m) {
         lastError = m.getReason();
+        lastErrorVersion++;
         notifyChanged();
     }
 
@@ -296,6 +302,7 @@ public class ClientModel {
     public void applyConnectionLost(String reason) {
         connected = false;
         lastError = reason;
+        lastErrorVersion++;
         notifyChanged();
     }
 
@@ -311,6 +318,7 @@ public class ClientModel {
     public boolean isLoginSuccess()                { return loginSuccess; }
     public boolean isConnected()                   { return connected; }
     public String getLastError()                   { return lastError; }
+    public long getLastErrorVersion()              { return lastErrorVersion; }
     public String getLastConnectionEvent() {
         if (lastConnectionEvent == null) {
             return null;
@@ -321,6 +329,7 @@ public class ClientModel {
         }
         return lastConnectionEvent;
     }
+    public long getLastConnectionEventVersion()    { return lastConnectionEventVersion; }
     public String getMyNickname()                  { return myNickname; }
     public List<String> getLobbyPlayers()          { return Collections.unmodifiableList(lobbyPlayers); }
     public List<String> getReadyPlayers()          { return Collections.unmodifiableList(readyPlayers); }
@@ -450,6 +459,7 @@ public class ClientModel {
     private void setConnectionEvent(String message) {
         lastConnectionEvent = message;
         lastConnectionEventExpiresAtMillis = System.currentTimeMillis() + CONNECTION_EVENT_VISIBLE_MILLIS;
+        lastConnectionEventVersion++;
     }
 
     private void setTurnEvent(String message) {

@@ -35,11 +35,13 @@ import javafx.util.Duration;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public final class GameBoardView {
@@ -51,6 +53,16 @@ public final class GameBoardView {
     private static final double MINI_CARD_HEIGHT = 68;
     private static final double DETAIL_CARD_WIDTH = 380;
     private static final double DETAIL_CARD_HEIGHT = 535;
+    private static final int FOOD_DISCOUNT_PER_GATHERER = 3;
+    private static final String ICON_HUNTER = "assets/icons/summary/hunter.png";
+    private static final String ICON_BUILDER = "assets/icons/summary/builder.png";
+    private static final String ICON_BUILDER_DISCOUNT = "assets/icons/summary/builder_discount.png";
+    private static final String ICON_GATHERER = "assets/icons/summary/gatherer.png";
+    private static final String ICON_SUSTENANCE_DISCOUNT = "assets/icons/summary/sustenance_discount.png";
+    private static final String ICON_ARTIST = "assets/icons/summary/artist.png";
+    private static final String ICON_INVENTOR = "assets/icons/summary/inventor.png";
+    private static final String ICON_SHAMAN = "assets/icons/summary/shaman.png";
+    private static final String ICON_STAR = "assets/icons/summary/star.png";
 
     private static final List<Character> TILE_ORDER = List.of('A', 'B', 'C', 'D', 'E', 'F', 'G');
 
@@ -98,7 +110,6 @@ public final class GameBoardView {
                         cardRow("Personaggi / Eventi", model.getUpperRowCharacterIds(), true, false),
                         cardRow("Edifici", model.getUpperRowBuildingIds(), true, true)),
                 centerTrackPanel(),
-                currentTribePanel(),
                 marketBand("Fila bassa",
                         cardRow("Personaggi / Eventi", model.getLowerRowCharacterIds(), false, false),
                         cardRow("Edifici", model.getLowerRowBuildingIds(), false, true)),
@@ -376,10 +387,7 @@ public final class GameBoardView {
         resources.getStyleClass().add("tribe-resources");
         header.getChildren().addAll(totemDot(player.getTotemColor()), title, resources);
 
-        FlowPane summaries = new FlowPane(8, 6);
-        summaries.setAlignment(Pos.CENTER);
-        summaries.getChildren().add(summaryPill("Personaggi", countSummary(player.getCharacterCardIds())));
-        summaries.getChildren().add(summaryPill("Edifici", countSummary(player.getBuildingCardIds())));
+        FlowPane summaries = tribeStatsGrid(player, false);
 
         FlowPane cards = tribeCards(player, MINI_CARD_WIDTH, MINI_CARD_HEIGHT);
         cards.getStyleClass().add("current-tribe-cards");
@@ -418,14 +426,15 @@ public final class GameBoardView {
 
         head.getChildren().addAll(totemDot(player.getTotemColor()), name);
 
-        Label resources = new Label("Cibo " + player.getFood() + "   PP " + player.getPrestigePoints());
+        Label resources = new Label("Cibo " + player.getFood() + "   PP " + player.getPrestigePoints()
+                + "   Edifici " + player.getBuildingCardIds().size());
         resources.getStyleClass().add("player-summary-stat");
 
-        Label cards = new Label("Personaggi " + player.getCharacterCardIds().size()
-                + "   Edifici " + player.getBuildingCardIds().size());
-        cards.getStyleClass().add("player-summary-stat");
+        FlowPane stats = tribeStatsGrid(player, true);
+        FlowPane cards = tribeCards(player, 38, 54);
+        cards.getStyleClass().add("player-summary-cards");
 
-        card.getChildren().addAll(head, resources, cards);
+        card.getChildren().addAll(head, resources, stats, cards);
 
         return card;
     }
@@ -461,6 +470,158 @@ public final class GameBoardView {
         Label pill = new Label(label + ": " + value);
         pill.getStyleClass().add("tribe-summary-pill");
         return pill;
+    }
+
+    private FlowPane tribeStatsGrid(PlayerView player, boolean compact) {
+        TribeSummaryStats stats = tribeSummaryStats(player);
+
+        FlowPane grid = new FlowPane(compact ? 5 : 7, compact ? 5 : 7);
+        grid.setAlignment(Pos.CENTER);
+        grid.getStyleClass().add("tribe-stat-grid");
+        if (compact) {
+            grid.getStyleClass().add("tribe-stat-grid-compact");
+        }
+
+        grid.getChildren().add(tribeStatCell("gatherer",
+                List.of(ICON_GATHERER, ICON_SUSTENANCE_DISCOUNT),
+                String.valueOf(stats.gatherers()),
+                "-" + stats.gathererFoodDiscount()));
+        grid.getChildren().add(tribeStatCell("hunter",
+                List.of(ICON_HUNTER),
+                String.valueOf(stats.hunters()),
+                ""));
+        grid.getChildren().add(tribeStatCell("builder",
+                List.of(ICON_BUILDER, ICON_BUILDER_DISCOUNT),
+                String.valueOf(stats.builders()),
+                "-" + stats.builderFoodDiscount()));
+        grid.getChildren().add(tribeStatCell("shaman",
+                List.of(ICON_SHAMAN, ICON_STAR),
+                String.valueOf(stats.shamans()),
+                String.valueOf(stats.shamanStars())));
+        grid.getChildren().add(tribeStatCell("artist",
+                List.of(ICON_ARTIST),
+                String.valueOf(stats.artists()),
+                ""));
+        grid.getChildren().add(tribeStatCell("inventor",
+                List.of(ICON_INVENTOR),
+                String.valueOf(stats.inventors()),
+                String.valueOf(stats.distinctInventorIcons())));
+
+        return grid;
+    }
+
+    private Node tribeStatCell(String type, List<String> iconPaths, String primary, String secondary) {
+        VBox cell = new VBox(3);
+        cell.getStyleClass().addAll("tribe-stat-cell", "tribe-stat-" + type);
+        if (iconPaths.size() > 1) {
+            cell.getStyleClass().add("tribe-stat-cell-wide");
+        }
+        cell.setAlignment(Pos.CENTER);
+
+        HBox top = new HBox(3);
+        top.getStyleClass().add("tribe-stat-icons");
+        top.setAlignment(Pos.CENTER);
+        for (String iconPath : iconPaths) {
+            top.getChildren().add(statIcon(iconPath));
+        }
+
+        HBox values = new HBox(5);
+        values.setAlignment(Pos.CENTER);
+        Label main = new Label(primary);
+        main.getStyleClass().add("tribe-stat-main");
+        values.getChildren().add(main);
+        if (secondary != null && !secondary.isBlank()) {
+            Label sub = new Label(secondary);
+            sub.getStyleClass().add("tribe-stat-sub");
+            values.getChildren().add(sub);
+        }
+
+        cell.getChildren().addAll(top, values);
+        return cell;
+    }
+
+    private Node statIcon(String path) {
+        try (InputStream stream = assetCatalog.openResource(path).orElse(null)) {
+            if (stream != null) {
+                ImageView image = new ImageView(new Image(stream));
+                image.setFitWidth(72);
+                image.setFitHeight(72);
+                image.setPreserveRatio(true);
+                image.getStyleClass().add("tribe-stat-icon");
+                return image;
+            }
+        } catch (Exception ignored) {
+            // Fallback dot below.
+        }
+
+        Region fallback = new Region();
+        fallback.getStyleClass().add("tribe-stat-icon-fallback");
+        return fallback;
+    }
+
+    private TribeSummaryStats tribeSummaryStats(PlayerView player) {
+        int gatherers = 0;
+        int hunters = 0;
+        int builders = 0;
+        int builderFoodDiscount = 0;
+        int shamans = 0;
+        int shamanStars = 0;
+        int artists = 0;
+        int inventors = 0;
+        Set<String> inventionIcons = new HashSet<>();
+
+        for (Integer cardId : player.getCharacterCardIds()) {
+            Optional<CardAsset> asset = assetCatalog.findCard(cardId);
+            if (asset.isEmpty()) {
+                continue;
+            }
+
+            String type = asset.get().getType().orElse("");
+            JsonObject details = assetCatalog.findCardDetails(cardId).orElse(null);
+
+            switch (type) {
+                case "gatherer" -> gatherers++;
+                case "hunter" -> hunters++;
+                case "builder" -> {
+                    builders++;
+                    if (details != null) {
+                        builderFoodDiscount += intDetail(details, "foodDiscount");
+                    }
+                }
+                case "shaman" -> {
+                    shamans++;
+                    if (details != null) {
+                        shamanStars += intDetail(details, "stars");
+                    }
+                }
+                case "artist" -> artists++;
+                case "inventor" -> {
+                    inventors++;
+                    if (details != null) {
+                        String icon = stringDetail(details, "inventionIcon");
+                        if (!icon.isBlank()) {
+                            inventionIcons.add(icon);
+                        }
+                    }
+                }
+                default -> {
+                    // Ignore non-character cards in this six-slot character summary.
+                }
+            }
+        }
+
+        return new TribeSummaryStats(
+                gatherers,
+                gatherers * FOOD_DISCOUNT_PER_GATHERER,
+                hunters,
+                builders,
+                builderFoodDiscount,
+                shamans,
+                shamanStars,
+                artists,
+                inventors,
+                inventionIcons.size()
+        );
     }
 
     private HBox smallStatus(String label, String value) {
@@ -740,6 +901,7 @@ public final class GameBoardView {
         content.getStyleClass().add("tribe-panel-content");
         content.getChildren().addAll(
                 tribePanelHeader(player),
+                tribeStatsGrid(player, false),
                 summaryPill("Personaggi", countSummary(player.getCharacterCardIds())),
                 summaryPill("Edifici", countSummary(player.getBuildingCardIds())),
                 tribeCards(player, 78, 110)
@@ -1165,6 +1327,20 @@ public final class GameBoardView {
         label.getStyleClass().add("section-title");
 
         return label;
+    }
+
+    private record TribeSummaryStats(
+            int gatherers,
+            int gathererFoodDiscount,
+            int hunters,
+            int builders,
+            int builderFoodDiscount,
+            int shamans,
+            int shamanStars,
+            int artists,
+            int inventors,
+            int distinctInventorIcons
+    ) {
     }
 
 }

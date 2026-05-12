@@ -13,17 +13,20 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
-import javafx.scene.control.Spinner;
-import javafx.scene.control.SpinnerValueFactory;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignA;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignC;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignL;
+
+import java.io.InputStream;
 
 public final class LobbyView {
     private final ClientController controller;
@@ -73,26 +76,53 @@ public final class LobbyView {
         box.setAlignment(Pos.CENTER);
         box.getStyleClass().add("lobby-controls");
 
-        Button ready = primaryButton("Pronto", MaterialDesignC.CHECK_CIRCLE);
-        Button unready = secondaryButton("Non pronto", MaterialDesignC.CLOSE_CIRCLE_OUTLINE);
-        ready.setOnAction(event -> controller.send(new ReadyMessage(true)));
-        unready.setOnAction(event -> controller.send(new ReadyMessage(false)));
-        box.getChildren().addAll(ready, unready);
+        boolean ready = model.getMyNickname() != null
+                && model.getReadyPlayers().contains(model.getMyNickname());
+        Button readyToggle = ready
+                ? secondaryButton("Non pronto", MaterialDesignC.CLOSE_CIRCLE_OUTLINE)
+                : primaryButton("Pronto", MaterialDesignC.CHECK_CIRCLE);
+        readyToggle.getStyleClass().add(ready ? "ready-toggle-on" : "ready-toggle-off");
+        readyToggle.setOnAction(event -> controller.send(new ReadyMessage(!ready)));
+        box.getChildren().add(readyToggle);
 
         if (model.isLobbyLeader()) {
-            Spinner<Integer> players = new Spinner<>();
-            players.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(
-                    2, 5, Math.max(2, model.getExpectedPlayers() > 0 ? model.getExpectedPlayers() : 2)));
-            Button apply = secondaryButton("Imposta giocatori", MaterialDesignA.ACCOUNT_MULTIPLE_CHECK);
-            apply.setOnAction(event -> controller.send(new SetPlayersCountMessage(players.getValue())));
-            HBox leaderControls = new HBox(8, players, apply);
-            leaderControls.setAlignment(Pos.CENTER);
-            leaderControls.getStyleClass().add("lobby-leader-controls");
-            box.getChildren().add(leaderControls);
+            box.getChildren().add(playerCountSelector());
         }
 
         box.getChildren().add(disconnectButton());
         return box;
+    }
+
+    private VBox playerCountSelector() {
+        VBox selector = new VBox(6);
+        selector.setAlignment(Pos.CENTER);
+        selector.getStyleClass().add("player-count-selector");
+
+        Label label = new Label("Numero giocatori");
+        label.getStyleClass().add("player-count-label");
+
+        HBox choices = new HBox(7);
+        choices.setAlignment(Pos.CENTER);
+        choices.getStyleClass().add("player-count-choices");
+
+        int selected = model.getExpectedPlayers();
+        int joined = model.getLobbyPlayers().size();
+        for (int count = 2; count <= 5; count++) {
+            Button choice = new Button(String.valueOf(count));
+            choice.getStyleClass().add("player-count-choice");
+            if (count == selected) {
+                choice.getStyleClass().add("player-count-choice-selected");
+            }
+            if (count < joined) {
+                choice.setDisable(true);
+            }
+            int chosen = count;
+            choice.setOnAction(event -> controller.send(new SetPlayersCountMessage(chosen)));
+            choices.getChildren().add(choice);
+        }
+
+        selector.getChildren().addAll(label, choices);
+        return selector;
     }
 
     private HBox lobbyStatusBlock() {
@@ -124,14 +154,11 @@ public final class LobbyView {
         card.getStyleClass().add("lobby-player-card");
         boolean leader = model.getLobbyPlayers().indexOf(nickname) == 0;
         boolean readyPlayer = model.getReadyPlayers().contains(nickname);
-        if (readyPlayer) {
-            card.getStyleClass().add("lobby-player-ready");
-        }
 
         HBox head = new HBox(8);
         head.setAlignment(Pos.CENTER);
         TotemColor color = model.getLobbyPlayerColors().get(nickname);
-        head.getChildren().add(totemDot(color));
+        head.getChildren().add(totemMarker(color));
 
         Label name = new Label(nickname);
         name.getStyleClass().add("lobby-player-name");
@@ -141,13 +168,16 @@ public final class LobbyView {
         }
         head.getChildren().add(name);
 
+        HBox readyStatus = new HBox(7);
+        readyStatus.setAlignment(Pos.CENTER);
+        readyStatus.getStyleClass().add("lobby-ready-status");
+        readyStatus.getChildren().add(readyDot(readyPlayer));
+
         Label ready = new Label(readyPlayer ? "Pronto" : "In attesa");
-        ready.setGraphic(GuiIcons.icon(readyPlayer
-                ? MaterialDesignC.CHECK_CIRCLE
-                : MaterialDesignC.CLOCK_OUTLINE, 14));
-        ready.setContentDisplay(ContentDisplay.LEFT);
         ready.getStyleClass().add(readyPlayer ? "ok" : "muted");
-        card.getChildren().addAll(head, ready);
+        readyStatus.getChildren().add(ready);
+
+        card.getChildren().addAll(head, readyStatus);
         return card;
     }
 
@@ -169,10 +199,46 @@ public final class LobbyView {
         return row;
     }
 
-    private Region totemDot(TotemColor color) {
+    private StackPane totemMarker(TotemColor color) {
+        StackPane marker = new StackPane();
+        marker.getStyleClass().add("lobby-totem-marker");
+        marker.setMinSize(28, 38);
+        marker.setPrefSize(28, 38);
+        marker.setMaxSize(28, 38);
+
+        try (InputStream stream = Thread.currentThread().getContextClassLoader()
+                .getResourceAsStream(totemAssetPath(color))) {
+            if (stream != null) {
+                ImageView image = new ImageView(new Image(stream));
+                image.setPreserveRatio(true);
+                image.setFitHeight(38);
+                marker.getChildren().add(image);
+                return marker;
+            }
+        } catch (Exception ignored) {
+            // Fallback colored dot below.
+        }
+
+        Region fallback = new Region();
+        fallback.getStyleClass().add("lobby-color-dot");
+        fallback.setStyle("-fx-background-color: " + totemColorHex(color) + ";");
+        marker.getChildren().add(fallback);
+        return marker;
+    }
+
+    private String totemAssetPath(TotemColor color) {
+        return switch (color == null ? TotemColor.WHITE : color) {
+            case RED -> "assets/tokens/totem_red.png";
+            case YELLOW -> "assets/tokens/totem_yellow.png";
+            case BLUE -> "assets/tokens/totem_blue.png";
+            case PURPLE -> "assets/tokens/totem_purple.png";
+            case WHITE -> "assets/tokens/totem_white.png";
+        };
+    }
+
+    private Region readyDot(boolean ready) {
         Region dot = new Region();
-        dot.getStyleClass().add("lobby-color-dot");
-        dot.setStyle("-fx-background-color: " + totemColorHex(color) + ";");
+        dot.getStyleClass().addAll("lobby-ready-dot", ready ? "lobby-ready-on" : "lobby-ready-off");
         return dot;
     }
 

@@ -1,6 +1,13 @@
 package it.polimi.ingsw.network.rmi;
 
-import it.polimi.ingsw.network.protocol.serverbound.ClientMessage;
+import it.polimi.ingsw.controller.action.GameAction;
+import it.polimi.ingsw.model.enums.TotemColor;
+import it.polimi.ingsw.network.protocol.serverbound.GameActionMessage;
+import it.polimi.ingsw.network.protocol.serverbound.LoginMessage;
+import it.polimi.ingsw.network.protocol.serverbound.PongMessage;
+import it.polimi.ingsw.network.protocol.serverbound.ReadyMessage;
+import it.polimi.ingsw.network.protocol.serverbound.ReconnectMessage;
+import it.polimi.ingsw.network.protocol.serverbound.SetPlayersCountMessage;
 import it.polimi.ingsw.network.server.LobbyManager;
 import it.polimi.ingsw.network.server.MessageDispatcher;
 
@@ -42,16 +49,51 @@ public class RMIServer extends UnicastRemoteObject implements RemoteServer {
     }
 
     @Override
-    public synchronized void send(RemoteClient client, ClientMessage message) throws RemoteException {
+    public synchronized void login(RemoteClient client, String nickname, TotemColor color) throws RemoteException {
         if (client == null) {
             throw new IllegalArgumentException("Remote client cannot be null");
         }
-        if (message == null) {
-            throw new IllegalArgumentException("Message cannot be null");
-        }
+        getOrCreateConnection(client).receive(new LoginMessage(nickname, color));
+    }
 
-        RMIServerConnection connection = getOrCreateConnection(client);
-        connection.receive(message);
+    @Override
+    public synchronized void reconnect(RemoteClient client, String nickname) throws RemoteException {
+        if (client == null) {
+            throw new IllegalArgumentException("Remote client cannot be null");
+        }
+        getOrCreateConnection(client).receive(new ReconnectMessage(nickname));
+    }
+
+    @Override
+    public synchronized void setPlayersCount(RemoteClient client, int count) throws RemoteException {
+        if (client == null) {
+            throw new IllegalArgumentException("Remote client cannot be null");
+        }
+        getOrCreateConnection(client).receive(new SetPlayersCountMessage(count));
+    }
+
+    @Override
+    public synchronized void setReady(RemoteClient client, boolean ready) throws RemoteException {
+        if (client == null) {
+            throw new IllegalArgumentException("Remote client cannot be null");
+        }
+        getOrCreateConnection(client).receive(new ReadyMessage(ready));
+    }
+
+    @Override
+    public synchronized void performAction(RemoteClient client, GameAction action) throws RemoteException {
+        if (client == null) {
+            throw new IllegalArgumentException("Remote client cannot be null");
+        }
+        getOrCreateConnection(client).receive(new GameActionMessage(action));
+    }
+
+    @Override
+    public synchronized void pong(RemoteClient client) throws RemoteException {
+        if (client == null) {
+            throw new IllegalArgumentException("Remote client cannot be null");
+        }
+        getOrCreateConnection(client).receive(new PongMessage());
     }
 
     @Override
