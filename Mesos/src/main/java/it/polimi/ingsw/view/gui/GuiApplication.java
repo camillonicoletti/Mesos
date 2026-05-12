@@ -48,10 +48,20 @@ public final class GuiApplication extends Application {
     private Label suspensionTimerLabel;
     private VBox toastHost;
     private Label timerLabel;
+    private Label endGameSubtitleLabel;
     private String pendingNickname;
     private Timeline timer;
     private long shownConnectionEventVersion;
     private long shownErrorVersion;
+    private Screen currentScreen;
+    private LoginView loginView;
+    private LobbyView lobbyView;
+    private GameBoardView gameBoardView;
+    private EndGameView endGameView;
+    private StackPane loginShell;
+    private BorderPane lobbyShell;
+    private BorderPane gameShell;
+    private BorderPane endGameShell;
 
     static void launchWith(ClientController controller, ClientModel model) {
         launchContext = new LaunchContext(controller, model);
@@ -111,73 +121,115 @@ public final class GuiApplication extends Application {
             return;
         }
 
-        if (!model.isLoginSuccess()) {
-            renderLogin();
-        } else if (model.isGameEnded()) {
-            renderEndGame();
-        } else if (model.isInPreGame()) {
-            renderLobby();
-        } else {
-            renderGame();
+        Screen nextScreen = resolveScreen();
+        if (nextScreen != currentScreen) {
+            switchScreen(nextScreen);
+            currentScreen = nextScreen;
         }
+        refreshCurrentScreen();
         refreshTimer();
         showPendingToasts();
     }
 
-    private void renderLogin() {
-        centerOnly(new LoginView(controller, model, pendingNickname, nickname -> pendingNickname = nickname).render());
+    private Screen resolveScreen() {
+        if (!model.isLoginSuccess()) {
+            return Screen.LOGIN;
+        }
+        if (model.isGameEnded()) {
+            return Screen.END_GAME;
+        }
+        if (model.isInPreGame()) {
+            return Screen.LOBBY;
+        }
+        return Screen.GAME;
     }
 
-    private void renderLobby() {
-        BorderPane layout = new BorderPane();
-        layout.getStyleClass().add("lobby-shell");
+    private void switchScreen(Screen screen) {
+        root.setTop(null);
+        root.setLeft(null);
+        root.setRight(null);
+        root.setBottom(null);
         timerLabel = null;
-        layout.setCenter(new LobbyView(controller, model).render());
-        root.setCenter(layout);
+
+        switch (screen) {
+            case LOGIN -> {
+                if (loginView == null) {
+                    loginView = new LoginView(controller, model, pendingNickname,
+                            nickname -> pendingNickname = nickname);
+                    loginShell = centeredShell(loginView.render());
+                }
+                root.setCenter(loginShell);
+            }
+            case LOBBY -> {
+                if (lobbyView == null) {
+                    lobbyView = new LobbyView(controller, model);
+                    lobbyShell = new BorderPane();
+                    lobbyShell.getStyleClass().add("lobby-shell");
+                    lobbyShell.setCenter(lobbyView.render());
+                }
+                root.setCenter(lobbyShell);
+            }
+            case GAME -> {
+                if (gameBoardView == null) {
+                    gameBoardView = new GameBoardView(controller, model, assetCatalog);
+                    gameShell = new BorderPane();
+                    gameShell.getStyleClass().add("game-shell");
+
+                    ScrollPane scroll = new ScrollPane(gameBoardView.render());
+                    scroll.setFitToWidth(true);
+                    scroll.setFitToHeight(true);
+                    scroll.getStyleClass().add("scroll");
+                    gameShell.setCenter(scroll);
+                }
+                root.setCenter(gameShell);
+            }
+            case END_GAME -> {
+                if (endGameView == null) {
+                    endGameView = new EndGameView(controller, model);
+                    endGameShell = endGameShell();
+                    endGameShell.setCenter(endGameView.render());
+                }
+                root.setCenter(endGameShell);
+            }
+        }
     }
 
-    private void renderGame() {
-        BorderPane layout = new BorderPane();
-        layout.getStyleClass().add("game-shell");
-        timerLabel = null;
-
-        ScrollPane scroll = new ScrollPane(new GameBoardView(controller, model, assetCatalog).render());
-        scroll.setFitToWidth(true);
-        scroll.setFitToHeight(true);
-        scroll.getStyleClass().add("scroll");
-        layout.setCenter(scroll);
-        root.setCenter(layout);
+    private void refreshCurrentScreen() {
+        if (currentScreen == null) {
+            return;
+        }
+        switch (currentScreen) {
+            case LOGIN -> loginView.refresh();
+            case LOBBY -> lobbyView.refresh();
+            case GAME -> gameBoardView.refresh();
+            case END_GAME -> {
+                endGameSubtitleLabel.setText("Vincitore: " + nullSafe(model.getWinnerNickname()));
+                endGameView.refresh();
+            }
+        }
     }
 
-    private void renderEndGame() {
-        BorderPane layout = shell("Fine partita", "Vincitore: " + nullSafe(model.getWinnerNickname()));
-        layout.setCenter(new EndGameView(controller, model).render());
-        root.setCenter(layout);
-    }
-
-    private BorderPane shell(String title, String subtitle) {
+    private BorderPane endGameShell() {
         BorderPane layout = new BorderPane();
         VBox top = new VBox(4);
         top.setPadding(new Insets(18, 22, 12, 22));
         top.getStyleClass().add("topbar");
-        Label h1 = title(title);
-        Label sub = new Label(subtitle);
-        sub.getStyleClass().add("muted");
+        Label h1 = title("Fine partita");
+        endGameSubtitleLabel = new Label();
+        endGameSubtitleLabel.getStyleClass().add("muted");
         timerLabel = new Label();
         timerLabel.getStyleClass().add("timer");
-        HBox line = new HBox(16, sub, spacer(), timerLabel);
+        HBox line = new HBox(16, endGameSubtitleLabel, spacer(), timerLabel);
         line.setAlignment(Pos.CENTER_LEFT);
         top.getChildren().addAll(h1, line);
         layout.setTop(top);
         return layout;
     }
 
-    private void centerOnly(Node node) {
+    private StackPane centeredShell(Node node) {
         StackPane wrapper = new StackPane(node);
         wrapper.setPadding(new Insets(24));
-        root.setCenter(wrapper);
-        root.setTop(null);
-        root.setLeft(null);
+        return wrapper;
     }
 
     private void refreshTimer() {
@@ -327,4 +379,11 @@ public final class GuiApplication extends Application {
     }
 
     private record LaunchContext(ClientController controller, ClientModel model) {}
+
+    private enum Screen {
+        LOGIN,
+        LOBBY,
+        GAME,
+        END_GAME
+    }
 }

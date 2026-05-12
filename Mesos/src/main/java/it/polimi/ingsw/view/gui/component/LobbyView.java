@@ -31,6 +31,10 @@ import java.io.InputStream;
 public final class LobbyView {
     private final ClientController controller;
     private final ClientModel model;
+    private BorderPane layout;
+    private Label subtitle;
+    private FlowPane players;
+    private HBox bottom;
 
     public LobbyView(ClientController controller, ClientModel model) {
         this.controller = controller;
@@ -38,7 +42,12 @@ public final class LobbyView {
     }
 
     public Node render() {
-        BorderPane layout = new BorderPane();
+        if (layout != null) {
+            refresh();
+            return layout;
+        }
+
+        layout = new BorderPane();
         layout.getStyleClass().add("lobby-root");
 
         VBox center = new VBox(22);
@@ -48,27 +57,39 @@ public final class LobbyView {
 
         Label title = new Label("Mesos");
         title.getStyleClass().add("lobby-title");
-        Label subtitle = new Label("Lobby  " + model.getLobbyPlayers().size() + "/" + model.getExpectedPlayers());
+        subtitle = new Label();
         subtitle.getStyleClass().add("lobby-subtitle");
 
-        FlowPane players = new FlowPane(18, 18);
+        players = new FlowPane(18, 18);
         players.setAlignment(Pos.CENTER);
         players.getStyleClass().add("lobby-players");
+
+        center.getChildren().addAll(title, subtitle, players);
+
+        bottom = new HBox(18);
+        bottom.setPadding(new Insets(0, 34, 28, 34));
+        bottom.setAlignment(Pos.CENTER);
+        bottom.getStyleClass().add("lobby-bottom");
+
+        layout.setCenter(center);
+        layout.setBottom(bottom);
+        refresh();
+        return layout;
+    }
+
+    public void refresh() {
+        if (layout == null) {
+            return;
+        }
+
+        subtitle.setText("Lobby  " + model.getLobbyPlayers().size() + "/" + model.getExpectedPlayers());
+
+        players.getChildren().clear();
         for (String nickname : model.getLobbyPlayers()) {
             players.getChildren().add(playerLobbyCard(nickname));
         }
 
-        center.getChildren().addAll(title, subtitle, players);
-
-        HBox bottom = new HBox(18);
-        bottom.setPadding(new Insets(0, 34, 28, 34));
-        bottom.setAlignment(Pos.CENTER);
-        bottom.getStyleClass().add("lobby-bottom");
-        bottom.getChildren().addAll(lobbyStatusBlock(), lobbyControls());
-
-        layout.setCenter(center);
-        layout.setBottom(bottom);
-        return layout;
+        bottom.getChildren().setAll(lobbyStatusBlock(), lobbyControls());
     }
 
     private HBox lobbyControls() {

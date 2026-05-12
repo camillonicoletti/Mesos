@@ -80,6 +80,13 @@ public final class GameBoardView {
     private final ClientModel model;
     private final GuiAssetCatalog assetCatalog;
     private StackPane rootLayer;
+    private VBox board;
+    private boolean boardShellBuilt;
+    private Label instructionLabel;
+    private HBox upperMarketBand;
+    private HBox centerTrack;
+    private HBox lowerMarketBand;
+    private HBox playerDockSlot;
 
     public GameBoardView(ClientController controller, ClientModel model, GuiAssetCatalog assetCatalog) {
         this.controller = controller;
@@ -88,37 +95,66 @@ public final class GameBoardView {
     }
 
     public Node render() {
-        if (model.getPlayers().isEmpty()) {
-            VBox waiting = new VBox();
-            waiting.getStyleClass().add("game-board");
-            waiting.setPadding(new Insets(22));
-
-            Label label = new Label("Loading game...");
-            label.getStyleClass().add("muted");
-
-            waiting.getChildren().add(label);
-            return waiting;
+        if (rootLayer != null) {
+            refresh();
+            return rootLayer;
         }
 
-        VBox board = new VBox(20);
+        board = new VBox(20);
         board.getStyleClass().add("game-board");
         board.setPadding(new Insets(22, 26, 28, 26));
-
-        board.getChildren().addAll(
-                instructionBanner(),
-                marketBand("Fila alta",
-                        cardRow("Personaggi / Eventi", model.getUpperRowCharacterIds(), true, false),
-                        cardRow("Edifici", model.getUpperRowBuildingIds(), true, true)),
-                centerTrackPanel(),
-                marketBand("Fila bassa",
-                        cardRow("Personaggi / Eventi", model.getLowerRowCharacterIds(), false, false),
-                        cardRow("Edifici", model.getLowerRowBuildingIds(), false, true)),
-                playerDock()
-        );
-
         rootLayer = new StackPane(board);
         rootLayer.getStyleClass().add("game-board-layer");
+        refresh();
         return rootLayer;
+    }
+
+    public void refresh() {
+        if (board == null) {
+            return;
+        }
+
+        if (model.getPlayers().isEmpty()) {
+            boardShellBuilt = false;
+            board.getChildren().clear();
+            Label label = new Label("Loading game...");
+            label.getStyleClass().add("muted");
+            board.getChildren().add(label);
+            return;
+        }
+
+        ensureBoardShell();
+        instructionLabel.setText(actionInstruction());
+        refreshMarketBand(upperMarketBand,
+                cardRow("Personaggi / Eventi", model.getUpperRowCharacterIds(), true, false),
+                cardRow("Edifici", model.getUpperRowBuildingIds(), true, true));
+        refreshCenterTrack();
+        refreshMarketBand(lowerMarketBand,
+                cardRow("Personaggi / Eventi", model.getLowerRowCharacterIds(), false, false),
+                cardRow("Edifici", model.getLowerRowBuildingIds(), false, true));
+        playerDockSlot.getChildren().setAll(playerDock());
+    }
+
+    private void ensureBoardShell() {
+        if (boardShellBuilt) {
+            return;
+        }
+
+        instructionLabel = instructionBanner();
+        upperMarketBand = emptyMarketBand();
+        centerTrack = emptyCenterTrack();
+        lowerMarketBand = emptyMarketBand();
+        playerDockSlot = new HBox();
+        playerDockSlot.setAlignment(Pos.CENTER);
+
+        board.getChildren().setAll(
+                instructionLabel,
+                upperMarketBand,
+                centerTrack,
+                lowerMarketBand,
+                playerDockSlot
+        );
+        boardShellBuilt = true;
     }
 
     private Label instructionBanner() {
@@ -129,28 +165,29 @@ public final class GameBoardView {
         return banner;
     }
 
-    private HBox marketBand(String title, VBox characters, VBox buildings) {
+    private HBox emptyMarketBand() {
         HBox band = new HBox(16);
         band.getStyleClass().add("market-band");
         band.setAlignment(Pos.CENTER);
-
-        band.getChildren().addAll(characters, buildings);
-
-        HBox.setHgrow(characters, Priority.ALWAYS);
-        HBox.setHgrow(buildings, Priority.ALWAYS);
-
         return band;
     }
 
-    private HBox centerTrackPanel() {
+    private void refreshMarketBand(HBox band, VBox characters, VBox buildings) {
+        band.getChildren().setAll(characters, buildings);
+        HBox.setHgrow(characters, Priority.ALWAYS);
+        HBox.setHgrow(buildings, Priority.ALWAYS);
+    }
+
+    private HBox emptyCenterTrack() {
         HBox track = new HBox(10);
         track.getStyleClass().add("center-track");
         track.setAlignment(Pos.CENTER);
         track.setFillHeight(true);
-
-        track.getChildren().addAll(turnOrderPanel(), totemPlacementPanel(), deckPanel());
-
         return track;
+    }
+
+    private void refreshCenterTrack() {
+        centerTrack.getChildren().setAll(turnOrderPanel(), totemPlacementPanel(), deckPanel());
     }
 
     private Node turnOrderPanel() {

@@ -17,6 +17,8 @@ import java.util.Map;
 public final class EndGameView {
     private final ClientController controller;
     private final ClientModel model;
+    private VBox content;
+    private VBox scores;
 
     public EndGameView(ClientController controller, ClientModel model) {
         this.controller = controller;
@@ -24,16 +26,29 @@ public final class EndGameView {
     }
 
     public Node render() {
-        VBox content = new VBox(14);
+        if (content != null) {
+            refresh();
+            return content;
+        }
+
+        content = new VBox(14);
         content.setPadding(new Insets(28));
         content.getChildren().add(sectionTitle("Classifica finale"));
+        scores = new VBox(8);
+        content.getChildren().add(scores);
+        content.getChildren().add(disconnectButton());
+        refresh();
+        return content;
+    }
 
+    public void refresh() {
+        if (scores == null) {
+            return;
+        }
+        scores.getChildren().clear();
         model.getFinalScores().entrySet().stream()
                 .sorted(Map.Entry.<String, Integer>comparingByValue(Comparator.reverseOrder()))
-                .forEach(entry -> content.getChildren().add(new Label(entry.getKey() + " - " + entry.getValue() + " PP")));
-
-        content.getChildren().add(disconnectButton());
-        return content;
+                .forEach(entry -> scores.getChildren().add(new Label(entry.getKey() + " - " + entry.getValue() + " PP")));
     }
 
     private Button disconnectButton() {

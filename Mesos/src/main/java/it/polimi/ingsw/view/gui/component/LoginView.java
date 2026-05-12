@@ -23,6 +23,8 @@ public final class LoginView {
     private final ClientModel model;
     private final String pendingNickname;
     private final Consumer<String> onNicknameSubmitted;
+    private VBox panel;
+    private Label error;
 
     public LoginView(ClientController controller, ClientModel model,
                      String pendingNickname, Consumer<String> onNicknameSubmitted) {
@@ -33,7 +35,12 @@ public final class LoginView {
     }
 
     public Node render() {
-        VBox panel = new VBox(16);
+        if (panel != null) {
+            refresh();
+            return panel;
+        }
+
+        panel = new VBox(16);
         panel.getStyleClass().add("login-panel");
         panel.setMaxWidth(420);
         panel.setAlignment(Pos.CENTER_LEFT);
@@ -58,9 +65,16 @@ public final class LoginView {
         enter.setMaxWidth(Double.MAX_VALUE);
         enter.setOnAction(event -> submit(nickname, reconnect, color));
 
-        Label error = errorLabel();
+        error = errorLabel();
         panel.getChildren().addAll(title, subtitle, nickname, color, reconnect, enter, error);
+        refresh();
         return panel;
+    }
+
+    public void refresh() {
+        if (error != null) {
+            error.setText(model.getLastError() == null ? "" : model.getLastError());
+        }
     }
 
     private void submit(TextField nickname, CheckBox reconnect, ComboBox<TotemColor> color) {
