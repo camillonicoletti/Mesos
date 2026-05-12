@@ -60,17 +60,17 @@ public class PersistenceListener implements GameListener {
 
     @Override
     public void onTotemPlaced(String nickname, char tileId) {
-        persist();
+        // Saved post-handler by GameController.onMessageReceived.
     }
 
     @Override
     public void onCharacterCardTaken(String nickname, String cardId, boolean fromUpperRow) {
-        persist();
+        // Saved post-handler by GameController.onMessageReceived.
     }
 
     @Override
     public void onBuildingCardTaken(String nickname, String cardId, boolean fromUpperRow) {
-        persist();
+        // Saved post-handler by GameController.onMessageReceived.
     }
 
     @Override

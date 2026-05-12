@@ -91,6 +91,13 @@ public class GameController implements Serializable {
         }
 
         currentState.handleAction(this, normalizedNickname, action);
+
+        // Save at the turn boundary: per-event saves fire mid-handler, before
+        // currentIndex / remainingPicks settle, producing an inconsistent snapshot.
+        // Skipped on EndGameState: PersistenceListener.onGameEnded already cleared the file.
+        if (!(currentState instanceof EndGameState)) {
+            Persistence.save(this);
+        }
     }
 
     public void onPlayerDisconnection(String playerNickname) {
