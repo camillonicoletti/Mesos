@@ -22,15 +22,16 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 
 import java.io.InputStream;
@@ -45,14 +46,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public final class GameBoardView {
-    private static final double CARD_WIDTH = 112;
-    private static final double CARD_HEIGHT = 158;
-    private static final double TILE_WIDTH = 116;
-    private static final double TILE_HEIGHT = 190;
-    private static final double MINI_CARD_WIDTH = 48;
-    private static final double MINI_CARD_HEIGHT = 68;
-    private static final double DETAIL_CARD_WIDTH = 380;
-    private static final double DETAIL_CARD_HEIGHT = 535;
+    private static final double CARD_WIDTH = 96;
+    private static final double CARD_HEIGHT = 135;
+    private static final double TILE_WIDTH = 100;
+    private static final double TILE_HEIGHT = 164;
+    private static final double MINI_CARD_WIDTH = 44;
+    private static final double MINI_CARD_HEIGHT = 62;
+    private static final double DETAIL_CARD_WIDTH = 330;
+    private static final double DETAIL_CARD_HEIGHT = 466;
     private static final int FOOD_DISCOUNT_PER_GATHERER = 3;
     private static final String ICON_HUNTER = "assets/icons/summary/hunter.png";
     private static final String ICON_BUILDER = "assets/icons/summary/builder.png";
@@ -87,6 +88,7 @@ public final class GameBoardView {
     private HBox centerTrack;
     private HBox lowerMarketBand;
     private HBox playerDockSlot;
+    private boolean fitBindingInstalled;
 
     public GameBoardView(ClientController controller, ClientModel model, GuiAssetCatalog assetCatalog) {
         this.controller = controller;
@@ -100,11 +102,17 @@ public final class GameBoardView {
             return rootLayer;
         }
 
-        board = new VBox(20);
+        board = new VBox(8);
         board.getStyleClass().add("game-board");
-        board.setPadding(new Insets(22, 26, 28, 26));
+        board.setPadding(new Insets(6, 10, 6, 10));
+        board.setAlignment(Pos.CENTER);
+        board.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
         rootLayer = new StackPane(board);
         rootLayer.getStyleClass().add("game-board-layer");
+        rootLayer.setAlignment(Pos.CENTER);
+        rootLayer.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        StackPane.setAlignment(board, Pos.CENTER);
+        installBoardFitBinding();
         refresh();
         return rootLayer;
     }
@@ -133,6 +141,36 @@ public final class GameBoardView {
                 cardRow("Personaggi / Eventi", model.getLowerRowCharacterIds(), false, false),
                 cardRow("Edifici", model.getLowerRowBuildingIds(), false, true));
         playerDockSlot.getChildren().setAll(playerDock());
+        Platform.runLater(this::updateBoardScale);
+    }
+
+    private void installBoardFitBinding() {
+        if (fitBindingInstalled) {
+            return;
+        }
+        fitBindingInstalled = true;
+        rootLayer.widthProperty().addListener((observable, oldValue, newValue) -> updateBoardScale());
+        rootLayer.heightProperty().addListener((observable, oldValue, newValue) -> updateBoardScale());
+        board.layoutBoundsProperty().addListener((observable, oldValue, newValue) -> updateBoardScale());
+        Platform.runLater(this::updateBoardScale);
+    }
+
+    private void updateBoardScale() {
+        if (rootLayer == null || board == null) {
+            return;
+        }
+        double boardWidth = board.getLayoutBounds().getWidth();
+        double boardHeight = board.getLayoutBounds().getHeight();
+        double availableWidth = rootLayer.getWidth() - 22;
+        double availableHeight = rootLayer.getHeight() - 16;
+        if (boardWidth <= 0 || boardHeight <= 0 || availableWidth <= 0 || availableHeight <= 0) {
+            return;
+        }
+
+        double scale = Math.min(availableWidth / boardWidth, availableHeight / boardHeight);
+        scale = Math.max(0.72, Math.min(1.06, scale));
+        board.setScaleX(scale);
+        board.setScaleY(scale);
     }
 
     private void ensureBoardShell() {
@@ -148,6 +186,7 @@ public final class GameBoardView {
         playerDockSlot.setAlignment(Pos.CENTER);
 
         board.getChildren().setAll(
+                gameTitle(),
                 instructionLabel,
                 upperMarketBand,
                 centerTrack,
@@ -155,6 +194,14 @@ public final class GameBoardView {
                 playerDockSlot
         );
         boardShellBuilt = true;
+    }
+
+    private Label gameTitle() {
+        Label title = new Label("MESOS");
+        title.getStyleClass().add("game-title");
+        title.setAlignment(Pos.CENTER);
+        title.setMaxWidth(Double.MAX_VALUE);
+        return title;
     }
 
     private Label instructionBanner() {
@@ -166,7 +213,7 @@ public final class GameBoardView {
     }
 
     private HBox emptyMarketBand() {
-        HBox band = new HBox(16);
+        HBox band = new HBox(10);
         band.getStyleClass().add("market-band");
         band.setAlignment(Pos.CENTER);
         return band;
@@ -179,7 +226,7 @@ public final class GameBoardView {
     }
 
     private HBox emptyCenterTrack() {
-        HBox track = new HBox(10);
+        HBox track = new HBox(4);
         track.getStyleClass().add("center-track");
         track.setAlignment(Pos.CENTER);
         track.setFillHeight(true);
@@ -192,7 +239,7 @@ public final class GameBoardView {
 
     private Node turnOrderPanel() {
         StackPane tile = new StackPane();
-        tile.getStyleClass().add("turn-order-tile");
+        tile.getStyleClass().addAll("turn-order-tile", "turn-order-tile-selectable");
         String path = "assets/board/turn_order_" + turnOrderTilePlayers() + ".png";
 
         try (InputStream stream = assetCatalog.openResource(path).orElse(null)) {
@@ -214,12 +261,84 @@ public final class GameBoardView {
         }
 
         addTurnOrderTotems(tile);
+        tile.setPickOnBounds(true);
+        tile.setOnMouseClicked(event -> showTurnOrderPanel());
+        GuiAnimations.addHoverScale(tile);
 
         return tile;
     }
 
+    private void showTurnOrderPanel() {
+        int players = turnOrderTilePlayers();
+        VBox panel = inlinePanel("Tessera Ordine di Turno");
+        panel.getStyleClass().add("turn-order-focus-panel");
+
+        HBox content = new HBox(16);
+        content.setAlignment(Pos.CENTER);
+        content.getStyleClass().add("turn-order-detail-content");
+
+        StackPane imageBox = new StackPane();
+        imageBox.getStyleClass().add("turn-order-detail-image");
+        String path = "assets/board/turn_order_" + players + ".png";
+        try (InputStream stream = assetCatalog.openResource(path).orElse(null)) {
+            if (stream != null) {
+                ImageView image = new ImageView(new Image(stream));
+                image.setPreserveRatio(true);
+                image.setFitWidth(180);
+                image.setFitHeight(290);
+                imageBox.getChildren().add(image);
+            }
+        } catch (Exception ignored) {
+            // Fallback text is added below.
+        }
+        if (imageBox.getChildren().isEmpty()) {
+            Label fallback = new Label("Ordine " + players + " giocatori");
+            fallback.getStyleClass().add("turn-name");
+            imageBox.getChildren().add(fallback);
+        }
+
+        VBox details = new VBox(8);
+        details.getStyleClass().add("card-detail-lines");
+        for (String line : turnOrderRuleLines(players)) {
+            Label label = new Label(line);
+            label.setWrapText(true);
+            label.getStyleClass().add("card-detail-line");
+            details.getChildren().add(label);
+        }
+
+        content.getChildren().addAll(imageBox, details);
+
+        Button close = inlineButton("Chiudi", false);
+        close.setOnAction(event -> hideInlinePanel());
+        HBox actions = new HBox(close);
+        actions.setAlignment(Pos.CENTER_RIGHT);
+
+        panel.getChildren().addAll(content, actions);
+        showInlinePanel(panel, Pos.CENTER);
+    }
+
+    private List<String> turnOrderRuleLines(int players) {
+        List<String> lines = new ArrayList<>();
+        lines.add("Ordine: nel round successivo i totem su questa tessera vengono letti dall'alto verso il basso.");
+        lines.add("Fine azione: dopo aver risolto una tessera offerta, il totem torna nel primo spazio libero piu in alto.");
+
+        List<String> slotEffects = switch (players) {
+            case 2 -> List.of("+1 cibo", "paga 1 cibo; se non puoi, perdi 2 PP");
+            case 3 -> List.of("+2 cibo", "nessun effetto", "paga 1 cibo; se non puoi, perdi 2 PP");
+            case 4 -> List.of("+2 cibo", "+1 cibo", "nessun effetto", "paga 1 cibo; se non puoi, perdi 2 PP");
+            default -> List.of("+3 cibo", "+1 cibo", "nessun effetto", "nessun effetto",
+                    "paga 1 cibo; se non puoi, perdi 2 PP");
+        };
+
+        for (int index = 0; index < slotEffects.size(); index++) {
+            lines.add("Spazio " + (index + 1) + ": " + slotEffects.get(index) + ".");
+        }
+        lines.add("Il bonus o il pagamento dello spazio si applica subito quando il totem rientra sulla tessera.");
+        return lines;
+    }
+
     private VBox totemPlacementPanel() {
-        VBox panel = new VBox(8);
+        VBox panel = new VBox(4);
         panel.getStyleClass().add("offer-strip");
 
         HBox pane = new HBox(4);
@@ -249,7 +368,7 @@ public final class GameBoardView {
     }
 
     private VBox deckPanel() {
-        VBox panel = new VBox(8);
+        VBox panel = new VBox(4);
         panel.getStyleClass().add("deck-view");
         panel.setAlignment(Pos.CENTER);
         panel.getChildren().add(sectionTitle("Mazzo Tribù"));
@@ -321,8 +440,8 @@ public final class GameBoardView {
             TotemColor color = player == null ? null : player.getTotemColor();
 
             StackPane badge = totemMarker(color, owner, 42);
-            badge.setTranslateX(4);
-            badge.setTranslateY(-44);
+            badge.setTranslateX(0);
+            badge.setTranslateY(-40);
 
             content.getChildren().add(badge);
             StackPane.setAlignment(badge, Pos.CENTER);
@@ -343,15 +462,21 @@ public final class GameBoardView {
         }
 
         double[] offsets = turnOrderTotemOffsets(turnOrderTilePlayers());
-        int count = Math.min(order.size(), offsets.length);
-        for (int index = 0; index < count; index++) {
-            PlayerView player = model.getPlayers().get(order.get(index));
+        Map<String, Integer> positions = model.getTurnOrderPositions();
+        for (int index = 0; index < order.size(); index++) {
+            String nickname = order.get(index);
+            PlayerView player = model.getPlayers().get(nickname);
             if (player == null) {
                 continue;
             }
 
-            StackPane marker = totemMarker(player.getTotemColor(), player.getNickname(), 30);
-            marker.setTranslateY(offsets[index]);
+            int slotIndex = positions.getOrDefault(nickname, index + 1) - 1;
+            if (slotIndex < 0 || slotIndex >= offsets.length) {
+                continue;
+            }
+
+            StackPane marker = totemMarker(player.getTotemColor(), player.getNickname(), 34);
+            marker.setTranslateY(offsets[slotIndex]);
             tile.getChildren().add(marker);
             StackPane.setAlignment(marker, Pos.CENTER);
         }
@@ -359,33 +484,25 @@ public final class GameBoardView {
 
     private double[] turnOrderTotemOffsets(int players) {
         return switch (players) {
-            case 2 -> new double[]{-34, -2};
-            case 3 -> new double[]{-36, -3, 29};
-            case 4 -> new double[]{-51, -22, 8, 39};
-            default -> new double[]{-59, -29, 1, 31, 60};
+            case 2 -> new double[]{-34, 0};
+            case 3 -> new double[]{-47, -11, 18};
+            case 4 -> new double[]{-45, -15, 14, 42};
+            default -> new double[]{-57, -28, 1, 29, 58};
         };
     }
 
-    private HBox playerDock() {
-        HBox dock = new HBox(14);
+    private VBox playerDock() {
+        VBox dock = new VBox(6);
         dock.getStyleClass().add("player-dock");
         dock.setAlignment(Pos.CENTER);
 
-        VBox status = new VBox(4);
+        HBox status = new HBox(12);
         status.getStyleClass().add("table-status");
         status.getChildren().addAll(
                 smallStatus("Era", nullSafe(model.getCurrentEra())),
                 smallStatus("Round", String.valueOf(model.getRoundNumber())),
                 smallStatus("Turno", nullSafe(currentTurnNickname()))
         );
-
-        FlowPane players = new FlowPane(10, 10);
-        players.setAlignment(Pos.CENTER);
-        players.getStyleClass().add("player-summary-flow");
-
-        for (PlayerView player : model.getPlayers().values()) {
-            players.getChildren().add(playerSummary(player));
-        }
 
         Button exit = new Button("Esci");
         exit.getStyleClass().add("dock-exit");
@@ -394,11 +511,33 @@ public final class GameBoardView {
             Platform.exit();
         });
 
-        dock.getChildren().addAll(status, players, exit);
+        HBox statusRow = new HBox(14, status, spacer(), exit);
+        statusRow.getStyleClass().add("player-dock-status-row");
+        statusRow.setAlignment(Pos.CENTER);
 
-        HBox.setHgrow(players, Priority.ALWAYS);
+        dock.getChildren().addAll(statusRow, playerSummaryRows());
 
         return dock;
+    }
+
+    private VBox playerSummaryRows() {
+        VBox rows = new VBox(7);
+        rows.getStyleClass().add("player-summary-rows");
+        rows.setAlignment(Pos.CENTER);
+
+        List<PlayerView> players = new ArrayList<>(model.getPlayers().values());
+        int perRow = players.size() <= 3 ? Math.max(1, players.size()) : 3;
+        for (int start = 0; start < players.size(); start += perRow) {
+            HBox row = new HBox(9);
+            row.setAlignment(Pos.CENTER);
+            row.getStyleClass().add("player-summary-strip");
+            int end = Math.min(players.size(), start + perRow);
+            for (int index = start; index < end; index++) {
+                row.getChildren().add(playerSummary(players.get(index), players.size()));
+            }
+            rows.getChildren().add(row);
+        }
+        return rows;
     }
 
     private Node currentTribePanel() {
@@ -424,7 +563,7 @@ public final class GameBoardView {
         resources.getStyleClass().add("tribe-resources");
         header.getChildren().addAll(totemDot(player.getTotemColor()), title, resources);
 
-        FlowPane summaries = tribeStatsGrid(player, false);
+        Node summaries = tribeStatsGrid(player, false);
 
         FlowPane cards = tribeCards(player, MINI_CARD_WIDTH, MINI_CARD_HEIGHT);
         cards.getStyleClass().add("current-tribe-cards");
@@ -433,13 +572,14 @@ public final class GameBoardView {
         return panel;
     }
 
-    private Node playerSummary(PlayerView player) {
+    private Node playerSummary(PlayerView player, int playerCount) {
         boolean disconnected = model.isPlayerDisconnected(player.getNickname());
         boolean current = player.getNickname().equals(currentTurnNickname());
         boolean me = player.getNickname().equals(model.getMyNickname());
 
-        VBox card = new VBox(5);
+        VBox card = new VBox(3);
         card.getStyleClass().add("player-summary");
+        card.getStyleClass().add(playerCount <= 3 ? "player-summary-roomy" : "player-summary-many");
 
         if (current) {
             card.getStyleClass().add("player-summary-current");
@@ -467,11 +607,9 @@ public final class GameBoardView {
                 + "   Edifici " + player.getBuildingCardIds().size());
         resources.getStyleClass().add("player-summary-stat");
 
-        FlowPane stats = tribeStatsGrid(player, true);
-        FlowPane cards = tribeCards(player, 38, 54);
-        cards.getStyleClass().add("player-summary-cards");
+        Node stats = tribeStatsGrid(player, true);
 
-        card.getChildren().addAll(head, resources, stats, cards);
+        card.getChildren().addAll(head, resources, stats);
 
         return card;
     }
@@ -509,45 +647,66 @@ public final class GameBoardView {
         return pill;
     }
 
-    private FlowPane tribeStatsGrid(PlayerView player, boolean compact) {
+    private Node tribeStatsGrid(PlayerView player, boolean compact) {
         TribeSummaryStats stats = tribeSummaryStats(player);
 
-        FlowPane grid = new FlowPane(compact ? 5 : 7, compact ? 5 : 7);
-        grid.setAlignment(Pos.CENTER);
-        grid.getStyleClass().add("tribe-stat-grid");
         if (compact) {
-            grid.getStyleClass().add("tribe-stat-grid-compact");
+            HBox grid = new HBox(6);
+            grid.setAlignment(Pos.CENTER);
+            grid.getStyleClass().addAll("tribe-stat-grid", "tribe-stat-grid-compact");
+            addTribeStatCells(grid, player, stats, true);
+            return grid;
         }
 
-        grid.getChildren().add(tribeStatCell("gatherer",
-                List.of(ICON_GATHERER, ICON_SUSTENANCE_DISCOUNT),
-                String.valueOf(stats.gatherers()),
-                "-" + stats.gathererFoodDiscount()));
-        grid.getChildren().add(tribeStatCell("hunter",
-                List.of(ICON_HUNTER),
-                String.valueOf(stats.hunters()),
-                ""));
-        grid.getChildren().add(tribeStatCell("builder",
-                List.of(ICON_BUILDER, ICON_BUILDER_DISCOUNT),
-                String.valueOf(stats.builders()),
-                "-" + stats.builderFoodDiscount()));
-        grid.getChildren().add(tribeStatCell("shaman",
-                List.of(ICON_SHAMAN, ICON_STAR),
-                String.valueOf(stats.shamans()),
-                String.valueOf(stats.shamanStars())));
-        grid.getChildren().add(tribeStatCell("artist",
-                List.of(ICON_ARTIST),
-                String.valueOf(stats.artists()),
-                ""));
-        grid.getChildren().add(tribeStatCell("inventor",
-                List.of(ICON_INVENTOR),
-                String.valueOf(stats.inventors()),
-                String.valueOf(stats.distinctInventorIcons())));
-
+        FlowPane grid = new FlowPane(7, 7);
+        grid.setAlignment(Pos.CENTER);
+        grid.getStyleClass().add("tribe-stat-grid");
+        addTribeStatCells(grid, player, stats, false);
         return grid;
     }
 
-    private Node tribeStatCell(String type, List<String> iconPaths, String primary, String secondary) {
+    private void addTribeStatCells(javafx.scene.layout.Pane grid, PlayerView player,
+                                   TribeSummaryStats stats, boolean compact) {
+        grid.getChildren().add(tribeStatCell("gatherer",
+                List.of(ICON_GATHERER, ICON_SUSTENANCE_DISCOUNT),
+                String.valueOf(stats.gatherers()),
+                "-" + stats.gathererFoodDiscount(),
+                compact,
+                player));
+        grid.getChildren().add(tribeStatCell("hunter",
+                List.of(ICON_HUNTER),
+                String.valueOf(stats.hunters()),
+                "",
+                compact,
+                player));
+        grid.getChildren().add(tribeStatCell("builder",
+                List.of(ICON_BUILDER, ICON_BUILDER_DISCOUNT),
+                String.valueOf(stats.builders()),
+                "-" + stats.builderFoodDiscount(),
+                compact,
+                player));
+        grid.getChildren().add(tribeStatCell("shaman",
+                List.of(ICON_SHAMAN, ICON_STAR),
+                String.valueOf(stats.shamans()),
+                String.valueOf(stats.shamanStars()),
+                compact,
+                player));
+        grid.getChildren().add(tribeStatCell("artist",
+                List.of(ICON_ARTIST),
+                String.valueOf(stats.artists()),
+                "",
+                compact,
+                player));
+        grid.getChildren().add(tribeStatCell("inventor",
+                List.of(ICON_INVENTOR),
+                String.valueOf(stats.inventors()),
+                String.valueOf(stats.distinctInventorIcons()),
+                compact,
+                player));
+    }
+
+    private Node tribeStatCell(String type, List<String> iconPaths, String primary, String secondary,
+                               boolean compact, PlayerView player) {
         VBox cell = new VBox(3);
         cell.getStyleClass().addAll("tribe-stat-cell", "tribe-stat-" + type);
         if (iconPaths.size() > 1) {
@@ -559,7 +718,8 @@ public final class GameBoardView {
         top.getStyleClass().add("tribe-stat-icons");
         top.setAlignment(Pos.CENTER);
         for (String iconPath : iconPaths) {
-            top.getChildren().add(statIcon(iconPath));
+            double iconSize = compact ? (iconPaths.size() > 1 ? 27 : 31) : (iconPaths.size() > 1 ? 64 : 68);
+            top.getChildren().add(statIcon(iconPath, iconSize));
         }
 
         HBox values = new HBox(5);
@@ -574,15 +734,88 @@ public final class GameBoardView {
         }
 
         cell.getChildren().addAll(top, values);
+        if (compact) {
+            cell.getChildren().add(characterCardsForType(player, type));
+        }
         return cell;
     }
 
-    private Node statIcon(String path) {
+    private Node characterCardsForType(PlayerView player, String type) {
+        Pane cards = new Pane();
+        cards.getStyleClass().add("tribe-stat-card-strip");
+        double stripWidth = 34;
+        double stripHeight = 110;
+        cards.setMinSize(stripWidth, stripHeight);
+        cards.setPrefSize(stripWidth, stripHeight);
+        cards.setMaxSize(stripWidth, stripHeight);
+        cards.setClip(new Rectangle(stripWidth, stripHeight));
+
+        List<Integer> matching = player.getCharacterCardIds().stream()
+                .filter(cardId -> assetCatalog.findCard(cardId)
+                        .flatMap(CardAsset::getType)
+                        .map(type::equals)
+                        .orElse(false))
+                .toList();
+
+        if (matching.isEmpty()) {
+            Region empty = new Region();
+            empty.getStyleClass().add("tribe-stat-empty-card-slot");
+            empty.setLayoutX(3);
+            empty.setLayoutY(32);
+            cards.getChildren().add(empty);
+            return cards;
+        }
+
+        int visibleCount = Math.min(10, matching.size());
+        int hiddenCount = matching.size() - visibleCount;
+        List<Integer> visibleCards = matching.subList(matching.size() - visibleCount, matching.size());
+
+        double cardWidth = 32;
+        double cardHeight = 45;
+        double reservedBadgeHeight = hiddenCount > 0 ? 14 : 0;
+        double availableStackHeight = stripHeight - reservedBadgeHeight;
+        double step = visibleCards.size() == 1
+                ? 0
+                : Math.min(12, (availableStackHeight - cardHeight) / (visibleCards.size() - 1));
+        double stackHeight = cardHeight + Math.max(0, visibleCards.size() - 1) * step;
+        double startX = (stripWidth - cardWidth) / 2;
+        double startY = Math.max(0, availableStackHeight - stackHeight);
+
+        for (int index = 0; index < visibleCards.size(); index++) {
+            Node card = stackedMiniCardNode(visibleCards.get(index), cardWidth, cardHeight);
+            card.setLayoutX(startX);
+            card.setLayoutY(startY + index * step);
+            card.setViewOrder(visibleCards.size() - index);
+            cards.getChildren().add(card);
+        }
+
+        if (hiddenCount > 0) {
+            Label more = new Label("+" + hiddenCount);
+            more.getStyleClass().add("tribe-stat-card-more");
+            more.setLayoutX(7);
+            more.setLayoutY(stripHeight - reservedBadgeHeight);
+            cards.getChildren().add(more);
+        }
+        return cards;
+    }
+
+    private Node stackedMiniCardNode(int cardId, double width, double height) {
+        StackPane card = new StackPane();
+        card.getStyleClass().addAll("mini-card", "mini-card-stacked");
+        card.setMinSize(width, height);
+        card.setPrefSize(width, height);
+        card.setMaxSize(width, height);
+        card.getChildren().add(cardImageNode(cardId, width, height));
+        card.setOnMouseClicked(event -> showCardPanel(cardId, false, null));
+        return card;
+    }
+
+    private Node statIcon(String path, double size) {
         try (InputStream stream = assetCatalog.openResource(path).orElse(null)) {
             if (stream != null) {
                 ImageView image = new ImageView(new Image(stream));
-                image.setFitWidth(72);
-                image.setFitHeight(72);
+                image.setFitWidth(size);
+                image.setFitHeight(size);
                 image.setPreserveRatio(true);
                 image.getStyleClass().add("tribe-stat-icon");
                 return image;
@@ -674,10 +907,16 @@ public final class GameBoardView {
         return row;
     }
 
+    private Region spacer() {
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        return spacer;
+    }
+
     private VBox cardRow(String title, List<Integer> ids, boolean upper, boolean building) {
-        VBox box = new VBox(8);
+        VBox box = new VBox(4);
         box.getStyleClass().add("card-row");
-        HBox cards = new HBox(12);
+        HBox cards = new HBox(8);
         cards.setAlignment(Pos.CENTER);
 
         for (Integer id : ids) {
@@ -819,11 +1058,11 @@ public final class GameBoardView {
             CardAsset card = asset.get();
             JsonObject data = details.get();
             switch (card.getKind()) {
-                case "character" -> lines.add(characterRuleText(data));
+                case "character" -> lines.addAll(characterRuleLines(data));
                 case "building" -> {
-                    lines.add(buildingRuleText(data));
                     lines.add("Costo: " + intDetail(data, "foodCost") + " cibo. Punti a fine partita: "
                             + intDetail(data, "pointsEndOfMatch") + ".");
+                    lines.addAll(buildingRuleLines(data));
                 }
                 case "event" -> lines.add(eventRuleText(data));
                 default -> lines.addAll(cardDetailLines(cardId));
@@ -840,45 +1079,78 @@ public final class GameBoardView {
         return lines;
     }
 
-    private String characterRuleText(JsonObject data) {
+    private List<String> characterRuleLines(JsonObject data) {
         String type = stringDetail(data, "type");
         return switch (type) {
             case "hunter" -> boolDetail(data, "foodIcon")
-                    ? "Cacciatore: conta negli eventi di caccia e mostra anche un'icona cibo."
-                    : "Cacciatore: conta negli eventi di caccia.";
-            case "builder" -> "Costruttore: riduce di " + intDetail(data, "foodDiscount")
-                    + " il costo degli edifici e vale " + intDetail(data, "pointsEndOfMatch")
-                    + " PP a fine partita.";
-            case "gatherer" -> "Raccoglitore: conta per gli effetti e gli edifici legati ai raccoglitori.";
-            case "artist" -> "Artista: conta nelle pitture rupestri e negli effetti legati agli artisti.";
-            case "inventor" -> "Inventore: porta l'icona invenzione " + stringDetail(data, "inventionIcon")
-                    + " per set, coppie ed effetti degli inventori.";
-            case "shaman" -> "Sciamano: aggiunge " + intDetail(data, "stars")
-                    + " stelle nei rituali sciamanici.";
-            default -> "Carta personaggio.";
+                    ? List.of(
+                    "Cacciatore: durante l'Evento Caccia conta per ottenere cibo e PP indicati dalla carta evento.",
+                    "Quando lo prendi, ottieni subito 1 cibo per ogni Cacciatore nella tua tribu, incluso questo.")
+                    : List.of(
+                    "Cacciatore: durante l'Evento Caccia conta per ottenere cibo e PP indicati dalla carta evento.",
+                    "Non mostra l'icona cibo, quindi quando lo prendi non da cibo immediato.");
+            case "builder" -> List.of(
+                    "Costruttore: riduce di " + intDetail(data, "foodDiscount")
+                            + " il costo di ogni Edificio che prendi.",
+                    "Gli sconti dei Costruttori si sommano, ma il costo non puo scendere sotto 0.",
+                    "A fine partita vale " + intDetail(data, "pointsEndOfMatch") + " PP.");
+            case "gatherer" -> List.of(
+                    "Raccoglitore: durante l'Evento Sostentamento sconta "
+                            + FOOD_DISCOUNT_PER_GATHERER + " cibo dal totale da pagare.",
+                    "Non fornisce cibo direttamente quando entra nella tribu.");
+            case "artist" -> List.of(
+                    "Artista: durante l'Evento Pitture Rupestri determina se perdi PP o guadagni PP per artista.",
+                    "A fine partita ottieni 10 PP per ogni coppia di Artisti nella tua tribu.");
+            case "inventor" -> List.of(
+                    "Inventore: porta l'icona invenzione " + stringDetail(data, "inventionIcon") + ".",
+                    "A fine partita vale: numero di Inventori nella tribu x numero di icone invenzione diverse.");
+            case "shaman" -> List.of(
+                    "Sciamano: aggiunge " + intDetail(data, "stars") + " stelle alla tua tribu.",
+                    "Durante il Rituale Sciamanico, piu stelle fanno guadagnare PP; meno stelle fanno perdere PP.");
+            default -> List.of("Carta personaggio.");
         };
     }
 
-    private String buildingRuleText(JsonObject data) {
+    private List<String> buildingRuleLines(JsonObject data) {
         JsonElement effect = data.get("effect");
         String effectName = effectName(effect);
         return switch (effectName) {
-            case "FullSetFood" -> "Edificio: quando completi set di personaggi diversi, ottieni cibo bonus.";
-            case "SustenanceFoodDiscount" -> "Edificio: durante il sostentamento riduce il cibo richiesto per "
-                    + labelForType(effectTarget(effect)) + ".";
-            case "ShamanicRitualImmunity" -> "Edificio: ti protegge dagli effetti negativi del rituale sciamanico.";
-            case "TotemSlotFoodBonus" -> "Edificio: fornisce cibo bonus in base allo slot/tessera totem scelta.";
-            case "InventorPairFood" -> "Edificio: da cibo per le coppie di inventori nella tua tribu.";
-            case "ShamanicRitualDoublePP" -> "Edificio: raddoppia i PP guadagnati nei rituali sciamanici.";
-            case "Shaman3ExtraStars" -> "Edificio: aumenta le stelle dei tuoi sciamani.";
-            case "Hunt1Food1PP" -> "Edificio: durante la caccia aggiunge 1 cibo e 1 PP.";
-            case "EndBuilderPP" -> "Edificio: a fine partita da PP in base ai costruttori.";
-            case "CavePaintingsFood" -> "Edificio: durante le pitture rupestri fornisce cibo bonus.";
-            case "ExtraCardUpperRow" -> "Edificio: permette di ottenere una carta extra dalla fila alta.";
-            case "EndPP" -> "Edificio: assegna PP finali secondo il suo effetto.";
-            case "EndCharacterCountPP" -> "Edificio: a fine partita da " + effectInt(effect, "pointsPerCard")
-                    + " PP per ogni " + labelForType(effectTarget(effect)) + ".";
-            default -> "Edificio: " + formatDetailValue(effect) + ".";
+            case "FullSetFood" -> List.of(
+                    "Da quando possiedi questo Edificio, ogni volta che completi un nuovo set di 6 Personaggi tutti diversi ottieni 5 cibo.",
+                    "I set gia completi prima di prendere l'Edificio non danno questo bonus.");
+            case "SustenanceFoodDiscount" -> List.of(
+                    "Durante l'Evento Sostentamento sconta 1 cibo dal totale da pagare per ogni "
+                            + characterTypeSingular(effectTarget(effect)) + " nella tua tribu.");
+            case "ShamanicRitualImmunity" -> List.of(
+                    "Durante il Rituale Sciamanico non perdi PP se hai meno stelle degli altri giocatori.");
+            case "TotemSlotFoodBonus" -> List.of(
+                    "Alla fine del tuo turno, quando il totem rientra sulla Tessera Ordine di Turno, ottieni 1 cibo extra se lo spazio scelto da gia un bonus cibo.",
+                    "Se finisci nell'ultimo spazio, paghi normalmente 1 cibo oppure perdi 2 PP se non puoi pagare.");
+            case "InventorPairFood" -> List.of(
+                    "Da quando possiedi questo Edificio, ottieni 3 cibo ogni volta che completi una nuova coppia di Inventori uguali.",
+                    "Contano come uguali gli Inventori con la stessa icona invenzione; le coppie gia presenti non danno il bonus.");
+            case "ShamanicRitualDoublePP" -> List.of(
+                    "Durante il Rituale Sciamanico, se hai piu stelle di tutti gli altri, guadagni il doppio dei PP indicati dall'evento.",
+                    "Se sei in parita per la maggioranza, guadagni comunque i PP indicati dall'evento.");
+            case "Shaman3ExtraStars" -> List.of(
+                    "Durante il Rituale Sciamanico la tua tribu conta 3 stelle aggiuntive.");
+            case "Hunt1Food1PP" -> List.of(
+                    "Durante l'Evento Caccia, per ogni Cacciatore nella tua tribu ottieni 1 cibo e 1 PP addizionali.");
+            case "EndBuilderPP" -> List.of(
+                    "A fine partita raddoppi i PP stampati sulle tue carte Costruttore.");
+            case "CavePaintingsFood" -> List.of(
+                    "Durante l'Evento Pitture Rupestri ottieni 1 cibo per ogni Artista nella tua tribu.");
+            case "EndFullSetPP" -> List.of(
+                    "A fine partita guadagni 6 PP per ogni set completo di 6 Personaggi tutti diversi nella tua tribu.");
+            case "ExtraCardUpperRow" -> List.of(
+                    "Dopo che tutti hanno risolto le azioni e prima della Fine del Round, puoi prendere 1 carta dalla fila superiore.",
+                    "Se scegli un Edificio devi comunque pagarne il costo, applicando gli sconti dei Costruttori.");
+            case "EndPP" -> List.of(
+                    "A fine partita guadagni 25 PP grazie a questo effetto.");
+            case "EndCharacterCountPP" -> List.of(
+                    "A fine partita guadagni " + effectInt(effect, "pointsPerCard") + " PP per ogni "
+                            + characterTypeSingular(effectTarget(effect)) + " nella tua tribu.");
+            default -> List.of("Edificio: " + formatDetailValue(effect) + ".");
         };
     }
 
@@ -934,27 +1206,25 @@ public final class GameBoardView {
 
     private void showTribePanel(PlayerView player) {
         VBox panel = inlinePanel("Tribu di " + player.getNickname());
+        panel.getStyleClass().add("tribe-focus-panel");
         VBox content = new VBox(12);
         content.getStyleClass().add("tribe-panel-content");
+        FlowPane largeCards = tribeCards(player, 108, 152);
+        largeCards.getStyleClass().add("tribe-panel-cards");
         content.getChildren().addAll(
                 tribePanelHeader(player),
                 tribeStatsGrid(player, false),
                 summaryPill("Personaggi", countSummary(player.getCharacterCardIds())),
                 summaryPill("Edifici", countSummary(player.getBuildingCardIds())),
-                tribeCards(player, 78, 110)
+                largeCards
         );
-
-        ScrollPane scroll = new ScrollPane(content);
-        scroll.setFitToWidth(true);
-        scroll.setPrefViewportWidth(720);
-        scroll.setPrefViewportHeight(460);
-        scroll.getStyleClass().add("tribe-panel-scroll");
+        content.setMaxWidth(1080);
 
         Button close = inlineButton("Chiudi", false);
         close.setOnAction(event -> hideInlinePanel());
         HBox actions = new HBox(close);
         actions.setAlignment(Pos.CENTER_RIGHT);
-        panel.getChildren().addAll(scroll, actions);
+        panel.getChildren().addAll(content, actions);
         showInlinePanel(panel, Pos.CENTER);
     }
 
@@ -1176,10 +1446,23 @@ public final class GameBoardView {
             case "Hunt1Food1PP" -> "Caccia: cibo e PP";
             case "EndBuilderPP" -> "PP finali costruttori";
             case "CavePaintingsFood" -> "Cibo pitture rupestri";
+            case "EndFullSetPP" -> "PP finali da set completo";
             case "ExtraCardUpperRow" -> "Carta extra fila alta";
             case "EndPP" -> "PP finali";
             case "EndCharacterCountPP" -> "PP finali per personaggio";
             default -> capitalize(type);
+        };
+    }
+
+    private String characterTypeSingular(String type) {
+        return switch (type) {
+            case "hunter" -> "Cacciatore";
+            case "builder" -> "Costruttore";
+            case "gatherer" -> "Raccoglitore";
+            case "artist" -> "Artista";
+            case "inventor" -> "Inventore";
+            case "shaman" -> "Sciamano";
+            default -> labelForType(type);
         };
     }
 
@@ -1244,35 +1527,8 @@ public final class GameBoardView {
         return value.substring(0, 1).toUpperCase(Locale.ROOT) + value.substring(1);
     }
 
-    private char getMyCurrentTile() {
-        String me = model.getMyNickname();
-
-        if (me == null) {
-            return 0;
-        }
-
-        for (Map.Entry<Character, String> entry : model.getTotemOnTiles().entrySet()) {
-            if (me.equals(entry.getValue())) {
-                return entry.getKey();
-            }
-        }
-
-        return 0;
-    }
-
     private boolean canPickFromRow(boolean upper) {
-        if (!model.isMyTurn()) {
-            return false;
-        }
-
-        char tile = getMyCurrentTile();
-
-        return switch (tile) {
-            case 'B', 'D' -> !upper;
-            case 'C', 'F' -> upper;
-            case 'E', 'G' -> true;
-            default -> false;
-        };
+        return model.canCurrentActionPlayerPickFromRow(upper);
     }
 
     private List<Character> activeOfferTiles() {

@@ -45,11 +45,15 @@ public class ClientModel {
     private String gameState;
     private boolean gameEndedReceived = false;
     private String currentActionPlayer;
+    private String pickBudgetPlayer;
+    private int remainingUpperPicks = -1;
+    private int remainingLowerPicks = -1;
     private String lastTurnEvent;
     private long lastTurnEventExpiresAtMillis = -1L;
     private Era currentEra;
     private int roundNumber;
     private List<String> turnOrder = new ArrayList<>();
+    private Map<String, Integer> turnOrderPositions = new HashMap<>();
     private List<String> actionResolvedPlayers = new ArrayList<>();
     private Map<Character, String> totemOnTiles = new HashMap<>();
     private Set<String> disconnectedPlayers = new HashSet<>();
@@ -141,7 +145,12 @@ public class ClientModel {
         roundNumber          = snap.getRoundNumber();
         totemOnTiles         = new HashMap<>(snap.getTotemOnTiles());
         turnOrder            = new ArrayList<>(snap.getTurnOrder());
+        turnOrderPositions   = new HashMap<>(snap.getTurnOrderPositions());
+        ensureTurnOrderPositions();
         disconnectedPlayers  = new HashSet<>(snap.getDisconnectedPlayers());
+        if ("ActionResolutionState".equals(gameState)) {
+            actionResolvedPlayers = new ArrayList<>(turnOrder);
+        }
         upperRowCharacterIds = new ArrayList<>(snap.getUpperRowCharacterAndEventIds());
         lowerRowCharacterIds = new ArrayList<>(snap.getLowerRowCharacterAndEventIds());
         upperRowBuildingIds  = new ArrayList<>(snap.getUpperRowBuildingIds());
@@ -159,9 +168,11 @@ public class ClientModel {
         if (!"ActionResolutionState".equals(gameState)
                 && !"TotemPlacementState".equals(gameState)) {
             currentActionPlayer = null;
+            clearPickBudget();
         }
         if ("ActionResolutionState".equals(gameState) || "TotemPlacementState".equals(gameState)) {
             actionResolvedPlayers = new ArrayList<>();
+            clearPickBudget();
         }
         lastError = null;
         notifyChanged();
@@ -170,6 +181,11 @@ public class ClientModel {
     public void applyCurrentPlayerChanged(CurrentPlayerChangedMessage m) {
         String previousPlayer = currentActionPlayer;
         currentActionPlayer = m.getNickname();
+        if ("ActionResolutionState".equals(gameState)
+                && (!Objects.equals(previousPlayer, currentActionPlayer)
+                || !Objects.equals(pickBudgetPlayer, currentActionPlayer))) {
+            initializeRegularPickBudget(currentActionPlayer);
+        }
         if (currentActionPlayer != null && !currentActionPlayer.equals(previousPlayer)) {
             setTurnEvent("Turn passed to " + currentActionPlayer);
         }
@@ -221,8 +237,7 @@ public class ClientModel {
         lastError = null;
         if (m.isFromUpperRow()) upperRowCharacterIds.remove(Integer.valueOf(m.getCardId()));
         else                    lowerRowCharacterIds.remove(Integer.valueOf(m.getCardId()));
-        clearCurrentActionPlayerIfActor(m.getNickname());
-        markActionResolved(m.getNickname());
+        decrementPickBudget(m.getNickname(), m.isFromUpperRow());
 
         replacePlayer(m.getNickname(), old -> {
             List<Integer> cards = new ArrayList<>(old.getCharacterCardIds());
@@ -235,8 +250,7 @@ public class ClientModel {
     public void applyBuildingCardTaken(BuildingCardTakenMessage m) {
         if (m.isFromUpperRow()) upperRowBuildingIds.remove(Integer.valueOf(m.getCardId()));
         else                    lowerRowBuildingIds.remove(Integer.valueOf(m.getCardId()));
-        clearCurrentActionPlayerIfActor(m.getNickname());
-        markActionResolved(m.getNickname());
+        decrementPickBudget(m.getNickname(), m.isFromUpperRow());
 
         replacePlayer(m.getNickname(), old -> {
             List<Integer> cards = new ArrayList<>(old.getBuildingCardIds());
@@ -296,6 +310,10 @@ public class ClientModel {
     }
 
     public void applyExtraCardPickAvailable(ExtraCardPickAvailableMessage m) {
+        currentActionPlayer = m.getNickname();
+        pickBudgetPlayer = m.getNickname();
+        remainingUpperPicks = Math.max(0, m.getPicks());
+        remainingLowerPicks = 0;
         notifyChanged();
     }
 
@@ -350,6 +368,9 @@ public class ClientModel {
     public Era getCurrentEra()                     { return currentEra; }
     public int getRoundNumber()                    { return roundNumber; }
     public List<String> getTurnOrder()             { return Collections.unmodifiableList(turnOrder); }
+    public Map<String, Integer> getTurnOrderPositions() {
+        return Collections.unmodifiableMap(turnOrderPositions);
+    }
     public List<String> getActionResolvedPlayers() { return Collections.unmodifiableList(actionResolvedPlayers); }
     public Map<Character, String> getTotemOnTiles(){ return Collections.unmodifiableMap(totemOnTiles); }
     public Map<String, PlayerView> getPlayers()    { return Collections.unmodifiableMap(players); }
@@ -380,6 +401,20 @@ public class ClientModel {
     public boolean isMyTurn() {
         return myNickname != null
                 && myNickname.equals(getCurrentActionResolutionPlayer());
+    }
+
+    public boolean canCurrentActionPlayerPickFromRow(boolean upper) {
+        if (!isMyTurn()) {
+            return false;
+        }
+
+        int remaining = upper ? remainingUpperPicks : remainingLowerPicks;
+        if (remaining >= 0) {
+            return remaining > 0;
+        }
+
+        char tile = offerTileForPlayer(myNickname);
+        return tileAllowsRow(tile, upper);
     }
 
     public String getCurrentActionResolutionPlayer() {
@@ -471,22 +506,88 @@ public class ClientModel {
         if (currentActionPlayer != null
                 && currentActionPlayer.equals(nickname)) {
             currentActionPlayer = null;
+            clearPickBudget();
         }
     }
 
-    private void markActionResolved(String nickname) {
-        if (!"ActionResolutionState".equals(gameState) || nickname == null) {
-            return;
-        }
-        totemOnTiles.entrySet().removeIf(e -> nickname.equals(e.getValue()));
-        if (!actionResolvedPlayers.contains(nickname)) {
-            actionResolvedPlayers.add(nickname);
+    private void ensureTurnOrderPositions() {
+        int nextPosition = 1;
+        for (String nickname : turnOrder) {
+            turnOrderPositions.putIfAbsent(nickname, nextPosition);
+            nextPosition++;
         }
     }
 
     private void clearCurrentActionPlayerIfDisconnected() {
         if (currentActionPlayer != null && disconnectedPlayers.contains(currentActionPlayer)) {
             currentActionPlayer = null;
+            clearPickBudget();
         }
+    }
+
+    private void initializeRegularPickBudget(String nickname) {
+        if (nickname == null) {
+            clearPickBudget();
+            return;
+        }
+
+        char tile = offerTileForPlayer(nickname);
+        pickBudgetPlayer = nickname;
+        remainingUpperPicks = upperPicksForTile(tile);
+        remainingLowerPicks = lowerPicksForTile(tile);
+    }
+
+    private void decrementPickBudget(String nickname, boolean upper) {
+        if (!Objects.equals(pickBudgetPlayer, nickname)) {
+            return;
+        }
+
+        if (upper && remainingUpperPicks > 0) {
+            remainingUpperPicks--;
+        } else if (!upper && remainingLowerPicks > 0) {
+            remainingLowerPicks--;
+        }
+    }
+
+    private void clearPickBudget() {
+        pickBudgetPlayer = null;
+        remainingUpperPicks = -1;
+        remainingLowerPicks = -1;
+    }
+
+    private char offerTileForPlayer(String nickname) {
+        if (nickname == null) {
+            return 0;
+        }
+        for (Map.Entry<Character, String> entry : totemOnTiles.entrySet()) {
+            if (nickname.equals(entry.getValue())) {
+                return entry.getKey();
+            }
+        }
+        return 0;
+    }
+
+    private boolean tileAllowsRow(char tile, boolean upper) {
+        return upper ? upperPicksForTile(tile) > 0 : lowerPicksForTile(tile) > 0;
+    }
+
+    private int upperPicksForTile(char tile) {
+        return switch (tile) {
+            case 'C' -> 1;
+            case 'E' -> 1;
+            case 'F' -> 2;
+            case 'G' -> 2;
+            default -> 0;
+        };
+    }
+
+    private int lowerPicksForTile(char tile) {
+        return switch (tile) {
+            case 'B' -> 1;
+            case 'D' -> 2;
+            case 'E' -> 1;
+            case 'G' -> 1;
+            default -> 0;
+        };
     }
 }

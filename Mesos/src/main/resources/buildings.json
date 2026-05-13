@@ -16,7 +16,7 @@
   {"id":106 , "era": "II", "foodCost":7 , "pointsEndOfMatch":2 , "effect": "Hunt1Food1PP"},
   {"id":107 , "era": "II", "foodCost":6 , "pointsEndOfMatch":4 , "effect": "EndBuilderPP"},
   {"id":108 , "era": "II", "foodCost":5 , "pointsEndOfMatch": 6, "effect": "CavePaintingsFood"},
-  {"id":109 , "era": "II", "foodCost":5 , "pointsEndOfMatch":6 , "effect": "FullSetFood"},
+  {"id":109 , "era": "II", "foodCost":5 , "pointsEndOfMatch":6 , "effect": "EndFullSetPP"},
   {"id": 110, "era": "III", "foodCost": 8, "pointsEndOfMatch": 8, "effect": {"name":
   "EndCharacterCountPP", "pointsPerCard":3 , "targetType": "hunter"}},
   {"id": 111, "era": "III", "foodCost":7 , "pointsEndOfMatch": 6, "effect": {"name":

@@ -22,10 +22,14 @@ import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.client.ClientModel;
 import it.polimi.ingsw.network.client.PlayerView;
+import it.polimi.ingsw.network.protocol.clientbound.BuildingCardTakenMessage;
+import it.polimi.ingsw.network.protocol.clientbound.CharacterCardTakenMessage;
+import it.polimi.ingsw.network.protocol.clientbound.ExtraCardPickAvailableMessage;
 import it.polimi.ingsw.network.protocol.clientbound.GameSnapshot;
 import it.polimi.ingsw.network.protocol.clientbound.GameSyncMessage;
 import it.polimi.ingsw.network.protocol.clientbound.PlayerSnapshot;
 import it.polimi.ingsw.network.protocol.clientbound.RoundEndedMessage;
+import it.polimi.ingsw.network.protocol.clientbound.StateChangedMessage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -217,34 +221,28 @@ class PersistenceAndSyncBugHunterTest {
     }
 
     // ╔══════════════════════════════════════════════════════════════════════╗
-    // ║ P3 — ClientModel: ExtraCardPickAvailable info is dropped             ║
+    // ║ P3 — ClientModel: ExtraCardPickAvailable info is preserved           ║
     // ║                                                                      ║
-    // ║ ClientModel.applyExtraCardPickAvailable only calls notifyChanged()   ║
-    // ║ — it does NOT store the nickname or the number of remaining picks.   ║
-    // ║ The TUI cannot tell the user "you have N extra picks from your       ║
-    // ║ building, take from upper row".                                      ║
+    // ║ The client model tracks the extra upper-row picks so GUI/TUI can     ║
+    // ║ keep enabling the correct row until the extra choices are consumed.  ║
     // ╚══════════════════════════════════════════════════════════════════════╝
 
     @Test
-    void clientModelDoesNotExposeExtraCardPickAvailableInformation() {
-        // Inspect ClientModel's public API: there is no getter that returns
-        // a non-empty extra-pick-available signal.  This is a feature gap.
-        // We assert by reflection that no field of type int/String stores
-        // it (best-effort heuristic).
+    void clientModelTracksExtraCardPickAvailabilityUntilConsumed() {
         ClientModel m = new ClientModel();
+        m.setMyNickname("Alice");
+        m.applyStateChanged(new StateChangedMessage("ActionResolutionState"));
 
-        boolean hasExtraField = false;
-        for (Field f : ClientModel.class.getDeclaredFields()) {
-            String name = f.getName().toLowerCase();
-            if (name.contains("extra") || name.contains("pick")) {
-                hasExtraField = true;
-                break;
-            }
-        }
-        assertFalse(hasExtraField,
-                "ClientModel currently has no field tracking the extra-pick " +
-                "info — confirms the feature gap.  If you add one, this " +
-                "assertion should be inverted.");
+        m.applyExtraCardPickAvailable(new ExtraCardPickAvailableMessage("Alice", 2));
+
+        assertTrue(m.canCurrentActionPlayerPickFromRow(true));
+        assertFalse(m.canCurrentActionPlayerPickFromRow(false));
+
+        m.applyCharacterCardTaken(new CharacterCardTakenMessage("Alice", 101, true));
+        assertTrue(m.canCurrentActionPlayerPickFromRow(true));
+
+        m.applyBuildingCardTaken(new BuildingCardTakenMessage("Alice", 201, true));
+        assertFalse(m.canCurrentActionPlayerPickFromRow(true));
     }
 
     // ╔══════════════════════════════════════════════════════════════════════╗

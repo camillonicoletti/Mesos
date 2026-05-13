@@ -128,6 +128,7 @@ public class CardFactory {
                 case "Hunt1Food1PP"           -> new Hunt1Food1PPEffect();
                 case "EndBuilderPP"           -> new EndBuilderPPEffect();
                 case "CavePaintingsFood"      -> new CavePaintingsFoodEffect();
+                case "EndFullSetPP"           -> new EndFullSetPPEffect();
                 case "ExtraCardUpperRow"      -> new ExtraCardUpperRowEffect();
                 case "EndPP"                  -> new EndPPEffect();
                 default -> throw new IllegalArgumentException("Unknown effect: " + name);

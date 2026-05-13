@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Comparator;
 
 public final class SnapshotBuilder {
     private SnapshotBuilder() {}
@@ -82,16 +83,26 @@ public final class SnapshotBuilder {
         }
 
         List<String> turnOrder = new ArrayList<>();
+        Map<String, Integer> turnOrderPositions = new HashMap<>();
         if (board != null && board.getTurnOrderTile() != null) {
-            for (TurnSlot slot : board.getTurnOrderTile().getSlots()) {
+            List<TurnSlot> sortedSlots = new ArrayList<>(board.getTurnOrderTile().getSlots());
+            sortedSlots.sort(Comparator.comparingInt(TurnSlot::getPosition));
+            for (TurnSlot slot : sortedSlots) {
                 if (slot.isOccupied()) {
                     String nick = ownerByTotem.get(slot.getOccupiedBy());
-                    if (nick != null) turnOrder.add(nick);
+                    if (nick != null) {
+                        turnOrder.add(nick);
+                        turnOrderPositions.put(nick, slot.getPosition());
+                    }
                 }
             }
         }
         if (turnOrder.isEmpty() && totemOnTiles.isEmpty()) {
-            for (Player p : game.getPlayers()) turnOrder.add(p.getNickname());
+            int position = 1;
+            for (Player p : game.getPlayers()) {
+                turnOrder.add(p.getNickname());
+                turnOrderPositions.put(p.getNickname(), position++);
+            }
         }
 
         List<String> disconnectedPlayers = new ArrayList<>();
@@ -109,6 +120,7 @@ public final class SnapshotBuilder {
                 round != null ? round.getNumber() : 0,
                 totemOnTiles,
                 turnOrder,
+                turnOrderPositions,
                 disconnectedPlayers,
                 upperEvents, lowerEvents,
                 game.getRemainingTributeDeck()

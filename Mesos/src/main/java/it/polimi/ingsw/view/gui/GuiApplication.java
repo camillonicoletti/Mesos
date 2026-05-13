@@ -22,7 +22,6 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -174,12 +173,7 @@ public final class GuiApplication extends Application {
                     gameBoardView = new GameBoardView(controller, model, assetCatalog);
                     gameShell = new BorderPane();
                     gameShell.getStyleClass().add("game-shell");
-
-                    ScrollPane scroll = new ScrollPane(gameBoardView.render());
-                    scroll.setFitToWidth(true);
-                    scroll.setFitToHeight(true);
-                    scroll.getStyleClass().add("scroll");
-                    gameShell.setCenter(scroll);
+                    gameShell.setCenter(gameBoardView.render());
                 }
                 root.setCenter(gameShell);
             }

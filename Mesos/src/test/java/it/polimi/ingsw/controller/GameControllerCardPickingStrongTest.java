@@ -228,6 +228,41 @@ class GameControllerCardPickingStrongTest {
         assertTrue(round.getLowerRowTribute().contains(secondCard));
     }
 
+    @Test
+    void threePlayerTileDAllowsTwoLowerRowCardsBeforeTurnAdvances() {
+        GameController controller = createStartedThreePlayerGame();
+        String tileDPlayer = controller.getCurrentTurnPlayerNickname();
+        controller.onMessageReceived(tileDPlayer, new PlaceTotemAction('D'));
+
+        String tileCPlayer = controller.getCurrentTurnPlayerNickname();
+        controller.onMessageReceived(tileCPlayer, new PlaceTotemAction('C'));
+
+        String tileFPlayer = controller.getCurrentTurnPlayerNickname();
+        controller.onMessageReceived(tileFPlayer, new PlaceTotemAction('F'));
+
+        assertInstanceOf(ActionResolutionState.class, controller.getCurrentState());
+        assertEquals(tileCPlayer, controller.getCurrentActionPlayerNickname());
+
+        Round round = controller.getGame().getCurrentRound();
+        CharacterCard upperCard = round.getUpperRowTribute().get(0);
+        controller.onMessageReceived(tileCPlayer, new PickCardAction(String.valueOf(upperCard.getId()), true));
+
+        assertEquals(tileDPlayer, controller.getCurrentActionPlayerNickname());
+
+        CharacterCard firstLower = round.getLowerRowTribute().get(0);
+        controller.onMessageReceived(tileDPlayer, new PickCardAction(String.valueOf(firstLower.getId()), false));
+
+        assertEquals(tileDPlayer, controller.getCurrentActionPlayerNickname());
+
+        CharacterCard secondLower = round.getLowerRowTribute().get(0);
+        controller.onMessageReceived(tileDPlayer, new PickCardAction(String.valueOf(secondLower.getId()), false));
+
+        Player player = findPlayer(controller, tileDPlayer);
+        assertTrue(player.getTribe().getCharacterCards().contains(firstLower));
+        assertTrue(player.getTribe().getCharacterCards().contains(secondLower));
+        assertEquals(tileFPlayer, controller.getCurrentActionPlayerNickname());
+    }
+
     private GameController createActionResolutionWithFirstPlayerOn(char firstTile, char secondTile) {
         GameController controller = createStartedTwoPlayerGame();
         String firstPlayer = controller.getCurrentTurnPlayerNickname();
@@ -248,6 +283,20 @@ class GameControllerCardPickingStrongTest {
         controller.onMessageReceived("Alice", new SetPlayerCountAction(2));
         controller.onMessageReceived("Alice", new ReadyAction(true));
         controller.onMessageReceived("Bob", new ReadyAction(true));
+
+        return controller;
+    }
+
+    private GameController createStartedThreePlayerGame() {
+        GameController controller = new GameController();
+
+        controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
+        controller.onMessageReceived("Bob", new JoinGameAction(createTotem(TotemColor.BLUE)));
+        controller.onMessageReceived("Charlie", new JoinGameAction(createTotem(TotemColor.PURPLE)));
+        controller.onMessageReceived("Alice", new SetPlayerCountAction(3));
+        controller.onMessageReceived("Alice", new ReadyAction(true));
+        controller.onMessageReceived("Bob", new ReadyAction(true));
+        controller.onMessageReceived("Charlie", new ReadyAction(true));
 
         return controller;
     }

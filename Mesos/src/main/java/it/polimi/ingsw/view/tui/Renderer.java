@@ -1274,6 +1274,7 @@ public class Renderer {
             case "Hunt1Food1PP" -> List.of("HUNT", "EACH HUNTER", "+1🍖 +1🌟");
             case "EndBuilderPP" -> List.of("END GAME", "BUILDER 🌟");
             case "CavePaintingsFood" -> List.of("CAVE PAINT", "EACH ARTIST", "+1🍖");
+            case "EndFullSetPP" -> List.of("END GAME", "FULL SET", "+6🌟 EACH");
             case "EndCharacterCountPP" -> List.of("END GAME", target, "+" + c.buildingEffectPointsPerCard + "🌟 EACH");
             case "ExtraCardUpperRow" -> List.of("UPPER ROW", "+1 CARD");
             case "EndPP" -> List.of("END GAME", "+25🌟");

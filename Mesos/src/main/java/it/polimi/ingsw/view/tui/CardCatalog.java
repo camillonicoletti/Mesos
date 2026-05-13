@@ -199,6 +199,7 @@ public final class CardCatalog {
             case "Hunt1Food1PP"           -> "Hunt+PP";
             case "EndBuilderPP"           -> "Bld>PP";
             case "CavePaintingsFood"      -> "CaveFd";
+            case "EndFullSetPP"           -> "Set>PP";
             case "ExtraCardUpperRow"      -> "+Upper";
             case "EndPP"                  -> "EndPP";
             case "EndCharacterCountPP"    -> "Cnt>PP";
