@@ -234,7 +234,46 @@ public final class GameBoardView {
     }
 
     private void refreshCenterTrack() {
-        centerTrack.getChildren().setAll(turnOrderPanel(), totemPlacementPanel(), deckPanel());
+        List<Node> trackNodes = new ArrayList<>();
+        Node disconnectedTotems = disconnectedTotemsPanel();
+        if (disconnectedTotems != null) {
+            trackNodes.add(disconnectedTotems);
+        }
+        trackNodes.add(turnOrderPanel());
+        trackNodes.add(totemPlacementPanel());
+        trackNodes.add(deckPanel());
+        centerTrack.getChildren().setAll(trackNodes);
+    }
+
+    private Node disconnectedTotemsPanel() {
+        List<PlayerView> disconnectedPlayers = model.getPlayers().values().stream()
+                .filter(player -> model.isPlayerDisconnected(player.getNickname()))
+                .toList();
+        if (disconnectedPlayers.isEmpty()) {
+            return null;
+        }
+
+        VBox panel = new VBox(5);
+        panel.getStyleClass().add("disconnected-totems-panel");
+        panel.setAlignment(Pos.CENTER);
+
+        Label title = new Label("Fuori");
+        title.getStyleClass().add("disconnected-totems-title");
+        panel.getChildren().add(title);
+
+        for (PlayerView player : disconnectedPlayers) {
+            HBox row = new HBox(5);
+            row.getStyleClass().add("disconnected-totem-row");
+            row.setAlignment(Pos.CENTER_LEFT);
+
+            StackPane marker = totemMarker(player.getTotemColor(), player.getNickname(), 34);
+            Label name = new Label(player.getNickname());
+            name.getStyleClass().add("disconnected-totem-name");
+            row.getChildren().addAll(marker, name);
+            panel.getChildren().add(row);
+        }
+
+        return panel;
     }
 
     private Node turnOrderPanel() {
@@ -435,7 +474,7 @@ public final class GameBoardView {
             content.getChildren().add(letter);
         }
 
-        if (owner != null) {
+        if (owner != null && !model.isPlayerDisconnected(owner)) {
             PlayerView player = model.getPlayers().get(owner);
             TotemColor color = player == null ? null : player.getTotemColor();
 
@@ -467,6 +506,9 @@ public final class GameBoardView {
             String nickname = order.get(index);
             PlayerView player = model.getPlayers().get(nickname);
             if (player == null) {
+                continue;
+            }
+            if (model.isPlayerDisconnected(nickname)) {
                 continue;
             }
 
@@ -610,8 +652,42 @@ public final class GameBoardView {
         Node stats = tribeStatsGrid(player, true);
 
         card.getChildren().addAll(head, resources, stats);
+        Node buildings = buildingSummaryStrip(player);
+        if (buildings != null) {
+            card.getChildren().add(buildings);
+        }
 
         return card;
+    }
+
+    private Node buildingSummaryStrip(PlayerView player) {
+        List<Integer> buildingIds = player.getBuildingCardIds();
+        if (buildingIds.isEmpty()) {
+            return null;
+        }
+
+        HBox strip = new HBox(5);
+        strip.getStyleClass().add("player-building-strip");
+        strip.setAlignment(Pos.CENTER_LEFT);
+
+        Label title = new Label("Edifici");
+        title.getStyleClass().add("player-building-title");
+        strip.getChildren().add(title);
+
+        int visibleCount = Math.min(5, buildingIds.size());
+        int hiddenCount = buildingIds.size() - visibleCount;
+        List<Integer> visibleBuildings = buildingIds.subList(buildingIds.size() - visibleCount, buildingIds.size());
+        for (Integer buildingId : visibleBuildings) {
+            strip.getChildren().add(stackedMiniCardNode(buildingId, 30, 42));
+        }
+
+        if (hiddenCount > 0) {
+            Label more = new Label("+" + hiddenCount);
+            more.getStyleClass().add("player-summary-more");
+            strip.getChildren().add(more);
+        }
+
+        return strip;
     }
 
     private FlowPane tribeCards(PlayerView player, double width, double height) {

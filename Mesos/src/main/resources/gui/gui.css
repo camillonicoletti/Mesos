@@ -252,6 +252,34 @@
     -fx-max-width: 1340px;
 }
 
+.disconnected-totems-panel {
+    -fx-background-color: rgba(43, 23, 32, .42);
+    -fx-background-radius: 8px;
+    -fx-border-color: rgba(255, 207, 200, .26);
+    -fx-border-radius: 8px;
+    -fx-padding: 7px 8px;
+    -fx-min-width: 86px;
+    -fx-max-width: 124px;
+}
+
+.disconnected-totems-title {
+    -fx-text-fill: #ffcfc8;
+    -fx-font-size: 10px;
+    -fx-font-weight: 900;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .70), 3, 0, 0, 1);
+}
+
+.disconnected-totem-row {
+    -fx-opacity: .78;
+}
+
+.disconnected-totem-name {
+    -fx-text-fill: #f7ddac;
+    -fx-font-size: 10px;
+    -fx-font-weight: 800;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .70), 3, 0, 0, 1);
+}
+
 .card-row {
     -fx-background-color: transparent;
     -fx-padding: 0;
@@ -780,6 +808,18 @@
 
 .player-summary-cards {
     -fx-padding: 0;
+}
+
+.player-building-strip {
+    -fx-padding: 2px 0 0 0;
+    -fx-alignment: center-left;
+}
+
+.player-building-title {
+    -fx-text-fill: #f0ce64;
+    -fx-font-size: 10px;
+    -fx-font-weight: 900;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .70), 3, 0, 0, 1);
 }
 
 .player-summary-more {

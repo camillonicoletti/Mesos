@@ -271,6 +271,7 @@ public final class GuiApplication extends Application {
         }
         boolean suspended = model.isGameSuspended();
         suspensionOverlay.setVisible(suspended);
+        suspensionOverlay.setManaged(suspended);
         if (!suspended) {
             return;
         }
