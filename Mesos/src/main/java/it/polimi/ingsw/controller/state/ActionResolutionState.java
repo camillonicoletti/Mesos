@@ -246,6 +246,13 @@ public class ActionResolutionState extends AbstractGameState {
             if (!pickBuilding.isFromUpperRow() && remainingLowerPicks <= 0)
                 throw new IllegalStateException("You cannot take any more buildings from the lower row");
 
+            List<CharacterCard> tributeRow = pickBuilding.isFromUpperRow()
+                    ? round.getUpperRowTribute()
+                    : round.getLowerRowTribute();
+            if (!tributeRow.isEmpty())
+                throw new IllegalStateException(
+                        "Must pick a Character card before a Building when Characters are available in the same row");
+
             List<BuildingCard> row = pickBuilding.isFromUpperRow()
                     ? round.getUpperRowBuildings()
                     : round.getLowerRowBuildings();

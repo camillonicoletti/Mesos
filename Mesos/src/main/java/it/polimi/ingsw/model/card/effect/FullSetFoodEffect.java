@@ -7,6 +7,10 @@ public class FullSetFoodEffect implements Effect{
     private static final long serialVersionUID = 1L;
     private int rewardedSets = 0;
 
+    public void setRewardedSets(int rewardedSets) {
+        this.rewardedSets = rewardedSets;
+    }
+
     @Override
     public void apply(Player player) {
 

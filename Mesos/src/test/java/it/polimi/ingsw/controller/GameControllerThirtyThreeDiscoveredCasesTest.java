@@ -543,9 +543,10 @@ public class GameControllerThirtyThreeDiscoveredCasesTest {
         assertEquals(alice, game.getWinner());
     }
 
-    /** 33. If points and food are tied, scores should remain tied; the current API exposes only one winner. */
+    /** 33. If points and food are tied, victory is shared: getWinner() returns null,
+     *  getWinners() contains all co-winners. */
     @Test
-    void finalTieOnPointsAndFoodKeepsEqualFinalScores() {
+    void finalTieOnPointsAndFoodProducesSharedVictory() {
         Player alice = new Player("Alice", createTotem(TotemColor.RED));
         Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
         alice.addPrestigePoints(10);
@@ -554,8 +555,13 @@ public class GameControllerThirtyThreeDiscoveredCasesTest {
         bob.addFood(2);
         Game game = createPlainGame(List.of(alice, bob), 1);
 
-        assertEquals(game.getFinalScore(alice), game.getFinalScore(bob));
-        assertTrue(List.of(alice, bob).contains(game.getWinner()));
+        assertEquals(game.getFinalScore(alice), game.getFinalScore(bob),
+                "scores must remain equal on a full tie");
+        assertNull(game.getWinner(),
+                "full PP+food tie → shared victory: getWinner() must return null");
+        List<Player> winners = game.getWinners();
+        assertTrue(winners.contains(alice), "Alice must be in getWinners() on a full tie");
+        assertTrue(winners.contains(bob),   "Bob must be in getWinners() on a full tie");
     }
 
     // ------------------------------------------------------------------

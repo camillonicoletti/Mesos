@@ -137,6 +137,11 @@ public class Player implements Serializable {
 
     public void addBuildingCard(BuildingCard card) {
         tribe.addBuildingCard(card);
+        if (card.getEffect() instanceof FullSetFoodEffect effect) {
+            effect.setRewardedSets(tribe.countFullSets());
+        } else if (card.getEffect() instanceof InventorPairFoodEffect effect) {
+            effect.setRewardedPairs(tribe.countInventorPairs());
+        }
     }
 }
 

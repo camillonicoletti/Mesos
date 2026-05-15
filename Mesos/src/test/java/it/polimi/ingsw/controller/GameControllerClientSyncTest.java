@@ -101,6 +101,9 @@ class GameControllerClientSyncTest {
         List<BuildingCard> list = roundList(round, "upperRowBuildings");
         list.clear();
         for (BuildingCard b : buildings) list.add(b);
+        // Also clear character cards so the mandatory-character-pick rule does not
+        // block the building pick that these tests are specifically exercising.
+        roundList(round, "upperRowTribute").clear();
     }
 
     /**

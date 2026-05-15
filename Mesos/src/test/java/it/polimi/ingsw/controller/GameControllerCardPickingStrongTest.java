@@ -181,6 +181,9 @@ class GameControllerCardPickingStrongTest {
 
         clearUpperRowBuildings(round);
         addUpperRowBuilding(round, discountedBuilding);
+        // No characters must remain in the upper row; otherwise the mandatory-character-pick
+        // rule would reject the building pick before the discount logic is exercised.
+        clearUpperRowTribute(round);
 
         int boardBuildingsBefore = round.getUpperRowBuildings().size();
         int tribeBuildingsBefore = player.getTribe().getBuildingCards().size();
@@ -327,6 +330,10 @@ class GameControllerCardPickingStrongTest {
 
     private void clearUpperRowBuildings(Round round) {
         roundInternalList(round, "upperRowBuildings").clear();
+    }
+
+    private void clearUpperRowTribute(Round round) {
+        roundInternalList(round, "upperRowTribute").clear();
     }
 
     @SuppressWarnings("unchecked")

@@ -324,14 +324,17 @@ public class GameScoringTest {
     }
 
     @Test
-    void testGetWinnerReturnsNotNullEvenWithTiedScores() {
+    void testGetWinnerIsNullOnExactPPAndFoodTie() {
         player1.addPrestigePoints(10);
         player2.addPrestigePoints(10);
+        // food also tied at 0 — full tie → shared victory, no single winner
 
-        Player winner = game.getWinner();
-
-        assertNotNull(winner);
-        assertTrue(winner == player1 || winner == player2);
+        assertNull(game.getWinner(),
+                "Full PP+food tie must produce shared victory: getWinner() must return null");
+        assertTrue(game.getWinners().contains(player1),
+                "player1 must be in getWinners() on a full tie");
+        assertTrue(game.getWinners().contains(player2),
+                "player2 must be in getWinners() on a full tie");
     }
 
     @Test
