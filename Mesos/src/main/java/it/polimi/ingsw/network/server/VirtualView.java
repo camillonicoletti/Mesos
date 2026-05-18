@@ -134,4 +134,10 @@ public class VirtualView implements GameListener {
                                 List<EventResolvedMessage.PlayerEffect> effects) {
         connection.send(new EventResolvedMessage(cardId, title, description, effects));
     }
+    @Override
+    public void onLeaderboardRank(String nick, int rank, int playersCount) {
+        if (this.nickname.equals(nick)) {
+            connection.send(new LeaderboardRankMessage(nick, rank, playersCount));
+        }
+    }
 }

@@ -1,0 +1,4 @@
+db.url=jdbc:postgresql://localhost:5432/mesos
+db.user=mesos
+db.password=mesos
+db.poolSize=4

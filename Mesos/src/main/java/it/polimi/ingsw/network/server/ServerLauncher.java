@@ -2,6 +2,8 @@ package it.polimi.ingsw.network.server;
 
 import it.polimi.ingsw.controller.GameController;
 import it.polimi.ingsw.controller.Persistence;
+import it.polimi.ingsw.controller.leaderboard.LeaderboardFactory;
+import it.polimi.ingsw.controller.leaderboard.LeaderboardService;
 import it.polimi.ingsw.network.rmi.RMIServer;
 import it.polimi.ingsw.network.rmi.RMIServerMain;
 
@@ -48,10 +50,12 @@ public final class ServerLauncher {
             Persistence.clear();
         }
 
+        LeaderboardService leaderboard = LeaderboardFactory.createDefault();
+
         Optional<GameController> restored = freshStart ? Optional.empty() : Persistence.load();
         LobbyManager lobby = restored
-                .map(LobbyManager::new)
-                .orElseGet(LobbyManager::new);
+                .map(c -> new LobbyManager(c, leaderboard))
+                .orElseGet(() -> new LobbyManager(leaderboard));
 
         if (restored.isPresent()) {
             System.out.println("Previous state restored from disk - "

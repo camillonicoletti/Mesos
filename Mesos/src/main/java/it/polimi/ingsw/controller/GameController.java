@@ -1,6 +1,8 @@
 package it.polimi.ingsw.controller;
 
 import it.polimi.ingsw.controller.action.GameAction;
+import it.polimi.ingsw.controller.leaderboard.LeaderboardService;
+import it.polimi.ingsw.controller.leaderboard.NoOpLeaderboardService;
 import it.polimi.ingsw.controller.listener.GameListener;
 import it.polimi.ingsw.controller.state.GameState;
 import it.polimi.ingsw.controller.state.ActionResolutionState;
@@ -15,11 +17,7 @@ import it.polimi.ingsw.model.Totem;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 
 import java.io.IOException;
@@ -33,7 +31,8 @@ public class GameController implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private static final long DEFAULT_SUSPENSION_TIMEOUT_MILLIS = 60 * 1000;
-
+    private transient LeaderboardService leaderboardService;
+    private final UUID matchId = UUID.randomUUID();
     private Game game;
     private GameState currentState;
 
@@ -657,5 +656,18 @@ public class GameController implements Serializable {
             actionState.debugAutoComplete(this);
         }
     }
+    public void setLeaderboardService(LeaderboardService service) {
+        this.leaderboardService = (service != null) ? service : new NoOpLeaderboardService();
+    }
 
+    public LeaderboardService getLeaderboardService() {
+        if (leaderboardService == null) {
+            leaderboardService = new NoOpLeaderboardService();
+        }
+        return leaderboardService;
+    }
+
+    public UUID getMatchId() {
+        return matchId;
+    }
 }

@@ -1,6 +1,8 @@
 package it.polimi.ingsw.network.server;
 
 import it.polimi.ingsw.controller.action.GameAction;
+import it.polimi.ingsw.controller.leaderboard.LeaderboardEntry;
+import it.polimi.ingsw.controller.leaderboard.LeaderboardService;
 import it.polimi.ingsw.controller.listener.PersistenceListener;
 import it.polimi.ingsw.controller.GameController;
 import it.polimi.ingsw.controller.action.JoinGameAction;
@@ -8,15 +10,8 @@ import it.polimi.ingsw.controller.action.ReadyAction;
 import it.polimi.ingsw.controller.action.SetPlayerCountAction;
 import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.Totem;
-import it.polimi.ingsw.network.protocol.clientbound.CurrentPlayerChangedMessage;
-import it.polimi.ingsw.network.protocol.clientbound.ErrorMessage;
-import it.polimi.ingsw.network.protocol.clientbound.GameStartedMessage;
-import it.polimi.ingsw.network.protocol.clientbound.GameSuspendedMessage;
-import it.polimi.ingsw.network.protocol.clientbound.GameSyncMessage;
-import it.polimi.ingsw.network.protocol.clientbound.LobbyPlayerSnapshot;
-import it.polimi.ingsw.network.protocol.clientbound.LobbyUpdateMessage;
-import it.polimi.ingsw.network.protocol.clientbound.LoginAckMessage;
-import it.polimi.ingsw.network.protocol.clientbound.StateChangedMessage;
+import it.polimi.ingsw.network.protocol.clientbound.*;
+import it.polimi.ingsw.network.protocol.serverbound.GetLeaderboardMessage;
 import it.polimi.ingsw.network.protocol.serverbound.LoginMessage;
 import it.polimi.ingsw.network.protocol.serverbound.ReconnectMessage;
 import it.polimi.ingsw.network.protocol.serverbound.SetPlayersCountMessage;
@@ -29,6 +24,8 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import it.polimi.ingsw.controller.leaderboard.NoOpLeaderboardService;
+import it.polimi.ingsw.network.protocol.clientbound.LeaderboardMessage;
 
 public class LobbyManager {
 
@@ -39,13 +36,21 @@ public class LobbyManager {
     private final Map<String, VirtualView> views = new HashMap<>();
     private final List<ServerSideConnection> pendingConnections = new ArrayList<>();
     private final ScheduledExecutorService suspensionTimeoutExecutor;
-
+    private final LeaderboardService leaderboardService;
     /**
      * Creates a fresh lobby manager with a brand-new controller.
      * Used on a clean server start with no save file on disk.
      */
     public LobbyManager() {
-        this(new GameController());
+        this(new GameController(), new NoOpLeaderboardService());
+    }
+
+    public LobbyManager(LeaderboardService leaderboardService) {
+        this(new GameController(), leaderboardService);
+    }
+
+    public LobbyManager(GameController preloaded) {
+        this(preloaded, new NoOpLeaderboardService());
     }
 
     /**
@@ -57,13 +62,20 @@ public class LobbyManager {
      * clients reconnect. A {@link PersistenceListener} is attached to keep the
      * save file aligned with future events.
      *
-     * @param preloaded the controller to use as backing state; must not be null
+     * @param preloaded         the controller to use as backing state; must not be null
+     * @param leaderboardService the leaderboard backend; must not be null
+     *                          (pass {@link NoOpLeaderboardService} to disable)
      */
-    public LobbyManager(GameController preloaded) {
+    public LobbyManager(GameController preloaded, LeaderboardService leaderboardService) {
         if (preloaded == null) {
             throw new IllegalArgumentException("Controller cannot be null");
         }
+        if (leaderboardService == null) {
+            throw new IllegalArgumentException("LeaderboardService cannot be null");
+        }
         this.gameController = preloaded;
+        this.leaderboardService = leaderboardService;
+        this.gameController.setLeaderboardService(leaderboardService);
         if (this.gameController.getGame() != null) {
             this.gameController.markAllPlayersDisconnected();
         }
@@ -79,6 +91,10 @@ public class LobbyManager {
                 SUSPENSION_TIMEOUT_CHECK_INTERVAL_SECONDS,
                 TimeUnit.SECONDS
         );
+    }
+
+    public LeaderboardService getLeaderboardService() {
+        return leaderboardService;
     }
 
     public synchronized void handleGameAction(String nickname, GameAction action) {
@@ -233,7 +249,13 @@ public class LobbyManager {
             broadcastLobbyUpdate();
         }
     }
-
+    public synchronized void handleGetLeaderboard(ServerSideConnection connection,
+                                                  GetLeaderboardMessage message) {
+        int requestedLimit = Math.min(message.limit(), 10);
+        List<LeaderboardEntry> entries =
+                leaderboardService.getTop(message.playersCount(), requestedLimit);
+        connection.send(new LeaderboardMessage(message.playersCount(), entries));
+    }
     private void broadcastLobbyUpdate() {
         LobbyUpdateMessage message = buildLobbyUpdateMessage();
 

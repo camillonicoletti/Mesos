@@ -40,4 +40,5 @@ public interface GameListener {
     void onGameEnded(Player winner, Map<Player, Integer> finalScores);
     void onExtraCardPickAvailable(String nickname, int picks);
 
+    default void onLeaderboardRank(String nickname, int rank, int playersCount) {}
 }
