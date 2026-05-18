@@ -68,6 +68,7 @@ public final class GameBoardView {
     private final TotemMarkerFactory totemMarkers;
     private final TurnOrderView turnOrderView;
     private final OfferTilesView offerTilesView;
+    private final DeckView deckView;
     private StackPane rootLayer;
     private VBox board;
     private boolean boardShellBuilt;
@@ -90,6 +91,7 @@ public final class GameBoardView {
                 this::showInlinePanel,
                 this::hideInlinePanel);
         this.offerTilesView = new OfferTilesView(controller, model, assetCatalog, totemMarkers);
+        this.deckView = new DeckView(model, assetCatalog);
     }
 
     public Node render() {
@@ -237,7 +239,7 @@ public final class GameBoardView {
         }
         trackNodes.add(turnOrderView.render());
         trackNodes.add(offerTilesView.render());
-        trackNodes.add(deckPanel());
+        trackNodes.add(deckView.render());
         centerTrack.getChildren().setAll(trackNodes);
     }
 
@@ -269,47 +271,6 @@ public final class GameBoardView {
             panel.getChildren().add(row);
         }
 
-        return panel;
-    }
-
-    private VBox deckPanel() {
-        VBox panel = new VBox(4);
-        panel.getStyleClass().add("deck-view");
-        panel.setAlignment(Pos.CENTER);
-        panel.getChildren().add(sectionTitle("Mazzo Tribù"));
-
-        StackPane cardBack = new StackPane();
-        cardBack.getStyleClass().add("deck-placeholder");
-        cardBack.setPrefSize(CARD_WIDTH, CARD_HEIGHT);
-
-        String eraKey = eraBackKey(model.getCurrentEra());
-        String backPath = "assets/cards/backs/" + eraKey + ".png";
-
-        boolean backLoaded = false;
-        try (InputStream stream = assetCatalog.openResource(backPath).orElse(null)) {
-            if (stream != null) {
-                ImageView img = new ImageView(new Image(stream));
-                img.setFitWidth(CARD_WIDTH);
-                img.setFitHeight(CARD_HEIGHT);
-                img.setPreserveRatio(true);
-                cardBack.getChildren().add(img);
-                backLoaded = true;
-            }
-        } catch (Exception ignored) {}
-
-        if (!backLoaded) {
-            String eraLabel = model.getCurrentEra() == null ? "TRIBÙ" : "ERA " + model.getCurrentEra().name();
-            Label placeholder = new Label(eraLabel);
-            placeholder.getStyleClass().add("deck-placeholder-label");
-            cardBack.getChildren().add(placeholder);
-        }
-
-        int remaining = model.getRemainingTribeDeckCards();
-        String countText = remaining < 0 ? "?" : String.valueOf(remaining);
-        Label count = new Label(countText + " carte");
-        count.getStyleClass().add("deck-count");
-
-        panel.getChildren().addAll(cardBack, count);
         return panel;
     }
 
@@ -1070,24 +1031,8 @@ public final class GameBoardView {
         return dot;
     }
 
-    private String eraBackKey(it.polimi.ingsw.model.enums.Era era) {
-        if (era == null) return "back_character_era_i";
-        return switch (era) {
-            case I   -> "back_character_era_i";
-            case II  -> "back_character_era_ii";
-            case III -> "back_character_era_iii";
-        };
-    }
-
     private String totemColorHex(TotemColor color) {
         return totemMarkers.colorHex(color);
-    }
-
-    private Label sectionTitle(String text) {
-        Label label = new Label(text);
-        label.getStyleClass().add("section-title");
-
-        return label;
     }
 
     private record TribeSummaryStats(
