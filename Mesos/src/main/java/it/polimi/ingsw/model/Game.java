@@ -510,13 +510,10 @@ public class Game implements Serializable {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Returns one winner for legacy callers.
-     * Use {@link #getWinners()} when shared victories must be represented explicitly.
-     */
+    /** Returns the single winner, or null when multiple players share the victory. */
     public Player getWinner() {
         List<Player> winners = getWinners();
-        return winners.isEmpty() ? null : winners.get(0);
+        return winners.size() == 1 ? winners.get(0) : null;
     }
     // LISTENER
     public void setNotifier(Consumer<Consumer<GameListener>> notifier) {
