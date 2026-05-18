@@ -6,17 +6,21 @@ import it.polimi.ingsw.network.protocol.serverbound.DisconnectMessage;
 import it.polimi.ingsw.network.protocol.serverbound.PongMessage;
 import it.polimi.ingsw.network.transport.ClientSideConnection;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 
 public class ClientController {
 
     private final ClientModel model;
     private final ClientSideConnection connection;
+    private final Map<Class<? extends ServerMessage>, Consumer<ServerMessage>> messageHandlers;
     private Consumer<Runnable> dispatcher = Runnable::run;
 
     public ClientController(ClientModel model, ClientSideConnection connection) {
         this.model = model;
         this.connection = connection;
+        this.messageHandlers = createMessageHandlers();
         connection.setOnMessage(this::onMessage);
         connection.setOnDisconnect(this::onDisconnect);
     }
@@ -59,27 +63,43 @@ public class ClientController {
     }
 
     private void dispatch(ServerMessage message) {
-        if (message instanceof LoginAckMessage m)           model.applyLoginAck(m);
-        else if (message instanceof LobbyUpdateMessage m)   model.applyLobbyUpdate(m);
-        else if (message instanceof GameStartedMessage m)   model.applyGameStarted(m);
-        else if (message instanceof GameSyncMessage m)      model.applyGameSync(m);
-        else if (message instanceof StateChangedMessage m)  model.applyStateChanged(m);
-        else if (message instanceof TotemPlacedMessage m)   model.applyTotemPlaced(m);
-        else if (message instanceof EraChangedMessage m)    model.applyEraChanged(m);
-        else if (message instanceof FoodChangedMessage m)   model.applyFoodChanged(m);
-        else if (message instanceof PointsChangedMessage m) model.applyPointsChanged(m);
-        else if (message instanceof CharacterCardTakenMessage m) model.applyCharacterCardTaken(m);
-        else if (message instanceof BuildingCardTakenMessage m)  model.applyBuildingCardTaken(m);
-        else if (message instanceof RoundEndedMessage m)    model.applyRoundEnded(m);
-        else if (message instanceof GameEndedMessage m)     model.applyGameEnded(m);
-        else if (message instanceof ErrorMessage m)         model.applyError(m);
-        else if (message instanceof EventResolvedMessage m)        model.applyEventResolved(m);
-        else if (message instanceof CurrentPlayerChangedMessage m) model.applyCurrentPlayerChanged(m);
-        else if (message instanceof GameSuspendedMessage m)        model.applyGameSuspended(m);
-        else if (message instanceof GameResumedMessage m)          model.applyGameResumed(m);
-        else if (message instanceof PlayerDisconnectedMessage m)   model.applyPlayerDisconnected(m);
-        else if (message instanceof PlayerReconnectedMessage m)    model.applyPlayerReconnected(m);
-        else if (message instanceof ExtraCardPickAvailableMessage m) model.applyExtraCardPickAvailable(m);
+        Consumer<ServerMessage> handler = messageHandlers.get(message.getClass());
+        if (handler != null) {
+            handler.accept(message);
+        }
+    }
+
+    private Map<Class<? extends ServerMessage>, Consumer<ServerMessage>> createMessageHandlers() {
+        Map<Class<? extends ServerMessage>, Consumer<ServerMessage>> handlers = new HashMap<>();
+        register(handlers, LoginAckMessage.class, model::applyLoginAck);
+        register(handlers, LobbyUpdateMessage.class, model::applyLobbyUpdate);
+        register(handlers, GameStartedMessage.class, model::applyGameStarted);
+        register(handlers, GameSyncMessage.class, model::applyGameSync);
+        register(handlers, StateChangedMessage.class, model::applyStateChanged);
+        register(handlers, TotemPlacedMessage.class, model::applyTotemPlaced);
+        register(handlers, EraChangedMessage.class, model::applyEraChanged);
+        register(handlers, FoodChangedMessage.class, model::applyFoodChanged);
+        register(handlers, PointsChangedMessage.class, model::applyPointsChanged);
+        register(handlers, CharacterCardTakenMessage.class, model::applyCharacterCardTaken);
+        register(handlers, BuildingCardTakenMessage.class, model::applyBuildingCardTaken);
+        register(handlers, RoundEndedMessage.class, model::applyRoundEnded);
+        register(handlers, GameEndedMessage.class, model::applyGameEnded);
+        register(handlers, ErrorMessage.class, model::applyError);
+        register(handlers, EventResolvedMessage.class, model::applyEventResolved);
+        register(handlers, CurrentPlayerChangedMessage.class, model::applyCurrentPlayerChanged);
+        register(handlers, GameSuspendedMessage.class, model::applyGameSuspended);
+        register(handlers, GameResumedMessage.class, model::applyGameResumed);
+        register(handlers, PlayerDisconnectedMessage.class, model::applyPlayerDisconnected);
+        register(handlers, PlayerReconnectedMessage.class, model::applyPlayerReconnected);
+        register(handlers, ExtraCardPickAvailableMessage.class, model::applyExtraCardPickAvailable);
+        return Map.copyOf(handlers);
+    }
+
+    private <T extends ServerMessage> void register(
+            Map<Class<? extends ServerMessage>, Consumer<ServerMessage>> handlers,
+            Class<T> type,
+            Consumer<T> handler) {
+        handlers.put(type, message -> handler.accept(type.cast(message)));
     }
 
     private void onDisconnect() {
