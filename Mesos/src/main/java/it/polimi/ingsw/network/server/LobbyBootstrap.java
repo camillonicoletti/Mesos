@@ -12,15 +12,15 @@ import java.util.function.Supplier;
  * Centralizes server startup state: fresh starts, saved-game restore and lobby
  * creation must behave the same way for every transport bootstrap.
  */
-final class LobbyBootstrap {
+public final class LobbyBootstrap {
 
     private LobbyBootstrap() {}
 
-    static LobbyManager create(boolean freshStart) {
+    public static LobbyManager create(boolean freshStart) {
         return create(freshStart, LobbyManager::new, LobbyManager::new);
     }
 
-    static LobbyManager create(boolean freshStart, LeaderboardService leaderboard) {
+    public static LobbyManager create(boolean freshStart, LeaderboardService leaderboard) {
         return create(freshStart,
                 () -> new LobbyManager(leaderboard),
                 controller -> new LobbyManager(controller, leaderboard));

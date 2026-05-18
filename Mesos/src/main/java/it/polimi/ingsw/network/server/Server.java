@@ -4,21 +4,11 @@ import java.io.IOException;
 
 public class Server {
     public static void main(String[] args) throws IOException {
-        boolean freshStart = false;
-        int port = 1234;
-
-        for (String arg : args) {
-            if ("--fresh".equalsIgnoreCase(arg)) {
-                freshStart = true;
-            } else {
-                port = Integer.parseInt(arg);
-            }
-        }
-
-        LobbyManager lobby = LobbyBootstrap.create(freshStart);
+        ServerLaunchOptions options = ServerLaunchOptions.socketOnly(args);
+        LobbyManager lobby = LobbyBootstrap.create(options.freshStart());
         MessageDispatcher dispatcher = new MessageDispatcher(lobby);
 
-        SocketAcceptLoop.runBlocking(port, lobby, dispatcher,
+        SocketAcceptLoop.runBlocking(options.socketPort(), lobby, dispatcher,
                 "Server started on port ",
                 "New connection: ");
     }

@@ -3,7 +3,6 @@ package it.polimi.ingsw.network.server;
 import it.polimi.ingsw.controller.leaderboard.LeaderboardFactory;
 import it.polimi.ingsw.controller.leaderboard.LeaderboardService;
 import it.polimi.ingsw.network.rmi.RMIServer;
-import it.polimi.ingsw.network.rmi.RMIServerMain;
 
 import java.io.IOException;
 import java.rmi.registry.LocateRegistry;
@@ -22,37 +21,17 @@ public final class ServerLauncher {
     private ServerLauncher() {}
 
     public static void main(String[] args) throws Exception {
-        boolean freshStart = false;
-        Integer socketPort = null;
-        Integer rmiPort = null;
-        String rmiBindingName = null;
-
-        for (String arg : args) {
-            if ("--fresh".equalsIgnoreCase(arg)) {
-                freshStart = true;
-            } else if (socketPort == null) {
-                socketPort = Integer.parseInt(arg);
-            } else if (rmiPort == null) {
-                rmiPort = Integer.parseInt(arg);
-            } else if (rmiBindingName == null) {
-                rmiBindingName = arg;
-            }
-        }
-
-        if (socketPort == null) socketPort = 1234;
-        if (rmiPort == null)    rmiPort = Registry.REGISTRY_PORT;
-        if (rmiBindingName == null) rmiBindingName = RMIServerMain.DEFAULT_BINDING_NAME;
-
+        ServerLaunchOptions options = ServerLaunchOptions.unified(args);
         LeaderboardService leaderboard = LeaderboardFactory.createDefault();
-        LobbyManager lobby = LobbyBootstrap.create(freshStart, leaderboard);
+        LobbyManager lobby = LobbyBootstrap.create(options.freshStart(), leaderboard);
         MessageDispatcher dispatcher = new MessageDispatcher(lobby);
 
-        Registry registry = LocateRegistry.createRegistry(rmiPort);
+        Registry registry = LocateRegistry.createRegistry(options.rmiPort());
         RMIServer rmiServer = new RMIServer(lobby);
-        registry.rebind(rmiBindingName, rmiServer);
-        System.out.println("Server listening for RMI clients on registry port " + rmiPort);
+        registry.rebind(options.rmiBindingName(), rmiServer);
+        System.out.println("Server listening for RMI clients on registry port " + options.rmiPort());
 
-        final int finalSocketPort = socketPort;
+        final int finalSocketPort = options.socketPort();
         Thread socketThread = new Thread(() -> runSocketAcceptLoop(finalSocketPort, lobby, dispatcher),
                 "socket-accept");
         socketThread.setDaemon(false);

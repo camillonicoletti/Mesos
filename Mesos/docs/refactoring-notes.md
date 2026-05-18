@@ -42,6 +42,11 @@ The design idea is a small factory/bootstrap object: it centralizes object
 creation that depends on startup state, without putting persistence details
 inside the transport classes.
 
+`ServerLaunchOptions` is the value object used by `Server`, `ServerLauncher`
+and `RMIServerMain` to parse launch arguments. This keeps command-line parsing
+away from the actual transport startup code, and makes defaults such as socket
+port, RMI registry port and binding name explicit and testable.
+
 ## Message dispatching
 
 The socket side receives DTO messages from the client and dispatches them in
