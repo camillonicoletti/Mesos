@@ -12,6 +12,8 @@ import it.polimi.ingsw.network.protocol.serverbound.SetPlayersCountMessage;
 import it.polimi.ingsw.network.transport.ClientSideConnection;
 
 import java.rmi.RemoteException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -28,6 +30,7 @@ public class RMIClientConnection implements ClientSideConnection {
     private final RemoteServer remoteServer;
     private final RMIClientCallback callback;
     private final ScheduledExecutorService heartbeatExecutor;
+    private final Map<Class<? extends ClientMessage>, RemoteOperation<ClientMessage>> remoteOperations;
 
     private volatile boolean alive;
     private volatile boolean disconnectNotified;
@@ -47,6 +50,7 @@ public class RMIClientConnection implements ClientSideConnection {
         this.lastReceivedAtMillis = System.currentTimeMillis();
         this.onMessage = message -> { };
         this.onDisconnect = () -> { };
+        this.remoteOperations = createRemoteOperations();
         // Message to client
         this.heartbeatExecutor = Executors.newSingleThreadScheduledExecutor(runnable -> {
             Thread thread = new Thread(runnable, "rmi-client-heartbeat");
@@ -84,24 +88,38 @@ public class RMIClientConnection implements ClientSideConnection {
     }
 
     private void invokeRemoteOperation(ClientMessage message) throws RemoteException {
-        if (message instanceof LoginMessage login) {
-            remoteServer.login(callback, login.getNickname(), login.getTotemColor());
-        } else if (message instanceof ReconnectMessage reconnect) {
-            remoteServer.reconnect(callback, reconnect.getNickname());
-        } else if (message instanceof SetPlayersCountMessage setPlayersCount) {
-            remoteServer.setPlayersCount(callback, setPlayersCount.getCount());
-        } else if (message instanceof ReadyMessage ready) {
-            remoteServer.setReady(callback, ready.isReady());
-        } else if (message instanceof GameActionMessage gameAction) {
-            remoteServer.performAction(callback, gameAction.getAction());
-        } else if (message instanceof PongMessage) {
-            remoteServer.pong(callback);
-        } else if (message instanceof DisconnectMessage) {
-            remoteServer.disconnect(callback);
-        } else {
+        RemoteOperation<ClientMessage> operation = remoteOperations.get(message.getClass());
+        if (operation == null) {
             throw new IllegalArgumentException("Unsupported RMI operation message: "
                     + message.getClass().getSimpleName());
         }
+        operation.invoke(message);
+    }
+
+    private Map<Class<? extends ClientMessage>, RemoteOperation<ClientMessage>> createRemoteOperations() {
+        Map<Class<? extends ClientMessage>, RemoteOperation<ClientMessage>> operations = new HashMap<>();
+        register(operations, LoginMessage.class,
+                message -> remoteServer.login(callback, message.getNickname(), message.getTotemColor()));
+        register(operations, ReconnectMessage.class,
+                message -> remoteServer.reconnect(callback, message.getNickname()));
+        register(operations, SetPlayersCountMessage.class,
+                message -> remoteServer.setPlayersCount(callback, message.getCount()));
+        register(operations, ReadyMessage.class,
+                message -> remoteServer.setReady(callback, message.isReady()));
+        register(operations, GameActionMessage.class,
+                message -> remoteServer.performAction(callback, message.getAction()));
+        register(operations, PongMessage.class,
+                message -> remoteServer.pong(callback));
+        register(operations, DisconnectMessage.class,
+                message -> remoteServer.disconnect(callback));
+        return Map.copyOf(operations);
+    }
+
+    private <T extends ClientMessage> void register(
+            Map<Class<? extends ClientMessage>, RemoteOperation<ClientMessage>> operations,
+            Class<T> type,
+            RemoteOperation<T> operation) {
+        operations.put(type, message -> operation.invoke(type.cast(message)));
     }
 
     @Override
@@ -171,5 +189,10 @@ public class RMIClientConnection implements ClientSideConnection {
 
         disconnectNotified = true;
         onDisconnect.run();
+    }
+
+    @FunctionalInterface
+    private interface RemoteOperation<T extends ClientMessage> {
+        void invoke(T message) throws RemoteException;
     }
 }
