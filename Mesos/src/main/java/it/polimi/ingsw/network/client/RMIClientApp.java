@@ -4,7 +4,6 @@ import it.polimi.ingsw.network.rmi.RMIClientConnection;
 import it.polimi.ingsw.network.rmi.RMIServerMain;
 import it.polimi.ingsw.network.rmi.RemoteServer;
 import it.polimi.ingsw.network.transport.ClientSideConnection;
-import it.polimi.ingsw.view.View;
 
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -25,23 +24,11 @@ public class RMIClientApp {
         String bindingName = args.length > 2 ? args[2] : RMIServerMain.DEFAULT_BINDING_NAME;
 
         ClientSideConnection connection = createConnection(host, registryPort, bindingName);
-        ClientModel model = new ClientModel();
-        ClientController controller = new ClientController(model, connection);
-        View view = ClientViewSelector.select(controller, model);
-        try {
-            ((RMIClientConnection) connection).register();
-        } catch (java.rmi.RemoteException e) {
-            System.err.println("Unable to register with the RMI server: " + e.getMessage());
-            System.exit(1);
-        }
-        try {
-            view.run();
-        } catch (Exception exception) {
-            System.err.println("Error: " + exception.getMessage());
-            System.exit(1);
-        } finally {
-            connection.close();
-        }
+        ClientRuntime.run(connection, () -> registerWithServer(connection));
+    }
+
+    private static void registerWithServer(ClientSideConnection connection) throws java.rmi.RemoteException {
+        ((RMIClientConnection) connection).register();
     }
 
     private static ClientSideConnection createConnection(String host, int registryPort, String bindingName) {

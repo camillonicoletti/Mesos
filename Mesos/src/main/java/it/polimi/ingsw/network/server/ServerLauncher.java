@@ -1,7 +1,5 @@
 package it.polimi.ingsw.network.server;
 
-import it.polimi.ingsw.controller.GameController;
-import it.polimi.ingsw.controller.Persistence;
 import it.polimi.ingsw.controller.leaderboard.LeaderboardFactory;
 import it.polimi.ingsw.controller.leaderboard.LeaderboardService;
 import it.polimi.ingsw.network.rmi.RMIServer;
@@ -10,7 +8,6 @@ import it.polimi.ingsw.network.rmi.RMIServerMain;
 import java.io.IOException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.util.Optional;
 
 /**
  * Unified server bootstrap: starts both the Socket and the RMI transports
@@ -46,24 +43,8 @@ public final class ServerLauncher {
         if (rmiPort == null)    rmiPort = Registry.REGISTRY_PORT;
         if (rmiBindingName == null) rmiBindingName = RMIServerMain.DEFAULT_BINDING_NAME;
 
-        if (freshStart) {
-            Persistence.clear();
-        }
-
         LeaderboardService leaderboard = LeaderboardFactory.createDefault();
-
-        Optional<GameController> restored = freshStart ? Optional.empty() : Persistence.load();
-        LobbyManager lobby = restored
-                .map(c -> new LobbyManager(c, leaderboard))
-                .orElseGet(() -> new LobbyManager(leaderboard));
-
-        if (restored.isPresent()) {
-            System.out.println("Previous state restored from disk - "
-                    + "waiting for players to reconnect.");
-        } else if (freshStart) {
-            System.out.println("Clean startup requested - no previous save will be restored.");
-        }
-
+        LobbyManager lobby = LobbyBootstrap.create(freshStart, leaderboard);
         MessageDispatcher dispatcher = new MessageDispatcher(lobby);
 
         Registry registry = LocateRegistry.createRegistry(rmiPort);

@@ -1,6 +1,5 @@
 package it.polimi.ingsw.network.client;
 
-import it.polimi.ingsw.view.View;
 import it.polimi.ingsw.network.transport.ClientSideConnection;
 import it.polimi.ingsw.network.transport.SocketClientConnection;
 
@@ -26,18 +25,7 @@ public class ClientApp {
         }
 
         ClientSideConnection connection = createConnection(host, port);
-        ClientModel model               = new ClientModel();
-        ClientController controller     = new ClientController(model, connection);
-        View view                       = ClientViewSelector.select(controller, model);
-
-        try {
-            view.run();
-        } catch (Exception e) {
-            System.err.println("Error: " + e.getMessage());
-            System.exit(1);
-        } finally {
-            connection.close();
-        }
+        ClientRuntime.run(connection);
     }
 
     private static ClientSideConnection createConnection(String host, int port) {
