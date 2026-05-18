@@ -33,3 +33,4 @@ Icon
 /Mesos/src/main/resources/assets/**/*.jpeg
 /Mesos/src/main/resources/assets/**/*.pdf
 /Mesos/src/main/resources/assets/**/*.webp
+.claude/
