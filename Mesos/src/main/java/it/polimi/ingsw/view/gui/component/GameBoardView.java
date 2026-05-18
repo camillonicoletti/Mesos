@@ -4,7 +4,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import it.polimi.ingsw.controller.action.PickBuildingAction;
 import it.polimi.ingsw.controller.action.PickCardAction;
-import it.polimi.ingsw.controller.action.PlaceTotemAction;
 import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.client.ClientController;
 import it.polimi.ingsw.network.client.ClientModel;
@@ -47,8 +46,6 @@ import java.util.stream.Collectors;
 public final class GameBoardView {
     private static final double CARD_WIDTH = 96;
     private static final double CARD_HEIGHT = 135;
-    private static final double TILE_WIDTH = 100;
-    private static final double TILE_HEIGHT = 164;
     private static final double MINI_CARD_WIDTH = 44;
     private static final double MINI_CARD_HEIGHT = 62;
     private static final double DETAIL_CARD_WIDTH = 330;
@@ -64,24 +61,13 @@ public final class GameBoardView {
     private static final String ICON_SHAMAN = "assets/icons/summary/shaman.png";
     private static final String ICON_STAR = "assets/icons/summary/star.png";
 
-    private static final List<Character> TILE_ORDER = List.of('A', 'B', 'C', 'D', 'E', 'F', 'G');
-
-    private static final Map<Character, Integer> TILE_MIN_PLAYERS = Map.of(
-            'A', 5,
-            'B', 2,
-            'C', 2,
-            'D', 3,
-            'E', 2,
-            'F', 2,
-            'G', 4
-    );
-
     private final ClientController controller;
     private final ClientModel model;
     private final GuiAssetCatalog assetCatalog;
     private final CardDescriptionService cardDescriptions;
     private final TotemMarkerFactory totemMarkers;
     private final TurnOrderView turnOrderView;
+    private final OfferTilesView offerTilesView;
     private StackPane rootLayer;
     private VBox board;
     private boolean boardShellBuilt;
@@ -103,6 +89,7 @@ public final class GameBoardView {
                 this::inlineButton,
                 this::showInlinePanel,
                 this::hideInlinePanel);
+        this.offerTilesView = new OfferTilesView(controller, model, assetCatalog, totemMarkers);
     }
 
     public Node render() {
@@ -249,7 +236,7 @@ public final class GameBoardView {
             trackNodes.add(disconnectedTotems);
         }
         trackNodes.add(turnOrderView.render());
-        trackNodes.add(totemPlacementPanel());
+        trackNodes.add(offerTilesView.render());
         trackNodes.add(deckPanel());
         centerTrack.getChildren().setAll(trackNodes);
     }
@@ -281,36 +268,6 @@ public final class GameBoardView {
             row.getChildren().addAll(marker, name);
             panel.getChildren().add(row);
         }
-
-        return panel;
-    }
-
-    private VBox totemPlacementPanel() {
-        VBox panel = new VBox(4);
-        panel.getStyleClass().add("offer-strip");
-
-        HBox pane = new HBox(4);
-        pane.setAlignment(Pos.CENTER);
-
-        for (char tile : activeOfferTiles()) {
-            String owner = model.getTotemOnTiles().get(tile);
-            Button button = offerTileButton(tile, owner);
-
-            char selectedTile = tile;
-
-            button.setDisable(false);
-            button.setOnAction(event -> {
-                if (!model.isMyTotemPlacementTurn() || owner != null) {
-                    return;
-                }
-                controller.send(new GameActionMessage(new PlaceTotemAction(selectedTile)));
-            });
-
-            GuiAnimations.addHoverScale(button);
-            pane.getChildren().add(button);
-        }
-
-        panel.getChildren().add(pane);
 
         return panel;
     }
@@ -354,53 +311,6 @@ public final class GameBoardView {
 
         panel.getChildren().addAll(cardBack, count);
         return panel;
-    }
-
-    private Button offerTileButton(char tile, String owner) {
-        String path = "assets/board/offer_" + tile + ".png";
-
-        StackPane content = new StackPane();
-        content.setAlignment(Pos.CENTER);
-
-        try (InputStream stream = assetCatalog.openResource(path).orElse(null)) {
-            if (stream != null) {
-                Image image = new Image(stream);
-                ImageView view = new ImageView(image);
-
-                view.setPreserveRatio(true);
-                view.setFitWidth(TILE_WIDTH);
-                view.setFitHeight(TILE_HEIGHT);
-
-                content.getChildren().add(view);
-            }
-        } catch (Exception ignored) {
-            // Fallback text is added below.
-        }
-
-        if (content.getChildren().isEmpty()) {
-            Label letter = new Label(String.valueOf(tile));
-            letter.getStyleClass().add("offer-letter");
-            content.getChildren().add(letter);
-        }
-
-        if (owner != null && !model.isPlayerDisconnected(owner)) {
-            PlayerView player = model.getPlayers().get(owner);
-            TotemColor color = player == null ? null : player.getTotemColor();
-
-            StackPane badge = totemMarker(color, owner, 42);
-            badge.setTranslateX(0);
-            badge.setTranslateY(-40);
-
-            content.getChildren().add(badge);
-            StackPane.setAlignment(badge, Pos.CENTER);
-        }
-
-        Button button = new Button();
-        button.getStyleClass().add(owner == null ? "offer-tile" : "offer-tile-occupied");
-        button.setGraphic(content);
-        button.setPrefSize(TILE_WIDTH + 8, TILE_HEIGHT + 8);
-
-        return button;
     }
 
     private VBox playerDock() {
@@ -1085,10 +995,6 @@ public final class GameBoardView {
                 .collect(Collectors.joining(" · "));
     }
 
-    private StackPane totemMarker(TotemColor color, String owner) {
-        return totemMarkers.create(color, owner);
-    }
-
     private StackPane totemMarker(TotemColor color, String owner, double fitHeight) {
         return totemMarkers.create(color, owner, fitHeight);
     }
@@ -1111,16 +1017,6 @@ public final class GameBoardView {
 
     private boolean canPickFromRow(boolean upper) {
         return model.canCurrentActionPlayerPickFromRow(upper);
-    }
-
-    private List<Character> activeOfferTiles() {
-        int players = Math.max(2, model.getPlayers().isEmpty()
-                ? model.getExpectedPlayers()
-                : model.getPlayers().size());
-
-        return TILE_ORDER.stream()
-                .filter(tile -> TILE_MIN_PLAYERS.get(tile) <= players)
-                .collect(Collectors.toList());
     }
 
     private String currentTurnNickname() {
