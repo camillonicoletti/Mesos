@@ -81,6 +81,7 @@ public final class GameBoardView {
     private final GuiAssetCatalog assetCatalog;
     private final CardDescriptionService cardDescriptions;
     private final TotemMarkerFactory totemMarkers;
+    private final TurnOrderView turnOrderView;
     private StackPane rootLayer;
     private VBox board;
     private boolean boardShellBuilt;
@@ -97,6 +98,11 @@ public final class GameBoardView {
         this.assetCatalog = assetCatalog;
         this.cardDescriptions = new CardDescriptionService(assetCatalog);
         this.totemMarkers = new TotemMarkerFactory(assetCatalog);
+        this.turnOrderView = new TurnOrderView(model, assetCatalog, totemMarkers,
+                this::inlinePanel,
+                this::inlineButton,
+                this::showInlinePanel,
+                this::hideInlinePanel);
     }
 
     public Node render() {
@@ -242,7 +248,7 @@ public final class GameBoardView {
         if (disconnectedTotems != null) {
             trackNodes.add(disconnectedTotems);
         }
-        trackNodes.add(turnOrderPanel());
+        trackNodes.add(turnOrderView.render());
         trackNodes.add(totemPlacementPanel());
         trackNodes.add(deckPanel());
         centerTrack.getChildren().setAll(trackNodes);
@@ -277,106 +283,6 @@ public final class GameBoardView {
         }
 
         return panel;
-    }
-
-    private Node turnOrderPanel() {
-        StackPane tile = new StackPane();
-        tile.getStyleClass().addAll("turn-order-tile", "turn-order-tile-selectable");
-        String path = "assets/board/turn_order_" + turnOrderTilePlayers() + ".png";
-
-        try (InputStream stream = assetCatalog.openResource(path).orElse(null)) {
-            if (stream != null) {
-                ImageView image = new ImageView(new Image(stream));
-                image.setPreserveRatio(true);
-                image.setFitWidth(TILE_WIDTH);
-                image.setFitHeight(TILE_HEIGHT);
-                tile.getChildren().add(image);
-            }
-        } catch (Exception ignored) {
-            // Fallback text is added below.
-        }
-
-        if (tile.getChildren().isEmpty()) {
-            Label fallback = new Label("Turno");
-            fallback.getStyleClass().add("turn-name");
-            tile.getChildren().add(fallback);
-        }
-
-        addTurnOrderTotems(tile);
-        tile.setPickOnBounds(true);
-        tile.setOnMouseClicked(event -> showTurnOrderPanel());
-        GuiAnimations.addHoverScale(tile);
-
-        return tile;
-    }
-
-    private void showTurnOrderPanel() {
-        int players = turnOrderTilePlayers();
-        VBox panel = inlinePanel("Tessera Ordine di Turno");
-        panel.getStyleClass().add("turn-order-focus-panel");
-
-        HBox content = new HBox(16);
-        content.setAlignment(Pos.CENTER);
-        content.getStyleClass().add("turn-order-detail-content");
-
-        StackPane imageBox = new StackPane();
-        imageBox.getStyleClass().add("turn-order-detail-image");
-        String path = "assets/board/turn_order_" + players + ".png";
-        try (InputStream stream = assetCatalog.openResource(path).orElse(null)) {
-            if (stream != null) {
-                ImageView image = new ImageView(new Image(stream));
-                image.setPreserveRatio(true);
-                image.setFitWidth(180);
-                image.setFitHeight(290);
-                imageBox.getChildren().add(image);
-            }
-        } catch (Exception ignored) {
-            // Fallback text is added below.
-        }
-        if (imageBox.getChildren().isEmpty()) {
-            Label fallback = new Label("Ordine " + players + " giocatori");
-            fallback.getStyleClass().add("turn-name");
-            imageBox.getChildren().add(fallback);
-        }
-
-        VBox details = new VBox(8);
-        details.getStyleClass().add("card-detail-lines");
-        for (String line : turnOrderRuleLines(players)) {
-            Label label = new Label(line);
-            label.setWrapText(true);
-            label.getStyleClass().add("card-detail-line");
-            details.getChildren().add(label);
-        }
-
-        content.getChildren().addAll(imageBox, details);
-
-        Button close = inlineButton("Chiudi", false);
-        close.setOnAction(event -> hideInlinePanel());
-        HBox actions = new HBox(close);
-        actions.setAlignment(Pos.CENTER_RIGHT);
-
-        panel.getChildren().addAll(content, actions);
-        showInlinePanel(panel, Pos.CENTER);
-    }
-
-    private List<String> turnOrderRuleLines(int players) {
-        List<String> lines = new ArrayList<>();
-        lines.add("Ordine: nel round successivo i totem su questa tessera vengono letti dall'alto verso il basso.");
-        lines.add("Fine azione: dopo aver risolto una tessera offerta, il totem torna nel primo spazio libero piu in alto.");
-
-        List<String> slotEffects = switch (players) {
-            case 2 -> List.of("+1 cibo", "paga 1 cibo; se non puoi, perdi 2 PP");
-            case 3 -> List.of("+2 cibo", "nessun effetto", "paga 1 cibo; se non puoi, perdi 2 PP");
-            case 4 -> List.of("+2 cibo", "+1 cibo", "nessun effetto", "paga 1 cibo; se non puoi, perdi 2 PP");
-            default -> List.of("+3 cibo", "+1 cibo", "nessun effetto", "nessun effetto",
-                    "paga 1 cibo; se non puoi, perdi 2 PP");
-        };
-
-        for (int index = 0; index < slotEffects.size(); index++) {
-            lines.add("Spazio " + (index + 1) + ": " + slotEffects.get(index) + ".");
-        }
-        lines.add("Il bonus o il pagamento dello spazio si applica subito quando il totem rientra sulla tessera.");
-        return lines;
     }
 
     private VBox totemPlacementPanel() {
@@ -495,45 +401,6 @@ public final class GameBoardView {
         button.setPrefSize(TILE_WIDTH + 8, TILE_HEIGHT + 8);
 
         return button;
-    }
-
-    private void addTurnOrderTotems(StackPane tile) {
-        List<String> order = model.getTurnOrder();
-        if (order.isEmpty()) {
-            return;
-        }
-
-        double[] offsets = turnOrderTotemOffsets(turnOrderTilePlayers());
-        Map<String, Integer> positions = model.getTurnOrderPositions();
-        for (int index = 0; index < order.size(); index++) {
-            String nickname = order.get(index);
-            PlayerView player = model.getPlayers().get(nickname);
-            if (player == null) {
-                continue;
-            }
-            if (model.isPlayerDisconnected(nickname)) {
-                continue;
-            }
-
-            int slotIndex = positions.getOrDefault(nickname, index + 1) - 1;
-            if (slotIndex < 0 || slotIndex >= offsets.length) {
-                continue;
-            }
-
-            StackPane marker = totemMarker(player.getTotemColor(), player.getNickname(), 34);
-            marker.setTranslateY(offsets[slotIndex]);
-            tile.getChildren().add(marker);
-            StackPane.setAlignment(marker, Pos.CENTER);
-        }
-    }
-
-    private double[] turnOrderTotemOffsets(int players) {
-        return switch (players) {
-            case 2 -> new double[]{-34, 0};
-            case 3 -> new double[]{-47, -11, 18};
-            case 4 -> new double[]{-45, -15, 14, 42};
-            default -> new double[]{-57, -28, 1, 29, 58};
-        };
     }
 
     private VBox playerDock() {
@@ -1021,14 +888,6 @@ public final class GameBoardView {
         box.getChildren().add(cards);
 
         return box;
-    }
-
-    private int turnOrderTilePlayers() {
-        int players = model.getPlayers().isEmpty()
-                ? model.getExpectedPlayers()
-                : model.getPlayers().size();
-        players = Math.max(players, model.getTurnOrder().size());
-        return Math.max(2, Math.min(5, players));
     }
 
     private Node cardNode(int cardId, boolean canTake, Runnable action) {
