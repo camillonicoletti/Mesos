@@ -1,14 +1,11 @@
 package it.polimi.ingsw.network.client;
 
 import it.polimi.ingsw.view.View;
-import it.polimi.ingsw.view.gui.Gui;
-import it.polimi.ingsw.view.tui.Tui;
 import it.polimi.ingsw.network.transport.ClientSideConnection;
 import it.polimi.ingsw.network.transport.SocketClientConnection;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.util.Scanner;
 
 public class ClientApp {
 
@@ -31,7 +28,7 @@ public class ClientApp {
         ClientSideConnection connection = createConnection(host, port);
         ClientModel model               = new ClientModel();
         ClientController controller     = new ClientController(model, connection);
-        View view                       = selectView(controller, model);
+        View view                       = ClientViewSelector.select(controller, model);
 
         try {
             view.run();
@@ -40,22 +37,6 @@ public class ClientApp {
             System.exit(1);
         } finally {
             connection.close();
-        }
-    }
-
-    private static View selectView(ClientController controller, ClientModel model) {
-        Scanner scanner = new Scanner(System.in);
-        while (true) {
-            System.out.println("Select interface:");
-            System.out.println("  1 — TUI (terminal)");
-            System.out.println("  2 — GUI (graphical interface)");
-            System.out.print("> ");
-            String choice = scanner.nextLine().trim();
-            switch (choice) {
-                case "1" -> { return new Tui(controller, model); }
-                case "2" -> { return new Gui(controller, model); }
-                default  -> System.out.println("Invalid choice, type 1 or 2.");
-            }
         }
     }
 
