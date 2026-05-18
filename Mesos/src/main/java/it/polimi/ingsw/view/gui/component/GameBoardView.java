@@ -1,14 +1,10 @@
 package it.polimi.ingsw.view.gui.component;
 
-import it.polimi.ingsw.controller.action.PickBuildingAction;
-import it.polimi.ingsw.controller.action.PickCardAction;
 import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.client.ClientController;
 import it.polimi.ingsw.network.client.ClientModel;
 import it.polimi.ingsw.network.client.PlayerView;
-import it.polimi.ingsw.network.protocol.serverbound.GameActionMessage;
 import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
-import it.polimi.ingsw.view.gui.util.GuiAnimations;
 import javafx.animation.FadeTransition;
 import javafx.animation.ParallelTransition;
 import javafx.animation.TranslateTransition;
@@ -29,17 +25,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class GameBoardView {
-    private static final double CARD_WIDTH = 96;
-    private static final double CARD_HEIGHT = 135;
     private static final double DETAIL_CARD_WIDTH = 330;
     private static final double DETAIL_CARD_HEIGHT = 466;
 
-    private final ClientController controller;
     private final ClientModel model;
-    private final GuiAssetCatalog assetCatalog;
     private final CardDescriptionService cardDescriptions;
     private final CardImageFactory cardImages;
     private final TotemMarkerFactory totemMarkers;
+    private final CardMarketView cardMarketView;
     private final TurnOrderView turnOrderView;
     private final OfferTilesView offerTilesView;
     private final DeckView deckView;
@@ -55,12 +48,11 @@ public final class GameBoardView {
     private boolean fitBindingInstalled;
 
     public GameBoardView(ClientController controller, ClientModel model, GuiAssetCatalog assetCatalog) {
-        this.controller = controller;
         this.model = model;
-        this.assetCatalog = assetCatalog;
         this.cardDescriptions = new CardDescriptionService(assetCatalog);
         this.cardImages = new CardImageFactory(assetCatalog);
         this.totemMarkers = new TotemMarkerFactory(assetCatalog);
+        this.cardMarketView = new CardMarketView(controller, model, cardImages, this::showCardPanel);
         this.turnOrderView = new TurnOrderView(model, assetCatalog, totemMarkers,
                 this::inlinePanel,
                 this::inlineButton,
@@ -115,12 +107,12 @@ public final class GameBoardView {
         ensureBoardShell();
         instructionLabel.setText(actionInstruction());
         refreshMarketBand(upperMarketBand,
-                cardRow("Personaggi / Eventi", model.getUpperRowCharacterIds(), true, false),
-                cardRow("Edifici", model.getUpperRowBuildingIds(), true, true));
+                cardMarketView.characterRow(true),
+                cardMarketView.buildingRow(true));
         refreshCenterTrack();
         refreshMarketBand(lowerMarketBand,
-                cardRow("Personaggi / Eventi", model.getLowerRowCharacterIds(), false, false),
-                cardRow("Edifici", model.getLowerRowBuildingIds(), false, true));
+                cardMarketView.characterRow(false),
+                cardMarketView.buildingRow(false));
         playerDockSlot.getChildren().setAll(playerDockView.render());
         Platform.runLater(this::updateBoardScale);
     }
@@ -257,49 +249,6 @@ public final class GameBoardView {
         return panel;
     }
 
-    private VBox cardRow(String title, List<Integer> ids, boolean upper, boolean building) {
-        VBox box = new VBox(4);
-        box.getStyleClass().add("card-row");
-        HBox cards = new HBox(8);
-        cards.setAlignment(Pos.CENTER);
-
-        for (Integer id : ids) {
-            boolean isEvent = !building && model.isEventCard(id);
-            boolean canTake = !isEvent && model.isMyTurn() && canPickFromRow(upper);
-
-            Node card = cardNode(id, canTake, () -> {
-                if (!canTake) {
-                    return;
-                }
-
-                if (building) {
-                    controller.send(new GameActionMessage(new PickBuildingAction(String.valueOf(id), upper)));
-                } else {
-                    controller.send(new GameActionMessage(new PickCardAction(String.valueOf(id), upper)));
-                }
-            });
-
-            GuiAnimations.addHoverScale(card);
-            cards.getChildren().add(card);
-        }
-
-        box.getChildren().add(cards);
-
-        return box;
-    }
-
-    private Node cardNode(int cardId, boolean canTake, Runnable action) {
-        StackPane card = new StackPane();
-        card.getStyleClass().add("card");
-        if (canTake) {
-            card.getStyleClass().add("card-pickable");
-        }
-        card.setPrefSize(CARD_WIDTH, CARD_HEIGHT);
-        card.setOnMouseClicked(event -> showCardPanel(cardId, canTake, action));
-        card.getChildren().add(cardImages.create(cardId, CARD_WIDTH, CARD_HEIGHT));
-        return card;
-    }
-
     private void showCardPanel(int cardId, boolean canTake, Runnable takeAction) {
         VBox panel = inlinePanel(canTake ? "Conferma carta" : "Dettagli carta");
         panel.getStyleClass().add("card-focus-panel");
@@ -404,10 +353,6 @@ public final class GameBoardView {
 
     private StackPane totemMarker(TotemColor color, String owner, double fitHeight) {
         return totemMarkers.create(color, owner, fitHeight);
-    }
-
-    private boolean canPickFromRow(boolean upper) {
-        return model.canCurrentActionPlayerPickFromRow(upper);
     }
 
     private String currentTurnNickname() {
