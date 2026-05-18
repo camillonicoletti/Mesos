@@ -22,6 +22,11 @@ only know how to connect, while `ClientRuntime` knows how a client session is
 assembled. This also makes Socket and RMI easier to compare during the oral
 exam: they differ in connection creation, not in the MVC client wiring.
 
+`ClientLaunchOptions` applies the same idea to command-line arguments: the
+client launchers no longer parse host, port and RMI binding directly in their
+`main` methods. They ask for parsed options, create the correct connection and
+then delegate to `ClientRuntime`.
+
 ## Server lobby bootstrap
 
 `Server` and `ServerLauncher` both need the same startup policy:

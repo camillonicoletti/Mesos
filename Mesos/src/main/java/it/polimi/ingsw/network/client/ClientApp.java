@@ -9,22 +9,17 @@ import java.net.Socket;
 public class ClientApp {
 
     public static void main(String[] args) {
-        if (args.length < 2) {
-            System.err.println("Usage: java ClientApp <host> <port>");
-            System.exit(1);
-        }
-
-        String host = args[0];
-        int port;
+        ClientLaunchOptions options;
         try {
-            port = Integer.parseInt(args[1]);
-        } catch (NumberFormatException e) {
-            System.err.println("Invalid port: " + args[1]);
+            options = ClientLaunchOptions.socket(args);
+        } catch (IllegalArgumentException e) {
+            System.err.println(e.getMessage());
+            System.err.println("Usage: java ClientApp <host> <port>");
             System.exit(1);
             return;
         }
 
-        ClientSideConnection connection = createConnection(host, port);
+        ClientSideConnection connection = createConnection(options.host(), options.socketPort());
         ClientRuntime.run(connection);
     }
 
