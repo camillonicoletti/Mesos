@@ -7,7 +7,6 @@ import it.polimi.ingsw.network.client.ClientController;
 import it.polimi.ingsw.network.client.ClientModel;
 import it.polimi.ingsw.network.client.PlayerView;
 import it.polimi.ingsw.network.protocol.serverbound.GameActionMessage;
-import it.polimi.ingsw.view.gui.asset.CardAsset;
 import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
 import it.polimi.ingsw.view.gui.util.GuiAnimations;
 import javafx.animation.FadeTransition;
@@ -19,8 +18,6 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -28,10 +25,8 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public final class GameBoardView {
     private static final double CARD_WIDTH = 96;
@@ -43,6 +38,7 @@ public final class GameBoardView {
     private final ClientModel model;
     private final GuiAssetCatalog assetCatalog;
     private final CardDescriptionService cardDescriptions;
+    private final CardImageFactory cardImages;
     private final TotemMarkerFactory totemMarkers;
     private final TurnOrderView turnOrderView;
     private final OfferTilesView offerTilesView;
@@ -63,6 +59,7 @@ public final class GameBoardView {
         this.model = model;
         this.assetCatalog = assetCatalog;
         this.cardDescriptions = new CardDescriptionService(assetCatalog);
+        this.cardImages = new CardImageFactory(assetCatalog);
         this.totemMarkers = new TotemMarkerFactory(assetCatalog);
         this.turnOrderView = new TurnOrderView(model, assetCatalog, totemMarkers,
                 this::inlinePanel,
@@ -72,7 +69,7 @@ public final class GameBoardView {
         this.offerTilesView = new OfferTilesView(controller, model, assetCatalog, totemMarkers);
         this.deckView = new DeckView(model, assetCatalog);
         this.playerDockView = new PlayerDockView(controller, model, assetCatalog, cardDescriptions, totemMarkers,
-                this::cardImageNode,
+                cardImages,
                 cardId -> showCardPanel(cardId, false, null),
                 this::inlinePanel,
                 this::inlineButton,
@@ -299,38 +296,7 @@ public final class GameBoardView {
         }
         card.setPrefSize(CARD_WIDTH, CARD_HEIGHT);
         card.setOnMouseClicked(event -> showCardPanel(cardId, canTake, action));
-        card.getChildren().add(cardImageNode(cardId, CARD_WIDTH, CARD_HEIGHT));
-        return card;
-    }
-
-    private Node cardImageNode(int cardId, double width, double height) {
-        Optional<CardAsset> asset = assetCatalog.findCard(cardId);
-        StackPane card = new StackPane();
-        card.setPrefSize(width, height);
-        if (asset.isPresent() && asset.get().isFrontAvailable()) {
-            try (InputStream stream = assetCatalog.openResource(asset.get().getFrontPath()).orElse(null)) {
-                if (stream != null) {
-                    ImageView image = new ImageView(new Image(stream));
-
-                    image.setFitWidth(width);
-                    image.setFitHeight(height);
-                    image.setPreserveRatio(true);
-
-                    card.getChildren().add(image);
-
-                    return card;
-                }
-            } catch (Exception ignored) {
-                // Fall through to a placeholder if the optional local image is unreadable.
-            }
-        }
-
-        Label placeholder = new Label(asset.map(assetCatalog::placeholderLabelFor).orElse("CARD #" + cardId));
-        placeholder.setWrapText(true);
-        placeholder.setAlignment(Pos.CENTER);
-
-        card.getChildren().add(placeholder);
-
+        card.getChildren().add(cardImages.create(cardId, CARD_WIDTH, CARD_HEIGHT));
         return card;
     }
 
@@ -367,7 +333,7 @@ public final class GameBoardView {
         content.setAlignment(Pos.CENTER);
         content.getStyleClass().add("card-detail-content");
 
-        Node image = cardImageNode(cardId, DETAIL_CARD_WIDTH, DETAIL_CARD_HEIGHT);
+        Node image = cardImages.create(cardId, DETAIL_CARD_WIDTH, DETAIL_CARD_HEIGHT);
         VBox details = new VBox(8);
         details.getStyleClass().add("card-detail-lines");
         for (String line : cardDescriptions.describeCard(
