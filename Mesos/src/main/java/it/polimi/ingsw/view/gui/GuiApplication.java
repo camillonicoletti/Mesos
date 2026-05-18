@@ -36,7 +36,7 @@ public final class GuiApplication extends Application {
     private static final Duration TOAST_ANIMATION_DURATION = Duration.millis(180);
 
     private static LaunchContext launchContext;
-    
+
 
     private ClientController controller;
     private ClientModel model;
@@ -61,6 +61,7 @@ public final class GuiApplication extends Application {
     private BorderPane lobbyShell;
     private BorderPane gameShell;
     private BorderPane endGameShell;
+    private StackPane endGameStack;
 
     static void launchWith(ClientController controller, ClientModel model) {
         launchContext = new LaunchContext(controller, model);
@@ -155,7 +156,11 @@ public final class GuiApplication extends Application {
                 if (loginView == null) {
                     loginView = new LoginView(controller, model, pendingNickname,
                             nickname -> pendingNickname = nickname);
-                    loginShell = centeredShell(loginView.render());
+                    Node loginPanel = loginView.render();
+                    loginShell = new StackPane(loginPanel);
+                    loginShell.setPadding(new Insets(40));
+                    StackPane.setAlignment(loginPanel, Pos.CENTER);
+                    loginShell.getStyleClass().add("login-root");
                 }
                 root.setCenter(loginShell);
             }
@@ -182,8 +187,13 @@ public final class GuiApplication extends Application {
                     endGameView = new EndGameView(controller, model);
                     endGameShell = endGameShell();
                     endGameShell.setCenter(endGameView.render());
+                    Region overlay = new Region();
+                    overlay.getStyleClass().add("endgame-overlay");
+                    overlay.setMouseTransparent(true);
+                    endGameStack = new StackPane(overlay, endGameShell);
+                    endGameStack.getStyleClass().add("endgame-root");
                 }
-                root.setCenter(endGameShell);
+                root.setCenter(endGameStack);
             }
         }
     }
@@ -205,18 +215,7 @@ public final class GuiApplication extends Application {
 
     private BorderPane endGameShell() {
         BorderPane layout = new BorderPane();
-        VBox top = new VBox(4);
-        top.setPadding(new Insets(18, 22, 12, 22));
-        top.getStyleClass().add("topbar");
-        Label h1 = title("Fine partita");
         endGameSubtitleLabel = new Label();
-        endGameSubtitleLabel.getStyleClass().add("muted");
-        timerLabel = new Label();
-        timerLabel.getStyleClass().add("timer");
-        HBox line = new HBox(16, endGameSubtitleLabel, spacer(), timerLabel);
-        line.setAlignment(Pos.CENTER_LEFT);
-        top.getChildren().addAll(h1, line);
-        layout.setTop(top);
         return layout;
     }
 

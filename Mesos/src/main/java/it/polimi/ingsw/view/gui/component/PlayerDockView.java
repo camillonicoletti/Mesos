@@ -102,7 +102,12 @@ final class PlayerDockView {
             Platform.exit();
         });
 
-        HBox statusRow = new HBox(14, status, spacer(), exit);
+        Button debugEnd = new Button("⚑ Fine partita [DEBUG]");
+        debugEnd.getStyleClass().add("dock-exit");
+        debugEnd.setOnAction(event -> controller.send(
+                new it.polimi.ingsw.network.protocol.serverbound.ForceEndGameMessage()));
+
+        HBox statusRow = new HBox(14, status, spacer(), debugEnd, exit);
         statusRow.getStyleClass().add("player-dock-status-row");
         statusRow.setAlignment(Pos.CENTER);
 

@@ -2,6 +2,7 @@ package it.polimi.ingsw.network.server;
 
 import it.polimi.ingsw.network.protocol.clientbound.ErrorMessage;
 import it.polimi.ingsw.network.protocol.serverbound.*;
+import it.polimi.ingsw.network.protocol.serverbound.ForceEndGameMessage;
 import it.polimi.ingsw.network.transport.ServerSideConnection;
 import it.polimi.ingsw.network.protocol.serverbound.GetLeaderboardMessage;
 public class MessageDispatcher {
@@ -29,6 +30,8 @@ public class MessageDispatcher {
                 // heartbeat
             } else if (msg instanceof DisconnectMessage) {
                 lobby.handleDisconnect(conn.getNickname());
+            } else if (msg instanceof ForceEndGameMessage) {
+                lobby.handleForceEndGame();
             }
         } catch (Exception e) {
             conn.send(new ErrorMessage(e.getMessage()));

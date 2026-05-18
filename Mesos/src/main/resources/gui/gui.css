@@ -25,17 +25,213 @@
 
 /* ── Login ────────────────────────────────────────────────────────────────── */
 
+.login-root {
+    -fx-background-image: url("../assets/ui/background_login.jpg");
+    -fx-background-size: cover;
+    -fx-background-position: center center;
+}
+
+.login-panel-shell {
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+}
+
 .login-panel {
-    -fx-background-color: rgba(91, 37, 53, .92);
-    -fx-padding: 30px;
-    -fx-border-color: rgba(255, 218, 130, .55);
-    -fx-border-radius: 8px;
-    -fx-background-radius: 8px;
-    -fx-effect: dropshadow(three-pass-box, rgba(24, 24, 18, .28), 18, 0, 0, 8);
+    -fx-background-color: transparent;
+    -fx-padding: 32px 30px 34px 30px;
+}
+
+.login-brush-frame {
+    -fx-background-color: transparent;
+    -fx-background-repeat: no-repeat;
+    -fx-background-size: 100% 100%;
+    -fx-background-position: center;
+}
+
+.login-brush-top {
+    -fx-background-image: url("login_brush_top.png");
+}
+
+.login-brush-bottom {
+    -fx-background-image: url("login_brush_bottom.png");
+}
+
+.login-brush-left {
+    -fx-background-image: url("login_brush_left.png");
+}
+
+.login-brush-right {
+    -fx-background-image: url("login_brush_right.png");
 }
 
 .login-panel .title {
+    -fx-font-family: "Noteworthy", "Avenir Next Condensed", "Copperplate", sans-serif;
+    -fx-font-size: 66px;
+    -fx-font-weight: normal;
     -fx-text-fill: #fff2cf;
+}
+
+.login-logo-holder {
+    -fx-padding: 0 0 10px 0;
+}
+
+.login-field-label {
+    -fx-font-size: 14px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #fff2cf;
+}
+
+.login-panel .text-field {
+    -fx-min-height: 40px;
+    -fx-pref-height: 40px;
+    -fx-background-color: rgba(255, 242, 207, .15);
+    -fx-background-radius: 5px;
+    -fx-border-color: rgba(255, 242, 207, .35);
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+    -fx-text-fill: #fff2cf;
+    -fx-prompt-text-fill: rgba(255, 242, 207, .58);
+    -fx-font-size: 14px;
+    -fx-padding: 0 12px;
+}
+
+.login-totem-selector {
+    -fx-padding: 2px 0 4px 0;
+}
+
+.login-totem-choice {
+    -fx-min-width: 44px;
+    -fx-min-height: 62px;
+    -fx-pref-width: 44px;
+    -fx-pref-height: 62px;
+    -fx-max-width: 44px;
+    -fx-max-height: 62px;
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+}
+
+.login-totem-choice:hover {
+    -fx-background-color: transparent;
+}
+
+.login-totem-choice-selected {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-scale-x: 1.25;
+    -fx-scale-y: 1.25;
+    -fx-effect: dropshadow(three-pass-box, rgba(255, 242, 207, .70), 16, 0, 0, 0);
+}
+
+.login-random-totem {
+    -fx-min-width: 38px;
+    -fx-min-height: 42px;
+    -fx-pref-width: 38px;
+    -fx-pref-height: 42px;
+    -fx-max-width: 38px;
+    -fx-max-height: 42px;
+    -fx-padding: 0;
+    -fx-background-color: rgba(255, 242, 207, .10);
+    -fx-background-radius: 9px;
+    -fx-border-color: rgba(255, 242, 207, .45);
+    -fx-border-width: 1px;
+    -fx-border-radius: 9px;
+    -fx-cursor: hand;
+}
+
+.login-random-totem:hover {
+    -fx-background-color: rgba(143, 224, 216, .20);
+    -fx-border-color: rgba(143, 224, 216, .85);
+}
+
+.login-random-totem .font-icon {
+    -fx-icon-color: #fff2cf;
+}
+
+.login-totem-fallback {
+    -fx-min-width: 28px;
+    -fx-min-height: 28px;
+    -fx-pref-width: 28px;
+    -fx-pref-height: 28px;
+    -fx-background-radius: 99px;
+}
+
+.login-panel .combo-box {
+    -fx-min-height: 40px;
+    -fx-pref-height: 40px;
+    -fx-background-color: #061421;
+    -fx-background-radius: 5px;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-border-radius: 5px;
+    -fx-padding: 0 8px 0 8px;
+}
+
+.login-panel .combo-box .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: rgba(255, 242, 207, .72);
+    -fx-font-size: 14px;
+}
+
+.login-panel .combo-box-popup .list-view {
+    -fx-background-color: #061421;
+    -fx-border-color: #2780ad;
+}
+
+.login-panel .combo-box-popup .list-cell {
+    -fx-background-color: #061421;
+    -fx-text-fill: #fff2cf;
+}
+
+.login-panel .combo-box-popup .list-cell:hover {
+    -fx-background-color: #0a9f98;
+}
+
+.login-panel .combo-box .arrow {
+    -fx-background-color: rgba(255, 242, 207, .72);
+}
+
+.login-panel .check-box {
+    -fx-text-fill: #fff2cf;
+    -fx-font-size: 14px;
+}
+
+.login-panel .check-box .box {
+    -fx-min-width: 20px;
+    -fx-min-height: 20px;
+    -fx-pref-width: 20px;
+    -fx-pref-height: 20px;
+    -fx-background-color: rgba(255, 242, 207, .15);
+    -fx-background-radius: 5px;
+    -fx-border-color: rgba(255, 242, 207, .35);
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+}
+
+.login-panel .check-box .mark {
+    -fx-background-color: transparent;
+}
+
+.login-panel .check-box:selected .mark {
+    -fx-background-color: #fff2cf;
+}
+
+.login-panel .primary-button {
+    -fx-min-height: 50px;
+    -fx-pref-height: 50px;
+    -fx-background-color: linear-gradient(to bottom, #c43b1a 0%, #8a2010 100%);
+    -fx-background-radius: 7px;
+    -fx-border-color: transparent;
+    -fx-text-fill: #fff2cf;
+    -fx-font-size: 15px;
+    -fx-font-weight: 900;
+    -fx-effect: dropshadow(three-pass-box, rgba(180, 50, 10, .55), 14, 0, 0, 4);
+}
+
+.login-panel .primary-button:hover {
+    -fx-background-color: linear-gradient(to bottom, #e04a20 0%, #a82a14 100%);
+    -fx-effect: dropshadow(three-pass-box, rgba(220, 80, 20, .75), 20, 0, 0, 5);
 }
 
 /* ── Panels ───────────────────────────────────────────────────────────────── */
@@ -1091,4 +1287,77 @@
 .lobby-root .muted,
 .login-panel .muted {
     -fx-text-fill: #d8c0af;
+}
+
+.login-panel .error {
+    -fx-text-fill: #ffb099;
+}
+
+/* ── End game ─────────────────────────────────────────────────────────────── */
+
+.endgame-root {
+    -fx-background-image: url("../assets/ui/background_victory.png");
+    -fx-background-size: cover;
+    -fx-background-position: center center;
+}
+
+.endgame-overlay {
+    -fx-background-color: rgba(10, 4, 8, .48);
+}
+
+.endgame-winner-section {
+    -fx-text-fill: rgba(255, 242, 207, .70);
+    -fx-font-size: 14px;
+    -fx-font-weight: 900;
+    -fx-padding: 0 0 4px 0;
+}
+
+.endgame-winner-name {
+    -fx-font-family: "Noteworthy", "Avenir Next Condensed", "Copperplate", sans-serif;
+    -fx-font-size: 72px;
+    -fx-font-weight: normal;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, .88), 12, 0, 0, 4);
+    -fx-padding: 0 0 16px 0;
+}
+
+.endgame-header-row {
+    -fx-padding: 6px 14px;
+    -fx-border-color: transparent transparent rgba(255, 226, 168, .25) transparent;
+    -fx-border-width: 0 0 1px 0;
+}
+
+.endgame-header-cell {
+    -fx-text-fill: rgba(255, 226, 168, .65);
+    -fx-font-size: 11px;
+    -fx-font-weight: 900;
+}
+
+.endgame-score-row {
+    -fx-background-color: rgba(255, 242, 207, .05);
+    -fx-background-radius: 6px;
+    -fx-border-color: rgba(255, 226, 168, .10);
+    -fx-border-radius: 6px;
+}
+
+.endgame-score-row-first {
+    -fx-background-color: rgba(255, 220, 100, .12);
+    -fx-border-color: rgba(255, 220, 100, .30);
+}
+
+.endgame-rank {
+    -fx-text-fill: rgba(255, 242, 207, .55);
+    -fx-font-size: 13px;
+    -fx-font-weight: 900;
+}
+
+.endgame-name {
+    -fx-font-size: 15px;
+    -fx-font-weight: 900;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, .60), 4, 0, 0, 1);
+}
+
+.endgame-stat {
+    -fx-text-fill: #fff2cf;
+    -fx-font-size: 14px;
+    -fx-font-weight: 900;
 }

@@ -6,16 +6,27 @@ import it.polimi.ingsw.network.client.ClientModel;
 import it.polimi.ingsw.network.protocol.serverbound.LoginMessage;
 import it.polimi.ingsw.network.protocol.serverbound.ReconnectMessage;
 import it.polimi.ingsw.view.gui.util.GuiIcons;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignL;
 
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 public final class LoginView {
@@ -23,6 +34,9 @@ public final class LoginView {
     private final ClientModel model;
     private final String pendingNickname;
     private final Consumer<String> onNicknameSubmitted;
+    private final Map<TotemColor, Button> totemButtons = new EnumMap<>(TotemColor.class);
+    private TotemColor selectedTotem = TotemColor.RED;
+    private StackPane panelShell;
     private VBox panel;
     private Label error;
 
@@ -35,49 +49,62 @@ public final class LoginView {
     }
 
     public Node render() {
-        if (panel != null) {
+        if (panelShell != null) {
             refresh();
-            return panel;
+            return panelShell;
         }
 
-        panel = new VBox(16);
+        panel = new VBox(12);
         panel.getStyleClass().add("login-panel");
-        panel.setMaxWidth(420);
+        panel.setPrefWidth(350);
+        panel.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
         panel.setAlignment(Pos.CENTER_LEFT);
 
-        Label title = title("Mesos");
-        Label subtitle = new Label("Entra nella partita o riconnettiti a una partita gia avviata.");
-        subtitle.getStyleClass().add("muted");
-
         TextField nickname = new TextField(pendingNickname != null ? pendingNickname : "");
-        nickname.setPromptText("Nickname");
+        nickname.setPromptText("Inserisci il nome del totem");
         nickname.setMaxWidth(Double.MAX_VALUE);
 
-        ComboBox<TotemColor> color = new ComboBox<>();
-        color.getItems().addAll(TotemColor.values());
-        color.setMaxWidth(Double.MAX_VALUE);
-        color.setPromptText("Colore totem");
+        HBox totemSelector = totemSelector();
 
         CheckBox reconnect = new CheckBox("Riconnettiti");
-        reconnect.selectedProperty().addListener((obs, oldValue, selected) -> color.setDisable(selected));
+        reconnect.selectedProperty().addListener((obs, oldValue, selected) -> totemSelector.setDisable(selected));
 
-        Button enter = primaryButton("Entra");
+        Button enter = primaryButton("ENTRA");
         enter.setMaxWidth(Double.MAX_VALUE);
-        enter.setOnAction(event -> submit(nickname, reconnect, color));
+        enter.setOnAction(event -> submit(nickname, reconnect));
 
         error = errorLabel();
-        panel.getChildren().addAll(title, subtitle, nickname, color, reconnect, enter, error);
+        panel.getChildren().addAll(
+                formGroup("NOME TOTEM", nickname),
+                formGroup("SCEGLI IL TOTEM", totemSelector),
+                reconnect, enter, error);
         refresh();
-        return panel;
+
+        panelShell = framedPanel(panel);
+        return panelShell;
     }
 
     public void refresh() {
         if (error != null) {
             error.setText(model.getLastError() == null ? "" : model.getLastError());
         }
+        Set<TotemColor> taken = new HashSet<>(model.getLobbyPlayerColors().values());
+        totemButtons.forEach((color, button) -> {
+            boolean isTaken = taken.contains(color);
+            button.setVisible(!isTaken);
+            button.setManaged(!isTaken);
+        });
+        if (taken.contains(selectedTotem)) {
+            TotemColor fallback = Arrays.stream(TotemColor.values())
+                    .filter(c -> !taken.contains(c))
+                    .findFirst()
+                    .orElse(selectedTotem);
+            selectedTotem = fallback;
+            refreshTotemSelection();
+        }
     }
 
-    private void submit(TextField nickname, CheckBox reconnect, ComboBox<TotemColor> color) {
+    private void submit(TextField nickname, CheckBox reconnect) {
         String name = nickname.getText().trim();
         if (name.isBlank()) {
             return;
@@ -85,8 +112,8 @@ public final class LoginView {
         onNicknameSubmitted.accept(name);
         if (reconnect.isSelected()) {
             controller.send(new ReconnectMessage(name));
-        } else if (color.getValue() != null) {
-            controller.send(new LoginMessage(name, color.getValue()));
+        } else {
+            controller.send(new LoginMessage(name, selectedTotem));
         }
     }
 
@@ -104,9 +131,97 @@ public final class LoginView {
         return label;
     }
 
-    private Label title(String text) {
+    private Label fieldLabel(String text) {
         Label label = new Label(text);
-        label.getStyleClass().add("title");
+        label.getStyleClass().add("login-field-label");
         return label;
+    }
+
+    private VBox formGroup(String label, Node control) {
+        VBox group = new VBox(7, fieldLabel(label), control);
+        group.getStyleClass().add("login-form-group");
+        return group;
+    }
+
+    private StackPane framedPanel(Node content) {
+        StackPane shell = new StackPane(content);
+        shell.getStyleClass().add("login-panel-shell");
+        shell.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+        return shell;
+    }
+
+    private HBox totemSelector() {
+        HBox selector = new HBox(5);
+        selector.getStyleClass().add("login-totem-selector");
+        selector.setAlignment(Pos.CENTER_LEFT);
+
+        for (TotemColor color : TotemColor.values()) {
+            Button button = totemButton(color);
+            totemButtons.put(color, button);
+            selector.getChildren().add(button);
+        }
+        refreshTotemSelection();
+        return selector;
+    }
+
+    private Button totemButton(TotemColor color) {
+        Button button = new Button();
+        button.getStyleClass().add("login-totem-choice");
+        button.setGraphic(totemGraphic(color));
+        button.setOnAction(event -> {
+            selectedTotem = color;
+            refreshTotemSelection();
+        });
+        return button;
+    }
+
+    private Node totemGraphic(TotemColor color) {
+        try (InputStream stream = Thread.currentThread().getContextClassLoader()
+                .getResourceAsStream(totemAssetPath(color))) {
+            if (stream != null) {
+                ImageView image = new ImageView(new Image(stream));
+                image.setPreserveRatio(true);
+                image.setFitHeight(52);
+                image.setSmooth(true);
+                return image;
+            }
+        } catch (Exception ignored) {
+            // Fallback colored marker below.
+        }
+
+        Region fallback = new Region();
+        fallback.getStyleClass().add("login-totem-fallback");
+        fallback.setStyle("-fx-background-color: " + totemColorHex(color) + ";");
+        return fallback;
+    }
+
+
+    private void refreshTotemSelection() {
+        totemButtons.forEach((color, button) -> {
+            button.getStyleClass().remove("login-totem-choice-selected");
+            if (color == selectedTotem) {
+                button.getStyleClass().add("login-totem-choice-selected");
+            }
+        });
+    }
+
+    private String totemAssetPath(TotemColor color) {
+        return switch (color == null ? TotemColor.WHITE : color) {
+            case RED -> "assets/tokens/totem_red.png";
+            case YELLOW -> "assets/tokens/totem_yellow.png";
+            case BLUE -> "assets/tokens/totem_blue.png";
+            case PURPLE -> "assets/tokens/totem_purple.png";
+            case WHITE -> "assets/tokens/totem_white.png";
+        };
+    }
+
+    private String totemColorHex(TotemColor color) {
+        return switch (color == null ? TotemColor.WHITE : color) {
+            case RED -> "#b94a3a";
+            case BLUE -> "#3c6f9e";
+            case PURPLE -> "#77529a";
+            case YELLOW -> "#d7a93d";
+            case WHITE -> "#f3ebdc";
+        };
     }
 }
