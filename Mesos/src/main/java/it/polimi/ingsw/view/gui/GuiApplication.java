@@ -161,7 +161,7 @@ public final class GuiApplication extends Application {
             }
             case LOBBY -> {
                 if (lobbyView == null) {
-                    lobbyView = new LobbyView(controller, model);
+                    lobbyView = new LobbyView(controller, model, assetCatalog);
                     lobbyShell = new BorderPane();
                     lobbyShell.getStyleClass().add("lobby-shell");
                     lobbyShell.setCenter(lobbyView.render());

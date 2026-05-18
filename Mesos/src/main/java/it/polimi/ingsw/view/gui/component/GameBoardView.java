@@ -80,6 +80,7 @@ public final class GameBoardView {
     private final ClientModel model;
     private final GuiAssetCatalog assetCatalog;
     private final CardDescriptionService cardDescriptions;
+    private final TotemMarkerFactory totemMarkers;
     private StackPane rootLayer;
     private VBox board;
     private boolean boardShellBuilt;
@@ -95,6 +96,7 @@ public final class GameBoardView {
         this.model = model;
         this.assetCatalog = assetCatalog;
         this.cardDescriptions = new CardDescriptionService(assetCatalog);
+        this.totemMarkers = new TotemMarkerFactory(assetCatalog);
     }
 
     public Node render() {
@@ -1225,48 +1227,11 @@ public final class GameBoardView {
     }
 
     private StackPane totemMarker(TotemColor color, String owner) {
-        return totemMarker(color, owner, 52);
+        return totemMarkers.create(color, owner);
     }
 
     private StackPane totemMarker(TotemColor color, String owner, double fitHeight) {
-        StackPane marker = new StackPane();
-        marker.getStyleClass().add("tile-totem-marker");
-        double width = Math.max(18, fitHeight * 0.72);
-        marker.setMinSize(width, fitHeight);
-        marker.setPrefSize(width, fitHeight);
-        marker.setMaxSize(width, fitHeight);
-
-        try (InputStream stream = assetCatalog.openResource(totemAssetPath(color)).orElse(null)) {
-            if (stream != null) {
-                ImageView image = new ImageView(new Image(stream));
-                image.setPreserveRatio(true);
-                image.setFitHeight(fitHeight);
-                marker.getChildren().add(image);
-                return marker;
-            }
-        } catch (Exception ignored) {
-            // Fallback marker is added below.
-        }
-
-        Region body = new Region();
-        body.getStyleClass().add("tile-totem-body");
-        double fallbackSize = Math.max(16, fitHeight * 0.64);
-        body.setMinSize(fallbackSize, fallbackSize);
-        body.setPrefSize(fallbackSize, fallbackSize);
-        body.setMaxSize(fallbackSize, fallbackSize);
-        body.setStyle("-fx-background-color: " + totemColorHex(color) + ";");
-        marker.getChildren().add(body);
-        return marker;
-    }
-
-    private String totemAssetPath(TotemColor color) {
-        return switch (color == null ? TotemColor.WHITE : color) {
-            case RED -> "assets/tokens/totem_red.png";
-            case YELLOW -> "assets/tokens/totem_yellow.png";
-            case BLUE -> "assets/tokens/totem_blue.png";
-            case PURPLE -> "assets/tokens/totem_purple.png";
-            case WHITE -> "assets/tokens/totem_white.png";
-        };
+        return totemMarkers.create(color, owner, fitHeight);
     }
 
     private String stringDetail(JsonObject object, String key) {
@@ -1360,17 +1325,7 @@ public final class GameBoardView {
     }
 
     private String totemColorHex(TotemColor color) {
-        if (color == null) {
-            return "#b8ad98";
-        }
-
-        return switch (color) {
-            case RED -> "#b94a3a";
-            case BLUE -> "#3c6f9e";
-            case PURPLE -> "#77529a";
-            case YELLOW -> "#d7a93d";
-            case WHITE -> "#f3ebdc";
-        };
+        return totemMarkers.colorHex(color);
     }
 
     private Label sectionTitle(String text) {

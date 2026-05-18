@@ -5,6 +5,7 @@ import it.polimi.ingsw.network.client.ClientController;
 import it.polimi.ingsw.network.client.ClientModel;
 import it.polimi.ingsw.network.protocol.serverbound.ReadyMessage;
 import it.polimi.ingsw.network.protocol.serverbound.SetPlayersCountMessage;
+import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
 import it.polimi.ingsw.view.gui.util.GuiIcons;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -13,32 +14,29 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignA;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignC;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignL;
 
-import java.io.InputStream;
-
 public final class LobbyView {
     private final ClientController controller;
     private final ClientModel model;
+    private final TotemMarkerFactory totemMarkers;
     private BorderPane layout;
     private Label subtitle;
     private FlowPane players;
     private HBox bottom;
 
-    public LobbyView(ClientController controller, ClientModel model) {
+    public LobbyView(ClientController controller, ClientModel model, GuiAssetCatalog assetCatalog) {
         this.controller = controller;
         this.model = model;
+        this.totemMarkers = new TotemMarkerFactory(assetCatalog);
     }
 
     public Node render() {
@@ -179,7 +177,7 @@ public final class LobbyView {
         HBox head = new HBox(8);
         head.setAlignment(Pos.CENTER);
         TotemColor color = model.getLobbyPlayerColors().get(nickname);
-        head.getChildren().add(totemMarker(color));
+        head.getChildren().add(totemMarkers.createLobbyMarker(color));
 
         Label name = new Label(nickname);
         name.getStyleClass().add("lobby-player-name");
@@ -220,60 +218,10 @@ public final class LobbyView {
         return row;
     }
 
-    private StackPane totemMarker(TotemColor color) {
-        StackPane marker = new StackPane();
-        marker.getStyleClass().add("lobby-totem-marker");
-        marker.setMinSize(28, 38);
-        marker.setPrefSize(28, 38);
-        marker.setMaxSize(28, 38);
-
-        try (InputStream stream = Thread.currentThread().getContextClassLoader()
-                .getResourceAsStream(totemAssetPath(color))) {
-            if (stream != null) {
-                ImageView image = new ImageView(new Image(stream));
-                image.setPreserveRatio(true);
-                image.setFitHeight(38);
-                marker.getChildren().add(image);
-                return marker;
-            }
-        } catch (Exception ignored) {
-            // Fallback colored dot below.
-        }
-
-        Region fallback = new Region();
-        fallback.getStyleClass().add("lobby-color-dot");
-        fallback.setStyle("-fx-background-color: " + totemColorHex(color) + ";");
-        marker.getChildren().add(fallback);
-        return marker;
-    }
-
-    private String totemAssetPath(TotemColor color) {
-        return switch (color == null ? TotemColor.WHITE : color) {
-            case RED -> "assets/tokens/totem_red.png";
-            case YELLOW -> "assets/tokens/totem_yellow.png";
-            case BLUE -> "assets/tokens/totem_blue.png";
-            case PURPLE -> "assets/tokens/totem_purple.png";
-            case WHITE -> "assets/tokens/totem_white.png";
-        };
-    }
-
     private Region readyDot(boolean ready) {
         Region dot = new Region();
         dot.getStyleClass().addAll("lobby-ready-dot", ready ? "lobby-ready-on" : "lobby-ready-off");
         return dot;
-    }
-
-    private String totemColorHex(TotemColor color) {
-        if (color == null) {
-            return "#f1ddc0";
-        }
-        return switch (color) {
-            case RED -> "#b94a3a";
-            case BLUE -> "#3c6f9e";
-            case PURPLE -> "#77529a";
-            case YELLOW -> "#d7a93d";
-            case WHITE -> "#f3ebdc";
-        };
     }
 
     private Button primaryButton(String text, Ikon ikon) {
