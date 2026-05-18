@@ -4,12 +4,8 @@ import it.polimi.ingsw.controller.GameController;
 import it.polimi.ingsw.controller.Persistence;
 import it.polimi.ingsw.network.rmi.RMIServer;
 import it.polimi.ingsw.network.rmi.RMIServerMain;
-import it.polimi.ingsw.network.transport.ServerSideConnection;
-import it.polimi.ingsw.network.transport.SocketServerConnection;
 
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.Optional;
@@ -79,27 +75,10 @@ public final class ServerLauncher {
     }
 
     private static void runSocketAcceptLoop(int port, LobbyManager lobby, MessageDispatcher dispatcher) {
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
-            System.out.println("Socket server started on port " + port);
-
-            while (true) {
-                Socket socket = serverSocket.accept();
-                ServerSideConnection conn = new SocketServerConnection(socket);
-
-                conn.setOnMessage(msg -> dispatcher.dispatch(conn, msg));
-
-                conn.setOnDisconnect(() -> {
-                    if (conn.getNickname() != null) {
-                        lobby.handleDisconnect(conn.getNickname());
-                    } else {
-                        lobby.unregisterPendingConnection(conn);
-                    }
-                });
-
-                lobby.registerPendingConnection(conn);
-
-                System.out.println("New socket connection: " + socket.getRemoteSocketAddress());
-            }
+        try {
+            SocketAcceptLoop.runBlocking(port, lobby, dispatcher,
+                    "Socket server started on port ",
+                    "New socket connection: ");
         } catch (IOException e) {
             System.err.println("Socket accept loop terminated: " + e.getMessage());
         }
