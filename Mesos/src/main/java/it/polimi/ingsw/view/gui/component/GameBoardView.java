@@ -1,7 +1,5 @@
 package it.polimi.ingsw.view.gui.component;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import it.polimi.ingsw.controller.action.PickBuildingAction;
 import it.polimi.ingsw.controller.action.PickCardAction;
 import it.polimi.ingsw.model.enums.TotemColor;
@@ -35,12 +33,10 @@ import javafx.util.Duration;
 
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public final class GameBoardView {
@@ -50,7 +46,6 @@ public final class GameBoardView {
     private static final double MINI_CARD_HEIGHT = 62;
     private static final double DETAIL_CARD_WIDTH = 330;
     private static final double DETAIL_CARD_HEIGHT = 466;
-    private static final int FOOD_DISCOUNT_PER_GATHERER = 3;
     private static final String ICON_HUNTER = "assets/icons/summary/hunter.png";
     private static final String ICON_BUILDER = "assets/icons/summary/builder.png";
     private static final String ICON_BUILDER_DISCOUNT = "assets/icons/summary/builder_discount.png";
@@ -65,6 +60,7 @@ public final class GameBoardView {
     private final ClientModel model;
     private final GuiAssetCatalog assetCatalog;
     private final CardDescriptionService cardDescriptions;
+    private final TribeSummaryService tribeSummaries;
     private final TotemMarkerFactory totemMarkers;
     private final TurnOrderView turnOrderView;
     private final OfferTilesView offerTilesView;
@@ -84,6 +80,7 @@ public final class GameBoardView {
         this.model = model;
         this.assetCatalog = assetCatalog;
         this.cardDescriptions = new CardDescriptionService(assetCatalog);
+        this.tribeSummaries = new TribeSummaryService(assetCatalog);
         this.totemMarkers = new TotemMarkerFactory(assetCatalog);
         this.turnOrderView = new TurnOrderView(model, assetCatalog, totemMarkers,
                 this::inlinePanel,
@@ -465,7 +462,7 @@ public final class GameBoardView {
     }
 
     private Node tribeStatsGrid(PlayerView player, boolean compact) {
-        TribeSummaryStats stats = tribeSummaryStats(player);
+        TribeSummaryStats stats = tribeSummaries.statsFor(player);
 
         if (compact) {
             HBox grid = new HBox(6);
@@ -644,71 +641,6 @@ public final class GameBoardView {
         Region fallback = new Region();
         fallback.getStyleClass().add("tribe-stat-icon-fallback");
         return fallback;
-    }
-
-    private TribeSummaryStats tribeSummaryStats(PlayerView player) {
-        int gatherers = 0;
-        int hunters = 0;
-        int builders = 0;
-        int builderFoodDiscount = 0;
-        int shamans = 0;
-        int shamanStars = 0;
-        int artists = 0;
-        int inventors = 0;
-        Set<String> inventionIcons = new HashSet<>();
-
-        for (Integer cardId : player.getCharacterCardIds()) {
-            Optional<CardAsset> asset = assetCatalog.findCard(cardId);
-            if (asset.isEmpty()) {
-                continue;
-            }
-
-            String type = asset.get().getType().orElse("");
-            JsonObject details = assetCatalog.findCardDetails(cardId).orElse(null);
-
-            switch (type) {
-                case "gatherer" -> gatherers++;
-                case "hunter" -> hunters++;
-                case "builder" -> {
-                    builders++;
-                    if (details != null) {
-                        builderFoodDiscount += intDetail(details, "foodDiscount");
-                    }
-                }
-                case "shaman" -> {
-                    shamans++;
-                    if (details != null) {
-                        shamanStars += intDetail(details, "stars");
-                    }
-                }
-                case "artist" -> artists++;
-                case "inventor" -> {
-                    inventors++;
-                    if (details != null) {
-                        String icon = stringDetail(details, "inventionIcon");
-                        if (!icon.isBlank()) {
-                            inventionIcons.add(icon);
-                        }
-                    }
-                }
-                default -> {
-                    // Ignore non-character cards in this six-slot character summary.
-                }
-            }
-        }
-
-        return new TribeSummaryStats(
-                gatherers,
-                gatherers * FOOD_DISCOUNT_PER_GATHERER,
-                hunters,
-                builders,
-                builderFoodDiscount,
-                shamans,
-                shamanStars,
-                artists,
-                inventors,
-                inventionIcons.size()
-        );
     }
 
     private HBox smallStatus(String label, String value) {
@@ -960,22 +892,6 @@ public final class GameBoardView {
         return totemMarkers.create(color, owner, fitHeight);
     }
 
-    private String stringDetail(JsonObject object, String key) {
-        JsonElement value = object.get(key);
-        if (value == null || value.isJsonNull()) {
-            return "";
-        }
-        return value.getAsString();
-    }
-
-    private int intDetail(JsonObject object, String key) {
-        JsonElement value = object.get(key);
-        if (value == null || value.isJsonNull()) {
-            return 0;
-        }
-        return value.getAsInt();
-    }
-
     private boolean canPickFromRow(boolean upper) {
         return model.canCurrentActionPlayerPickFromRow(upper);
     }
@@ -1033,20 +949,6 @@ public final class GameBoardView {
 
     private String totemColorHex(TotemColor color) {
         return totemMarkers.colorHex(color);
-    }
-
-    private record TribeSummaryStats(
-            int gatherers,
-            int gathererFoodDiscount,
-            int hunters,
-            int builders,
-            int builderFoodDiscount,
-            int shamans,
-            int shamanStars,
-            int artists,
-            int inventors,
-            int distinctInventorIcons
-    ) {
     }
 
 }
