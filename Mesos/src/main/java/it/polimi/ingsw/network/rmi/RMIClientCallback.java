@@ -6,7 +6,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
 /**
- * Client-side RMI callback implementation used by {@link RMIClientConnection}.
+ * Exported client-side RMI callback used by the server to push updates back to the client.
  */
 public class RMIClientCallback extends UnicastRemoteObject implements RemoteClient {
 

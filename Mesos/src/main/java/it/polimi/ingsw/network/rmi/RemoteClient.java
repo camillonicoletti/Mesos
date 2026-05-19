@@ -6,12 +6,13 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 /**
- * Remote callback exposed by a client so the server can push {@link ServerMessage}s.
+ * Remote callback object exported by a client.
+ * The server invokes it to push clientbound {@link ServerMessage} DTOs to that client.
  */
 public interface RemoteClient extends Remote {
 
     /**
-     * Delivers a server-side message to the remote client.
+     * Delivers a clientbound update produced by the server.
      *
      * @param message the message to deliver
      * @throws RemoteException if the callback cannot be reached

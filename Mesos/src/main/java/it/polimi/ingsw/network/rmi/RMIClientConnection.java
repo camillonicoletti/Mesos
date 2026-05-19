@@ -51,7 +51,6 @@ public class RMIClientConnection implements ClientSideConnection {
         this.onMessage = message -> { };
         this.onDisconnect = () -> { };
         this.remoteOperations = createRemoteOperations();
-        // Message to client
         this.heartbeatExecutor = Executors.newSingleThreadScheduledExecutor(runnable -> {
             Thread thread = new Thread(runnable, "rmi-client-heartbeat");
             thread.setDaemon(true);
