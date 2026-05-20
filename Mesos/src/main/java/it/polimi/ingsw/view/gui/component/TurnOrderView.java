@@ -57,7 +57,7 @@ final class TurnOrderView {
         StackPane tile = new StackPane();
         tile.getStyleClass().addAll("turn-order-tile", "turn-order-tile-selectable");
 
-        addTileImage(tile, playerCount(), TILE_WIDTH, TILE_HEIGHT, "Turno");
+        addTileImage(tile, playerCount(), TILE_WIDTH, TILE_HEIGHT, "Turn");
         addTotems(tile);
 
         tile.setPickOnBounds(true);
@@ -69,7 +69,7 @@ final class TurnOrderView {
 
     private void showDetails() {
         int players = playerCount();
-        VBox panel = panelFactory.apply("Tessera Ordine di Turno");
+        VBox panel = panelFactory.apply("Turn Order Tile");
         panel.getStyleClass().add("turn-order-focus-panel");
 
         HBox content = new HBox(16);
@@ -79,7 +79,7 @@ final class TurnOrderView {
         StackPane imageBox = new StackPane();
         imageBox.getStyleClass().add("turn-order-detail-image");
         addTileImage(imageBox, players, DETAIL_TILE_WIDTH, DETAIL_TILE_HEIGHT,
-                "Ordine " + players + " giocatori");
+                "Order — " + players + " players");
 
         VBox details = new VBox(8);
         details.getStyleClass().add("card-detail-lines");
@@ -92,7 +92,7 @@ final class TurnOrderView {
 
         content.getChildren().addAll(imageBox, details);
 
-        Button close = buttonFactory.apply("Chiudi", false);
+        Button close = buttonFactory.apply("Close", false);
         close.setOnAction(event -> hideInlinePanel.run());
         HBox actions = new HBox(close);
         actions.setAlignment(Pos.CENTER_RIGHT);
@@ -167,21 +167,21 @@ final class TurnOrderView {
 
     private List<String> ruleLines(int players) {
         List<String> lines = new ArrayList<>();
-        lines.add("Ordine: nel round successivo i totem su questa tessera vengono letti dall'alto verso il basso.");
-        lines.add("Fine azione: dopo aver risolto una tessera offerta, il totem torna nel primo spazio libero piu in alto.");
+        lines.add("Order: in the next round, totems on this tile are read from top to bottom.");
+        lines.add("End of action: after resolving an offer tile, the totem returns to the highest free slot.");
 
         List<String> slotEffects = switch (players) {
-            case 2 -> List.of("+1 cibo", "paga 1 cibo; se non puoi, perdi 2 PP");
-            case 3 -> List.of("+2 cibo", "nessun effetto", "paga 1 cibo; se non puoi, perdi 2 PP");
-            case 4 -> List.of("+2 cibo", "+1 cibo", "nessun effetto", "paga 1 cibo; se non puoi, perdi 2 PP");
-            default -> List.of("+3 cibo", "+1 cibo", "nessun effetto", "nessun effetto",
-                    "paga 1 cibo; se non puoi, perdi 2 PP");
+            case 2 -> List.of("+1 food", "pay 1 food; if you can't, lose 2 PP");
+            case 3 -> List.of("+2 food", "no effect", "pay 1 food; if you can't, lose 2 PP");
+            case 4 -> List.of("+2 food", "+1 food", "no effect", "pay 1 food; if you can't, lose 2 PP");
+            default -> List.of("+3 food", "+1 food", "no effect", "no effect",
+                    "pay 1 food; if you can't, lose 2 PP");
         };
 
         for (int index = 0; index < slotEffects.size(); index++) {
-            lines.add("Spazio " + (index + 1) + ": " + slotEffects.get(index) + ".");
+            lines.add("Slot " + (index + 1) + ": " + slotEffects.get(index) + ".");
         }
-        lines.add("Il bonus o il pagamento dello spazio si applica subito quando il totem rientra sulla tessera.");
+        lines.add("The slot bonus or penalty applies immediately when the totem returns to the tile.");
         return lines;
     }
 }

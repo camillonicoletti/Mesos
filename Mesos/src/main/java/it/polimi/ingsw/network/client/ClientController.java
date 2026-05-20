@@ -103,6 +103,6 @@ public class ClientController {
     }
 
     private void onDisconnect() {
-        dispatcher.accept(() -> model.applyConnectionLost("Connessione al server interrotta"));
+        dispatcher.accept(() -> model.applyConnectionLost("Connection to server lost"));
     }
 }

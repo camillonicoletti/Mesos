@@ -377,7 +377,7 @@ public class Renderer {
         // null winner = shared victory: resolve co-winners via the same tiebreaker the server uses.
         List<String> tiedList = tiedWinners(model.getWinnerNickname(), model.getFinalScores(), model);
         String winner = tiedList.isEmpty()
-                ? "PAREGGIO"
+                ? "DRAW"
                 : String.join(" & ", tiedList);
         List<Map.Entry<String, Integer>> standings = model.getFinalScores().entrySet().stream()
                 .sorted((a, b) -> {

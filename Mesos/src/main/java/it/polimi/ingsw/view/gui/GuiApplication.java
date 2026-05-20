@@ -280,7 +280,7 @@ public final class GuiApplication extends Application {
 
         long remaining = model.getSuspensionRemainingMillis();
         String countdown = remaining >= 0L ? formatMillis(remaining) : "--:--";
-        suspensionTimerLabel.setText("Vittoria automatica tra " + countdown);
+        suspensionTimerLabel.setText("Automatic victory in " + countdown);
     }
 
     private void showPendingToasts() {
@@ -337,12 +337,12 @@ public final class GuiApplication extends Application {
     private String stateLabel() {
         String state = model.getGameState();
         if ("TotemPlacementState".equals(state)) {
-            return "Piazzamento totem";
+            return "Totem placement";
         }
         if ("ActionResolutionState".equals(state)) {
-            return "Risoluzione azioni";
+            return "Action resolution";
         }
-        return state == null ? "Sincronizzazione" : state;
+        return state == null ? "Synchronizing" : state;
     }
 
     private Label title(String text) {

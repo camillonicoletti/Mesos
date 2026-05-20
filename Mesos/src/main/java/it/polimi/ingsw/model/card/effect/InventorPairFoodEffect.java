@@ -12,6 +12,7 @@ public class InventorPairFoodEffect implements Effect{
 
     @Override
     public void apply(Player player) {
+        // rewardedPairs prevents already rewarded pairs from granting food again.
         int currentPairs = player.getTribe().countInventorPairs();
         int newPairs = currentPairs - rewardedPairs;
 

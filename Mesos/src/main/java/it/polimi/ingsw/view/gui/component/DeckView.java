@@ -28,7 +28,7 @@ final class DeckView {
         VBox panel = new VBox(4);
         panel.getStyleClass().add("deck-view");
         panel.setAlignment(Pos.CENTER);
-        panel.getChildren().add(sectionTitle("Mazzo Tribù"));
+        panel.getChildren().add(sectionTitle("Tribe Deck"));
 
         StackPane cardBack = new StackPane();
         cardBack.getStyleClass().add("deck-placeholder");
@@ -57,7 +57,7 @@ final class DeckView {
             // Fallback label is added below.
         }
 
-        Label placeholder = new Label(model.getCurrentEra() == null ? "TRIBÙ" : "ERA " + model.getCurrentEra().name());
+        Label placeholder = new Label(model.getCurrentEra() == null ? "TRIBE" : "ERA " + model.getCurrentEra().name());
         placeholder.getStyleClass().add("deck-placeholder-label");
         cardBack.getChildren().add(placeholder);
     }
@@ -65,7 +65,7 @@ final class DeckView {
     private String deckCountText() {
         int remaining = model.getRemainingTribeDeckCards();
         String countText = remaining < 0 ? "?" : String.valueOf(remaining);
-        return countText + " carte";
+        return countText + " cards";
     }
 
     private String eraBackKey(Era era) {

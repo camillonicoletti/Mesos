@@ -77,7 +77,7 @@ public final class EndGameView {
     }
 
     private Label winnerSectionLabel() {
-        Label label = new Label("VINCITORE");
+        Label label = new Label("WINNER");
         label.getStyleClass().add("endgame-winner-section");
         return label;
     }
@@ -93,9 +93,9 @@ public final class EndGameView {
         HBox row = new HBox();
         row.getStyleClass().add("endgame-header-row");
         row.getChildren().addAll(
-                headerCell("GIOCATORE", 260),
+                headerCell("PLAYER", 260),
                 headerCell("PP", 120),
-                headerCell("CIBO", 120)
+                headerCell("FOOD", 120)
         );
         return row;
     }
@@ -143,12 +143,12 @@ public final class EndGameView {
         label.getStyleClass().add("endgame-header-cell");
         label.setMinWidth(width);
         label.setPrefWidth(width);
-        if (!text.equals("GIOCATORE")) label.setAlignment(Pos.CENTER);
+        if (!text.equals("PLAYER")) label.setAlignment(Pos.CENTER);
         return label;
     }
 
     private Button disconnectButton() {
-        Button quit = new Button("Esci");
+        Button quit = new Button("Quit");
         quit.getStyleClass().add("secondary-button");
         GuiIcons.decorateButton(quit, MaterialDesignL.LOGOUT);
         quit.setOnAction(event -> {

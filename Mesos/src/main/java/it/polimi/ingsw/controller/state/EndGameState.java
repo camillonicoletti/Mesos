@@ -20,6 +20,7 @@ public class EndGameState extends AbstractGameState {
     public void onEnter(GameController ctx) {
         Game game = ctx.getGame();
         game.calculateFinalScores();
+        // A suspension timeout can override normal score-based winner calculation.
         Player winner = ctx.consumeForcedWinner();
         if (winner == null) {
             winner = game.getWinner();

@@ -24,6 +24,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+/** Resolves offer-tile actions in tile order, then handles extra upper-row picks granted by buildings. */
 public class ActionResolutionState extends AbstractGameState {
 
     private static final long serialVersionUID = 1L;
@@ -251,6 +252,7 @@ public class ActionResolutionState extends AbstractGameState {
             List<CharacterCard> tributeRow = pickBuilding.isFromUpperRow()
                     ? round.getUpperRowTribute()
                     : round.getLowerRowTribute();
+            // Buildings can be picked from a row only after all character cards in that row are gone.
             if (!tributeRow.isEmpty())
                 throw new IllegalStateException(
                         "Must pick a Character card before a Building when Characters are available in the same row");

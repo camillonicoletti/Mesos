@@ -250,20 +250,20 @@ public final class GameBoardView {
     }
 
     private void showCardPanel(int cardId, boolean canTake, Runnable takeAction) {
-        VBox panel = inlinePanel(canTake ? "Conferma carta" : "Dettagli carta");
+        VBox panel = inlinePanel(canTake ? "Confirm card" : "Card details");
         panel.getStyleClass().add("card-focus-panel");
         Label prompt = new Label(canTake
-                ? "Vuoi prendere questa carta?"
-                : "Carta selezionata");
+                ? "Do you want to take this card?"
+                : "Card selected");
         prompt.getStyleClass().add("inline-panel-subtitle");
 
         HBox actions = new HBox(10);
         actions.setAlignment(Pos.CENTER_RIGHT);
-        Button close = inlineButton("Chiudi", false);
+        Button close = inlineButton("Close", false);
         close.setOnAction(event -> hideInlinePanel());
         actions.getChildren().add(close);
         if (canTake) {
-            Button take = inlineButton("Prendi", true);
+            Button take = inlineButton("Take", true);
             take.setOnAction(event -> {
                 hideInlinePanel();
                 if (takeAction != null) {
@@ -377,25 +377,25 @@ public final class GameBoardView {
 
         if ("TotemPlacementState".equals(model.getGameState())) {
             if (myTurn) {
-                return "Scegli una Tessera Offerta su cui posizionare il tuo totem";
+                return "Choose an Offer Tile to place your totem on";
             }
 
             return current == null
-                    ? "In attesa del piazzamento dei totem"
-                    : "Attendi il piazzamento di " + current;
+                    ? "Waiting for totem placement"
+                    : "Waiting for " + current + " to place their totem";
         }
 
         if ("ActionResolutionState".equals(model.getGameState())) {
             if (myTurn) {
-                return "Scegli una carta disponibile dalla fila indicata dalla tua tessera";
+                return "Choose a card from the row indicated by your tile";
             }
 
             return current == null
-                    ? "Risoluzione azioni in corso"
-                    : "Turno di " + current;
+                    ? "Resolving actions"
+                    : current + "'s turn";
         }
 
-        return "Tabellone di gioco";
+        return "Game board";
     }
 
 }

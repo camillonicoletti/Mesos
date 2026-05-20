@@ -98,8 +98,8 @@ public final class LobbyView {
         boolean ready = model.getMyNickname() != null
                 && model.getReadyPlayers().contains(model.getMyNickname());
         Button readyToggle = ready
-                ? secondaryButton("Non pronto", MaterialDesignC.CLOSE_CIRCLE_OUTLINE)
-                : primaryButton("Pronto", MaterialDesignC.CHECK_CIRCLE);
+                ? secondaryButton("Not ready", MaterialDesignC.CLOSE_CIRCLE_OUTLINE)
+                : primaryButton("Ready", MaterialDesignC.CHECK_CIRCLE);
         readyToggle.getStyleClass().add(ready ? "ready-toggle-on" : "ready-toggle-off");
         readyToggle.setOnAction(event -> controller.send(new ReadyMessage(!ready)));
         box.getChildren().add(readyToggle);
@@ -117,7 +117,7 @@ public final class LobbyView {
         selector.setAlignment(Pos.CENTER);
         selector.getStyleClass().add("player-count-selector");
 
-        Label label = new Label("Numero giocatori");
+        Label label = new Label("Number of players");
         label.getStyleClass().add("player-count-label");
 
         HBox choices = new HBox(7);
@@ -149,9 +149,9 @@ public final class LobbyView {
         box.setAlignment(Pos.CENTER);
         box.getStyleClass().add("lobby-status");
         box.getChildren().add(infoRow(MaterialDesignA.ACCOUNT_CIRCLE, nullSafe(model.getMyNickname())));
-        box.getChildren().add(infoRow(MaterialDesignA.ACCOUNT_MULTIPLE, model.getExpectedPlayers() + " giocatori"));
+        box.getChildren().add(infoRow(MaterialDesignA.ACCOUNT_MULTIPLE, model.getExpectedPlayers() + " players"));
 
-        Label connection = new Label(model.isConnected() ? "Connesso" : "Disconnesso");
+        Label connection = new Label(model.isConnected() ? "Connected" : "Disconnected");
         connection.setGraphic(GuiIcons.icon(model.isConnected() ? MaterialDesignC.CONNECTION : MaterialDesignC.CLOSE_NETWORK, 15));
         connection.setContentDisplay(ContentDisplay.LEFT);
         connection.getStyleClass().add(model.isConnected() ? "ok" : "error");
@@ -192,7 +192,7 @@ public final class LobbyView {
         readyStatus.getStyleClass().add("lobby-ready-status");
         readyStatus.getChildren().add(readyDot(readyPlayer));
 
-        Label ready = new Label(readyPlayer ? "Pronto" : "In attesa");
+        Label ready = new Label(readyPlayer ? "Ready" : "Waiting");
         ready.getStyleClass().add(readyPlayer ? "ok" : "muted");
         readyStatus.getChildren().add(ready);
 
@@ -201,7 +201,7 @@ public final class LobbyView {
     }
 
     private Button disconnectButton() {
-        Button quit = secondaryButton("Esci", MaterialDesignL.LOGOUT);
+        Button quit = secondaryButton("Quit", MaterialDesignL.LOGOUT);
         quit.setOnAction(event -> {
             controller.disconnect();
             Platform.exit();

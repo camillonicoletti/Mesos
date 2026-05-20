@@ -42,7 +42,7 @@ final class CardDescriptionService {
             switch (card.getKind()) {
                 case "character" -> lines.addAll(characterRuleLines(data));
                 case "building" -> {
-                    lines.add("Costo: " + intDetail(data, "foodCost") + " cibo. Punti a fine partita: "
+                    lines.add("Cost: " + intDetail(data, "foodCost") + " food. End-game points: "
                             + intDetail(data, "pointsEndOfMatch") + ".");
                     lines.addAll(buildingRuleLines(data));
                 }
@@ -54,7 +54,7 @@ final class CardDescriptionService {
         }
 
         if (cardId == lastResolvedEventCardId && lastResolvedEventDescription != null) {
-            lines.add("Ultimo effetto risolto: " + lastResolvedEventDescription);
+            lines.add("Last resolved effect: " + lastResolvedEventDescription);
         }
 
         return lines;
@@ -63,7 +63,7 @@ final class CardDescriptionService {
     String summaryLabelFor(int cardId) {
         Optional<CardAsset> asset = assetCatalog.findCard(cardId);
         if (asset.isEmpty()) {
-            return "Carta";
+            return "Card";
         }
         CardAsset card = asset.get();
         if ("building".equals(card.getKind())) {
@@ -71,7 +71,7 @@ final class CardDescriptionService {
                     .map(details -> details.get("effect"))
                     .map(this::formatDetailValue)
                     .map(this::labelForType)
-                    .orElse("Edificio");
+                    .orElse("Building");
         }
         return card.getType().map(this::labelForType).orElse(labelForKind(card.getKind()));
     }
@@ -81,30 +81,29 @@ final class CardDescriptionService {
         return switch (type) {
             case "hunter" -> boolDetail(data, "foodIcon")
                     ? List.of(
-                    "Cacciatore: durante l'Evento Caccia conta per ottenere cibo e PP indicati dalla carta evento.",
-                    "Quando lo prendi, ottieni subito 1 cibo per ogni Cacciatore nella tua tribu, incluso questo.")
+                    "Hunter: counts during the Hunt Event to earn food and PP as shown on the event card.",
+                    "When taken, immediately gain 1 food for each Hunter in your tribe, including this one.")
                     : List.of(
-                    "Cacciatore: durante l'Evento Caccia conta per ottenere cibo e PP indicati dalla carta evento.",
-                    "Non mostra l'icona cibo, quindi quando lo prendi non da cibo immediato.");
+                    "Hunter: counts during the Hunt Event to earn food and PP as shown on the event card.",
+                    "Has no food icon, so taking it does not grant immediate food.");
             case "builder" -> List.of(
-                    "Costruttore: riduce di " + intDetail(data, "foodDiscount")
-                            + " il costo di ogni Edificio che prendi.",
-                    "Gli sconti dei Costruttori si sommano, ma il costo non puo scendere sotto 0.",
-                    "A fine partita vale " + intDetail(data, "pointsEndOfMatch") + " PP.");
+                    "Builder: reduces the cost of each Building you take by " + intDetail(data, "foodDiscount") + ".",
+                    "Builder discounts stack, but the cost cannot drop below 0.",
+                    "Worth " + intDetail(data, "pointsEndOfMatch") + " PP at end of game.");
             case "gatherer" -> List.of(
-                    "Raccoglitore: durante l'Evento Sostentamento sconta "
-                            + FOOD_DISCOUNT_PER_GATHERER + " cibo dal totale da pagare.",
-                    "Non fornisce cibo direttamente quando entra nella tribu.");
+                    "Gatherer: during the Sustenance Event, reduces the total food you pay by "
+                            + FOOD_DISCOUNT_PER_GATHERER + ".",
+                    "Does not provide food when added to your tribe.");
             case "artist" -> List.of(
-                    "Artista: durante l'Evento Pitture Rupestri determina se perdi PP o guadagni PP per artista.",
-                    "A fine partita ottieni 10 PP per ogni coppia di Artisti nella tua tribu.");
+                    "Artist: during the Cave Paintings Event, determines whether you lose or gain PP per artist.",
+                    "At end of game, gain 10 PP for each pair of Artists in your tribe.");
             case "inventor" -> List.of(
-                    "Inventore: porta l'icona invenzione " + stringDetail(data, "inventionIcon") + ".",
-                    "A fine partita vale: numero di Inventori nella tribu x numero di icone invenzione diverse.");
+                    "Inventor: carries invention icon " + stringDetail(data, "inventionIcon") + ".",
+                    "End-game score: number of Inventors × number of distinct invention icons.");
             case "shaman" -> List.of(
-                    "Sciamano: aggiunge " + intDetail(data, "stars") + " stelle alla tua tribu.",
-                    "Durante il Rituale Sciamanico, piu stelle fanno guadagnare PP; meno stelle fanno perdere PP.");
-            default -> List.of("Carta personaggio.");
+                    "Shaman: adds " + intDetail(data, "stars") + " stars to your tribe.",
+                    "During the Shamanic Ritual, more stars earn PP; fewer stars lose PP.");
+            default -> List.of("Character card.");
         };
     }
 
@@ -113,59 +112,59 @@ final class CardDescriptionService {
         String effectName = effectName(effect);
         return switch (effectName) {
             case "FullSetFood" -> List.of(
-                    "Da quando possiedi questo Edificio, ogni volta che completi un nuovo set di 6 Personaggi tutti diversi ottieni 5 cibo.",
-                    "I set gia completi prima di prendere l'Edificio non danno questo bonus.");
+                    "While you own this Building, gain 5 food each time you complete a new set of all 6 different Character types.",
+                    "Sets completed before taking this Building do not grant the bonus.");
             case "SustenanceFoodDiscount" -> List.of(
-                    "Durante l'Evento Sostentamento sconta 1 cibo dal totale da pagare per ogni "
-                            + characterTypeSingular(effectTarget(effect)) + " nella tua tribu.");
+                    "During the Sustenance Event, reduce total food paid by 1 for each "
+                            + characterTypeSingular(effectTarget(effect)) + " in your tribe.");
             case "ShamanicRitualImmunity" -> List.of(
-                    "Durante il Rituale Sciamanico non perdi PP se hai meno stelle degli altri giocatori.");
+                    "During the Shamanic Ritual, you do not lose PP even if you have fewer stars than others.");
             case "TotemSlotFoodBonus" -> List.of(
-                    "Alla fine del tuo turno, quando il totem rientra sulla Tessera Ordine di Turno, ottieni 1 cibo extra se lo spazio scelto da gia un bonus cibo.",
-                    "Se finisci nell'ultimo spazio, paghi normalmente 1 cibo oppure perdi 2 PP se non puoi pagare.");
+                    "When your totem returns to the Turn Order Tile, gain 1 extra food if the chosen slot already has a food bonus.",
+                    "If you end up in the last slot, pay 1 food normally or lose 2 PP if you cannot.");
             case "InventorPairFood" -> List.of(
-                    "Da quando possiedi questo Edificio, ottieni 3 cibo ogni volta che completi una nuova coppia di Inventori uguali.",
-                    "Contano come uguali gli Inventori con la stessa icona invenzione; le coppie gia presenti non danno il bonus.");
+                    "While you own this Building, gain 3 food each time you complete a new pair of matching Inventors.",
+                    "Inventors with the same invention icon count as matching; pairs already present before taking this Building do not grant the bonus.");
             case "ShamanicRitualDoublePP" -> List.of(
-                    "Durante il Rituale Sciamanico, se hai piu stelle di tutti gli altri, guadagni il doppio dei PP indicati dall'evento.",
-                    "Se sei in parita per la maggioranza, guadagni comunque i PP indicati dall'evento.");
+                    "During the Shamanic Ritual, if you have more stars than all others, gain double the PP shown on the event card.",
+                    "If tied for the lead, you still gain the PP shown on the event card.");
             case "Shaman3ExtraStars" -> List.of(
-                    "Durante il Rituale Sciamanico la tua tribu conta 3 stelle aggiuntive.");
+                    "During the Shamanic Ritual, your tribe counts 3 additional stars.");
             case "Hunt1Food1PP" -> List.of(
-                    "Durante l'Evento Caccia, per ogni Cacciatore nella tua tribu ottieni 1 cibo e 1 PP addizionali.");
+                    "During the Hunt Event, gain 1 extra food and 1 extra PP for each Hunter in your tribe.");
             case "EndBuilderPP" -> List.of(
-                    "A fine partita raddoppi i PP stampati sulle tue carte Costruttore.");
+                    "At end of game, double the printed PP on all your Builder cards.");
             case "CavePaintingsFood" -> List.of(
-                    "Durante l'Evento Pitture Rupestri ottieni 1 cibo per ogni Artista nella tua tribu.");
+                    "During the Cave Paintings Event, gain 1 food for each Artist in your tribe.");
             case "EndFullSetPP" -> List.of(
-                    "A fine partita guadagni 6 PP per ogni set completo di 6 Personaggi tutti diversi nella tua tribu.");
+                    "At end of game, gain 6 PP for each complete set of all 6 different Character types in your tribe.");
             case "ExtraCardUpperRow" -> List.of(
-                    "Dopo che tutti hanno risolto le azioni e prima della Fine del Round, puoi prendere 1 carta dalla fila superiore.",
-                    "Se scegli un Edificio devi comunque pagarne il costo, applicando gli sconti dei Costruttori.");
+                    "After all players resolve actions and before End of Round, take 1 card from the upper row.",
+                    "If you choose a Building, you still pay its cost, applying any Builder discounts.");
             case "EndPP" -> List.of(
-                    "A fine partita guadagni 25 PP grazie a questo effetto.");
+                    "Gain 25 PP at end of game from this effect.");
             case "EndCharacterCountPP" -> List.of(
-                    "A fine partita guadagni " + effectInt(effect, "pointsPerCard") + " PP per ogni "
-                            + characterTypeSingular(effectTarget(effect)) + " nella tua tribu.");
-            default -> List.of("Edificio: " + formatDetailValue(effect) + ".");
+                    "At end of game, gain " + effectInt(effect, "pointsPerCard") + " PP for each "
+                            + characterTypeSingular(effectTarget(effect)) + " in your tribe.");
+            default -> List.of("Building: " + formatDetailValue(effect) + ".");
         };
     }
 
     private String eventRuleText(JsonObject data) {
-        String suffix = boolDetail(data, "closeEvent") ? " Questo e un evento finale." : "";
+        String suffix = boolDetail(data, "closeEvent") ? " This is a closing event." : "";
         return switch (stringDetail(data, "type")) {
-            case "hunt" -> "Caccia: ogni cacciatore fornisce " + intDetail(data, "foodPerHunter")
-                    + " cibo e " + intDetail(data, "ppPerHunter") + " PP." + suffix;
-            case "sustenance" -> "Sostentamento: ogni personaggio non nutrito causa -"
+            case "hunt" -> "Hunt: each Hunter provides " + intDetail(data, "foodPerHunter")
+                    + " food and " + intDetail(data, "ppPerHunter") + " PP." + suffix;
+            case "sustenance" -> "Sustenance: each unfed character causes -"
                     + intDetail(data, "ppPenaltyPerUnfed") + " PP." + suffix;
-            case "shamanicRitual" -> "Rituale sciamanico: chi ha piu stelle guadagna "
-                    + intDetail(data, "ppGain") + " PP, chi ne ha meno perde "
+            case "shamanicRitual" -> "Shamanic Ritual: whoever has the most stars gains "
+                    + intDetail(data, "ppGain") + " PP; whoever has the fewest loses "
                     + intDetail(data, "ppLoss") + " PP." + suffix;
-            case "cavePaintings" -> "Pitture rupestri: servono almeno " + intDetail(data, "minArtists")
-                    + " artisti; se non li hai perdi " + intDetail(data, "ppPenalty")
-                    + " PP, altrimenti ottieni " + intDetail(data, "ppPerArtist")
-                    + " PP per artista." + suffix;
-            default -> "Evento." + suffix;
+            case "cavePaintings" -> "Cave Paintings: you need at least " + intDetail(data, "minArtists")
+                    + " artists; if you don't have them lose " + intDetail(data, "ppPenalty")
+                    + " PP, otherwise gain " + intDetail(data, "ppPerArtist")
+                    + " PP per artist." + suffix;
+            default -> "Event." + suffix;
         };
     }
 
@@ -174,8 +173,8 @@ final class CardDescriptionService {
         Optional<CardAsset> asset = assetCatalog.findCard(cardId);
         lines.add("ID: " + cardId);
         asset.ifPresent(card -> {
-            lines.add("Categoria: " + labelForKind(card.getKind()));
-            card.getType().ifPresent(type -> lines.add("Tipo: " + labelForType(type)));
+            lines.add("Kind: " + labelForKind(card.getKind()));
+            card.getType().ifPresent(type -> lines.add("Type: " + labelForType(type)));
             card.getEra().ifPresent(era -> lines.add("Era: " + era));
         });
 
@@ -246,77 +245,77 @@ final class CardDescriptionService {
 
     private String labelForKind(String kind) {
         return switch (kind) {
-            case "character" -> "Personaggio";
-            case "building" -> "Edificio";
-            case "event" -> "Evento";
+            case "character" -> "Character";
+            case "building" -> "Building";
+            case "event" -> "Event";
             default -> capitalize(kind);
         };
     }
 
     private String labelForType(String type) {
         return switch (type) {
-            case "hunter" -> "Cacciatori";
-            case "builder" -> "Costruttori";
-            case "gatherer" -> "Raccoglitori";
-            case "artist" -> "Artisti";
-            case "inventor" -> "Inventori";
-            case "shaman" -> "Sciamani";
-            case "hunt" -> "Caccia";
-            case "sustenance" -> "Sostentamento";
-            case "shamanicRitual" -> "Rituale sciamanico";
-            case "cavePaintings" -> "Pitture rupestri";
-            case "FullSetFood" -> "Cibo da set completo";
-            case "SustenanceFoodDiscount" -> "Sconto sostentamento";
-            case "ShamanicRitualImmunity" -> "Immunita rituale sciamanico";
-            case "TotemSlotFoodBonus" -> "Bonus cibo slot totem";
-            case "InventorPairFood" -> "Cibo da coppie inventori";
-            case "ShamanicRitualDoublePP" -> "Doppio rituale sciamanico";
-            case "Shaman3ExtraStars" -> "Stelle sciamano extra";
-            case "Hunt1Food1PP" -> "Caccia: cibo e PP";
-            case "EndBuilderPP" -> "PP finali costruttori";
-            case "CavePaintingsFood" -> "Cibo pitture rupestri";
-            case "EndFullSetPP" -> "PP finali da set completo";
-            case "ExtraCardUpperRow" -> "Carta extra fila alta";
-            case "EndPP" -> "PP finali";
-            case "EndCharacterCountPP" -> "PP finali per personaggio";
+            case "hunter" -> "Hunters";
+            case "builder" -> "Builders";
+            case "gatherer" -> "Gatherers";
+            case "artist" -> "Artists";
+            case "inventor" -> "Inventors";
+            case "shaman" -> "Shamans";
+            case "hunt" -> "Hunt";
+            case "sustenance" -> "Sustenance";
+            case "shamanicRitual" -> "Shamanic Ritual";
+            case "cavePaintings" -> "Cave Paintings";
+            case "FullSetFood" -> "Food from full set";
+            case "SustenanceFoodDiscount" -> "Sustenance discount";
+            case "ShamanicRitualImmunity" -> "Shamanic ritual immunity";
+            case "TotemSlotFoodBonus" -> "Totem slot food bonus";
+            case "InventorPairFood" -> "Food from inventor pairs";
+            case "ShamanicRitualDoublePP" -> "Double shamanic ritual";
+            case "Shaman3ExtraStars" -> "Extra shaman stars";
+            case "Hunt1Food1PP" -> "Hunt: food and PP";
+            case "EndBuilderPP" -> "End PP builders";
+            case "CavePaintingsFood" -> "Cave paintings food";
+            case "EndFullSetPP" -> "End PP full set";
+            case "ExtraCardUpperRow" -> "Extra card upper row";
+            case "EndPP" -> "End PP";
+            case "EndCharacterCountPP" -> "End PP per character";
             default -> capitalize(type);
         };
     }
 
     private String characterTypeSingular(String type) {
         return switch (type) {
-            case "hunter" -> "Cacciatore";
-            case "builder" -> "Costruttore";
-            case "gatherer" -> "Raccoglitore";
-            case "artist" -> "Artista";
-            case "inventor" -> "Inventore";
-            case "shaman" -> "Sciamano";
+            case "hunter" -> "Hunter";
+            case "builder" -> "Builder";
+            case "gatherer" -> "Gatherer";
+            case "artist" -> "Artist";
+            case "inventor" -> "Inventor";
+            case "shaman" -> "Shaman";
             default -> labelForType(type);
         };
     }
 
     private String labelForDetailKey(String key) {
         return switch (key) {
-            case "minPlayers" -> "Giocatori minimi";
-            case "foodIcon" -> "Icona cibo";
-            case "pointsEndOfMatch" -> "Punti fine partita";
-            case "foodDiscount" -> "Sconto cibo";
-            case "inventionIcon" -> "Icona invenzione";
-            case "stars" -> "Stelle";
-            case "foodCost" -> "Costo cibo";
-            case "effect" -> "Effetto";
-            case "closeEvent" -> "Evento finale";
-            case "foodPerHunter" -> "Cibo per cacciatore";
-            case "ppPerHunter" -> "PP per cacciatore";
-            case "ppPenaltyPerUnfed" -> "Penalita PP per non nutrito";
-            case "ppGain" -> "PP guadagnati";
-            case "ppLoss" -> "PP persi";
-            case "minArtists" -> "Artisti minimi";
-            case "ppPenalty" -> "Penalita PP";
-            case "ppPerArtist" -> "PP per artista";
-            case "targetType" -> "Tipo bersaglio";
-            case "pointsPerCard" -> "Punti per carta";
-            case "name" -> "Nome";
+            case "minPlayers" -> "Min. players";
+            case "foodIcon" -> "Food icon";
+            case "pointsEndOfMatch" -> "End-game points";
+            case "foodDiscount" -> "Food discount";
+            case "inventionIcon" -> "Invention icon";
+            case "stars" -> "Stars";
+            case "foodCost" -> "Food cost";
+            case "effect" -> "Effect";
+            case "closeEvent" -> "Closing event";
+            case "foodPerHunter" -> "Food per hunter";
+            case "ppPerHunter" -> "PP per hunter";
+            case "ppPenaltyPerUnfed" -> "PP penalty per unfed";
+            case "ppGain" -> "PP gained";
+            case "ppLoss" -> "PP lost";
+            case "minArtists" -> "Min. artists";
+            case "ppPenalty" -> "PP penalty";
+            case "ppPerArtist" -> "PP per artist";
+            case "targetType" -> "Target type";
+            case "pointsPerCard" -> "Points per card";
+            case "name" -> "Name";
             default -> capitalize(key);
         };
     }
@@ -327,7 +326,7 @@ final class CardDescriptionService {
         }
         if (value.isJsonPrimitive()) {
             if (value.getAsJsonPrimitive().isBoolean()) {
-                return value.getAsBoolean() ? "si" : "no";
+                return value.getAsBoolean() ? "yes" : "no";
             }
             if (value.getAsJsonPrimitive().isString()) {
                 return labelForType(value.getAsString());
@@ -336,7 +335,7 @@ final class CardDescriptionService {
         }
         if (value.isJsonObject()) {
             JsonObject object = value.getAsJsonObject();
-            String name = object.has("name") ? labelForType(object.get("name").getAsString()) : "Effetto";
+            String name = object.has("name") ? labelForType(object.get("name").getAsString()) : "Effect";
             List<String> parts = new ArrayList<>();
             for (Map.Entry<String, JsonElement> entry : object.entrySet()) {
                 if ("name".equals(entry.getKey())) {

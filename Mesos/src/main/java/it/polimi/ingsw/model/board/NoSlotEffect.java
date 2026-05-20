@@ -10,6 +10,6 @@ public class NoSlotEffect implements TurnSlotEffect, Serializable {
 
     @Override
     public void apply(Player player) {
-        // nessun effetto
+        // no effect
     }
 }

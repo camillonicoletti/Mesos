@@ -17,22 +17,22 @@ class CardDescriptionServiceTest {
     void describesCharacterWithoutDependingOnGameBoardView() {
         List<String> lines = descriptions.describeCard(1, -1, null);
 
-        assertTrue(lines.contains("Personaggio - Cacciatori | Era I"));
-        assertTrue(lines.stream().anyMatch(line -> line.contains("ottieni subito 1 cibo")));
+        assertTrue(lines.contains("Character - Hunters | Era I"));
+        assertTrue(lines.stream().anyMatch(line -> line.contains("immediately gain 1 food")));
     }
 
     @Test
     void describesBuildingEffectAndSummaryLabel() {
         List<String> lines = descriptions.describeCard(109, -1, null);
 
-        assertEquals("PP finali da set completo", descriptions.summaryLabelFor(109));
-        assertTrue(lines.stream().anyMatch(line -> line.contains("6 PP per ogni set completo")));
+        assertEquals("End PP full set", descriptions.summaryLabelFor(109));
+        assertTrue(lines.stream().anyMatch(line -> line.contains("gain 6 PP")));
     }
 
     @Test
     void appendsLastResolvedEventDetailsOnlyForMatchingCard() {
         List<String> lines = descriptions.describeCard(85, 85, "Alice guadagna 2 PP");
 
-        assertTrue(lines.contains("Ultimo effetto risolto: Alice guadagna 2 PP"));
+        assertTrue(lines.contains("Last resolved effect: Alice guadagna 2 PP"));
     }
 }

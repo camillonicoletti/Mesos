@@ -7,6 +7,7 @@ import it.polimi.ingsw.model.Player;
 
 import java.io.Serializable;
 
+/** Tracks suspension timing and forced-winner logic when too few players remain connected. */
 public class SuspensionManager implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -90,6 +91,7 @@ public class SuspensionManager implements Serializable {
             return false;
         }
 
+        // Timeout only applies when exactly one player is connected; with zero the game is already over.
         if (connectedPlayersCount != 1) {
             return false;
         }

@@ -40,13 +40,13 @@ public final class PlayerSidebar {
 
     private VBox statusBlock() {
         VBox box = new VBox(8);
-        box.getChildren().add(sectionTitle("Stato"));
+        box.getChildren().add(sectionTitle("Status"));
         box.getChildren().add(infoRow(MaterialDesignA.ACCOUNT_CIRCLE, "Nickname: " + nullSafe(model.getMyNickname())));
         box.getChildren().add(infoRow(MaterialDesignP.PINE_TREE, "Era: " + nullSafe(model.getCurrentEra())));
         box.getChildren().add(infoRow(MaterialDesignC.CALENDAR_CLOCK, "Round: " + model.getRoundNumber()));
-        box.getChildren().add(infoRow(MaterialDesignP.PLAY_CIRCLE, "Turno: " + currentTurnText()));
+        box.getChildren().add(infoRow(MaterialDesignP.PLAY_CIRCLE, "Turn: " + currentTurnText()));
 
-        Label connection = new Label(model.isConnected() ? "Connesso" : "Disconnesso");
+        Label connection = new Label(model.isConnected() ? "Connected" : "Disconnected");
         connection.setGraphic(GuiIcons.icon(model.isConnected() ? MaterialDesignC.CONNECTION : MaterialDesignC.CLOSE_NETWORK, 15));
         connection.setContentDisplay(ContentDisplay.LEFT);
         connection.getStyleClass().add(model.isConnected() ? "ok" : "error");
@@ -70,7 +70,7 @@ public final class PlayerSidebar {
 
     private VBox playersPanel() {
         VBox box = new VBox(10);
-        box.getChildren().add(sectionTitle("Giocatori"));
+        box.getChildren().add(sectionTitle("Players"));
         for (PlayerView player : model.getPlayers().values()) {
             boolean disconnected = model.isPlayerDisconnected(player.getNickname());
             VBox card = new VBox(3);
@@ -81,15 +81,15 @@ public final class PlayerSidebar {
             name.setContentDisplay(ContentDisplay.LEFT);
             name.getStyleClass().add(disconnected ? "disconnected" : "player-row");
 
-            Label resources = new Label("Cibo: " + player.getFood() + "   PP: " + player.getPrestigePoints());
+            Label resources = new Label("Food: " + player.getFood() + "   PP: " + player.getPrestigePoints());
             resources.getStyleClass().add("muted");
 
-            Label characters = new Label("Personaggi: " + player.getCharacterCardIds().size());
+            Label characters = new Label("Characters: " + player.getCharacterCardIds().size());
             characters.setGraphic(GuiIcons.icon(MaterialDesignA.ACCOUNT_MULTIPLE, 13));
             characters.setContentDisplay(ContentDisplay.LEFT);
             characters.getStyleClass().add("muted");
 
-            Label buildings = new Label("Edifici: " + player.getBuildingCardIds().size());
+            Label buildings = new Label("Buildings: " + player.getBuildingCardIds().size());
             buildings.setGraphic(GuiIcons.icon(MaterialDesignP.PINE_TREE, 13));
             buildings.setContentDisplay(ContentDisplay.LEFT);
             buildings.getStyleClass().add("muted");
@@ -101,7 +101,7 @@ public final class PlayerSidebar {
     }
 
     private Button disconnectButton() {
-        Button quit = new Button("Esci");
+        Button quit = new Button("Quit");
         quit.getStyleClass().add("secondary-button");
         GuiIcons.decorateButton(quit, MaterialDesignL.LOGOUT);
         quit.setOnAction(event -> {

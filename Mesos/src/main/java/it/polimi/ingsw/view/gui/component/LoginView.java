@@ -61,22 +61,22 @@ public final class LoginView {
         panel.setAlignment(Pos.CENTER_LEFT);
 
         TextField nickname = new TextField(pendingNickname != null ? pendingNickname : "");
-        nickname.setPromptText("Inserisci il nome del totem");
+        nickname.setPromptText("Enter your totem name");
         nickname.setMaxWidth(Double.MAX_VALUE);
 
         HBox totemSelector = totemSelector();
 
-        CheckBox reconnect = new CheckBox("Riconnettiti");
+        CheckBox reconnect = new CheckBox("Reconnect");
         reconnect.selectedProperty().addListener((obs, oldValue, selected) -> totemSelector.setDisable(selected));
 
-        Button enter = primaryButton("ENTRA");
+        Button enter = primaryButton("JOIN");
         enter.setMaxWidth(Double.MAX_VALUE);
         enter.setOnAction(event -> submit(nickname, reconnect));
 
         error = errorLabel();
         panel.getChildren().addAll(
-                formGroup("NOME TOTEM", nickname),
-                formGroup("SCEGLI IL TOTEM", totemSelector),
+                formGroup("TOTEM NAME", nickname),
+                formGroup("CHOOSE YOUR TOTEM", totemSelector),
                 reconnect, enter, error);
         refresh();
 

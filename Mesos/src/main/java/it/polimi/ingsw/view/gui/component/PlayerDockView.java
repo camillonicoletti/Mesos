@@ -92,17 +92,17 @@ final class PlayerDockView {
         status.getChildren().addAll(
                 smallStatus("Era", nullSafe(model.getCurrentEra())),
                 smallStatus("Round", String.valueOf(model.getRoundNumber())),
-                smallStatus("Turno", nullSafe(currentTurnNickname()))
+                smallStatus("Turn", nullSafe(currentTurnNickname()))
         );
 
-        Button exit = new Button("Esci");
+        Button exit = new Button("Quit");
         exit.getStyleClass().add("dock-exit");
         exit.setOnAction(event -> {
             controller.disconnect();
             Platform.exit();
         });
 
-        Button debugEnd = new Button("⚑ Fine partita [DEBUG]");
+        Button debugEnd = new Button("⚑ End game [DEBUG]");
         debugEnd.getStyleClass().add("dock-exit");
         debugEnd.setOnAction(event -> controller.send(
                 new it.polimi.ingsw.network.protocol.serverbound.ForceEndGameMessage()));
@@ -160,12 +160,12 @@ final class PlayerDockView {
         HBox head = new HBox(7);
         head.setAlignment(Pos.CENTER_LEFT);
 
-        Label name = new Label((me ? "Tu · " : "") + player.getNickname());
+        Label name = new Label((me ? "You · " : "") + player.getNickname());
         name.getStyleClass().add("player-summary-name");
         head.getChildren().addAll(totemDot(player), name);
 
-        Label resources = new Label("Cibo " + player.getFood() + "   PP " + player.getPrestigePoints()
-                + "   Edifici " + player.getBuildingCardIds().size());
+        Label resources = new Label("Food " + player.getFood() + "   PP " + player.getPrestigePoints()
+                + "   Buildings " + player.getBuildingCardIds().size());
         resources.getStyleClass().add("player-summary-stat");
 
         card.getChildren().addAll(head, resources, tribeStatsGrid(player, true));
@@ -187,7 +187,7 @@ final class PlayerDockView {
         strip.getStyleClass().add("player-building-strip");
         strip.setAlignment(Pos.CENTER_LEFT);
 
-        Label title = new Label("Edifici");
+        Label title = new Label("Buildings");
         title.getStyleClass().add("player-building-title");
         strip.getChildren().add(title);
 
@@ -208,7 +208,7 @@ final class PlayerDockView {
     }
 
     private void showTribePanel(PlayerView player) {
-        VBox panel = panelFactory.apply("Tribu di " + player.getNickname());
+        VBox panel = panelFactory.apply("Tribe of " + player.getNickname());
         panel.getStyleClass().add("tribe-focus-panel");
 
         VBox content = new VBox(12);
@@ -219,13 +219,13 @@ final class PlayerDockView {
         content.getChildren().addAll(
                 tribePanelHeader(player),
                 tribeStatsGrid(player, false),
-                summaryPill("Personaggi", countSummary(player.getCharacterCardIds())),
-                summaryPill("Edifici", countSummary(player.getBuildingCardIds())),
+                summaryPill("Characters", countSummary(player.getCharacterCardIds())),
+                summaryPill("Buildings", countSummary(player.getBuildingCardIds())),
                 largeCards
         );
         content.setMaxWidth(1080);
 
-        Button close = buttonFactory.apply("Chiudi", false);
+        Button close = buttonFactory.apply("Close", false);
         close.setOnAction(event -> hideInlinePanel.run());
         HBox actions = new HBox(close);
         actions.setAlignment(Pos.CENTER_RIGHT);
@@ -239,7 +239,7 @@ final class PlayerDockView {
         header.setAlignment(Pos.CENTER_LEFT);
         Label name = new Label(player.getNickname());
         name.getStyleClass().add("tribe-title");
-        Label resources = new Label("Cibo " + player.getFood() + "   PP " + player.getPrestigePoints());
+        Label resources = new Label("Food " + player.getFood() + "   PP " + player.getPrestigePoints());
         resources.getStyleClass().add("tribe-resources");
         header.getChildren().addAll(totemDot(player), name, resources);
         return header;
@@ -255,7 +255,7 @@ final class PlayerDockView {
             cards.getChildren().add(miniCardNode(id, width, height));
         }
         if (cards.getChildren().isEmpty()) {
-            Label empty = new Label("Nessuna carta nella tribu");
+            Label empty = new Label("No cards in tribe");
             empty.getStyleClass().add("muted");
             cards.getChildren().add(empty);
         }

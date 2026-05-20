@@ -333,6 +333,7 @@ public class Round implements Serializable {
         }
     }
 
+    // An era ends when a card from the next era appears in the upper row after refill.
     public void checkEraTransition() {
         Era before = game.getCurrentEra();
 
