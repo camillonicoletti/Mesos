@@ -158,3 +158,47 @@ entrypoint.
 tests, but delegates the suspension calculations to the manager. This keeps the
 external contract stable while making the internal responsibilities easier to
 explain and test.
+
+`DisconnectionManager` now owns the operational rules around disconnected
+players: marking a player disconnected/connected, checking whether a nickname
+is disconnected, marking every known player disconnected after restore, counting
+connected game players and finding the only connected player for suspension
+timeouts.
+
+The actual `disconnectedPlayers` set currently remains in `GameController`.
+This is intentional for this step: the controller was already serialized with
+that field, so keeping it avoids unnecessary persistence-format churn while
+still removing the disconnection logic from the controller body.
+
+`TurnRecoveryService` now owns the read-only lookup of the current player across
+normal and suspended states. Before this extraction, `GameController` had to
+know that a `SuspendedState` wraps the real state and then inspect
+`TotemPlacementState` or `ActionResolutionState` directly every time the UI
+needed the current turn/action player.
+
+The service does not advance the turn and does not mutate the state. This is
+important because earlier bugs came from getter-like methods that accidentally
+changed turn state. For now it is a small boundary: the controller asks the
+service for the current visible player, while the state classes still own the
+actual turn progression rules.
+
+## Totem placement queue
+
+`TotemPlacementState` no longer owns the raw turn-order list, the current index
+and the set of players that already placed their totem. That bookkeeping now
+lives in `TotemPlacementTurnQueue`.
+
+The state still decides how to react to actions and when to move to
+`ActionResolutionState`; the queue owns only the small data structure needed to:
+
+- build the placement order from the previous turn-order tile;
+- fall back to the game player order during the first round;
+- skip disconnected players;
+- remember who has already placed;
+- answer whether every connected player has placed.
+
+This is a conservative extraction: the game rules did not move into a generic
+utility, but the state is no longer forced to mix action validation with list
+index manipulation. It also makes the disconnection behavior easier to explain:
+when a player disconnects, the queue advances past unavailable players without
+changing the rule that only connected players are required to place.

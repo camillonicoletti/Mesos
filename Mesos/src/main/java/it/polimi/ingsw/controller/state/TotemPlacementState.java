@@ -5,45 +5,16 @@ import it.polimi.ingsw.controller.action.GameAction;
 import it.polimi.ingsw.controller.action.PlaceTotemAction;
 import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.board.OfferTile;
-import it.polimi.ingsw.model.Totem;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 public class TotemPlacementState extends AbstractGameState {
 
     private static final long serialVersionUID = 1L;
 
-    // nicknames of the players who have already placed their totem
-    private final Set<String> playersWhoPlaced = new HashSet<>();
-    private final List<String> placementOrder = new ArrayList<>();
-    private int currentTurnIndex;
+    private final TotemPlacementTurnQueue turnQueue = new TotemPlacementTurnQueue();
 
     @Override
     public void onEnter(GameController ctx) {
-        playersWhoPlaced.clear();
-        placementOrder.clear();
-
-        var turnTile = ctx.getGame().getBoard().getTurnOrderTile();
-        for (Totem totem : turnTile.getTurnOrder()) {
-            Player owner = findPlayerByTotem(ctx, totem);
-            if (owner != null) {
-                placementOrder.add(owner.getNickname());
-            }
-        }
-
-        // First round of the match: the turn-order tile is empty, fall back to the
-        // game's own player order (which respects the original setup randomization).
-        if (placementOrder.isEmpty()) {
-            for (Player p : ctx.getGame().getPlayers()) {
-                placementOrder.add(p.getNickname());
-            }
-        }
-
-        currentTurnIndex = 0;
-        advanceToNextConnectedPlayer(ctx);
+        turnQueue.initialize(ctx);
     }
 
     @Override
@@ -56,7 +27,7 @@ public class TotemPlacementState extends AbstractGameState {
         }
         PlaceTotemAction placeTotem = (PlaceTotemAction) action;
 
-        advanceToNextConnectedPlayer(ctx);
+        turnQueue.advanceToNextAvailablePlayer(ctx);
         String currentPlayerNickname = getCurrentPlayerNickname(ctx);
         if (currentPlayerNickname == null) {
             throw new IllegalStateException("No player available for placement");
@@ -66,7 +37,7 @@ public class TotemPlacementState extends AbstractGameState {
         }
 
         // checks that the player has not already placed
-        if (playersWhoPlaced.contains(playerNickname)) {
+        if (turnQueue.hasPlaced(playerNickname)) {
             throw new IllegalStateException(playerNickname + " has already placed the totem");
         }
 
@@ -92,11 +63,9 @@ public class TotemPlacementState extends AbstractGameState {
             throw new IllegalStateException("Tile " + placeTotem.getTileId() + " occupied or not available");
         }
 
-        playersWhoPlaced.add(playerNickname);
         // listener
         ctx.notifyListeners(l -> l.onTotemPlaced(playerNickname, placeTotem.getTileId()));
-        currentTurnIndex++;
-        advanceToNextConnectedPlayer(ctx);
+        turnQueue.markPlaced(playerNickname, ctx);
 
         // if everyone has placed → move to ActionResolutionState
         if (haveAllConnectedPlayersPlaced(ctx)) {
@@ -136,7 +105,7 @@ public class TotemPlacementState extends AbstractGameState {
             return;
         }
         String previousCurrentPlayer = getCurrentPlayerNickname(ctx);
-        advanceToNextConnectedPlayer(ctx);
+        turnQueue.advanceToNextAvailablePlayer(ctx);
         String currentPlayer = getCurrentPlayerNickname(ctx);
         if (currentPlayer != null && !currentPlayer.equals(previousCurrentPlayer)) {
             notifyCurrentPlayer(ctx);
@@ -152,18 +121,6 @@ public class TotemPlacementState extends AbstractGameState {
         return null;
     }
 
-    private Player findPlayerByTotem(GameController ctx, Totem totem) {
-        if (totem == null || totem.getColor() == null) {
-            return null;
-        }
-        for (Player p : ctx.getGame().getPlayers()) {
-            if (p.getTotem() != null && p.getTotem().getColor() == totem.getColor()) {
-                return p;
-            }
-        }
-        return null;
-    }
-
     private OfferTile findTile(GameController ctx, char tileId) {
         for (OfferTile tile : ctx.getGame().getBoard().getOfferTiles()) {
             if (tile.getLetter() == tileId) return tile;
@@ -172,10 +129,7 @@ public class TotemPlacementState extends AbstractGameState {
     }
 
     public String getCurrentPlayerNickname(GameController ctx) {
-        if (currentTurnIndex >= placementOrder.size()) {
-            return null;
-        }
-        return placementOrder.get(currentTurnIndex);
+        return turnQueue.currentPlayerNickname();
     }
 
     private void notifyCurrentPlayer(GameController ctx) {
@@ -185,30 +139,13 @@ public class TotemPlacementState extends AbstractGameState {
         }
     }
 
-    private void advanceToNextConnectedPlayer(GameController ctx) {
-        while (currentTurnIndex < placementOrder.size()) {
-            String nickname = placementOrder.get(currentTurnIndex);
-            if (!ctx.isPlayerDisconnected(nickname) && !playersWhoPlaced.contains(nickname)) {
-                return;
-            }
-            currentTurnIndex++;
-        }
-    }
-
     private void skipCurrentPlayer(GameController ctx) {
-        currentTurnIndex++;
-        advanceToNextConnectedPlayer(ctx);
+        turnQueue.skipCurrentPlayer(ctx);
         notifyCurrentPlayer(ctx);
     }
 
     private boolean haveAllConnectedPlayersPlaced(GameController ctx) {
-        for (Player player : ctx.getGame().getPlayers()) {
-            if (!ctx.isPlayerDisconnected(player.getNickname())
-                    && !playersWhoPlaced.contains(player.getNickname())) {
-                return false;
-            }
-        }
-        return true;
+        return turnQueue.haveAllConnectedPlayersPlaced(ctx);
     }
 
     private boolean isKnownTileId(char tileId) {

@@ -33,6 +33,8 @@ public class GameController implements Serializable {
     private static final long DEFAULT_SUSPENSION_TIMEOUT_MILLIS = 60 * 1000;
     private transient LeaderboardService leaderboardService;
     private transient GamePersistenceService persistenceService;
+    private transient DisconnectionManager disconnectionManager;
+    private transient TurnRecoveryService turnRecoveryService;
     private SuspensionManager suspensionManager;
     private final UUID matchId = UUID.randomUUID();
     private Game game;
@@ -56,6 +58,8 @@ public class GameController implements Serializable {
         this.disconnectedPlayers = new HashSet<>();
         this.suspensionManager = new SuspensionManager(DEFAULT_SUSPENSION_TIMEOUT_MILLIS);
         this.persistenceService = new GamePersistenceService();
+        this.disconnectionManager = new DisconnectionManager();
+        this.turnRecoveryService = new TurnRecoveryService();
 
         currentState.onEnter(this);
     }
@@ -176,28 +180,11 @@ public class GameController implements Serializable {
     }
 
     public String getCurrentActionPlayerNickname() {
-        GameState state = currentState;
-        if (state instanceof SuspendedState suspendedState) {
-            state = suspendedState.getSuspendedState();
-        }
-        if (state instanceof ActionResolutionState actionResolutionState) {
-            return actionResolutionState.getCurrentPlayerNickname();
-        }
-        return null;
+        return getTurnRecoveryService().currentActionPlayer(currentState);
     }
 
     public String getCurrentTurnPlayerNickname() {
-        GameState state = currentState;
-        if (state instanceof SuspendedState suspendedState) {
-            state = suspendedState.getSuspendedState();
-        }
-        if (state instanceof TotemPlacementState totemPlacementState) {
-            return totemPlacementState.getCurrentPlayerNickname(this);
-        }
-        if (state instanceof ActionResolutionState actionResolutionState) {
-            return actionResolutionState.getCurrentPlayerNickname();
-        }
-        return null;
+        return getTurnRecoveryService().currentTurnPlayer(this, currentState);
     }
 
     public List<Player> getLobbyPlayers() {
@@ -209,7 +196,7 @@ public class GameController implements Serializable {
             throw new IllegalArgumentException("Player cannot be null");
         }
         lobbyPlayers.add(player);
-        disconnectedPlayers.remove(player.getNickname());
+        getDisconnectionManager().forget(player.getNickname(), disconnectedPlayers);
     }
 
     public boolean isNicknameAvailable(String nickname) {
@@ -329,7 +316,7 @@ public class GameController implements Serializable {
         }
 
         readyPlayers.remove(nickname);
-        disconnectedPlayers.remove(nickname);
+        getDisconnectionManager().forget(nickname, disconnectedPlayers);
 
         if (lobbyPlayers.isEmpty()) {
             chosenPlayersCount = -1;
@@ -338,31 +325,19 @@ public class GameController implements Serializable {
     }
 
     public void markPlayerDisconnected(String nickname) {
-        if (nickname == null || nickname.isBlank()) {
-            throw new IllegalArgumentException("Nickname cannot be null or blank");
-        }
-
-        if (!containsLobbyPlayer(nickname) && !containsGamePlayer(nickname)) {
-            throw new IllegalArgumentException("Unknown player");
-        }
-
-        disconnectedPlayers.add(nickname);
+        getDisconnectionManager().markDisconnected(
+                nickname,
+                disconnectedPlayers,
+                containsLobbyPlayer(nickname) || containsGamePlayer(nickname)
+        );
     }
 
     public void markPlayerConnected(String nickname) {
-        if (nickname == null || nickname.isBlank()) {
-            throw new IllegalArgumentException("Nickname cannot be null or blank");
-        }
-
-        disconnectedPlayers.remove(nickname);
+        getDisconnectionManager().markConnected(nickname, disconnectedPlayers);
     }
 
     public boolean isPlayerDisconnected(String nickname) {
-        if (nickname == null || nickname.isBlank()) {
-            return false;
-        }
-
-        return disconnectedPlayers.contains(nickname);
+        return getDisconnectionManager().isDisconnected(nickname, disconnectedPlayers);
     }
 
     /**
@@ -377,14 +352,7 @@ public class GameController implements Serializable {
      * player reconnects.
      */
     public void markAllPlayersDisconnected() {
-        for (Player player : lobbyPlayers) {
-            disconnectedPlayers.add(player.getNickname());
-        }
-        if (game != null) {
-            for (Player player : game.getPlayers()) {
-                disconnectedPlayers.add(player.getNickname());
-            }
-        }
+        getDisconnectionManager().markAllDisconnected(lobbyPlayers, game, disconnectedPlayers);
         updateSuspensionStatus();
         if (isSuspended() && !(currentState instanceof SuspendedState)) {
             enterSuspendedState();
@@ -393,17 +361,7 @@ public class GameController implements Serializable {
     }
 
     public int getConnectedGamePlayersCount() {
-        if (game == null) {
-            return 0;
-        }
-
-        int connectedPlayersCount = 0;
-        for (Player player : game.getPlayers()) {
-            if (!isPlayerDisconnected(player.getNickname())) {
-                connectedPlayersCount++;
-            }
-        }
-        return connectedPlayersCount;
+        return getDisconnectionManager().countConnectedGamePlayers(game, disconnectedPlayers);
     }
 
     public boolean isSuspended() {
@@ -466,24 +424,7 @@ public class GameController implements Serializable {
     }
 
     private Player getOnlyConnectedGamePlayer() {
-        if (game == null) {
-            return null;
-        }
-
-        Player connectedPlayer = null;
-        for (Player player : game.getPlayers()) {
-            if (isPlayerDisconnected(player.getNickname())) {
-                continue;
-            }
-
-            if (connectedPlayer != null) {
-                return null;
-            }
-
-            connectedPlayer = player;
-        }
-
-        return connectedPlayer;
+        return getDisconnectionManager().onlyConnectedGamePlayer(game, disconnectedPlayers);
     }
 
     private void enterSuspendedState() {
@@ -563,14 +504,15 @@ public class GameController implements Serializable {
         in.defaultReadObject();
         listeners = new ArrayList<>();
         persistenceService = new GamePersistenceService();
+        disconnectionManager = new DisconnectionManager();
+        turnRecoveryService = new TurnRecoveryService();
         getSuspensionManager().ensureValidTimeout(DEFAULT_SUSPENSION_TIMEOUT_MILLIS);
     }
 
     // ── DEBUG ────────────────────────────────────────────────────────────────
 
     private void debugSkipRound(String senderNickname) {
-        GameState state = currentState;
-        if (state instanceof SuspendedState s) state = s.getSuspendedState();
+        GameState state = getTurnRecoveryService().unwrapSuspendedState(currentState);
 
         if (state instanceof TotemPlacementState) {
             java.util.List<it.polimi.ingsw.model.board.OfferTile> tiles =
@@ -620,5 +562,19 @@ public class GameController implements Serializable {
             suspensionManager = new SuspensionManager(DEFAULT_SUSPENSION_TIMEOUT_MILLIS);
         }
         return suspensionManager;
+    }
+
+    private DisconnectionManager getDisconnectionManager() {
+        if (disconnectionManager == null) {
+            disconnectionManager = new DisconnectionManager();
+        }
+        return disconnectionManager;
+    }
+
+    private TurnRecoveryService getTurnRecoveryService() {
+        if (turnRecoveryService == null) {
+            turnRecoveryService = new TurnRecoveryService();
+        }
+        return turnRecoveryService;
     }
 }
