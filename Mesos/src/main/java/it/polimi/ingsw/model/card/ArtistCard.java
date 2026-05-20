@@ -10,4 +10,9 @@ public class ArtistCard extends CharacterCard{
 
     }
 
+    @Override
+    public <R> R accept(CardVisitor<R> visitor) {
+        return visitor.visitArtist(this);
+    }
+
 }

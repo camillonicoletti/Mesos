@@ -2,6 +2,8 @@ package it.polimi.ingsw.model.card;
 
 import it.polimi.ingsw.model.Game;
 import it.polimi.ingsw.model.Player;
+import it.polimi.ingsw.model.card.effect.Effect;
+import it.polimi.ingsw.model.card.effect.EffectVisitor;
 import it.polimi.ingsw.model.card.effect.Hunt1Food1PPEffect;
 import it.polimi.ingsw.model.enums.Era;
 
@@ -36,11 +38,27 @@ public class HuntEventCard extends EventCard {
 
             //building effect
             for (BuildingCard building : player.getTribe().getBuildingCards()) {
-                if (building.getEffect() instanceof Hunt1Food1PPEffect effect) {
-                    effect.apply(player);
-                }
+                applyHuntEffect(player, building);
             }
         }
+    }
+
+    @Override
+    public <R> R accept(CardVisitor<R> visitor) {
+        return visitor.visitHuntEvent(this);
+    }
+
+    private void applyHuntEffect(Player player, BuildingCard building) {
+        building.acceptEffect(new EffectVisitor<Void>() {
+            @Override public Void visitHunt1Food1PP(Hunt1Food1PPEffect effect) {
+                effect.apply(player);
+                return null;
+            }
+
+            @Override public Void visitEffect(Effect effect) {
+                return null;
+            }
+        });
     }
 
 }

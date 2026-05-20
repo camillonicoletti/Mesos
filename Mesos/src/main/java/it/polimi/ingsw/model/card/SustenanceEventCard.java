@@ -2,6 +2,8 @@ package it.polimi.ingsw.model.card;
 
 import it.polimi.ingsw.model.Game;
 import it.polimi.ingsw.model.Player;
+import it.polimi.ingsw.model.card.effect.Effect;
+import it.polimi.ingsw.model.card.effect.EffectVisitor;
 import it.polimi.ingsw.model.card.effect.SustenanceFoodDiscountEffect;
 import it.polimi.ingsw.model.enums.Era;
 
@@ -24,6 +26,11 @@ public class SustenanceEventCard extends EventCard {
     }
 
     @Override
+    public <R> R accept(CardVisitor<R> visitor) {
+        return visitor.visitSustenanceEvent(this);
+    }
+
+    @Override
     public void resolve(Game game) {
         for (Player player : game.getPlayers()) {
             int totalCharacters = player.getTribe().countCharacterCards();
@@ -33,10 +40,7 @@ public class SustenanceEventCard extends EventCard {
 
             //building effect
             for (BuildingCard building : player.getTribe().getBuildingCards()) {
-                if (building.getEffect() instanceof SustenanceFoodDiscountEffect effect) {
-                    int count = player.getTribe().countCharactersByType(effect.getTargetType());
-                    foodDiscount += count;
-                }
+                foodDiscount += sustenanceDiscountFrom(player, building);
             }
 
             int foodRequired = Math.max(0, totalCharacters - foodDiscount);
@@ -54,6 +58,18 @@ public class SustenanceEventCard extends EventCard {
                 player.removePrestigePoints(missingFood * ppPenaltyPerUnfed);
             }
         }
+    }
+
+    private int sustenanceDiscountFrom(Player player, BuildingCard building) {
+        return building.acceptEffect(new EffectVisitor<>() {
+            @Override public Integer visitSustenanceFoodDiscount(SustenanceFoodDiscountEffect effect) {
+                return player.getTribe().countCharactersByType(effect.getTargetType());
+            }
+
+            @Override public Integer visitEffect(Effect effect) {
+                return 0;
+            }
+        });
     }
 
 }

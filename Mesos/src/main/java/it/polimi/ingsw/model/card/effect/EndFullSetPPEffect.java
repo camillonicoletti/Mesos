@@ -13,4 +13,9 @@ public class EndFullSetPPEffect implements EndGameEffect {
     public void apply(Player player) {
         player.addPrestigePoints(calculatePoints(player));
     }
+
+    @Override
+    public <R> R accept(EffectVisitor<R> visitor) {
+        return visitor.visitEndFullSetPP(this);
+    }
 }

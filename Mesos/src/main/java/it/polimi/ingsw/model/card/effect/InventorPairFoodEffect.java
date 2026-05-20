@@ -20,4 +20,9 @@ public class InventorPairFoodEffect implements Effect{
             rewardedPairs = currentPairs;
         }
     }
+
+    @Override
+    public <R> R accept(EffectVisitor<R> visitor) {
+        return visitor.visitInventorPairFood(this);
+    }
 }

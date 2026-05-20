@@ -8,4 +8,8 @@ public interface Effect extends Serializable {
 
     void apply(Player player);
 
+    default <R> R accept(EffectVisitor<R> visitor) {
+        return visitor.visitEffect(this);
+    }
+
 }

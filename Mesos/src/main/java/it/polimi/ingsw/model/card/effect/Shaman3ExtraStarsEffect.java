@@ -13,4 +13,9 @@ public class Shaman3ExtraStarsEffect implements Effect {
         // Passive effect managed in ShamanicRitual
         // by doing stars += effect.getExtraStars()
     }
+
+    @Override
+    public <R> R accept(EffectVisitor<R> visitor) {
+        return visitor.visitShaman3ExtraStars(this);
+    }
 }

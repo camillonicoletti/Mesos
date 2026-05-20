@@ -14,6 +14,33 @@ import java.util.Collections;
 
 public class Tribe implements Serializable {
     private static final long serialVersionUID = 1L;
+    private static final Map<Class<? extends CharacterCard>, CardVisitor<Boolean>> CHARACTER_TYPE_MATCHERS = Map.of(
+            ArtistCard.class, new CardVisitor<>() {
+                @Override public Boolean visitArtist(ArtistCard card) { return true; }
+                @Override public Boolean visitCard(Card card) { return false; }
+            },
+            BuilderCard.class, new CardVisitor<>() {
+                @Override public Boolean visitBuilder(BuilderCard card) { return true; }
+                @Override public Boolean visitCard(Card card) { return false; }
+            },
+            GathererCard.class, new CardVisitor<>() {
+                @Override public Boolean visitGatherer(GathererCard card) { return true; }
+                @Override public Boolean visitCard(Card card) { return false; }
+            },
+            HunterCard.class, new CardVisitor<>() {
+                @Override public Boolean visitHunter(HunterCard card) { return true; }
+                @Override public Boolean visitCard(Card card) { return false; }
+            },
+            InventorCard.class, new CardVisitor<>() {
+                @Override public Boolean visitInventor(InventorCard card) { return true; }
+                @Override public Boolean visitCard(Card card) { return false; }
+            },
+            ShamanCard.class, new CardVisitor<>() {
+                @Override public Boolean visitShaman(ShamanCard card) { return true; }
+                @Override public Boolean visitCard(Card card) { return false; }
+            }
+    );
+
     private List<CharacterCard> characterCards;
     private List<BuildingCard> buildingCards;
 
@@ -36,23 +63,23 @@ public class Tribe implements Serializable {
     }
 
     public int countCharactersByType(Class<? extends CharacterCard> type) {
-        int count = 0;
-        for (CharacterCard card : characterCards) {
-            if (type.isInstance(card)) {
-                count++;
-            }
+        CardVisitor<Boolean> matcher = CHARACTER_TYPE_MATCHERS.get(type);
+        if (matcher == null) {
+            throw new IllegalArgumentException("Unsupported character type: " + type.getSimpleName());
         }
-        return count;
+        return countMatching(matcher);
     }
 
     public int getBuildingDiscount() {
-        int discount = 0;
-        for (CharacterCard card : characterCards) {
-            if (card instanceof BuilderCard builder) {
-                discount += builder.getFoodDiscount();
+        return sumValues(new CardVisitor<>() {
+            @Override public Integer visitBuilder(BuilderCard builder) {
+                return builder.getFoodDiscount();
             }
-        }
-        return discount;
+
+            @Override public Integer visitCard(Card card) {
+                return 0;
+            }
+        });
     }
 
     public List<CharacterCard> getCharacterCards() {
@@ -84,13 +111,15 @@ public class Tribe implements Serializable {
 
     // Method for ShamanicRitualEvent
     public int countShamanStars() {
-        int totalStars = 0;
-        for (CharacterCard card : characterCards) {
-            if (card instanceof ShamanCard shaman) {
-                totalStars += shaman.getStars();
+        return sumValues(new CardVisitor<>() {
+            @Override public Integer visitShaman(ShamanCard shaman) {
+                return shaman.getStars();
             }
-        }
-        return totalStars;
+
+            @Override public Integer visitCard(Card card) {
+                return 0;
+            }
+        });
     }
 
     /**
@@ -99,11 +128,18 @@ public class Tribe implements Serializable {
      */
     public int countDistinctInventorIcons() {
         Set<InventorIcons> distinctIcons = new HashSet<>();
-
-        for (CharacterCard card : characterCards) {
-            if (card instanceof InventorCard inventor) {
+        CardVisitor<Void> collector = new CardVisitor<>() {
+            @Override public Void visitInventor(InventorCard inventor) {
                 distinctIcons.add(inventor.getInventionIcon());
+                return null;
             }
+
+            @Override public Void visitCard(Card card) {
+                return null;
+            }
+        };
+        for (CharacterCard card : characterCards) {
+            card.accept(collector);
         }
 
         return distinctIcons.size();
@@ -112,12 +148,19 @@ public class Tribe implements Serializable {
     // Method used for InventorPairFoodEffect
     public int countInventorPairs() {
         Map<InventorIcons, Integer> iconCounts = new HashMap<>();
-
-        for (CharacterCard card : characterCards) {
-            if (card instanceof InventorCard inventor) {
+        CardVisitor<Void> collector = new CardVisitor<>() {
+            @Override public Void visitInventor(InventorCard inventor) {
                 InventorIcons icon = inventor.getInventionIcon();
                 iconCounts.put(icon, iconCounts.getOrDefault(icon, 0) + 1);
+                return null;
             }
+
+            @Override public Void visitCard(Card card) {
+                return null;
+            }
+        };
+        for (CharacterCard card : characterCards) {
+            card.accept(collector);
         }
 
         int pairs = 0;
@@ -131,5 +174,23 @@ public class Tribe implements Serializable {
     public int countArtistPairs() {
         int artists = countCharactersByType(ArtistCard.class);
         return artists / 2;
+    }
+
+    private int countMatching(CardVisitor<Boolean> matcher) {
+        int count = 0;
+        for (CharacterCard card : characterCards) {
+            if (Boolean.TRUE.equals(card.accept(matcher))) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private int sumValues(CardVisitor<Integer> visitor) {
+        int total = 0;
+        for (CharacterCard card : characterCards) {
+            total += card.accept(visitor);
+        }
+        return total;
     }
 }

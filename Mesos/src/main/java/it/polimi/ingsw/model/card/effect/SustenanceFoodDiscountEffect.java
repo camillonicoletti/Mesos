@@ -20,4 +20,9 @@ public class SustenanceFoodDiscountEffect implements Effect{
         // Managed in SustenanceEventCard by adding sum of targetType
         // to foodDiscount
     }
+
+    @Override
+    public <R> R accept(EffectVisitor<R> visitor) {
+        return visitor.visitSustenanceFoodDiscount(this);
+    }
 }

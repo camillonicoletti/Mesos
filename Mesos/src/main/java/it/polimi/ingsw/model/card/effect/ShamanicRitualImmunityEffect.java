@@ -10,4 +10,9 @@ public class ShamanicRitualImmunityEffect implements Effect{
         // Passive effect, managed in ShamanicRitual
         // by skipping points removal
     }
+
+    @Override
+    public <R> R accept(EffectVisitor<R> visitor) {
+        return visitor.visitShamanicRitualImmunity(this);
+    }
 }

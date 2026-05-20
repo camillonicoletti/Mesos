@@ -12,4 +12,9 @@ public class CavePaintingsFoodEffect implements Effect{
         player.addFood(artists);
     }
 
+    @Override
+    public <R> R accept(EffectVisitor<R> visitor) {
+        return visitor.visitCavePaintingsFood(this);
+    }
+
 }

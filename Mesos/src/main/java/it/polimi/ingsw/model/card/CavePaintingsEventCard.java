@@ -3,6 +3,8 @@ package it.polimi.ingsw.model.card;
 import it.polimi.ingsw.model.Game;
 import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.card.effect.CavePaintingsFoodEffect;
+import it.polimi.ingsw.model.card.effect.Effect;
+import it.polimi.ingsw.model.card.effect.EffectVisitor;
 import it.polimi.ingsw.model.enums.Era;
 
 
@@ -49,11 +51,27 @@ public class CavePaintingsEventCard extends EventCard {
 
             //building effect
             for (BuildingCard building : player.getTribe().getBuildingCards()) {
-                if (building.getEffect() instanceof CavePaintingsFoodEffect effect) {
-                    effect.apply(player);
-                }
+                applyCavePaintingsEffect(player, building);
             }
         }
+    }
+
+    @Override
+    public <R> R accept(CardVisitor<R> visitor) {
+        return visitor.visitCavePaintingsEvent(this);
+    }
+
+    private void applyCavePaintingsEffect(Player player, BuildingCard building) {
+        building.acceptEffect(new EffectVisitor<Void>() {
+            @Override public Void visitCavePaintingsFood(CavePaintingsFoodEffect effect) {
+                effect.apply(player);
+                return null;
+            }
+
+            @Override public Void visitEffect(Effect effect) {
+                return null;
+            }
+        });
     }
 
 }

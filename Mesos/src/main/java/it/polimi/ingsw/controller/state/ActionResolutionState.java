@@ -14,6 +14,8 @@ import it.polimi.ingsw.model.board.OfferTile;
 import it.polimi.ingsw.model.board.UpperRowSlot;
 import it.polimi.ingsw.model.card.BuildingCard;
 import it.polimi.ingsw.model.card.CharacterCard;
+import it.polimi.ingsw.model.card.effect.Effect;
+import it.polimi.ingsw.model.card.effect.EffectVisitor;
 import it.polimi.ingsw.model.card.effect.ExtraCardUpperRowEffect;
 
 import java.io.Serializable;
@@ -141,7 +143,7 @@ public class ActionResolutionState extends AbstractGameState {
         for (Player p : ctx.getGame().getPlayers()) {
             int count = 0;
             for (BuildingCard b : p.getTribe().getBuildingCards()) {
-                if (b.getEffect() instanceof ExtraCardUpperRowEffect) count++;
+                count += extraUpperRowPicksFrom(b);
             }
             if (count > 0) extraPickQueue.add(new ExtraPick(p, count));
         }
@@ -536,6 +538,18 @@ public class ActionResolutionState extends AbstractGameState {
     }
 
     // ── HELPERS ──────────────────────────────────────────────
+
+    private int extraUpperRowPicksFrom(BuildingCard building) {
+        return building.acceptEffect(new EffectVisitor<>() {
+            @Override public Integer visitExtraCardUpperRow(ExtraCardUpperRowEffect effect) {
+                return 1;
+            }
+
+            @Override public Integer visitEffect(Effect effect) {
+                return 0;
+            }
+        });
+    }
 
     private CharacterCard findCharacterCard(List<CharacterCard> row, String cardId) {
         for (CharacterCard card : row) {

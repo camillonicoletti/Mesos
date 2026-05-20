@@ -3,6 +3,9 @@ package it.polimi.ingsw.model;
 import it.polimi.ingsw.model.board.BoardFactory;
 import it.polimi.ingsw.model.card.BuildingCard;
 import it.polimi.ingsw.model.card.Card;
+import it.polimi.ingsw.model.card.CardVisitor;
+import it.polimi.ingsw.model.card.effect.Effect;
+import it.polimi.ingsw.model.card.effect.EffectVisitor;
 import it.polimi.ingsw.model.card.effect.EndGameEffect;
 import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.RoundPhase;
@@ -244,12 +247,22 @@ public class Game implements Serializable {
         }
 
         for (BuildingCard building : player.getTribe().getBuildingCards()) {
-            if (building.getEffect() instanceof EndGameEffect endEffect) {
-                finalScore += endEffect.calculatePoints(player);
-            }
+            finalScore += endGamePointsFrom(player, building);
         }
 
         return finalScore;
+    }
+
+    private int endGamePointsFrom(Player player, BuildingCard building) {
+        return building.acceptEffect(new EffectVisitor<>() {
+            @Override public Integer visitEndGame(EndGameEffect effect) {
+                return effect.calculatePoints(player);
+            }
+
+            @Override public Integer visitEffect(Effect effect) {
+                return 0;
+            }
+        });
     }
 
     public void calculateFinalScores() {
@@ -269,10 +282,17 @@ public class Game implements Serializable {
 
     private int calculateBuilderPoints(Player player) {
         int points = 0;
-        for (CharacterCard card : player.getTribe().getCharacterCards()) {
-            if (card instanceof BuilderCard builder) {
-                points += builder.getPointsEndOfMatch();
+        CardVisitor<Integer> builderPoints = new CardVisitor<>() {
+            @Override public Integer visitBuilder(BuilderCard builder) {
+                return builder.getPointsEndOfMatch();
             }
+
+            @Override public Integer visitCard(Card card) {
+                return 0;
+            }
+        };
+        for (CharacterCard card : player.getTribe().getCharacterCards()) {
+            points += card.accept(builderPoints);
         }
         return points;
     }
@@ -349,10 +369,19 @@ public class Game implements Serializable {
     }
 
     private void applyCharacterImmediateEffects(Player player, CharacterCard card) {
-        if (card instanceof HunterCard hunter && hunter.hasFoodIcon()) {
-            int huntersInTribe = player.getTribe().countCharactersByType(HunterCard.class);
-            player.addFood(huntersInTribe);
-        }
+        card.accept(new CardVisitor<Void>() {
+            @Override public Void visitHunter(HunterCard hunter) {
+                if (hunter.hasFoodIcon()) {
+                    int huntersInTribe = player.getTribe().countCharactersByType(HunterCard.class);
+                    player.addFood(huntersInTribe);
+                }
+                return null;
+            }
+
+            @Override public Void visitCard(Card card) {
+                return null;
+            }
+        });
     }
 
     public void takeBuildingCard(Player player, List<BuildingCard> row, BuildingCard chosenCard) {

@@ -2,6 +2,8 @@ package it.polimi.ingsw.model.card;
 
 import it.polimi.ingsw.model.Game;
 import it.polimi.ingsw.model.Player;
+import it.polimi.ingsw.model.card.effect.Effect;
+import it.polimi.ingsw.model.card.effect.EffectVisitor;
 import it.polimi.ingsw.model.card.effect.Shaman3ExtraStarsEffect;
 import it.polimi.ingsw.model.card.effect.ShamanicRitualDoublePPEffect;
 import it.polimi.ingsw.model.card.effect.ShamanicRitualImmunityEffect;
@@ -30,13 +32,16 @@ public class ShamanicRitualEventCard extends EventCard {
         return ppLoss;
     }
 
+    @Override
+    public <R> R accept(CardVisitor<R> visitor) {
+        return visitor.visitShamanicRitualEvent(this);
+    }
+
     // counts shaman stars for a player, adding 3 extra if they have Shaman3ExtraStarsEffect
     private int countStarsForPlayer(Player player) {
         int stars = player.getTribe().countShamanStars();
         for (BuildingCard building : player.getTribe().getBuildingCards()) {
-            if (building.getEffect() instanceof Shaman3ExtraStarsEffect effect) {
-                stars += effect.getExtraStars();
-            }
+            stars += extraStarsFrom(building);
         }
         return stars;
     }
@@ -73,7 +78,7 @@ public class ShamanicRitualEventCard extends EventCard {
             int pp = ppGain;
 
             for (BuildingCard building : player.getTribe().getBuildingCards()) {
-                if (building.getEffect() instanceof ShamanicRitualDoublePPEffect) {
+                if (doublesShamanicRitualPoints(building)) {
                     pp *= 2;
                 }
             }
@@ -85,7 +90,7 @@ public class ShamanicRitualEventCard extends EventCard {
         for (Player player : playersWithLeastStars) {
             boolean immune = false;
             for (BuildingCard building : player.getTribe().getBuildingCards()) {
-                if (building.getEffect() instanceof ShamanicRitualImmunityEffect) {
+                if (grantsShamanicRitualImmunity(building)) {
                     immune = true;
                     break;
                 }
@@ -94,5 +99,41 @@ public class ShamanicRitualEventCard extends EventCard {
                 player.removePrestigePoints(ppLoss);
             }
         }
+    }
+
+    private int extraStarsFrom(BuildingCard building) {
+        return building.acceptEffect(new EffectVisitor<>() {
+            @Override public Integer visitShaman3ExtraStars(Shaman3ExtraStarsEffect effect) {
+                return effect.getExtraStars();
+            }
+
+            @Override public Integer visitEffect(Effect effect) {
+                return 0;
+            }
+        });
+    }
+
+    private boolean doublesShamanicRitualPoints(BuildingCard building) {
+        return Boolean.TRUE.equals(building.acceptEffect(new EffectVisitor<>() {
+            @Override public Boolean visitShamanicRitualDoublePP(ShamanicRitualDoublePPEffect effect) {
+                return true;
+            }
+
+            @Override public Boolean visitEffect(Effect effect) {
+                return false;
+            }
+        }));
+    }
+
+    private boolean grantsShamanicRitualImmunity(BuildingCard building) {
+        return Boolean.TRUE.equals(building.acceptEffect(new EffectVisitor<>() {
+            @Override public Boolean visitShamanicRitualImmunity(ShamanicRitualImmunityEffect effect) {
+                return true;
+            }
+
+            @Override public Boolean visitEffect(Effect effect) {
+                return false;
+            }
+        }));
     }
 }

@@ -9,4 +9,9 @@ public class ExtraCardUpperRowEffect implements Effect{
         // Managed at the end of round in Game
     }
 
+    @Override
+    public <R> R accept(EffectVisitor<R> visitor) {
+        return visitor.visitExtraCardUpperRow(this);
+    }
+
 }

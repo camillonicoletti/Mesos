@@ -17,5 +17,9 @@ public class InventorCard extends CharacterCard{
     public InventorIcons getInventionIcon() {
         return inventionIcon;
     }
-}
 
+    @Override
+    public <R> R accept(CardVisitor<R> visitor) {
+        return visitor.visitInventor(this);
+    }
+}

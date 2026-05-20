@@ -16,4 +16,9 @@ public class ShamanCard extends CharacterCard{
     public int getStars() {
         return stars;
     }
+
+    @Override
+    public <R> R accept(CardVisitor<R> visitor) {
+        return visitor.visitShaman(this);
+    }
 }

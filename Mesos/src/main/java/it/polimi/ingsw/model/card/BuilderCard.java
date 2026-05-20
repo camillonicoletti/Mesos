@@ -22,4 +22,9 @@ public class BuilderCard extends CharacterCard{
         return pointsEndOfMatch;
     }
 
+    @Override
+    public <R> R accept(CardVisitor<R> visitor) {
+        return visitor.visitBuilder(this);
+    }
+
 }

@@ -24,4 +24,9 @@ public class FullSetFoodEffect implements Effect{
         }
     }
 
+    @Override
+    public <R> R accept(EffectVisitor<R> visitor) {
+        return visitor.visitFullSetFood(this);
+    }
+
 }

@@ -2,6 +2,8 @@ package it.polimi.ingsw.model;
 
 import it.polimi.ingsw.model.card.BuildingCard;
 import it.polimi.ingsw.model.card.CharacterCard;
+import it.polimi.ingsw.model.card.effect.Effect;
+import it.polimi.ingsw.model.card.effect.EffectVisitor;
 import it.polimi.ingsw.model.card.effect.FullSetFoodEffect;
 import it.polimi.ingsw.model.card.effect.InventorPairFoodEffect;
 
@@ -127,21 +129,49 @@ public class Player implements Serializable {
 
         // trigger building effects that activate when a character card is added
         for (BuildingCard building : tribe.getBuildingCards()) {
-            if (building.getEffect() instanceof FullSetFoodEffect ||
-                    building.getEffect() instanceof InventorPairFoodEffect) {
-                building.getEffect().apply(this);
-            }
+            applyCharacterAddedEffect(building);
         }
     }
 
 
     public void addBuildingCard(BuildingCard card) {
         tribe.addBuildingCard(card);
-        if (card.getEffect() instanceof FullSetFoodEffect effect) {
-            effect.setRewardedSets(tribe.countFullSets());
-        } else if (card.getEffect() instanceof InventorPairFoodEffect effect) {
-            effect.setRewardedPairs(tribe.countInventorPairs());
-        }
+        initializeStoredProgress(card);
+    }
+
+    private void applyCharacterAddedEffect(BuildingCard building) {
+        building.acceptEffect(new EffectVisitor<Void>() {
+            @Override public Void visitFullSetFood(FullSetFoodEffect effect) {
+                effect.apply(Player.this);
+                return null;
+            }
+
+            @Override public Void visitInventorPairFood(InventorPairFoodEffect effect) {
+                effect.apply(Player.this);
+                return null;
+            }
+
+            @Override public Void visitEffect(Effect effect) {
+                return null;
+            }
+        });
+    }
+
+    private void initializeStoredProgress(BuildingCard card) {
+        card.acceptEffect(new EffectVisitor<Void>() {
+            @Override public Void visitFullSetFood(FullSetFoodEffect effect) {
+                effect.setRewardedSets(tribe.countFullSets());
+                return null;
+            }
+
+            @Override public Void visitInventorPairFood(InventorPairFoodEffect effect) {
+                effect.setRewardedPairs(tribe.countInventorPairs());
+                return null;
+            }
+
+            @Override public Void visitEffect(Effect effect) {
+                return null;
+            }
+        });
     }
 }
-

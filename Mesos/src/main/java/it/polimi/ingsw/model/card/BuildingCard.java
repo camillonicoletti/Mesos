@@ -1,6 +1,7 @@
 package it.polimi.ingsw.model.card;
 
 import it.polimi.ingsw.model.card.effect.Effect;
+import it.polimi.ingsw.model.card.effect.EffectVisitor;
 import it.polimi.ingsw.model.enums.Era;
 
 public class BuildingCard extends Card{
@@ -24,8 +25,20 @@ public class BuildingCard extends Card{
         return effect;
     }
 
+    public <R> R acceptEffect(EffectVisitor<R> visitor) {
+        if (effect == null) {
+            return visitor.visitEffect(null);
+        }
+        return effect.accept(visitor);
+    }
+
     public int getPointsEndOfMatch() {
         return pointsEndOfMatch;
+    }
+
+    @Override
+    public <R> R accept(CardVisitor<R> visitor) {
+        return visitor.visitBuilding(this);
     }
 
 }

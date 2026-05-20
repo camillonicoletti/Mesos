@@ -10,4 +10,9 @@ public class GathererCard extends CharacterCard{
 
     }
 
+    @Override
+    public <R> R accept(CardVisitor<R> visitor) {
+        return visitor.visitGatherer(this);
+    }
+
 }

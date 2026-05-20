@@ -9,4 +9,9 @@ public class TotemSlotFoodBonusEffect implements Effect{
         player.addFood(1);
     }
 
+    @Override
+    public <R> R accept(EffectVisitor<R> visitor) {
+        return visitor.visitTotemSlotFoodBonus(this);
+    }
+
 }

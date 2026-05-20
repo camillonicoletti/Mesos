@@ -17,5 +17,9 @@ public class    HunterCard extends CharacterCard{
         return foodIcon;
     }
 
+    @Override
+    public <R> R accept(CardVisitor<R> visitor) {
+        return visitor.visitHunter(this);
+    }
 
 }

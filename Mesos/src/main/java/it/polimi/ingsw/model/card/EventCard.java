@@ -18,4 +18,9 @@ public abstract class EventCard extends Card {
     }
 
     public abstract void resolve(Game game);
+
+    @Override
+    public <R> R accept(CardVisitor<R> visitor) {
+        return visitor.visitEvent(this);
+    }
 }

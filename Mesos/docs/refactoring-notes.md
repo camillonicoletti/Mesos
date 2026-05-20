@@ -86,3 +86,53 @@ architecture while keeping the RMI boundary method-based, as expected from RMI.
 `RMIServer` receives those method calls and delegates to `LobbyManager`, the
 same application service used by the socket dispatcher. This means the game
 rules are not duplicated between Socket and RMI.
+
+## Card visitor
+
+The card hierarchy now exposes `Card.accept(CardVisitor<R>)`. Concrete cards
+call the specific visitor method for their real type, for example
+`HunterCard` calls `visitHunter`, `BuildingCard` calls `visitBuilding`, and
+`SustenanceEventCard` calls `visitSustenanceEvent`.
+
+This moves type-specific behavior away from chains of `instanceof`. The first
+domain usages are:
+
+- `Tribe`, for character counting, builder discounts, shaman stars and inventor
+  icon aggregation;
+- `Game`, for builder final points and hunter immediate food effects;
+- `Round`, for routing drawn tribe cards to event or character rows and for
+  recognizing sustenance events during event ordering;
+- `EventResolutionState`, for event titles and descriptions.
+
+The important design point is that card-dependent behavior is now expressed as
+a visitor operation over the card hierarchy. The next cleanup should introduce
+the same idea for building `Effect` classes, because many remaining
+`instanceof` checks are not on cards but on effects.
+
+## Effect visitor
+
+The building-effect hierarchy now exposes `Effect.accept(EffectVisitor<R>)`.
+Concrete effects override it to call the specific visitor method, for example
+`FullSetFoodEffect` calls `visitFullSetFood`, `ExtraCardUpperRowEffect` calls
+`visitExtraCardUpperRow`, and end-game effects call their own end scoring
+visitor methods.
+
+`Effect.accept` also has a default implementation. This keeps `Effect` usable
+as a functional interface in tests and preserves the old behavior where a
+building with `null` effect simply did not match any specific effect type.
+`BuildingCard.acceptEffect(...)` is the null-safe adapter used by the domain
+code.
+
+The first usages replace effect-specific `instanceof` checks in:
+
+- `Player`, for effects triggered when character cards are added and for
+  initializing stored progress on newly built buildings;
+- `Game`, for end-game scoring effects;
+- event cards such as Hunt, Sustenance, Shamanic Ritual and Cave Paintings;
+- `Round`, for the totem-slot food bonus;
+- `ActionResolutionState`, for counting extra upper-row picks.
+
+The remaining `instanceof` checks in the action resolution flow are on board
+slot effects (`FoodSlot`, `UpperRowSlot`, `LowerRowSlot`, `GainFoodSlotEffect`),
+so they should be handled by a separate slot-effect visitor rather than by the
+card or building-effect visitors.

@@ -9,4 +9,9 @@ public class ShamanicRitualDoublePPEffect implements Effect{
         // Passive effect managed in ShamanicRitual resolve
         // by adding points twice
     }
+
+    @Override
+    public <R> R accept(EffectVisitor<R> visitor) {
+        return visitor.visitShamanicRitualDoublePP(this);
+    }
 }

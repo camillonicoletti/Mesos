@@ -13,4 +13,9 @@ public class Hunt1Food1PPEffect implements Effect{
         player.addPrestigePoints(hunters);
     }
 
+    @Override
+    public <R> R accept(EffectVisitor<R> visitor) {
+        return visitor.visitHunt1Food1PP(this);
+    }
+
 }

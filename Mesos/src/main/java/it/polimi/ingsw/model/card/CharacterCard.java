@@ -20,4 +20,9 @@ public abstract class CharacterCard extends Card {
         return numPlayers >= minPlayers;
     }
 
+    @Override
+    public <R> R accept(CardVisitor<R> visitor) {
+        return visitor.visitCharacter(this);
+    }
+
 }

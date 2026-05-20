@@ -22,4 +22,8 @@ public abstract class Card implements Serializable {
         return era;
     }
 
+    public <R> R accept(CardVisitor<R> visitor) {
+        return visitor.visitCard(this);
+    }
+
 }

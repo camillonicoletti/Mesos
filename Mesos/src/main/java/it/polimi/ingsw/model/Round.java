@@ -2,11 +2,11 @@ package it.polimi.ingsw.model;
 
 import it.polimi.ingsw.model.board.*;
 import it.polimi.ingsw.model.card.*;
-import it.polimi.ingsw.model.card.effect.ExtraCardUpperRowEffect;
+import it.polimi.ingsw.model.card.effect.Effect;
+import it.polimi.ingsw.model.card.effect.EffectVisitor;
 import it.polimi.ingsw.model.card.effect.TotemSlotFoodBonusEffect;
 import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.RoundPhase;
-import it.polimi.ingsw.model.Totem;
 import java.util.Collections;
 
 import java.io.Serializable;
@@ -107,71 +107,6 @@ public class Round implements Serializable {
     public List<BuildingCard> getLowerRowBuildings() {
         return Collections.unmodifiableList(lowerRowBuildings);
     }
-    // execute() currently handles the round flow correctly for all automatic actions;
-    // once the controller is implemented, it will be refactored to delegate
-    // player choices (card selection, extra card from upper row) to the controller
-
-    /*
-    public void execute() {
-
-        game.getBoard().getTurnOrderTile().reset();
-
-        // sort players by their chosen tile letter (A < B < C)
-        // so each player resolves their action and moves their totem in the correct order
-        phase = RoundPhase.ACTION_RESOLUTION;
-        List<Map.Entry<Player, OfferTile>> orderedChoices = playerChoices.entrySet()
-                .stream()
-                .sorted(Comparator.comparingInt(e -> (int) e.getValue().getLetter()))
-                .toList();
-
-        for (Map.Entry<Player, OfferTile> entry : orderedChoices) {
-            Player player = entry.getKey();
-            OfferTile tile = entry.getValue();
-
-            // resolve the player's offer action
-            // chosenCards is empty until the controller is implemented —
-            // the controller will pass the actual cards chosen by the player
-            resolveOfferAction(player, tile, new ArrayList<>());
-
-            // 2. move totem to TurnOrderTile and apply slot effect immediately
-            placeTotemOrderForPlayer(player);
-        }
-
-        // after all totems are on the TurnOrderTile, players with ExtraCardUpperRowEffect
-        // can take 1 extra card from the upper row before the event resolution
-        phase = RoundPhase.TURN_ORDER;
-        for (Player player : game.getPlayers()) {
-            for (BuildingCard building : player.getTribe().getBuildingCards()) {
-                if (building.getEffect() instanceof ExtraCardUpperRowEffect) {
-                    // TODO: controller must provide the chosen card —
-                    // building.getEffect().apply(player) will be called with the chosen card
-                }
-            }
-        }
-
-        phase = RoundPhase.EVENT_RESOLUTION;
-        resolveEvent();
-
-        if (game.isLastRound()) {
-            phase = RoundPhase.ROUND_CLEANUP;
-            game.getBoard().resetOfferTiles();
-            return;
-        }
-
-        phase = RoundPhase.ROUND_CLEANUP;
-        discardLowerRow();
-        shiftUpperToLowerRow();
-        refillUpperRow();
-        checkEraTransition();
-        // remove all totems from offer tiles for the next round
-        game.getBoard().resetOfferTiles();
-    }
-
-     */
-
-
-
-
     public Round createNextRound(int nextRoundNumber) {
         return new Round(
                 nextRoundNumber,
@@ -198,22 +133,14 @@ public class Round implements Serializable {
                 throw new IllegalStateException("Tribute deck is empty during initial setup");
             }
 
-            if (drawnCard instanceof EventCard eventCard) {
-                upperRowEventCards.add(eventCard);
-            } else if (drawnCard instanceof CharacterCard characterCard) {
-                lowerRowTribute.add(characterCard);
-            }
+            addTribeCardToRows(drawnCard, upperRowEventCards, lowerRowTribute, "tribute deck");
         }
 
         // 2. riempi la fila superiore
         while (getUpperTributeRowSize() < upperTarget) {
             Card drawnCard = game.drawTribeCard();
 
-            if (drawnCard instanceof EventCard eventCard) {
-                upperRowEventCards.add(eventCard);
-            } else if (drawnCard instanceof CharacterCard characterCard) {
-                upperRowTribute.add(characterCard);
-            }
+            addTribeCardToRows(drawnCard, upperRowEventCards, upperRowTribute, "tribute deck");
         }
     }
 
@@ -223,26 +150,12 @@ public class Round implements Serializable {
 
     private void drawCardToUpperRow(List<Card> deck) {
         Card drawn = deck.remove(0);
-
-        if (drawn instanceof EventCard eventCard) {
-            upperRowEventCards.add(eventCard);
-        } else if (drawn instanceof CharacterCard characterCard) {
-            upperRowTribute.add(characterCard);
-        } else {
-            throw new IllegalStateException("Unexpected card type: " + drawn.getClass().getSimpleName());
-        }
+        addTribeCardToRows(drawn, upperRowEventCards, upperRowTribute, "tribute deck");
     }
 
     private void drawCardToLowerRow(List<Card> deck) {
         Card drawn = deck.remove(0);
-
-        if (drawn instanceof EventCard eventCard) {
-            lowerRowEventCards.add(eventCard);
-        } else if (drawn instanceof CharacterCard characterCard) {
-            lowerRowTribute.add(characterCard);
-        } else {
-            throw new IllegalStateException("Unexpected card type: " + drawn.getClass().getSimpleName());
-        }
+        addTribeCardToRows(drawn, lowerRowEventCards, lowerRowTribute, "tribute deck");
     }
 
 
@@ -284,9 +197,7 @@ public class Round implements Serializable {
         // building effect TotemSlotFoodBonusEffect
         if (targetSlot.getEffect() instanceof GainFoodSlotEffect) {
             for (BuildingCard building : player.getTribe().getBuildingCards()) {
-                if (building.getEffect() instanceof TotemSlotFoodBonusEffect) {
-                    building.getEffect().apply(player);
-                }
+                applyTotemSlotFoodBonus(player, building);
             }
         }
 
@@ -344,7 +255,7 @@ public class Round implements Serializable {
         List<EventCard> sustenanceEvents = new ArrayList<>();
 
         for (EventCard e : eventsToResolve) {
-            if (e instanceof SustenanceEventCard) {
+            if (isSustenanceEvent(e)) {
                 sustenanceEvents.add(e);
             } else {
                 normalEvents.add(e);
@@ -418,13 +329,7 @@ public class Round implements Serializable {
                 return;
             }
 
-            if (drawnCard instanceof EventCard eventCard) {
-                upperRowEventCards.add(eventCard);
-            } else if (drawnCard instanceof CharacterCard characterCard) {
-                upperRowTribute.add(characterCard);
-            } else {
-                throw new IllegalStateException("Unexpected card type in tribute deck: " + drawnCard.getClass().getSimpleName());
-            }
+            addTribeCardToRows(drawnCard, upperRowEventCards, upperRowTribute, "tribute deck");
         }
     }
 
@@ -465,5 +370,52 @@ public class Round implements Serializable {
 
     public Map<Player, OfferTile> getPlayerChoices() {
         return playerChoices;
+    }
+
+    private void addTribeCardToRows(Card card,
+                                    List<EventCard> eventRow,
+                                    List<CharacterCard> tributeRow,
+                                    String sourceName) {
+        card.accept(new CardVisitor<Void>() {
+            @Override public Void visitEvent(EventCard eventCard) {
+                eventRow.add(eventCard);
+                return null;
+            }
+
+            @Override public Void visitCharacter(CharacterCard characterCard) {
+                tributeRow.add(characterCard);
+                return null;
+            }
+
+            @Override public Void visitCard(Card card) {
+                throw new IllegalStateException("Unexpected card type in "
+                        + sourceName + ": " + card.getClass().getSimpleName());
+            }
+        });
+    }
+
+    private boolean isSustenanceEvent(EventCard eventCard) {
+        return Boolean.TRUE.equals(eventCard.accept(new CardVisitor<>() {
+            @Override public Boolean visitSustenanceEvent(SustenanceEventCard card) {
+                return true;
+            }
+
+            @Override public Boolean visitCard(Card card) {
+                return false;
+            }
+        }));
+    }
+
+    private void applyTotemSlotFoodBonus(Player player, BuildingCard building) {
+        building.acceptEffect(new EffectVisitor<Void>() {
+            @Override public Void visitTotemSlotFoodBonus(TotemSlotFoodBonusEffect effect) {
+                effect.apply(player);
+                return null;
+            }
+
+            @Override public Void visitEffect(Effect effect) {
+                return null;
+            }
+        });
     }
 }
