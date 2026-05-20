@@ -32,6 +32,8 @@ public class GameController implements Serializable {
     private static final long serialVersionUID = 1L;
     private static final long DEFAULT_SUSPENSION_TIMEOUT_MILLIS = 60 * 1000;
     private transient LeaderboardService leaderboardService;
+    private transient GamePersistenceService persistenceService;
+    private SuspensionManager suspensionManager;
     private final UUID matchId = UUID.randomUUID();
     private Game game;
     private GameState currentState;
@@ -41,11 +43,6 @@ public class GameController implements Serializable {
 
     private final Set<String> readyPlayers;
     private final Set<String> disconnectedPlayers;
-    private boolean suspended;
-    private GameState suspendedStateReturn;
-    private long suspensionStartedAtMillis;
-    private long suspensionTimeoutMillis;
-    private String forcedWinnerNickname;
 
     // LISTENER
     private transient List<GameListener> listeners = new ArrayList<>();
@@ -57,11 +54,8 @@ public class GameController implements Serializable {
         this.chosenPlayersCount = -1;
         this.readyPlayers = new HashSet<>();
         this.disconnectedPlayers = new HashSet<>();
-        this.suspended = false;
-        this.suspendedStateReturn = null;
-        this.suspensionStartedAtMillis = -1L;
-        this.suspensionTimeoutMillis = DEFAULT_SUSPENSION_TIMEOUT_MILLIS;
-        this.forcedWinnerNickname = null;
+        this.suspensionManager = new SuspensionManager(DEFAULT_SUSPENSION_TIMEOUT_MILLIS);
+        this.persistenceService = new GamePersistenceService();
 
         currentState.onEnter(this);
     }
@@ -90,13 +84,7 @@ public class GameController implements Serializable {
         }
 
         currentState.handleAction(this, normalizedNickname, action);
-
-        // Save at the turn boundary: per-event saves fire mid-handler, before
-        // currentIndex / remainingPicks settle, producing an inconsistent snapshot.
-        // Skipped on EndGameState: PersistenceListener.onGameEnded already cleared the file.
-        if (!(currentState instanceof EndGameState)) {
-            Persistence.save(this);
-        }
+        getPersistenceService().saveAfterAction(this, currentState);
     }
 
     public void onPlayerDisconnection(String playerNickname) {
@@ -105,14 +93,14 @@ public class GameController implements Serializable {
             return;
         }
         boolean knownPlayer = containsLobbyPlayer(normalizedNickname) || containsGamePlayer(normalizedNickname);
-        boolean wasSuspended = suspended;
+        boolean wasSuspended = isSuspended();
 
         currentState.onPlayerDisconnected(this, normalizedNickname);
         if (knownPlayer) {
             notifyListeners(l -> l.onPlayerDisconnected(normalizedNickname));
         }
         updateSuspensionStatus();
-        if (!wasSuspended && suspended) {
+        if (!wasSuspended && isSuspended()) {
             enterSuspendedState();
             notifyListeners(GameListener::onGameSuspended);
         }
@@ -126,13 +114,13 @@ public class GameController implements Serializable {
         if (!isPlayerDisconnected(normalizedNickname)) {
             throw new IllegalStateException("Player is already connected");
         }
-        boolean wasSuspended = suspended;
+        boolean wasSuspended = isSuspended();
 
         markPlayerConnected(normalizedNickname);
         currentState.onPlayerReconnected(this, normalizedNickname);
         notifyListeners(l -> l.onPlayerReconnected(normalizedNickname));
         updateSuspensionStatus();
-        if (wasSuspended && !suspended) {
+        if (wasSuspended && !isSuspended()) {
             resumeSuspendedState();
             notifyListeners(GameListener::onGameResumed);
         }
@@ -177,10 +165,7 @@ public class GameController implements Serializable {
 
     public void setGame(Game game) {
         this.game = game;
-        this.suspended = false;
-        this.suspendedStateReturn = null;
-        this.suspensionStartedAtMillis = -1L;
-        this.forcedWinnerNickname = null;
+        getSuspensionManager().resetForGame(game);
         if (game != null) {
             game.setNotifier(this::notifyListeners);
         }
@@ -401,7 +386,7 @@ public class GameController implements Serializable {
             }
         }
         updateSuspensionStatus();
-        if (suspended && !(currentState instanceof SuspendedState)) {
+        if (isSuspended() && !(currentState instanceof SuspendedState)) {
             enterSuspendedState();
             notifyListeners(GameListener::onGameSuspended);
         }
@@ -422,11 +407,11 @@ public class GameController implements Serializable {
     }
 
     public boolean isSuspended() {
-        return suspended;
+        return getSuspensionManager().isSuspended();
     }
 
     public GameState getSuspendedStateReturn() {
-        return suspendedStateReturn;
+        return getSuspensionManager().getSuspendedStateReturn();
     }
 
     public boolean canContinueAfterDisconnection() {
@@ -434,36 +419,19 @@ public class GameController implements Serializable {
     }
 
     public void updateSuspensionStatus() {
-        if (game == null || game.isGameOver()) {
-            suspended = false;
-            suspensionStartedAtMillis = -1L;
-            return;
-        }
-
-        boolean shouldSuspend = getConnectedGamePlayersCount() <= 1;
-        if (!suspended && shouldSuspend) {
-            suspensionStartedAtMillis = System.currentTimeMillis();
-        } else if (suspended && !shouldSuspend) {
-            suspensionStartedAtMillis = -1L;
-        }
-
-        suspended = shouldSuspend;
+        getSuspensionManager().updateStatus(game, getConnectedGamePlayersCount(), System.currentTimeMillis());
     }
 
     public long getSuspensionTimeoutMillis() {
-        return suspensionTimeoutMillis;
+        return getSuspensionManager().getSuspensionTimeoutMillis();
     }
 
     public void setSuspensionTimeoutMillis(long suspensionTimeoutMillis) {
-        if (suspensionTimeoutMillis <= 0) {
-            throw new IllegalArgumentException("Suspension timeout must be positive");
-        }
-
-        this.suspensionTimeoutMillis = suspensionTimeoutMillis;
+        getSuspensionManager().setSuspensionTimeoutMillis(suspensionTimeoutMillis);
     }
 
     public long getSuspensionStartedAtMillis() {
-        return suspensionStartedAtMillis;
+        return getSuspensionManager().getSuspensionStartedAtMillis();
     }
 
     public long getSuspensionRemainingMillis() {
@@ -471,12 +439,7 @@ public class GameController implements Serializable {
     }
 
     public long getSuspensionRemainingMillis(long nowMillis) {
-        if (!suspended || suspensionStartedAtMillis < 0L) {
-            return -1L;
-        }
-
-        long elapsedMillis = Math.max(0L, nowMillis - suspensionStartedAtMillis);
-        return Math.max(0L, suspensionTimeoutMillis - elapsedMillis);
+        return getSuspensionManager().getSuspensionRemainingMillis(nowMillis);
     }
 
     public boolean checkSuspensionTimeout() {
@@ -484,46 +447,22 @@ public class GameController implements Serializable {
     }
 
     public boolean checkSuspensionTimeout(long nowMillis) {
-        if (!suspended || game == null || game.isGameOver()) {
+        boolean timedOut = getSuspensionManager().checkTimeout(
+                game,
+                getConnectedGamePlayersCount(),
+                getOnlyConnectedGamePlayer(),
+                nowMillis
+        );
+        if (!timedOut) {
             return false;
         }
 
-        if (suspensionStartedAtMillis < 0L) {
-            return false;
-        }
-
-        if (getConnectedGamePlayersCount() != 1) {
-            return false;
-        }
-
-        if (nowMillis - suspensionStartedAtMillis < suspensionTimeoutMillis) {
-            return false;
-        }
-
-        Player forcedWinner = getOnlyConnectedGamePlayer();
-        if (forcedWinner == null) {
-            return false;
-        }
-
-        forcedWinnerNickname = forcedWinner.getNickname();
-        suspended = false;
-        suspendedStateReturn = null;
-        suspensionStartedAtMillis = -1L;
-        changeState(new it.polimi.ingsw.controller.state.EndGameState());
+        changeState(new EndGameState());
         return true;
     }
 
     public Player consumeForcedWinner() {
-        if (forcedWinnerNickname == null || game == null) {
-            return null;
-        }
-
-        Player forcedWinner = game.getPlayers().stream()
-                .filter(player -> player.getNickname().equals(forcedWinnerNickname))
-                .findFirst()
-                .orElse(null);
-        forcedWinnerNickname = null;
-        return forcedWinner;
+        return getSuspensionManager().consumeForcedWinner(game);
     }
 
     private Player getOnlyConnectedGamePlayer() {
@@ -548,26 +487,25 @@ public class GameController implements Serializable {
     }
 
     private void enterSuspendedState() {
-        if (currentState instanceof SuspendedState || game == null || game.isGameOver()) {
+        SuspendedState suspendedState = getSuspensionManager().enter(game, currentState);
+        if (suspendedState == null) {
             return;
         }
 
-        // Preserve the live state instance so its internal progress can resume unchanged.
-        suspendedStateReturn = currentState;
-        currentState = new SuspendedState(suspendedStateReturn);
+        currentState = suspendedState;
         currentState.onEnter(this);
         notifyListeners(l -> l.onStateChanged(currentState));
     }
 
     private void resumeSuspendedState() {
-        if (!(currentState instanceof SuspendedState) || suspendedStateReturn == null) {
+        GameState stateToResume = getSuspensionManager().resume(currentState);
+        if (stateToResume == null) {
             return;
         }
 
         currentState.onExit(this);
         // Restore the exact pre-suspension state without re-entering it from scratch.
-        currentState = suspendedStateReturn;
-        suspendedStateReturn = null;
+        currentState = stateToResume;
         GameState resumedState = currentState;
         currentState.onResume(this);
         if (currentState == resumedState) {
@@ -624,9 +562,8 @@ public class GameController implements Serializable {
             ClassNotFoundException {
         in.defaultReadObject();
         listeners = new ArrayList<>();
-        if (suspensionTimeoutMillis <= 0L) {
-            suspensionTimeoutMillis = DEFAULT_SUSPENSION_TIMEOUT_MILLIS;
-        }
+        persistenceService = new GamePersistenceService();
+        getSuspensionManager().ensureValidTimeout(DEFAULT_SUSPENSION_TIMEOUT_MILLIS);
     }
 
     // ── DEBUG ────────────────────────────────────────────────────────────────
@@ -669,5 +606,19 @@ public class GameController implements Serializable {
 
     public UUID getMatchId() {
         return matchId;
+    }
+
+    private GamePersistenceService getPersistenceService() {
+        if (persistenceService == null) {
+            persistenceService = new GamePersistenceService();
+        }
+        return persistenceService;
+    }
+
+    private SuspensionManager getSuspensionManager() {
+        if (suspensionManager == null) {
+            suspensionManager = new SuspensionManager(DEFAULT_SUSPENSION_TIMEOUT_MILLIS);
+        }
+        return suspensionManager;
     }
 }

@@ -136,3 +136,25 @@ The remaining `instanceof` checks in the action resolution flow are on board
 slot effects (`FoodSlot`, `UpperRowSlot`, `LowerRowSlot`, `GainFoodSlotEffect`),
 so they should be handled by a separate slot-effect visitor rather than by the
 card or building-effect visitors.
+
+## Controller services
+
+`GameController` is being reduced back toward its intended role: coordinating
+state transitions instead of owning every supporting responsibility directly.
+
+`GamePersistenceService` now owns the controller-level rule for saving after an
+action has settled. The controller still decides when an action has been
+handled, but the persistence decision is no longer embedded in the action
+entrypoint.
+
+`SuspensionManager` now owns suspension data and timeout rules:
+
+- whether the game is suspended;
+- which state must be resumed after suspension;
+- suspension start time and timeout duration;
+- forced winner after timeout.
+
+`GameController` keeps the same public methods used by server, GUI, TUI and
+tests, but delegates the suspension calculations to the manager. This keeps the
+external contract stable while making the internal responsibilities easier to
+explain and test.
