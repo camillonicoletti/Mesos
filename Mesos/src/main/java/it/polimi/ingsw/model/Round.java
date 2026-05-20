@@ -126,7 +126,7 @@ public class Round implements Serializable {
         int lowerTarget = game.getPlayers().size() + 1;
         int upperTarget = game.getPlayers().size() + 4;
 
-        // 1. riempi la fila inferiore
+        // 1. Fill the lower row up to target size
         while (getLowerTributeRowSize() < lowerTarget) {
             Card drawnCard = game.drawTribeCard();
             if (drawnCard == null) {
@@ -136,7 +136,7 @@ public class Round implements Serializable {
             addTribeCardToRows(drawnCard, upperRowEventCards, lowerRowTribute, "tribute deck");
         }
 
-        // 2. riempi la fila superiore
+        // 2. Fill the upper row up to target size
         while (getUpperTributeRowSize() < upperTarget) {
             Card drawnCard = game.drawTribeCard();
 
@@ -242,15 +242,15 @@ public class Round implements Serializable {
     public List<EventCard> getOrderedEventsForResolution(boolean includeUpperRow) {
         List<EventCard> eventsToResolve = new ArrayList<>();
 
-        // 1. prendo eventi lower
+        // 1. Collect lower-row events
         eventsToResolve.addAll(lowerRowEventCards);
 
-        // 2. eventualmente aggiungo upper
+        // 2. On the last round, also include upper-row events
         if (includeUpperRow) {
             eventsToResolve.addAll(upperRowEventCards);
         }
 
-        // 3. separo sustenance dagli altri
+        // 3. Sustenance events are always resolved last
         List<EventCard> normalEvents = new ArrayList<>();
         List<EventCard> sustenanceEvents = new ArrayList<>();
 
@@ -262,11 +262,11 @@ public class Round implements Serializable {
             }
         }
 
-        // 4. ordino per era
+        // 4. Sort each group by Era for deterministic resolution order
         normalEvents.sort(Comparator.comparing(EventCard::getEra));
         sustenanceEvents.sort(Comparator.comparing(EventCard::getEra));
 
-        // 5. ricompongo: prima normali, poi sustenance
+        // 5. Reassemble: normal events first, sustenance last
         List<EventCard> ordered = new ArrayList<>();
         ordered.addAll(normalEvents);
         ordered.addAll(sustenanceEvents);

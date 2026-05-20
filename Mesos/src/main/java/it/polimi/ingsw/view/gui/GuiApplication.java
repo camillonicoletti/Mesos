@@ -207,7 +207,10 @@ public final class GuiApplication extends Application {
             case LOBBY -> lobbyView.refresh();
             case GAME -> gameBoardView.refresh();
             case END_GAME -> {
-                endGameSubtitleLabel.setText("Vincitore: " + nullSafe(model.getWinnerNickname()));
+                String winNick = model.getWinnerNickname();
+                endGameSubtitleLabel.setText(winNick != null
+                        ? "Winner: " + winNick
+                        : "Shared victory");
                 endGameView.refresh();
             }
         }
@@ -232,10 +235,10 @@ public final class GuiApplication extends Application {
         }
         if (model.isGameSuspended()) {
             long remaining = model.getSuspensionRemainingMillis();
-            timerLabel.setText("Partita sospesa - timeout " + formatMillis(remaining));
+            timerLabel.setText("Game suspended — timeout " + formatMillis(remaining));
             timerLabel.getStyleClass().setAll("timer", "timer-alert");
         } else {
-            timerLabel.setText("Connessione attiva");
+            timerLabel.setText("Connection active");
             timerLabel.getStyleClass().setAll("timer");
         }
     }
@@ -248,10 +251,10 @@ public final class GuiApplication extends Application {
         overlay.setVisible(false);
         overlay.setManaged(false);
 
-        Label title = new Label("Partita sospesa");
+        Label title = new Label("Game suspended");
         title.getStyleClass().add("suspension-title");
 
-        Label message = new Label("E rimasto un solo giocatore connesso. La partita riprende quando rientra almeno un altro giocatore.");
+        Label message = new Label("Only one player remains connected. The game resumes when at least one other player reconnects.");
         message.getStyleClass().add("suspension-message");
         message.setWrapText(true);
         message.setMaxWidth(460);

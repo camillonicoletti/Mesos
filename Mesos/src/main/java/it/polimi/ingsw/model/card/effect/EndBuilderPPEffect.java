@@ -23,7 +23,7 @@ public class EndBuilderPPEffect implements EndGameEffect {
         for (CharacterCard card : player.getTribe().getCharacterCards()) {
             points += card.accept(builderPoints);
         }
-        return points; // double the builder points
+        return points; // Sum of each Builder card's end-of-match point value.
     }
 
 

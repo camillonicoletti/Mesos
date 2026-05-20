@@ -20,7 +20,7 @@ public class CardFactory {
 
 
     public static List<Card> createTribeDeck(int numPlayers) {
-        // 1. Carica e filtra i Personaggi per numPlayers, partiziona per Era
+        // 1. Load and filter Characters by numPlayers, partition by Era
         List<CharacterCard> characters = loadCharacterCards();
         List<Card> eraI   = new ArrayList<>();
         List<Card> eraII  = new ArrayList<>();
@@ -34,7 +34,7 @@ public class CardFactory {
             }
         }
 
-        // 2. Carica gli Eventi, separa closeEvent (Eventi Finali) dagli altri per Era
+        // 2. Load Events; separate end-game close events from era events
         List<EventCard> events = loadEventCards();
         List<Card> closeEvents = new ArrayList<>();
         for (EventCard e : events) {
@@ -49,13 +49,13 @@ public class CardFactory {
             }
         }
 
-        // 3. Mescola ogni pila per Era, e i 2 Eventi Finali tra loro
+        // 3. Shuffle each era pile and the close-event pile independently
         Collections.shuffle(eraI);
         Collections.shuffle(eraII);
         Collections.shuffle(eraIII);
         Collections.shuffle(closeEvents);
 
-        // 4. Componi: TOP = Era I, poi II, III, BOTTOM = closeEvents
+        // 4. Stack: Era I on top, then II, III, close events at the bottom
         List<Card> deck = new ArrayList<>();
         deck.addAll(eraI);
         deck.addAll(eraII);
@@ -65,17 +65,17 @@ public class CardFactory {
     }
 
     public static List<BuildingCard> createBuildingCards(Era era, int numPlayers) {
-        // 1. Carica e filtra per Era richiesta
+        // 1. Load all buildings and keep only those matching the requested Era
         List<BuildingCard> all = loadBuildingCards();
         List<BuildingCard> filtered = new ArrayList<>();
         for (BuildingCard b : all) {
             if (b.getEra() == era) filtered.add(b);
         }
 
-        // 2. Mescola
+        // 2. Shuffle before selecting
         Collections.shuffle(filtered);
 
-        // 3. Prendi le prime N secondo la tabella giocatori/Era
+        // 3. Take the first N cards according to the player-count/Era table
         int count = getBuildingCountForEra(era, numPlayers);
         if (count > filtered.size()) {
             throw new IllegalStateException(

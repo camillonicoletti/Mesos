@@ -201,39 +201,8 @@ public class Game implements Serializable {
         currentRound = currentRound.createNextRound(currentRoundNumber);
     }
 
-    /* NON SERVE!
-    public void endRound() {
-        if (isGameOver()) {
-            throw new IllegalStateException("Cannot end round if game is not running");
-        }
-
-        currentRound.execute();
-
-        if (isLastRound()) {
-            end();
-        } else {
-            nextRound();
-        }
-    }
-
-     */
-
     /**
-     * Calculates the final score for each player.
-     * Building effects that trigger at end of game implement EndGameEffect,
-     * which exposes calculatePoints() — this returns the points as a value
-     * instead of calling apply() directly on the player, avoiding double counting
-     * with the prestige points already accumulated during the game.
-     */
-    /**
-     * Calculates and caches the final scores.
-     * This method is meant to be used once the game has ended.
-     */
-    /**
-     * Calculates the current score for a single player without updating the cached final score map.
-     *
-     * @param player the player whose score must be calculated
-     * @return the calculated score
+     * Calculates the current score for a single player without caching it.
      */
     private int calculateScoreForPlayer(Player player) {
         int finalScore = player.getPrestigePoints();
@@ -512,11 +481,6 @@ public class Game implements Serializable {
 
         return new HashMap<>(finalScores);
     }
-    /**
-     * Returns the current winner according to score and food tie-breaker.
-     *
-     * @return the current winning player, or null if there are no players
-     */
     /**
      * Returns all co-winners applying the official tiebreaker chain:
      * 1. Most PP; 2. Most food among PP-tied players; 3. Shared victory.

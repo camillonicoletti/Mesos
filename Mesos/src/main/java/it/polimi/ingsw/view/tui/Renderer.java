@@ -374,7 +374,11 @@ public class Renderer {
 
     private void endGameScreen(ClientModel model) {
         final int panelW = 72;
-        String winner = model.getWinnerNickname() == null ? "UNKNOWN" : model.getWinnerNickname();
+        // null winner = shared victory: resolve co-winners via the same tiebreaker the server uses.
+        List<String> tiedList = tiedWinners(model.getWinnerNickname(), model.getFinalScores(), model);
+        String winner = tiedList.isEmpty()
+                ? "PAREGGIO"
+                : String.join(" & ", tiedList);
         List<Map.Entry<String, Integer>> standings = model.getFinalScores().entrySet().stream()
                 .sorted((a, b) -> {
                     int cmp = Integer.compare(b.getValue(), a.getValue());
