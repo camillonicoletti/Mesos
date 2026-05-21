@@ -220,3 +220,40 @@ the small accounting rules:
 This avoids scattering `remainingUpperPicks` / `remainingLowerPicks` checks
 through the state and makes the end-of-turn condition explicit:
 `regularPickBudget.isDepleted()`.
+
+## Extra pick queue
+
+`ActionResolutionState` also no longer owns the raw list/index/counter used for
+extra upper-row picks granted by buildings. That state now lives in
+`ExtraPickQueue`.
+
+The queue is deliberately small: it stores the players that have extra picks,
+the current player index and the number of picks still available for that
+player. The game state still decides which actions are legal, how cards are
+taken and when to move to `EventResolutionState`.
+
+This keeps the extra-pick phase symmetrical with the totem placement cleanup:
+the state coordinates the phase, while a dedicated queue owns the cursor-like
+bookkeeping. It also makes disconnection recovery easier to read, because the
+state now says “if the disconnected player is the current extra-pick player,
+advance the queue and prepare the next one”.
+
+## Action turn queue
+
+`ActionResolutionState` no longer owns the ordered list of players resolving
+their offer tiles. That list, its ordering by tile letter and the current cursor
+now live in `ActionTurnQueue`.
+
+This queue represents the normal action-resolution order:
+
+- build the queue from `Round.getPlayerChoices()`;
+- sort players by the chosen offer tile letter;
+- expose the current player and current offer tile;
+- advance to the next player after the current one finishes;
+- let the state ask whether a disconnected player is the current one.
+
+The state still applies the rules of the action phase: food from slots, card
+and building picks, affordability checks, listener notifications and transition
+to the extra-pick phase. The queue owns only “whose offer tile is being
+resolved now?”. This is the same design line used for `TotemPlacementTurnQueue`
+and `ExtraPickQueue`.
