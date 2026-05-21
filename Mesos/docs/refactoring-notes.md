@@ -202,3 +202,21 @@ utility, but the state is no longer forced to mix action validation with list
 index manipulation. It also makes the disconnection behavior easier to explain:
 when a player disconnects, the queue advances past unavailable players without
 changing the rule that only connected players are required to place.
+
+## Action pick budget
+
+`ActionResolutionState` no longer stores the regular upper-row and lower-row
+pick counters as loose integers. Those counters now live in `RowPickBudget`.
+
+The state still performs the gameplay checks: current player, card existence,
+building affordability and listener notifications. `RowPickBudget` owns only
+the small accounting rules:
+
+- how many upper/lower row picks remain;
+- whether a row can still be picked;
+- consuming one pick only after the card/building was actually taken;
+- clearing a row budget when that row has no cards or buildings left.
+
+This avoids scattering `remainingUpperPicks` / `remainingLowerPicks` checks
+through the state and makes the end-of-turn condition explicit:
+`regularPickBudget.isDepleted()`.

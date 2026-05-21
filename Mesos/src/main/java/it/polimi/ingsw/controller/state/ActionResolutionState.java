@@ -63,9 +63,7 @@ public class ActionResolutionState extends AbstractGameState {
     private List<OrderedPlayer> orderedPlayers;
     private int currentIndex;
 
-    // how many cards the current player can still take
-    private int remainingUpperPicks;
-    private int remainingLowerPicks;
+    private RowPickBudget regularPickBudget = new RowPickBudget();
 
     // extra pick phase
     private List<ExtraPick> extraPickQueue;
@@ -109,8 +107,7 @@ public class ActionResolutionState extends AbstractGameState {
             return;
         }
 
-        remainingUpperPicks = 0;
-        remainingLowerPicks = 0;
+        getRegularPickBudget().reset();
 
         for (ActionSlot slot : tile.getSlots()) {
             if (slot.getEffect() instanceof FoodSlot) {
@@ -119,15 +116,15 @@ public class ActionResolutionState extends AbstractGameState {
                 ctx.notifyListeners(l -> l.onFoodChanged(
                         player.getNickname(), player.getFood(), amount));
             } else if (slot.getEffect() instanceof UpperRowSlot) {
-                remainingUpperPicks += slot.getAmount();
+                getRegularPickBudget().addUpper(slot.getAmount());
             } else if (slot.getEffect() instanceof LowerRowSlot) {
-                remainingLowerPicks += slot.getAmount();
+                getRegularPickBudget().addLower(slot.getAmount());
             }
         }
 
-        skipImpossibleRowPicks(round);
+        getRegularPickBudget().skipUnavailableRows(round);
 
-        if (remainingUpperPicks == 0 && remainingLowerPicks == 0) {
+        if (getRegularPickBudget().isDepleted()) {
             round.placeTotemOrderForPlayer(player);
             currentIndex++;
             prepareCurrentPlayer(ctx);
@@ -223,10 +220,7 @@ public class ActionResolutionState extends AbstractGameState {
         }
 
         if (action instanceof PickCardAction pickCard) {
-            if (pickCard.isFromUpperRow() && remainingUpperPicks <= 0)
-                throw new IllegalStateException("You cannot take any more cards from the upper row");
-            if (!pickCard.isFromUpperRow() && remainingLowerPicks <= 0)
-                throw new IllegalStateException("You cannot take any more cards from the lower row");
+            getRegularPickBudget().requireCanPick(pickCard.isFromUpperRow(), "cards");
 
             List<CharacterCard> row = pickCard.isFromUpperRow()
                     ? round.getUpperRowTribute()
@@ -239,15 +233,10 @@ public class ActionResolutionState extends AbstractGameState {
             game.takeCharacterCard(currentPlayer, row, card);
             ctx.notifyListeners(l -> l.onCharacterCardTaken(
                     playerNickname, pickCard.getCardId(), pickCard.isFromUpperRow()));
-
-            if (pickCard.isFromUpperRow()) remainingUpperPicks--;
-            else remainingLowerPicks--;
+            getRegularPickBudget().consume(pickCard.isFromUpperRow());
 
         } else if (action instanceof PickBuildingAction pickBuilding) {
-            if (pickBuilding.isFromUpperRow() && remainingUpperPicks <= 0)
-                throw new IllegalStateException("You cannot take any more buildings from the upper row");
-            if (!pickBuilding.isFromUpperRow() && remainingLowerPicks <= 0)
-                throw new IllegalStateException("You cannot take any more buildings from the lower row");
+            getRegularPickBudget().requireCanPick(pickBuilding.isFromUpperRow(), "buildings");
 
             List<CharacterCard> tributeRow = pickBuilding.isFromUpperRow()
                     ? round.getUpperRowTribute()
@@ -271,36 +260,20 @@ public class ActionResolutionState extends AbstractGameState {
             game.takeBuildingCard(currentPlayer, row, card);
             ctx.notifyListeners(l -> l.onBuildingCardTaken(
                     playerNickname, pickBuilding.getCardId(), pickBuilding.isFromUpperRow()));
-
-            if (pickBuilding.isFromUpperRow()) remainingUpperPicks--;
-            else remainingLowerPicks--;
+            getRegularPickBudget().consume(pickBuilding.isFromUpperRow());
 
         } else {
             rejectAction(action);
         }
 
-        skipImpossibleRowPicks(round);
+        getRegularPickBudget().skipUnavailableRows(round);
 
-        if (remainingUpperPicks == 0 && remainingLowerPicks == 0) {
+        if (getRegularPickBudget().isDepleted()) {
             ctx.getGame().getCurrentRound().placeTotemOrderForPlayer(currentPlayer);
             currentIndex++;
             prepareCurrentPlayer(ctx);
         } else {
             ctx.notifyListeners(l -> l.onCurrentPlayerChanged(currentPlayer.getNickname()));
-        }
-    }
-
-    private void skipImpossibleRowPicks(Round round) {
-        boolean upperRowEmpty = round.getUpperRowTribute().isEmpty()
-                && round.getUpperRowBuildings().isEmpty();
-        boolean lowerRowEmpty = round.getLowerRowTribute().isEmpty()
-                && round.getLowerRowBuildings().isEmpty();
-
-        if (upperRowEmpty) {
-            remainingUpperPicks = 0;
-        }
-        if (lowerRowEmpty) {
-            remainingLowerPicks = 0;
         }
     }
 
@@ -425,7 +398,8 @@ public class ActionResolutionState extends AbstractGameState {
 
         if (currentIndex < orderedPlayers.size()) {
             Player player = orderedPlayers.get(currentIndex).getPlayer();
-            autoPickForPlayer(ctx, game, round, player, remainingUpperPicks, remainingLowerPicks);
+            autoPickForPlayer(ctx, game, round, player,
+                    getRegularPickBudget().upperPicks(), getRegularPickBudget().lowerPicks());
             round.placeTotemOrderForPlayer(player);
             currentIndex++;
         }
@@ -565,5 +539,12 @@ public class ActionResolutionState extends AbstractGameState {
             if (String.valueOf(card.getId()).equals(cardId)) return card;
         }
         return null;
+    }
+
+    private RowPickBudget getRegularPickBudget() {
+        if (regularPickBudget == null) {
+            regularPickBudget = new RowPickBudget();
+        }
+        return regularPickBudget;
     }
 }
