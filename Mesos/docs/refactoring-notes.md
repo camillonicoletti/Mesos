@@ -257,3 +257,44 @@ and building picks, affordability checks, listener notifications and transition
 to the extra-pick phase. The queue owns only “whose offer tile is being
 resolved now?”. This is the same design line used for `TotemPlacementTurnQueue`
 and `ExtraPickQueue`.
+
+## Offer tile slot resolver
+
+`ActionResolutionState` no longer reads every slot of an offer tile directly.
+That work now lives in `OfferTileSlotResolver`.
+
+The resolver converts an `OfferTile` into the two immediate consequences needed
+by the action phase:
+
+- food slots are applied to the current player and notify listeners;
+- upper/lower row slots are converted into a `RowPickBudget`.
+
+This is intentionally not the full slot-effect visitor yet. It is a smaller and
+safer cleanup: the few remaining `instanceof` checks for offer-tile slot effects
+are localized in one class instead of being duplicated in normal resolution and
+debug autocomplete. If the project later introduces a proper slot-effect
+visitor, this resolver becomes the single place to replace.
+
+## Card acquisition service
+
+`ActionResolutionState` no longer owns the low-level mechanics for taking a
+card from a row. That work now lives in `CardAcquisitionService`.
+
+The state still decides whether an action is legal in the current phase:
+
+- regular picks may come from upper or lower rows according to `RowPickBudget`;
+- buildings can be picked only after character cards in the same row are gone;
+- extra picks must come from the upper row.
+
+`CardAcquisitionService` owns the repeated mechanics:
+
+- find a character/building by id inside the chosen row;
+- check building affordability;
+- call the `Game` model to add the card to the player's tribe;
+- notify listeners that the card/building was taken;
+- support debug autocomplete by taking the first available character or the
+  first affordable building.
+
+This keeps the phase rules in the state while removing duplicated model and
+listener plumbing. It is a small service-style extraction, not a new domain
+rule owner.

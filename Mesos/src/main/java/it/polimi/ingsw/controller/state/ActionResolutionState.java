@@ -4,14 +4,9 @@ import it.polimi.ingsw.controller.GameController;
 import it.polimi.ingsw.controller.action.GameAction;
 import it.polimi.ingsw.controller.action.PickBuildingAction;
 import it.polimi.ingsw.controller.action.PickCardAction;
-import it.polimi.ingsw.model.Game;
 import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.Round;
-import it.polimi.ingsw.model.board.ActionSlot;
-import it.polimi.ingsw.model.board.FoodSlot;
-import it.polimi.ingsw.model.board.LowerRowSlot;
 import it.polimi.ingsw.model.board.OfferTile;
-import it.polimi.ingsw.model.board.UpperRowSlot;
 import it.polimi.ingsw.model.card.BuildingCard;
 import it.polimi.ingsw.model.card.CharacterCard;
 import it.polimi.ingsw.model.card.effect.Effect;
@@ -60,21 +55,7 @@ public class ActionResolutionState extends AbstractGameState {
             return;
         }
 
-        getRegularPickBudget().reset();
-
-        for (ActionSlot slot : tile.getSlots()) {
-            if (slot.getEffect() instanceof FoodSlot) {
-                int amount = slot.getAmount();
-                player.addFood(amount);
-                ctx.notifyListeners(l -> l.onFoodChanged(
-                        player.getNickname(), player.getFood(), amount));
-            } else if (slot.getEffect() instanceof UpperRowSlot) {
-                getRegularPickBudget().addUpper(slot.getAmount());
-            } else if (slot.getEffect() instanceof LowerRowSlot) {
-                getRegularPickBudget().addLower(slot.getAmount());
-            }
-        }
-
+        regularPickBudget = OfferTileSlotResolver.resolve(ctx, player, tile);
         getRegularPickBudget().skipUnavailableRows(round);
 
         if (getRegularPickBudget().isDepleted()) {
@@ -164,8 +145,7 @@ public class ActionResolutionState extends AbstractGameState {
         if (!queue.hasCurrentPlayer()) return;
 
         Player currentPlayer = queue.currentPlayer();
-        Game game = ctx.getGame();
-        Round round = game.getCurrentRound();
+        Round round = ctx.getGame().getCurrentRound();
 
         if (!currentPlayer.getNickname().equals(playerNickname)) {
             throw new IllegalStateException("It is not " + playerNickname + "'s turn");
@@ -178,13 +158,8 @@ public class ActionResolutionState extends AbstractGameState {
                     ? round.getUpperRowTribute()
                     : round.getLowerRowTribute();
 
-            CharacterCard card = findCharacterCard(row, pickCard.getCardId());
-            if (card == null)
-                throw new IllegalArgumentException("Character card not found: " + pickCard.getCardId());
-
-            game.takeCharacterCard(currentPlayer, row, card);
-            ctx.notifyListeners(l -> l.onCharacterCardTaken(
-                    playerNickname, pickCard.getCardId(), pickCard.isFromUpperRow()));
+            CardAcquisitionService.takeCharacter(
+                    ctx, currentPlayer, row, pickCard.getCardId(), pickCard.isFromUpperRow());
             getRegularPickBudget().consume(pickCard.isFromUpperRow());
 
         } else if (action instanceof PickBuildingAction pickBuilding) {
@@ -202,16 +177,8 @@ public class ActionResolutionState extends AbstractGameState {
                     ? round.getUpperRowBuildings()
                     : round.getLowerRowBuildings();
 
-            BuildingCard card = findBuildingCard(row, pickBuilding.getCardId());
-            if (card == null)
-                throw new IllegalArgumentException("Building not found: " + pickBuilding.getCardId());
-
-            if (!game.canAffordBuilding(currentPlayer, card))
-                throw new IllegalStateException("You do not have enough food to buy this building");
-
-            game.takeBuildingCard(currentPlayer, row, card);
-            ctx.notifyListeners(l -> l.onBuildingCardTaken(
-                    playerNickname, pickBuilding.getCardId(), pickBuilding.isFromUpperRow()));
+            CardAcquisitionService.takeBuilding(
+                    ctx, currentPlayer, row, pickBuilding.getCardId(), pickBuilding.isFromUpperRow());
             getRegularPickBudget().consume(pickBuilding.isFromUpperRow());
 
         } else {
@@ -232,8 +199,7 @@ public class ActionResolutionState extends AbstractGameState {
     private void handleExtraPickAction(GameController ctx, String playerNickname, GameAction action) {
         ExtraPickQueue queue = getExtraPickQueue();
         Player currentPlayer = queue.currentPlayer();
-        Game game = ctx.getGame();
-        Round round = game.getCurrentRound();
+        Round round = ctx.getGame().getCurrentRound();
 
         if (!currentPlayer.getNickname().equals(playerNickname)) {
             throw new IllegalStateException("It is not " + playerNickname + "'s turn");
@@ -246,26 +212,13 @@ public class ActionResolutionState extends AbstractGameState {
             if (!pickCard.isFromUpperRow())
                 throw new IllegalStateException("The extra card must be taken from the upper row");
 
-            CharacterCard card = findCharacterCard(upperTribute, pickCard.getCardId());
-            if (card == null)
-                throw new IllegalArgumentException("Character card not found: " + pickCard.getCardId());
-
-            game.takeCharacterCard(currentPlayer, upperTribute, card);
-            ctx.notifyListeners(l -> l.onCharacterCardTaken(playerNickname, pickCard.getCardId(), true));
+            CardAcquisitionService.takeCharacter(ctx, currentPlayer, upperTribute, pickCard.getCardId(), true);
 
         } else if (action instanceof PickBuildingAction pickBuilding) {
             if (!pickBuilding.isFromUpperRow())
                 throw new IllegalStateException("The extra building must be taken from the upper row");
 
-            BuildingCard card = findBuildingCard(upperBuildings, pickBuilding.getCardId());
-            if (card == null)
-                throw new IllegalArgumentException("Building not found: " + pickBuilding.getCardId());
-
-            if (!game.canAffordBuilding(currentPlayer, card))
-                throw new IllegalStateException("You do not have enough food to buy this building");
-
-            game.takeBuildingCard(currentPlayer, upperBuildings, card);
-            ctx.notifyListeners(l -> l.onBuildingCardTaken(playerNickname, pickBuilding.getCardId(), true));
+            CardAcquisitionService.takeBuilding(ctx, currentPlayer, upperBuildings, pickBuilding.getCardId(), true);
 
         } else {
             rejectAction(action);
@@ -343,13 +296,12 @@ public class ActionResolutionState extends AbstractGameState {
     }
 
     private void autoCompleteFromCurrentIndex(GameController ctx) {
-        Game game = ctx.getGame();
-        Round round = game.getCurrentRound();
+        Round round = ctx.getGame().getCurrentRound();
         ActionTurnQueue queue = getActionTurnQueue();
 
         if (queue.hasCurrentPlayer()) {
             Player player = queue.currentPlayer();
-            autoPickForPlayer(ctx, game, round, player,
+            autoPickForPlayer(ctx, round, player,
                     getRegularPickBudget().upperPicks(), getRegularPickBudget().lowerPicks());
             round.placeTotemOrderForPlayer(player);
             queue.advance();
@@ -359,28 +311,10 @@ public class ActionResolutionState extends AbstractGameState {
             Player player = queue.currentPlayer();
             OfferTile tile = queue.currentTile();
 
-            int upperPicks = 0;
-            int lowerPicks = 0;
+            RowPickBudget tileBudget = OfferTileSlotResolver.resolve(ctx, player, tile);
+            tileBudget.skipUnavailableRows(round);
 
-            for (ActionSlot slot : tile.getSlots()) {
-                if (slot.getEffect() instanceof FoodSlot) {
-                    int amount = slot.getAmount();
-                    player.addFood(amount);
-                    final Player fp = player;
-                    ctx.notifyListeners(l -> l.onFoodChanged(fp.getNickname(), fp.getFood(), amount));
-                } else if (slot.getEffect() instanceof UpperRowSlot) {
-                    upperPicks += slot.getAmount();
-                } else if (slot.getEffect() instanceof LowerRowSlot) {
-                    lowerPicks += slot.getAmount();
-                }
-            }
-
-            boolean upperEmpty = round.getUpperRowTribute().isEmpty() && round.getUpperRowBuildings().isEmpty();
-            boolean lowerEmpty = round.getLowerRowTribute().isEmpty() && round.getLowerRowBuildings().isEmpty();
-            if (upperEmpty) upperPicks = 0;
-            if (lowerEmpty) lowerPicks = 0;
-
-            autoPickForPlayer(ctx, game, round, player, upperPicks, lowerPicks);
+            autoPickForPlayer(ctx, round, player, tileBudget.upperPicks(), tileBudget.lowerPicks());
             round.placeTotemOrderForPlayer(player);
             queue.advance();
         }
@@ -388,43 +322,21 @@ public class ActionResolutionState extends AbstractGameState {
         startExtraPickPhase(ctx);
     }
 
-    private void autoPickForPlayer(GameController ctx, Game game, Round round,
+    private void autoPickForPlayer(GameController ctx, Round round,
                                    Player player, int upperPicks, int lowerPicks) {
         while (upperPicks > 0) {
-            if (!round.getUpperRowTribute().isEmpty()) {
-                CharacterCard card = round.getUpperRowTribute().get(0);
-                game.takeCharacterCard(player, round.getUpperRowTribute(), card);
-                String cardId = String.valueOf(card.getId());
-                final Player fp = player;
-                ctx.notifyListeners(l -> l.onCharacterCardTaken(fp.getNickname(), cardId, true));
-            } else if (!round.getUpperRowBuildings().isEmpty()) {
-                BuildingCard card = round.getUpperRowBuildings().get(0);
-                if (!game.canAffordBuilding(player, card)) break;
-                game.takeBuildingCard(player, round.getUpperRowBuildings(), card);
-                String cardId = String.valueOf(card.getId());
-                final Player fp = player;
-                ctx.notifyListeners(l -> l.onBuildingCardTaken(fp.getNickname(), cardId, true));
-            } else {
+            if (!CardAcquisitionService.takeFirstCharacter(ctx, player, round.getUpperRowTribute(), true)
+                    && !CardAcquisitionService.takeFirstAffordableBuilding(
+                    ctx, player, round.getUpperRowBuildings(), true)) {
                 break;
             }
             upperPicks--;
         }
 
         while (lowerPicks > 0) {
-            if (!round.getLowerRowTribute().isEmpty()) {
-                CharacterCard card = round.getLowerRowTribute().get(0);
-                game.takeCharacterCard(player, round.getLowerRowTribute(), card);
-                String cardId = String.valueOf(card.getId());
-                final Player fp = player;
-                ctx.notifyListeners(l -> l.onCharacterCardTaken(fp.getNickname(), cardId, false));
-            } else if (!round.getLowerRowBuildings().isEmpty()) {
-                BuildingCard card = round.getLowerRowBuildings().get(0);
-                if (!game.canAffordBuilding(player, card)) break;
-                game.takeBuildingCard(player, round.getLowerRowBuildings(), card);
-                String cardId = String.valueOf(card.getId());
-                final Player fp = player;
-                ctx.notifyListeners(l -> l.onBuildingCardTaken(fp.getNickname(), cardId, false));
-            } else {
+            if (!CardAcquisitionService.takeFirstCharacter(ctx, player, round.getLowerRowTribute(), false)
+                    && !CardAcquisitionService.takeFirstAffordableBuilding(
+                    ctx, player, round.getLowerRowBuildings(), false)) {
                 break;
             }
             lowerPicks--;
@@ -432,8 +344,7 @@ public class ActionResolutionState extends AbstractGameState {
     }
 
     private void autoCompleteExtraPickPhase(GameController ctx) {
-        Game game = ctx.getGame();
-        Round round = game.getCurrentRound();
+        Round round = ctx.getGame().getCurrentRound();
 
         ExtraPickQueue queue = getExtraPickQueue();
         while (queue.isActive()) {
@@ -441,20 +352,9 @@ public class ActionResolutionState extends AbstractGameState {
             int picks = queue.remainingPicks();
 
             while (picks > 0) {
-                if (!round.getUpperRowTribute().isEmpty()) {
-                    CharacterCard card = round.getUpperRowTribute().get(0);
-                    game.takeCharacterCard(player, round.getUpperRowTribute(), card);
-                    String cardId = String.valueOf(card.getId());
-                    final Player fp = player;
-                    ctx.notifyListeners(l -> l.onCharacterCardTaken(fp.getNickname(), cardId, true));
-                } else if (!round.getUpperRowBuildings().isEmpty()) {
-                    BuildingCard card = round.getUpperRowBuildings().get(0);
-                    if (!game.canAffordBuilding(player, card)) break;
-                    game.takeBuildingCard(player, round.getUpperRowBuildings(), card);
-                    String cardId = String.valueOf(card.getId());
-                    final Player fp = player;
-                    ctx.notifyListeners(l -> l.onBuildingCardTaken(fp.getNickname(), cardId, true));
-                } else {
+                if (!CardAcquisitionService.takeFirstCharacter(ctx, player, round.getUpperRowTribute(), true)
+                        && !CardAcquisitionService.takeFirstAffordableBuilding(
+                        ctx, player, round.getUpperRowBuildings(), true)) {
                     break;
                 }
                 picks--;
@@ -477,20 +377,6 @@ public class ActionResolutionState extends AbstractGameState {
                 return 0;
             }
         });
-    }
-
-    private CharacterCard findCharacterCard(List<CharacterCard> row, String cardId) {
-        for (CharacterCard card : row) {
-            if (String.valueOf(card.getId()).equals(cardId)) return card;
-        }
-        return null;
-    }
-
-    private BuildingCard findBuildingCard(List<BuildingCard> row, String cardId) {
-        for (BuildingCard card : row) {
-            if (String.valueOf(card.getId()).equals(cardId)) return card;
-        }
-        return null;
     }
 
     private RowPickBudget getRegularPickBudget() {
