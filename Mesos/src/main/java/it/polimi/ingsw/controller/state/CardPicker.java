@@ -7,9 +7,9 @@ import it.polimi.ingsw.model.card.CharacterCard;
 
 import java.util.List;
 
-final class CardAcquisitionService {
+final class CardPicker {
 
-    private CardAcquisitionService() {
+    private CardPicker() {
     }
 
     static void takeCharacter(GameController ctx, Player player, List<CharacterCard> row,

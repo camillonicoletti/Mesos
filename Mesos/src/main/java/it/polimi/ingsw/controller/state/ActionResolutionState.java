@@ -158,7 +158,7 @@ public class ActionResolutionState extends AbstractGameState {
                     ? round.getUpperRowTribute()
                     : round.getLowerRowTribute();
 
-            CardAcquisitionService.takeCharacter(
+            CardPicker.takeCharacter(
                     ctx, currentPlayer, row, pickCard.getCardId(), pickCard.isFromUpperRow());
             getRegularPickBudget().consume(pickCard.isFromUpperRow());
 
@@ -177,7 +177,7 @@ public class ActionResolutionState extends AbstractGameState {
                     ? round.getUpperRowBuildings()
                     : round.getLowerRowBuildings();
 
-            CardAcquisitionService.takeBuilding(
+            CardPicker.takeBuilding(
                     ctx, currentPlayer, row, pickBuilding.getCardId(), pickBuilding.isFromUpperRow());
             getRegularPickBudget().consume(pickBuilding.isFromUpperRow());
 
@@ -212,13 +212,13 @@ public class ActionResolutionState extends AbstractGameState {
             if (!pickCard.isFromUpperRow())
                 throw new IllegalStateException("The extra card must be taken from the upper row");
 
-            CardAcquisitionService.takeCharacter(ctx, currentPlayer, upperTribute, pickCard.getCardId(), true);
+            CardPicker.takeCharacter(ctx, currentPlayer, upperTribute, pickCard.getCardId(), true);
 
         } else if (action instanceof PickBuildingAction pickBuilding) {
             if (!pickBuilding.isFromUpperRow())
                 throw new IllegalStateException("The extra building must be taken from the upper row");
 
-            CardAcquisitionService.takeBuilding(ctx, currentPlayer, upperBuildings, pickBuilding.getCardId(), true);
+            CardPicker.takeBuilding(ctx, currentPlayer, upperBuildings, pickBuilding.getCardId(), true);
 
         } else {
             rejectAction(action);
@@ -325,8 +325,8 @@ public class ActionResolutionState extends AbstractGameState {
     private void autoPickForPlayer(GameController ctx, Round round,
                                    Player player, int upperPicks, int lowerPicks) {
         while (upperPicks > 0) {
-            if (!CardAcquisitionService.takeFirstCharacter(ctx, player, round.getUpperRowTribute(), true)
-                    && !CardAcquisitionService.takeFirstAffordableBuilding(
+            if (!CardPicker.takeFirstCharacter(ctx, player, round.getUpperRowTribute(), true)
+                    && !CardPicker.takeFirstAffordableBuilding(
                     ctx, player, round.getUpperRowBuildings(), true)) {
                 break;
             }
@@ -334,8 +334,8 @@ public class ActionResolutionState extends AbstractGameState {
         }
 
         while (lowerPicks > 0) {
-            if (!CardAcquisitionService.takeFirstCharacter(ctx, player, round.getLowerRowTribute(), false)
-                    && !CardAcquisitionService.takeFirstAffordableBuilding(
+            if (!CardPicker.takeFirstCharacter(ctx, player, round.getLowerRowTribute(), false)
+                    && !CardPicker.takeFirstAffordableBuilding(
                     ctx, player, round.getLowerRowBuildings(), false)) {
                 break;
             }
@@ -352,8 +352,8 @@ public class ActionResolutionState extends AbstractGameState {
             int picks = queue.remainingPicks();
 
             while (picks > 0) {
-                if (!CardAcquisitionService.takeFirstCharacter(ctx, player, round.getUpperRowTribute(), true)
-                        && !CardAcquisitionService.takeFirstAffordableBuilding(
+                if (!CardPicker.takeFirstCharacter(ctx, player, round.getUpperRowTribute(), true)
+                        && !CardPicker.takeFirstAffordableBuilding(
                         ctx, player, round.getUpperRowBuildings(), true)) {
                     break;
                 }

@@ -275,10 +275,10 @@ are localized in one class instead of being duplicated in normal resolution and
 debug autocomplete. If the project later introduces a proper slot-effect
 visitor, this resolver becomes the single place to replace.
 
-## Card acquisition service
+## Card picker
 
 `ActionResolutionState` no longer owns the low-level mechanics for taking a
-card from a row. That work now lives in `CardAcquisitionService`.
+card from a row. That work now lives in `CardPicker`.
 
 The state still decides whether an action is legal in the current phase:
 
@@ -286,7 +286,7 @@ The state still decides whether an action is legal in the current phase:
 - buildings can be picked only after character cards in the same row are gone;
 - extra picks must come from the upper row.
 
-`CardAcquisitionService` owns the repeated mechanics:
+`CardPicker` owns the repeated mechanics:
 
 - find a character/building by id inside the chosen row;
 - check building affordability;
@@ -296,5 +296,4 @@ The state still decides whether an action is legal in the current phase:
   first affordable building.
 
 This keeps the phase rules in the state while removing duplicated model and
-listener plumbing. It is a small service-style extraction, not a new domain
-rule owner.
+listener plumbing. It is a small helper, not a new domain rule owner.
