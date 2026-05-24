@@ -43,6 +43,7 @@ public class ReadyCheckState extends AbstractGameState {
 
         ctx.markPlayerNotReady(playerNickname);
         ctx.removePlayerFromLobby(playerNickname);
+        // Return to the lobby so the vacated slot can be filled by another player.
         ctx.changeState(new LobbyState());
     }
 
@@ -78,6 +79,7 @@ public class ReadyCheckState extends AbstractGameState {
         ctx.resetReadyPlayers();
         ctx.notifyListeners(l -> l.onPlayersCountSet(action.getPlayersCount()));
 
+        // If the new target count is larger than the current lobby size, more players must join.
         if (!ctx.isLobbyFull()) {
             ctx.changeState(new LobbyState());
         }

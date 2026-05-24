@@ -24,9 +24,6 @@ public class Player implements Serializable {
         this.prestigePoints = 0;
         this.tribe = new Tribe();
         this.totem = totem;
-
-        // TODO: nickname uniqueness must be checked by the server/lobby
-        // TODO: initial food assignment belongs to game setup, not to Player
     }
     public void setGame(Game game) {
         this.game = game;
@@ -127,7 +124,7 @@ public class Player implements Serializable {
     public void addCharacterCard(CharacterCard card) {
         tribe.addCharacterCard(card);
 
-        // trigger building effects that activate when a character card is added
+        // Building effects that depend on tribe composition (e.g. FullSetFood) react here.
         for (BuildingCard building : tribe.getBuildingCards()) {
             applyCharacterAddedEffect(building);
         }

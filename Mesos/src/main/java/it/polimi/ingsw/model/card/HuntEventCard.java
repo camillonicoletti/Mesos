@@ -36,7 +36,7 @@ public class HuntEventCard extends EventCard {
             player.addFood(hunters * foodPerHunter);
             player.addPrestigePoints(hunters * ppPerHunter);
 
-            //building effect
+            // Apply building bonuses triggered by the Hunt event.
             for (BuildingCard building : player.getTribe().getBuildingCards()) {
                 applyHuntEffect(player, building);
             }

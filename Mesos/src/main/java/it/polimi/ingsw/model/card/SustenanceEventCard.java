@@ -38,7 +38,7 @@ public class SustenanceEventCard extends EventCard {
 
             int foodDiscount = gatherers * FOOD_DISCOUNT_PER_GATHERER;
 
-            //building effect
+            // Buildings with SustenanceFoodDiscountEffect reduce the food required.
             for (BuildingCard building : player.getTribe().getBuildingCards()) {
                 foodDiscount += sustenanceDiscountFrom(player, building);
             }

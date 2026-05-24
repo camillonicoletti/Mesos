@@ -25,6 +25,7 @@ public class EndRoundState extends AbstractGameState {
             ctx.changeState(new EndGameState());
         } else {
             int finishedRound = round.getNumber();
+            // Order matters: discard lower → shift upper to lower → refill upper → check era transition.
             round.discardLowerRow();
             round.shiftUpperToLowerRow();
             round.refillUpperRow();
@@ -34,6 +35,7 @@ public class EndRoundState extends AbstractGameState {
             ctx.notifyListeners(l -> l.onRoundEnded(finishedRound));
             ctx.notifyListeners(GameListener::onGameSnapshotChanged);
 
+            // Give clients time to display the end-of-round screen before transitioning.
             try {
                 Thread.sleep(END_ROUND_DISPLAY_MILLIS);
             } catch (InterruptedException e) {

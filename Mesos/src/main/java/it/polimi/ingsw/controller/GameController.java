@@ -103,6 +103,7 @@ public class GameController implements Serializable {
         if (knownPlayer) {
             notifyListeners(l -> l.onPlayerDisconnected(normalizedNickname));
         }
+        // Recompute after marking the player disconnected so isSuspended() reflects the new connected count.
         updateSuspensionStatus();
         if (!wasSuspended && isSuspended()) {
             enterSuspendedState();
@@ -124,6 +125,7 @@ public class GameController implements Serializable {
         currentState.onPlayerReconnected(this, normalizedNickname);
         notifyListeners(l -> l.onPlayerReconnected(normalizedNickname));
         updateSuspensionStatus();
+        // If reconnection brings the connected count back above threshold, resume.
         if (wasSuspended && !isSuspended()) {
             resumeSuspendedState();
             notifyListeners(GameListener::onGameResumed);
@@ -152,6 +154,7 @@ public class GameController implements Serializable {
         try {
             currentState.onEnter(this);
         } catch (RuntimeException | Error exception) {
+            // onEnter failed; roll back to the previous state to keep the game consistent.
             currentState = previousState;
             try {
                 previousState.onEnter(this);
@@ -433,6 +436,7 @@ public class GameController implements Serializable {
             return;
         }
 
+        // Bypass changeState() to preserve the interrupted state's progress — onExit() must not be called.
         currentState = suspendedState;
         currentState.onEnter(this);
         notifyListeners(l -> l.onStateChanged(currentState));
@@ -501,6 +505,7 @@ public class GameController implements Serializable {
     @Serial
     private void readObject(ObjectInputStream in) throws IOException,
             ClassNotFoundException {
+        // Transient fields are not serialized; rebuild them from scratch on deserialization.
         in.defaultReadObject();
         listeners = new ArrayList<>();
         persistenceService = new GamePersistenceService();

@@ -64,8 +64,8 @@ public class LobbyState extends AbstractGameState {
 
         Player player = new Player(playerNickname, action.getTotem());
         ctx.addLobbyPlayer(player);
-        // Notify Listener
         ctx.notifyListeners(l -> l.onPlayerJoined(playerNickname));
+        // Auto-advance to ready check as soon as the lobby reaches the chosen player count.
         if (ctx.hasChosenPlayersCount() && ctx.isLobbyFull()) {
             ctx.changeState(new ReadyCheckState());
         }
@@ -87,7 +87,6 @@ public class LobbyState extends AbstractGameState {
         }
 
         ctx.setChosenPlayersCount(action.getPlayersCount());
-        // listener
         ctx.notifyListeners(l -> l.onPlayersCountSet(action.getPlayersCount()));
 
         if (ctx.isLobbyFull()) {

@@ -29,11 +29,12 @@ public class EventResolutionState extends AbstractGameState {
     @Override
     public void onEnter(GameController ctx) {
         Round round = ctx.getGame().getCurrentRound();
+        // Upper-row events are only resolved on the last round of the game.
         boolean includeUpperRow = ctx.getGame().isLastRound();
         List<EventCard> events = round.getOrderedEventsForResolution(includeUpperRow);
 
         for (EventCard event : events) {
-            // Capture food/pp BEFORE resolving
+            // Capture values before resolving to compute per-player deltas for the event notification.
             Map<String, int[]> before = new HashMap<>();
             for (Player p : ctx.getGame().getPlayers()) {
                 before.put(p.getNickname(), new int[]{ p.getFood(), p.getPrestigePoints() });
@@ -89,6 +90,7 @@ public class EventResolutionState extends AbstractGameState {
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     private static void sleep() {
+        // Pause between events so clients have time to display each result before the next one fires.
         try {
             Thread.sleep(EVENT_DISPLAY_MS);
         } catch (InterruptedException e) {

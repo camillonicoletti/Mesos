@@ -49,7 +49,7 @@ public class CavePaintingsEventCard extends EventCard {
                 player.addPrestigePoints(artists * ppPerArtist);
             }
 
-            //building effect
+            // Apply building bonuses triggered by the Cave Paintings event.
             for (BuildingCard building : player.getTribe().getBuildingCards()) {
                 applyCavePaintingsEffect(player, building);
             }

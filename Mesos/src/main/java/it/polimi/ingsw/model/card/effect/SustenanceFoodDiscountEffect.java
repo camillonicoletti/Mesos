@@ -17,8 +17,7 @@ public class SustenanceFoodDiscountEffect implements Effect{
 
     @Override
     public void apply(Player player) {
-        // Managed in SustenanceEventCard by adding sum of targetType
-        // to foodDiscount
+        // Passive: apply() is a no-op; SustenanceEventCard reads getTargetType() to compute the food discount.
     }
 
     @Override

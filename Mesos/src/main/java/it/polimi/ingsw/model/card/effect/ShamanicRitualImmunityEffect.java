@@ -7,8 +7,7 @@ public class ShamanicRitualImmunityEffect implements Effect{
     @Override
     public void apply(Player player)
     {
-        // Passive effect, managed in ShamanicRitual
-        // by skipping points removal
+        // Passive: apply() is a no-op; ShamanicRitualEventCard skips PP removal for immune players.
     }
 
     @Override

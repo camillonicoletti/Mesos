@@ -148,6 +148,7 @@ public class ClientModel {
         turnOrderPositions   = new HashMap<>(snap.getTurnOrderPositions());
         ensureTurnOrderPositions();
         disconnectedPlayers  = new HashSet<>(snap.getDisconnectedPlayers());
+        // On snapshot, treat all players as already resolved to avoid showing stale pending indicators.
         if ("ActionResolutionState".equals(gameState)) {
             actionResolvedPlayers = new ArrayList<>(turnOrder);
         }
@@ -165,11 +166,13 @@ public class ClientModel {
 
     public void applyStateChanged(StateChangedMessage m) {
         gameState = m.getStateName();
+        // Clear the current player when the new state does not actively manage turns.
         if (!"ActionResolutionState".equals(gameState)
                 && !"TotemPlacementState".equals(gameState)) {
             currentActionPlayer = null;
             clearPickBudget();
         }
+        // Reset phase-specific progress when entering a new action or placement phase.
         if ("ActionResolutionState".equals(gameState) || "TotemPlacementState".equals(gameState)) {
             actionResolvedPlayers = new ArrayList<>();
             clearPickBudget();
@@ -409,6 +412,7 @@ public class ClientModel {
         }
 
         int remaining = upper ? remainingUpperPicks : remainingLowerPicks;
+        // Prefer server-provided pick budget; fall back to tile-based inference when it is unavailable.
         if (remaining >= 0) {
             return remaining > 0;
         }
@@ -469,6 +473,7 @@ public class ClientModel {
             return null;
         }
 
+        // If the server has not sent a current player, infer the next placement player from turn order.
         Set<String> playersWhoAlreadyPlaced = new HashSet<>(totemOnTiles.values());
         for (String nickname : turnOrder) {
             if (!playersWhoAlreadyPlaced.contains(nickname)

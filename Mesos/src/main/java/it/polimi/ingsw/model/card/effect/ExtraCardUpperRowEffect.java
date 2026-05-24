@@ -6,7 +6,7 @@ public class ExtraCardUpperRowEffect implements Effect{
     private static final long serialVersionUID = 1L;
     @Override
     public void apply(Player player){
-        // Managed at the end of round in Game
+        // Passive: apply() is a no-op; the extra pick is granted by ActionResolutionState.startExtraPickPhase().
     }
 
     @Override

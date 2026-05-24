@@ -47,6 +47,7 @@ public class Game implements Serializable {
     private boolean finalScoresCalculated = false;
     private boolean gameEnded = false;
 
+    // Building counts per era and player count follow the rulebook setup table.
     private int getBuildingCountForEra(Era era) {
         int playersCount = players.size();
 
@@ -143,6 +144,7 @@ public class Game implements Serializable {
     }
 
     private int getInitialFoodForPosition(int positionIndex) {
+        // Later turn-order positions receive more starting food as compensation.
         return switch (positionIndex) {
             case 0 -> 2;
             case 1, 2 -> 3;
@@ -174,6 +176,7 @@ public class Game implements Serializable {
             return;
         }
 
+        // At the II→III transition, lower-row buildings are discarded instead of carried over.
         if (currentEra == Era.II) {
             currentRound.discardLowerBuildings();
         }
@@ -235,6 +238,7 @@ public class Game implements Serializable {
     }
 
     public void calculateFinalScores() {
+        // Prevent final scoring from being applied more than once.
         if (finalScoresCalculated) {
             return;
         }
@@ -341,6 +345,7 @@ public class Game implements Serializable {
         card.accept(new CardVisitor<Void>() {
             @Override public Void visitHunter(HunterCard hunter) {
                 if (hunter.hasFoodIcon()) {
+                    // The card is already in the tribe here, so the count includes the newly added Hunter.
                     int huntersInTribe = player.getTribe().countCharactersByType(HunterCard.class);
                     player.addFood(huntersInTribe);
                 }

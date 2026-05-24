@@ -10,8 +10,7 @@ public class Shaman3ExtraStarsEffect implements Effect {
 
     @Override
     public void apply(Player player) {
-        // Passive effect managed in ShamanicRitual
-        // by doing stars += effect.getExtraStars()
+        // Passive: apply() is a no-op; ShamanicRitualEventCard reads getExtraStars() directly.
     }
 
     @Override

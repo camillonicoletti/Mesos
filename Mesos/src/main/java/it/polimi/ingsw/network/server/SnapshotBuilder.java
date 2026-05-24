@@ -97,6 +97,7 @@ public final class SnapshotBuilder {
                 }
             }
         }
+        // Defensive fallback when no board totem data is available, keeping the snapshot valid.
         if (turnOrder.isEmpty() && totemOnTiles.isEmpty()) {
             int position = 1;
             for (Player p : game.getPlayers()) {

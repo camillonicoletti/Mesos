@@ -90,7 +90,7 @@ public class Tribe implements Serializable {
         return Collections.unmodifiableList(buildingCards);
     }
 
-    // Method used for FullSetFoodEffect and EndFullSetPPEffect
+    // Each full set consumes one card of every character type.
     public int countFullSets() {
         int[] counts = {
                 countCharactersByType(ArtistCard.class),
@@ -109,7 +109,7 @@ public class Tribe implements Serializable {
         return sets;
     }
 
-    // Method for ShamanicRitualEvent
+    // Sums star values from Shaman cards only; building bonuses are added by the caller.
     public int countShamanStars() {
         return sumValues(new CardVisitor<>() {
             @Override public Integer visitShaman(ShamanCard shaman) {
@@ -145,7 +145,7 @@ public class Tribe implements Serializable {
         return distinctIcons.size();
     }
 
-    // Method used for InventorPairFoodEffect
+    // Counts same-icon inventor pairs; each icon group contributes floor(count / 2) pairs.
     public int countInventorPairs() {
         Map<InventorIcons, Integer> iconCounts = new HashMap<>();
         CardVisitor<Void> collector = new CardVisitor<>() {
@@ -170,7 +170,7 @@ public class Tribe implements Serializable {
         return pairs;
     }
 
-    // Method used for Artist scoring (2 Artist cards = 1 pair → points)
+    // Two Artist cards form one pair; odd artists are ignored.
     public int countArtistPairs() {
         int artists = countCharactersByType(ArtistCard.class);
         return artists / 2;

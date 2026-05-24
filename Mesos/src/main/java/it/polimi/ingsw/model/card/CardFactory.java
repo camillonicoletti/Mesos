@@ -228,7 +228,6 @@ public class CardFactory {
         }
         return result;
     }
-    // Read Json as JsonArray
     private static JsonArray readJsonArray(String resourceName) {
         InputStream in = CardFactory.class.getClassLoader().getResourceAsStream(resourceName);
         if (in == null) {

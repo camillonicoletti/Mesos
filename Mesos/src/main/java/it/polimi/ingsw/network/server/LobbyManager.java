@@ -102,6 +102,7 @@ public class LobbyManager {
         gameController.changeState(new it.polimi.ingsw.controller.state.EndGameState());
     }
 
+    // Synchronization serializes game actions with connection and disconnection events.
     public synchronized void handleGameAction(String nickname, GameAction action) {
         try {
             gameController.onMessageReceived(nickname, action);

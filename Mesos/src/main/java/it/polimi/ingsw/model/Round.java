@@ -194,7 +194,7 @@ public class Round implements Serializable {
 
         targetSlot.getEffect().apply(player);
 
-        // building effect TotemSlotFoodBonusEffect
+        // TotemSlotFoodBonusEffect applies only on food-reward slots.
         if (targetSlot.getEffect() instanceof GainFoodSlotEffect) {
             for (BuildingCard building : player.getTribe().getBuildingCards()) {
                 applyTotemSlotFoodBonus(player, building);

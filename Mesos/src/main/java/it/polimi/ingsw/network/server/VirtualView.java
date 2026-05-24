@@ -33,7 +33,7 @@ public class VirtualView implements GameListener {
 
     @Override
     public void onPlayersCountSet(int count) {
-        // Same as above.
+        // Notification handled by LobbyManager through LobbyUpdateMessage; nothing is needed here.
     }
 
     @Override

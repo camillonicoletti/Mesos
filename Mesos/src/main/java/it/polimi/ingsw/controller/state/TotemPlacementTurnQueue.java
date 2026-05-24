@@ -29,6 +29,7 @@ final class TotemPlacementTurnQueue implements Serializable {
             }
         }
 
+        // Defensive fallback if the turn-order tile has no occupants or no totem matches; join order guarantees initialization completes.
         if (placementOrder.isEmpty()) {
             for (Player player : ctx.getGame().getPlayers()) {
                 placementOrder.add(player.getNickname());
@@ -62,6 +63,7 @@ final class TotemPlacementTurnQueue implements Serializable {
     }
 
     void advanceToNextAvailablePlayer(GameController ctx) {
+        // Skip players who are disconnected or have already placed their totem this round.
         while (currentTurnIndex < placementOrder.size()) {
             String nickname = placementOrder.get(currentTurnIndex);
             if (!ctx.isPlayerDisconnected(nickname) && !playersWhoPlaced.contains(nickname)) {

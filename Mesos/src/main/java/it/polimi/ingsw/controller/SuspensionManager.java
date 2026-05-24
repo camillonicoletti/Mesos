@@ -47,6 +47,7 @@ public class SuspensionManager implements Serializable {
             return;
         }
 
+        // Suspend when ≤1 player is connected: the game cannot continue with fewer than 2 active players.
         boolean shouldSuspend = connectedPlayersCount <= 1;
         if (!suspended && shouldSuspend) {
             suspensionStartedAtMillis = nowMillis;
@@ -120,6 +121,7 @@ public class SuspensionManager implements Serializable {
                 .filter(player -> player.getNickname().equals(forcedWinnerNickname))
                 .findFirst()
                 .orElse(null);
+        // Clear so the forced winner can only be consumed once.
         forcedWinnerNickname = null;
         return forcedWinner;
     }

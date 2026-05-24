@@ -6,8 +6,7 @@ public class ShamanicRitualDoublePPEffect implements Effect{
     private static final long serialVersionUID = 1L;
     @Override
     public void apply(Player player) {
-        // Passive effect managed in ShamanicRitual resolve
-        // by adding points twice
+        // Passive: apply() is a no-op; ShamanicRitualEventCard doubles the PP amount before awarding.
     }
 
     @Override

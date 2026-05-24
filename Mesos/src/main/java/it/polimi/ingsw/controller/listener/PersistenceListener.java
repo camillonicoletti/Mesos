@@ -119,7 +119,7 @@ public class PersistenceListener implements GameListener {
 
     @Override
     public void onPlayersCountSet(int count) {
-        // Same: a state transition will follow when the lobby is ready.
+        // Covered by the subsequent onStateChanged when the lobby fills to the chosen count.
     }
 
     @Override

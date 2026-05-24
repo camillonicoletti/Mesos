@@ -53,6 +53,7 @@ public class TurnOrderTile implements Serializable {
     }
 
     public void assignTurnOrder(Board board) {
+        // Earlier offer tiles map to earlier turn-order slots for the next round.
         reset();
 
         List<OfferTile> occupiedTiles = new ArrayList<>();
@@ -86,13 +87,13 @@ public class TurnOrderTile implements Serializable {
     }
 
     public void assignRandomTurnOrder(List<Totem> totems) {
+        // Used only at game start to create the first turn order before any round has been played.
         reset();
         List<Totem> shuffled = new ArrayList<>(totems);
         Collections.shuffle(shuffled);
         List<TurnSlot> sortedSlots = new ArrayList<>(slots);
         sortedSlots.sort(Comparator.comparingInt(TurnSlot::getPosition));
         for (int i = 0; i < shuffled.size(); i++) {
-            // assigns each totem to a position
             sortedSlots.get(i).placeTotem(shuffled.get(i));
         }
     }

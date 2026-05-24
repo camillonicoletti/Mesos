@@ -27,7 +27,7 @@ public class MessageDispatcher {
             } else if (msg instanceof GetLeaderboardMessage m) {
                 lobby.handleGetLeaderboard(conn, m);
             } else if (msg instanceof PongMessage) {
-                // heartbeat
+                // Pong keeps the connection alive; no game-state update needed.
             } else if (msg instanceof DisconnectMessage) {
                 lobby.handleDisconnect(conn.getNickname());
             } else if (msg instanceof ForceEndGameMessage) {

@@ -36,18 +36,15 @@ public class TotemPlacementState extends AbstractGameState {
             throw new IllegalStateException("It is not " + playerNickname + "'s turn");
         }
 
-        // checks that the player has not already placed
         if (turnQueue.hasPlaced(playerNickname)) {
             throw new IllegalStateException(playerNickname + " has already placed the totem");
         }
 
-        // finds the player in the model
         Player player = findPlayer(ctx, playerNickname);
         if (player == null) {
             throw new IllegalStateException("Player not found: " + playerNickname);
         }
 
-        // finds the chosen tile on the board
         OfferTile tile = findTile(ctx, placeTotem.getTileId());
         if (tile == null) {
             if (isKnownTileId(placeTotem.getTileId())) {
@@ -57,13 +54,11 @@ public class TotemPlacementState extends AbstractGameState {
             throw new IllegalArgumentException("Invalid tile: " + placeTotem.getTileId());
         }
 
-        // calls the model
         boolean placed = ctx.getGame().getCurrentRound().placeTotemOffer(player, tile);
         if (!placed) {
             throw new IllegalStateException("Tile " + placeTotem.getTileId() + " occupied or not available");
         }
 
-        // listener
         ctx.notifyListeners(l -> l.onTotemPlaced(playerNickname, placeTotem.getTileId()));
         turnQueue.markPlaced(playerNickname, ctx);
 
