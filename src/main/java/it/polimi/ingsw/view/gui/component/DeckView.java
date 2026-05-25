@@ -18,6 +18,7 @@ final class DeckView {
 
     private final ClientModel model;
     private final GuiAssetCatalog assetCatalog;
+    private StackPane cardBackNode;
 
     DeckView(ClientModel model, GuiAssetCatalog assetCatalog) {
         this.model = model;
@@ -34,12 +35,17 @@ final class DeckView {
         cardBack.getStyleClass().add("deck-placeholder");
         cardBack.setPrefSize(CARD_WIDTH, CARD_HEIGHT);
         addDeckBack(cardBack);
+        this.cardBackNode = cardBack;
 
         Label count = new Label(deckCountText());
         count.getStyleClass().add("deck-count");
 
         panel.getChildren().addAll(cardBack, count);
         return panel;
+    }
+
+    StackPane getCardBackNode() {
+        return cardBackNode;
     }
 
     private void addDeckBack(StackPane cardBack) {

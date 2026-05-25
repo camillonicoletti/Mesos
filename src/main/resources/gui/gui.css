@@ -71,6 +71,23 @@
     -fx-text-fill: #fff2cf;
 }
 
+.mesos-title-image {
+    -fx-effect: dropshadow(three-pass-box, rgba(255, 242, 190, .28), 18, .20, 0, 0),
+                dropshadow(three-pass-box, rgba(31, 12, 15, .70), 8, 0, 0, 2);
+}
+
+.login-title-logo {
+    -fx-opacity: .96;
+}
+
+.lobby-title-logo {
+    -fx-opacity: .97;
+}
+
+.game-title-logo {
+    -fx-opacity: .94;
+}
+
 .login-logo-holder {
     -fx-padding: 0 0 10px 0;
 }
@@ -122,6 +139,17 @@
     -fx-scale-x: 1.25;
     -fx-scale-y: 1.25;
     -fx-effect: dropshadow(three-pass-box, rgba(255, 242, 207, .70), 16, 0, 0, 0);
+}
+
+.login-full-message {
+    -fx-background-color: rgba(62, 22, 34, .58);
+    -fx-background-radius: 8px;
+    -fx-border-color: rgba(255, 226, 168, .38);
+    -fx-border-radius: 8px;
+    -fx-padding: 10px 12px;
+    -fx-text-fill: #fff2cf;
+    -fx-font-size: 13px;
+    -fx-font-weight: 800;
 }
 
 .login-random-totem {
@@ -298,13 +326,13 @@
 
 .lobby-player-card {
     -fx-background-color: transparent;
-    -fx-padding: 12px 18px;
-    -fx-min-width: 160px;
+    -fx-padding: 14px 22px;
+    -fx-min-width: 190px;
 }
 
 .lobby-player-name {
     -fx-text-fill: #fff2cf;
-    -fx-font-size: 17px;
+    -fx-font-size: 20px;
     -fx-font-weight: 900;
     -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .78), 5, 0, 0, 1);
 }
@@ -320,10 +348,10 @@
 }
 
 .lobby-totem-marker {
-    -fx-min-width: 28px;
-    -fx-min-height: 38px;
-    -fx-max-width: 28px;
-    -fx-max-height: 38px;
+    -fx-min-width: 36px;
+    -fx-min-height: 50px;
+    -fx-max-width: 36px;
+    -fx-max-height: 50px;
     -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .62), 5, 0, 0, 2);
 }
 
@@ -354,11 +382,33 @@
 
 .lobby-bottom {
     -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-effect: none;
 }
 
 .lobby-status,
 .lobby-controls {
     -fx-background-color: transparent;
+}
+
+.lobby-status {
+    -fx-background-color: rgba(255, 242, 207, .08);
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(255, 226, 168, .18);
+    -fx-border-radius: 999px;
+    -fx-border-width: 1px;
+    -fx-padding: 11px 18px;
+}
+
+.lobby-controls {
+    -fx-background-color: rgba(62, 22, 34, .36);
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(255, 226, 168, .18);
+    -fx-border-radius: 999px;
+    -fx-border-width: 1px;
+    -fx-padding: 10px 15px;
 }
 
 .lobby-status .label,
@@ -367,25 +417,30 @@
 }
 
 .player-count-selector {
-    -fx-padding: 0 4px;
+    -fx-background-color: rgba(255, 242, 207, .08);
+    -fx-background-radius: 18px;
+    -fx-border-color: rgba(255, 226, 168, .18);
+    -fx-border-radius: 18px;
+    -fx-border-width: 1px;
+    -fx-padding: 7px 10px;
 }
 
 .player-count-label {
     -fx-text-fill: #f0ce64;
-    -fx-font-size: 11px;
+    -fx-font-size: 12px;
     -fx-font-weight: 900;
 }
 
 .player-count-choice {
-    -fx-background-color: rgba(255, 242, 207, .16);
-    -fx-background-radius: 8px;
-    -fx-border-color: rgba(255, 242, 207, .28);
-    -fx-border-radius: 8px;
+    -fx-background-color: rgba(255, 242, 207, .13);
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(255, 242, 207, .25);
+    -fx-border-radius: 999px;
     -fx-text-fill: #fff2cf;
-    -fx-font-size: 15px;
+    -fx-font-size: 16px;
     -fx-font-weight: 900;
-    -fx-min-width: 38px;
-    -fx-min-height: 36px;
+    -fx-min-width: 40px;
+    -fx-min-height: 38px;
     -fx-cursor: hand;
     -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .45), 5, 0, 0, 2);
 }
@@ -408,11 +463,41 @@
 }
 
 .ready-toggle-on {
-    -fx-border-color: rgba(255, 207, 200, .35);
+    -fx-background-color: rgba(255, 242, 207, .14);
+    -fx-text-fill: #ffd5cc;
+    -fx-border-color: rgba(255, 207, 200, .36);
 }
 
 .ready-toggle-off {
-    -fx-border-color: rgba(143, 224, 216, .42);
+    -fx-background-color: rgba(47, 143, 132, .82);
+    -fx-text-fill: #fff7e8;
+    -fx-border-color: rgba(143, 224, 216, .46);
+}
+
+.lobby-action-button {
+    -fx-background-radius: 999px;
+    -fx-border-radius: 999px;
+    -fx-font-weight: 900;
+    -fx-padding: 8px 15px;
+}
+
+.lobby-action-button .font-icon {
+    -fx-icon-color: #fff2cf;
+}
+
+.lobby-action-button:hover {
+    -fx-background-color: rgba(255, 226, 168, .92);
+    -fx-text-fill: #3c1827;
+}
+
+.lobby-action-button:hover .font-icon {
+    -fx-icon-color: #3c1827;
+}
+
+.lobby-quit-button {
+    -fx-background-color: rgba(120, 36, 42, .50);
+    -fx-text-fill: #ffd5cc;
+    -fx-border-color: rgba(255, 160, 140, .30);
 }
 
 /* ── Board instruction banner ─────────────────────────────────────────────── */
@@ -572,6 +657,72 @@
 
 .secondary-button:hover {
     -fx-background-color: #fff1cf;
+}
+
+.game-rules-button {
+    -fx-background-color: rgba(62, 22, 34, .56);
+    -fx-text-fill: #fff2cf;
+    -fx-font-size: 12px;
+    -fx-font-weight: 900;
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(255, 226, 168, .45);
+    -fx-border-radius: 999px;
+    -fx-border-width: 1px;
+    -fx-padding: 7px 14px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, .42), 8, 0, 0, 2);
+}
+
+.game-rules-button .font-icon {
+    -fx-icon-color: #fff2cf;
+}
+
+.game-rules-button:hover {
+    -fx-background-color: rgba(255, 226, 168, .92);
+    -fx-text-fill: #3c1827;
+    -fx-border-color: rgba(255, 242, 207, .80);
+}
+
+.game-rules-button:hover .font-icon {
+    -fx-icon-color: #3c1827;
+}
+
+.lobby-controls .lobby-action-button {
+    -fx-background-radius: 999px;
+    -fx-border-radius: 999px;
+    -fx-font-size: 13px;
+    -fx-font-weight: 900;
+    -fx-padding: 10px 18px;
+}
+
+.lobby-controls .ready-toggle-on {
+    -fx-background-color: rgba(255, 242, 207, .14);
+    -fx-text-fill: #ffd5cc;
+    -fx-border-color: rgba(255, 207, 200, .36);
+}
+
+.lobby-controls .ready-toggle-off {
+    -fx-background-color: rgba(47, 143, 132, .82);
+    -fx-text-fill: #fff7e8;
+    -fx-border-color: rgba(143, 224, 216, .46);
+}
+
+.lobby-controls .lobby-quit-button {
+    -fx-background-color: rgba(120, 36, 42, .50);
+    -fx-text-fill: #ffd5cc;
+    -fx-border-color: rgba(255, 160, 140, .30);
+}
+
+.lobby-controls .lobby-action-button .font-icon {
+    -fx-icon-color: #fff2cf;
+}
+
+.lobby-controls .lobby-action-button:hover {
+    -fx-background-color: rgba(255, 226, 168, .92);
+    -fx-text-fill: #3c1827;
+}
+
+.lobby-controls .lobby-action-button:hover .font-icon {
+    -fx-icon-color: #3c1827;
 }
 
 /* ── Cards ────────────────────────────────────────────────────────────────── */
@@ -814,13 +965,13 @@
 }
 
 .tribe-stat-grid-compact .tribe-stat-cell {
-    -fx-min-width: 50px;
+    -fx-min-width: 44px;
     -fx-min-height: 174px;
-    -fx-padding: 6px 4px;
+    -fx-padding: 6px 3px;
 }
 
 .tribe-stat-grid-compact .tribe-stat-cell-wide {
-    -fx-min-width: 72px;
+    -fx-min-width: 62px;
 }
 
 .tribe-stat-gatherer {
@@ -938,13 +1089,13 @@
 
 .table-status-key {
     -fx-text-fill: #f0ce64;
-    -fx-font-size: 11px;
+    -fx-font-size: 12px;
     -fx-font-weight: 900;
 }
 
 .table-status-value {
     -fx-text-fill: #fff2cf;
-    -fx-font-size: 12px;
+    -fx-font-size: 14px;
     -fx-font-weight: 800;
     -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .65), 3, 0, 0, 1);
 }
@@ -953,6 +1104,43 @@
 
 .player-summary-strip {
     -fx-alignment: center;
+    -fx-spacing: 14px;
+}
+
+.player-summary-carousel {
+    -fx-alignment: center;
+    -fx-min-width: 1260px;
+    -fx-pref-width: 1260px;
+    -fx-max-width: 1260px;
+    -fx-padding: 0 8px;
+}
+
+.player-summary-carousel-button {
+    -fx-min-width: 34px;
+    -fx-pref-width: 34px;
+    -fx-max-width: 34px;
+    -fx-min-height: 34px;
+    -fx-pref-height: 34px;
+    -fx-max-height: 34px;
+    -fx-background-color: rgba(62, 22, 34, .58);
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(255, 226, 168, .46);
+    -fx-border-radius: 999px;
+    -fx-border-width: 1px;
+    -fx-text-fill: #fff2cf;
+    -fx-font-size: 18px;
+    -fx-font-weight: 900;
+    -fx-padding: 0;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, .38), 7, 0, 0, 2);
+}
+
+.player-summary-carousel-button:hover {
+    -fx-background-color: rgba(255, 226, 168, .92);
+    -fx-text-fill: #3c1827;
+}
+
+.player-summary-carousel-button:disabled {
+    -fx-opacity: .32;
 }
 
 .player-summary-rows {
@@ -970,8 +1158,8 @@
 }
 
 .player-summary-many {
-    -fx-min-width: 410px;
-    -fx-pref-width: 410px;
+    -fx-min-width: 352px;
+    -fx-pref-width: 352px;
 }
 
 .player-summary-me {

@@ -34,6 +34,8 @@ import java.util.function.IntConsumer;
 import java.util.stream.Collectors;
 
 final class PlayerDockView {
+    private static final int MAX_VISIBLE_SUMMARIES = 3;
+
     private static final String ICON_HUNTER = "assets/icons/summary/hunter.png";
     private static final String ICON_BUILDER = "assets/icons/summary/builder.png";
     private static final String ICON_BUILDER_DISCOUNT = "assets/icons/summary/builder_discount.png";
@@ -56,6 +58,7 @@ final class PlayerDockView {
     private final BiFunction<String, Boolean, Button> buttonFactory;
     private final BiConsumer<Node, Pos> showInlinePanel;
     private final Runnable hideInlinePanel;
+    private int summaryStartIndex;
 
     PlayerDockView(ClientController controller,
                    ClientModel model,
@@ -130,18 +133,76 @@ HBox statusRow = new HBox(14, status, spacer());
         rows.setAlignment(Pos.CENTER);
 
         List<PlayerView> players = new ArrayList<>(model.getPlayers().values());
-        int perRow = players.size() <= 3 ? Math.max(1, players.size()) : 3;
-        for (int start = 0; start < players.size(); start += perRow) {
-            HBox row = new HBox(9);
-            row.setAlignment(Pos.CENTER);
-            row.getStyleClass().add("player-summary-strip");
-            int end = Math.min(players.size(), start + perRow);
-            for (int index = start; index < end; index++) {
-                row.getChildren().add(playerSummary(players.get(index), players.size()));
+        if (players.size() <= MAX_VISIBLE_SUMMARIES) {
+            HBox row = playerSummaryStrip();
+            for (PlayerView player : players) {
+                row.getChildren().add(playerSummary(player, players.size()));
             }
             rows.getChildren().add(row);
+        } else {
+            rows.getChildren().add(playerSummaryCarousel(players));
         }
         return rows;
+    }
+
+    private Node playerSummaryCarousel(List<PlayerView> players) {
+        summaryStartIndex = clampSummaryStart(players);
+
+        HBox carousel = new HBox(18);
+        carousel.getStyleClass().add("player-summary-carousel");
+        carousel.setAlignment(Pos.CENTER);
+
+        Button previous = carouselButton("<");
+        Button next = carouselButton(">");
+        HBox visibleSummaries = playerSummaryStrip();
+        visibleSummaries.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(visibleSummaries, Priority.ALWAYS);
+
+        Runnable refreshVisibleSummaries = () -> {
+            visibleSummaries.getChildren().clear();
+            int end = Math.min(players.size(), summaryStartIndex + MAX_VISIBLE_SUMMARIES);
+            for (int index = summaryStartIndex; index < end; index++) {
+                visibleSummaries.getChildren().add(playerSummary(players.get(index), players.size()));
+            }
+            previous.setDisable(summaryStartIndex == 0);
+            next.setDisable(summaryStartIndex >= players.size() - MAX_VISIBLE_SUMMARIES);
+        };
+
+        previous.setOnAction(event -> {
+            summaryStartIndex = Math.max(0, summaryStartIndex - 1);
+            refreshVisibleSummaries.run();
+        });
+        next.setOnAction(event -> {
+            summaryStartIndex = Math.min(players.size() - MAX_VISIBLE_SUMMARIES, summaryStartIndex + 1);
+            refreshVisibleSummaries.run();
+        });
+
+        refreshVisibleSummaries.run();
+        carousel.getChildren().addAll(previous, visibleSummaries, next);
+        return carousel;
+    }
+
+    private HBox playerSummaryStrip() {
+        HBox row = new HBox(9);
+        row.setAlignment(Pos.CENTER);
+        row.getStyleClass().add("player-summary-strip");
+        return row;
+    }
+
+    private Button carouselButton(String text) {
+        Button button = new Button(text);
+        button.getStyleClass().add("player-summary-carousel-button");
+        button.setFocusTraversable(false);
+        GuiAnimations.addHoverScale(button);
+        return button;
+    }
+
+    private int clampSummaryStart(List<PlayerView> players) {
+        int maxStart = Math.max(0, players.size() - MAX_VISIBLE_SUMMARIES);
+        if (summaryStartIndex < 0) {
+            return 0;
+        }
+        return Math.min(summaryStartIndex, maxStart);
     }
 
     private Node playerSummary(PlayerView player, int playerCount) {

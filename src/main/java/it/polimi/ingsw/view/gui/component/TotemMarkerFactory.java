@@ -36,8 +36,8 @@ final class TotemMarkerFactory {
     }
 
     StackPane createLobbyMarker(TotemColor color) {
-        StackPane marker = baseMarker("lobby-totem-marker", null, 28, 38);
-        if (addTotemImage(marker, color, 38)) {
+        StackPane marker = baseMarker("lobby-totem-marker", null, 36, 50);
+        if (addTotemImage(marker, color, 50)) {
             return marker;
         }
 
