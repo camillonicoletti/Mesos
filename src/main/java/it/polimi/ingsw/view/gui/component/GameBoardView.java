@@ -7,6 +7,8 @@ import it.polimi.ingsw.network.client.PlayerView;
 import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
 import javafx.animation.FadeTransition;
 import javafx.animation.ParallelTransition;
+import javafx.animation.PauseTransition;
+import javafx.animation.SequentialTransition;
 import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -46,6 +48,8 @@ public final class GameBoardView {
     private HBox lowerMarketBand;
     private HBox playerDockSlot;
     private boolean fitBindingInstalled;
+    private int lastSeenRound = 0;
+    private boolean roundTransitionPlaying = false;
 
     public GameBoardView(ClientController controller, ClientModel model, GuiAssetCatalog assetCatalog) {
         this.model = model;
@@ -106,15 +110,94 @@ public final class GameBoardView {
 
         ensureBoardShell();
         instructionLabel.setText(actionInstruction());
-        refreshMarketBand(upperMarketBand,
-                cardMarketView.characterRow(true),
-                cardMarketView.buildingRow(true));
-        refreshCenterTrack();
-        refreshMarketBand(lowerMarketBand,
-                cardMarketView.characterRow(false),
-                cardMarketView.buildingRow(false));
-        playerDockSlot.getChildren().setAll(playerDockView.render());
-        Platform.runLater(this::updateBoardScale);
+
+        int currentRound = model.getLastFinishedRound();
+        boolean roundJustEnded = currentRound > 0 && currentRound > lastSeenRound;
+        lastSeenRound = currentRound;
+
+        if (roundJustEnded && !roundTransitionPlaying) {
+            refreshCenterTrack();
+            playerDockSlot.getChildren().setAll(playerDockView.render());
+            Platform.runLater(this::updateBoardScale);
+            playRoundEndAnimation(() -> {
+                refreshMarketBand(upperMarketBand,
+                        cardMarketView.characterRow(true),
+                        cardMarketView.buildingRow(true));
+                refreshMarketBand(lowerMarketBand,
+                        cardMarketView.characterRow(false),
+                        cardMarketView.buildingRow(false));
+            });
+        } else if (!roundTransitionPlaying) {
+            refreshMarketBand(upperMarketBand,
+                    cardMarketView.characterRow(true),
+                    cardMarketView.buildingRow(true));
+            refreshCenterTrack();
+            refreshMarketBand(lowerMarketBand,
+                    cardMarketView.characterRow(false),
+                    cardMarketView.buildingRow(false));
+            playerDockSlot.getChildren().setAll(playerDockView.render());
+            Platform.runLater(this::updateBoardScale);
+        }
+    }
+
+    private void playRoundEndAnimation(Runnable onDealNewCards) {
+        roundTransitionPlaying = true;
+        double sweepX = 900;
+        Duration exitDur = Duration.millis(300);
+        Duration pauseDur = Duration.millis(120);
+        Duration enterDur = Duration.millis(300);
+
+        // Exit: upper sweeps left immediately, lower follows with slight stagger
+        TranslateTransition exitUpper = new TranslateTransition(exitDur, upperMarketBand);
+        exitUpper.setToX(-sweepX);
+        FadeTransition fadeOutUpper = new FadeTransition(exitDur, upperMarketBand);
+        fadeOutUpper.setToValue(0);
+        ParallelTransition exitUpperAnim = new ParallelTransition(exitUpper, fadeOutUpper);
+
+        TranslateTransition exitLower = new TranslateTransition(exitDur, lowerMarketBand);
+        exitLower.setToX(-sweepX);
+        FadeTransition fadeOutLower = new FadeTransition(exitDur, lowerMarketBand);
+        fadeOutLower.setToValue(0);
+        ParallelTransition exitLowerAnim = new ParallelTransition(exitLower, fadeOutLower);
+        exitLowerAnim.setDelay(Duration.millis(80));
+
+        ParallelTransition exitAll = new ParallelTransition(exitUpperAnim, exitLowerAnim);
+
+        PauseTransition pause = new PauseTransition(pauseDur);
+
+        SequentialTransition sequence = new SequentialTransition(exitAll, pause);
+        sequence.setOnFinished(e -> {
+            // Deal new cards
+            onDealNewCards.run();
+
+            // Position off-screen to the right before entering
+            upperMarketBand.setTranslateX(sweepX);
+            lowerMarketBand.setTranslateX(sweepX);
+            upperMarketBand.setOpacity(0);
+            lowerMarketBand.setOpacity(0);
+
+            // Enter: upper slides in first, lower follows staggered
+            TranslateTransition enterUpper = new TranslateTransition(enterDur, upperMarketBand);
+            enterUpper.setToX(0);
+            FadeTransition fadeInUpper = new FadeTransition(enterDur, upperMarketBand);
+            fadeInUpper.setToValue(1);
+            ParallelTransition enterUpperAnim = new ParallelTransition(enterUpper, fadeInUpper);
+
+            TranslateTransition enterLower = new TranslateTransition(enterDur, lowerMarketBand);
+            enterLower.setToX(0);
+            FadeTransition fadeInLower = new FadeTransition(enterDur, lowerMarketBand);
+            fadeInLower.setToValue(1);
+            ParallelTransition enterLowerAnim = new ParallelTransition(enterLower, fadeInLower);
+            enterLowerAnim.setDelay(Duration.millis(80));
+
+            ParallelTransition enterAll = new ParallelTransition(enterUpperAnim, enterLowerAnim);
+            enterAll.setOnFinished(ev -> {
+                roundTransitionPlaying = false;
+                Platform.runLater(this::updateBoardScale);
+            });
+            enterAll.play();
+        });
+        sequence.play();
     }
 
     private void installBoardFitBinding() {

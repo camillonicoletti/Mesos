@@ -17,6 +17,8 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -25,10 +27,16 @@ import javafx.scene.layout.VBox;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignL;
 import javafx.util.Duration;
 
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
 public final class EndGameView {
+    private static final String PRESTIGE_BADGE_PATH = "gui/endgame_prestige_badge.png";
+    private static final String FOOD_BADGE_PATH = "gui/endgame_food_badge.png";
+    private static final double PRESTIGE_BADGE_SIZE = 48;
+    private static final double FOOD_BADGE_SIZE = 48;
+
     private final ClientController controller;
     private final ClientModel model;
     private final TotemMarkerFactory totemMarkers;
@@ -158,23 +166,82 @@ public final class EndGameView {
         nameCell.setMinWidth(260);
         nameCell.setPrefWidth(260);
 
-        Label ppLabel = new Label(score + " ★");
-        ppLabel.getStyleClass().add("endgame-stat");
-        ppLabel.setStyle("-fx-text-fill: " + hex + ";");
-        ppLabel.setMinWidth(120);
-        ppLabel.setAlignment(Pos.CENTER);
+        HBox prestigeCell = new HBox(prestigeBadge(score));
+        prestigeCell.getStyleClass().add("endgame-prestige-cell");
+        prestigeCell.setMinWidth(120);
+        prestigeCell.setPrefWidth(120);
+        prestigeCell.setAlignment(Pos.CENTER);
 
-        Label foodLabel = new Label(food + " 🍖");
-        foodLabel.getStyleClass().add("endgame-stat");
-        foodLabel.setMinWidth(120);
-        foodLabel.setAlignment(Pos.CENTER);
+        HBox foodCell = new HBox(foodBadge(food));
+        foodCell.getStyleClass().add("endgame-food-cell");
+        foodCell.setMinWidth(120);
+        foodCell.setPrefWidth(120);
+        foodCell.setAlignment(Pos.CENTER);
 
-        HBox row = new HBox(nameCell, ppLabel, foodLabel);
+        HBox row = new HBox(nameCell, prestigeCell, foodCell);
         row.getStyleClass().add("endgame-score-row");
         if (rank == 1) row.getStyleClass().add("endgame-score-row-first");
         row.setAlignment(Pos.CENTER_LEFT);
         row.setPadding(new Insets(10, 14, 10, 14));
         return row;
+    }
+
+    private Node prestigeBadge(int score) {
+        StackPane badge = new StackPane();
+        badge.getStyleClass().add("endgame-prestige-badge");
+        setFixedSize(badge, PRESTIGE_BADGE_SIZE, PRESTIGE_BADGE_SIZE);
+
+        try (InputStream stream = Thread.currentThread().getContextClassLoader()
+                .getResourceAsStream(PRESTIGE_BADGE_PATH)) {
+            if (stream != null) {
+                ImageView image = new ImageView(new Image(stream));
+                image.setPreserveRatio(true);
+                image.setFitWidth(PRESTIGE_BADGE_SIZE);
+                image.setFitHeight(PRESTIGE_BADGE_SIZE);
+                badge.getChildren().add(image);
+            } else {
+                badge.getStyleClass().add("endgame-prestige-fallback");
+            }
+        } catch (Exception ignored) {
+            badge.getStyleClass().add("endgame-prestige-fallback");
+        }
+
+        Label value = new Label(String.valueOf(score));
+        value.getStyleClass().add("endgame-prestige-value");
+        if (Math.abs(score) >= 100) {
+            value.getStyleClass().add("endgame-prestige-value-large");
+        }
+        badge.getChildren().add(value);
+        return badge;
+    }
+
+    private Node foodBadge(int food) {
+        StackPane badge = new StackPane();
+        badge.getStyleClass().add("endgame-food-badge");
+        setFixedSize(badge, FOOD_BADGE_SIZE, FOOD_BADGE_SIZE);
+
+        try (InputStream stream = Thread.currentThread().getContextClassLoader()
+                .getResourceAsStream(FOOD_BADGE_PATH)) {
+            if (stream != null) {
+                ImageView image = new ImageView(new Image(stream));
+                image.setPreserveRatio(true);
+                image.setFitWidth(FOOD_BADGE_SIZE);
+                image.setFitHeight(FOOD_BADGE_SIZE);
+                badge.getChildren().add(image);
+            } else {
+                badge.getStyleClass().add("endgame-food-fallback");
+            }
+        } catch (Exception ignored) {
+            badge.getStyleClass().add("endgame-food-fallback");
+        }
+
+        Label value = new Label(String.valueOf(food));
+        value.getStyleClass().add("endgame-food-value");
+        if (Math.abs(food) >= 100) {
+            value.getStyleClass().add("endgame-food-value-large");
+        }
+        badge.getChildren().add(value);
+        return badge;
     }
 
     private Label headerCell(String text, double width) {
@@ -245,5 +312,11 @@ public final class EndGameView {
         winnerScale.setToY(1);
 
         new ParallelTransition(fade, tableMove, winnerMove, winnerScale).play();
+    }
+
+    private void setFixedSize(Region region, double width, double height) {
+        region.setMinSize(width, height);
+        region.setPrefSize(width, height);
+        region.setMaxSize(width, height);
     }
 }

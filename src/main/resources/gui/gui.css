@@ -1389,6 +1389,60 @@
     -fx-font-weight: 900;
 }
 
+.endgame-prestige-cell {
+    -fx-alignment: center;
+}
+
+.endgame-prestige-badge {
+    -fx-alignment: center;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, .48), 5, 0, 0, 2);
+}
+
+.endgame-prestige-fallback {
+    -fx-background-color: rgba(229, 183, 47, .92);
+    -fx-background-radius: 999px;
+    -fx-border-color: #ff3da8;
+    -fx-border-radius: 999px;
+    -fx-border-width: 2px;
+}
+
+.endgame-prestige-value {
+    -fx-text-fill: #532618;
+    -fx-font-size: 20px;
+    -fx-font-weight: 900;
+    -fx-effect: dropshadow(three-pass-box, rgba(255, 241, 160, .50), 2, 0, 0, 1);
+}
+
+.endgame-prestige-value-large {
+    -fx-font-size: 16px;
+}
+
+.endgame-food-cell {
+    -fx-alignment: center;
+}
+
+.endgame-food-badge {
+    -fx-alignment: center;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, .48), 5, 0, 0, 2);
+}
+
+.endgame-food-fallback {
+    -fx-background-color: rgba(239, 151, 35, .92);
+    -fx-background-radius: 999px;
+}
+
+.endgame-food-value {
+    -fx-text-fill: #fff6de;
+    -fx-font-size: 20px;
+    -fx-font-weight: 900;
+    -fx-translate-y: 9px;
+    -fx-effect: dropshadow(three-pass-box, rgba(33, 19, 10, .95), 3, 0, 0, 2);
+}
+
+.endgame-food-value-large {
+    -fx-font-size: 16px;
+}
+
 .endgame-quit-button {
     -fx-text-fill: #fff2cf;
     -fx-background-color: rgba(255, 242, 207, .12);
