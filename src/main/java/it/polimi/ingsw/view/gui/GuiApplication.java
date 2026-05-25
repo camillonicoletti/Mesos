@@ -184,7 +184,7 @@ public final class GuiApplication extends Application {
             }
             case END_GAME -> {
                 if (endGameView == null) {
-                    endGameView = new EndGameView(controller, model);
+                    endGameView = new EndGameView(controller, model, assetCatalog);
                     endGameShell = endGameShell();
                     endGameShell.setCenter(endGameView.render());
                     Region overlay = new Region();

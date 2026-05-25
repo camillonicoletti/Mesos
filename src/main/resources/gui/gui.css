@@ -1305,11 +1305,38 @@
     -fx-background-color: rgba(10, 4, 8, .48);
 }
 
+.endgame-title {
+    -fx-font-family: "Noteworthy", "Avenir Next Condensed", "Copperplate", sans-serif;
+    -fx-font-size: 40px;
+    -fx-font-weight: normal;
+    -fx-text-fill: rgba(255, 226, 168, .88);
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, .80), 8, 0, 0, 2);
+    -fx-padding: 0 0 2px 0;
+}
+
 .endgame-winner-section {
+    -fx-font-family: "Noteworthy", "Avenir Next Condensed", "Copperplate", sans-serif;
     -fx-text-fill: rgba(255, 242, 207, .70);
-    -fx-font-size: 14px;
-    -fx-font-weight: 900;
-    -fx-padding: 0 0 4px 0;
+    -fx-font-size: 22px;
+    -fx-font-weight: normal;
+    -fx-padding: 0;
+}
+
+.endgame-winner-box {
+    -fx-padding: 18px 0 2px 0;
+}
+
+.endgame-winner-row {
+    -fx-padding: 2px 22px 4px 22px;
+}
+
+.endgame-winner-glow {
+    -fx-background-color: transparent;
+    -fx-effect: none;
+    -fx-min-width: 430px;
+    -fx-min-height: 108px;
+    -fx-max-width: 430px;
+    -fx-max-height: 108px;
 }
 
 .endgame-winner-name {
@@ -1317,7 +1344,7 @@
     -fx-font-size: 72px;
     -fx-font-weight: normal;
     -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, .88), 12, 0, 0, 4);
-    -fx-padding: 0 0 16px 0;
+    -fx-padding: 0 0 4px 0;
 }
 
 .endgame-header-row {
@@ -1360,4 +1387,22 @@
     -fx-text-fill: #fff2cf;
     -fx-font-size: 14px;
     -fx-font-weight: 900;
+}
+
+.endgame-quit-button {
+    -fx-text-fill: #fff2cf;
+    -fx-background-color: rgba(255, 242, 207, .12);
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(255, 226, 168, .45);
+    -fx-border-radius: 999px;
+    -fx-border-width: 1px;
+    -fx-padding: 8px 18px;
+}
+
+.endgame-quit-button:hover {
+    -fx-text-fill: #24170f;
+}
+
+.endgame-quit-button:hover .ikonli-font-icon {
+    -fx-icon-color: #24170f;
 }

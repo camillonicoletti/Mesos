@@ -4,7 +4,13 @@ import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.client.ClientController;
 import it.polimi.ingsw.network.client.ClientModel;
 import it.polimi.ingsw.network.client.PlayerView;
+import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
+import it.polimi.ingsw.view.gui.util.GuiAnimations;
 import it.polimi.ingsw.view.gui.util.GuiIcons;
+import javafx.animation.FadeTransition;
+import javafx.animation.ParallelTransition;
+import javafx.animation.ScaleTransition;
+import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -14,8 +20,10 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignL;
+import javafx.util.Duration;
 
 import java.util.List;
 import java.util.Map;
@@ -23,12 +31,16 @@ import java.util.Map;
 public final class EndGameView {
     private final ClientController controller;
     private final ClientModel model;
+    private final TotemMarkerFactory totemMarkers;
     private VBox content;
     private VBox standings;
+    private VBox winnerBox;
+    private boolean introPlayed;
 
-    public EndGameView(ClientController controller, ClientModel model) {
+    public EndGameView(ClientController controller, ClientModel model, GuiAssetCatalog assetCatalog) {
         this.controller = controller;
         this.model = model;
+        this.totemMarkers = new TotemMarkerFactory(assetCatalog);
     }
 
     public Node render() {
@@ -37,21 +49,26 @@ public final class EndGameView {
             return content;
         }
 
-        content = new VBox(20);
+        content = new VBox(26);
         content.setPadding(new Insets(32));
         content.setAlignment(Pos.TOP_CENTER);
 
         standings = new VBox(6);
         standings.setMaxWidth(560);
 
-        content.getChildren().addAll(standings, disconnectButton());
+        winnerBox = new VBox(2);
+        winnerBox.getStyleClass().add("endgame-winner-box");
+        winnerBox.setAlignment(Pos.CENTER);
+
+        content.getChildren().addAll(titleLabel(), standings, winnerBox, disconnectButton());
         refresh();
         return content;
     }
 
     public void refresh() {
-        if (standings == null) return;
+        if (standings == null || winnerBox == null) return;
         standings.getChildren().clear();
+        winnerBox.getChildren().clear();
 
         Map<String, Integer> scores = model.getFinalScores();
         if (scores.isEmpty()) return;
@@ -65,8 +82,6 @@ public final class EndGameView {
                 .toList();
 
         String winner = sorted.get(0).getKey();
-        standings.getChildren().add(winnerSectionLabel());
-        standings.getChildren().add(winnerNameLabel(winner));
         standings.getChildren().add(tableHeader());
 
         int rank = 1;
@@ -74,6 +89,15 @@ public final class EndGameView {
             standings.getChildren().add(scoreRow(rank, e.getKey(), e.getValue()));
             rank++;
         }
+
+        winnerBox.getChildren().addAll(winnerSectionLabel(), winnerStage(winner));
+        playIntroOnce();
+    }
+
+    private Label titleLabel() {
+        Label label = new Label("MESOS");
+        label.getStyleClass().add("endgame-title");
+        return label;
     }
 
     private Label winnerSectionLabel() {
@@ -87,6 +111,21 @@ public final class EndGameView {
         label.getStyleClass().add("endgame-winner-name");
         label.setStyle("-fx-text-fill: " + totemColorHex(totemOf(winner)) + ";");
         return label;
+    }
+
+    private StackPane winnerStage(String winner) {
+        Region glow = new Region();
+        glow.getStyleClass().add("endgame-winner-glow");
+
+        HBox winnerRow = new HBox(18);
+        winnerRow.getStyleClass().add("endgame-winner-row");
+        winnerRow.setAlignment(Pos.CENTER);
+        winnerRow.getChildren().addAll(
+                totemMarkers.create(totemOf(winner), winner, 82),
+                winnerNameLabel(winner)
+        );
+
+        return new StackPane(glow, winnerRow);
     }
 
     private HBox tableHeader() {
@@ -148,9 +187,10 @@ public final class EndGameView {
     }
 
     private Button disconnectButton() {
-        Button quit = new Button("Quit");
-        quit.getStyleClass().add("secondary-button");
+        Button quit = new Button("Esci");
+        quit.getStyleClass().addAll("secondary-button", "endgame-quit-button");
         GuiIcons.decorateButton(quit, MaterialDesignL.LOGOUT);
+        GuiAnimations.addHoverScale(quit);
         quit.setOnAction(event -> {
             controller.disconnect();
             Platform.exit();
@@ -176,5 +216,34 @@ public final class EndGameView {
             case YELLOW -> "#e8be5a";
             case WHITE  -> "#f3ebdc";
         };
+    }
+
+    private void playIntroOnce() {
+        if (introPlayed || content == null || standings == null || winnerBox == null) {
+            return;
+        }
+        introPlayed = true;
+
+        content.setOpacity(0);
+        standings.setTranslateY(-12);
+        winnerBox.setTranslateY(16);
+        winnerBox.setScaleX(0.96);
+        winnerBox.setScaleY(0.96);
+
+        FadeTransition fade = new FadeTransition(Duration.millis(420), content);
+        fade.setFromValue(0);
+        fade.setToValue(1);
+
+        TranslateTransition tableMove = new TranslateTransition(Duration.millis(420), standings);
+        tableMove.setToY(0);
+
+        TranslateTransition winnerMove = new TranslateTransition(Duration.millis(520), winnerBox);
+        winnerMove.setToY(0);
+
+        ScaleTransition winnerScale = new ScaleTransition(Duration.millis(520), winnerBox);
+        winnerScale.setToX(1);
+        winnerScale.setToY(1);
+
+        new ParallelTransition(fade, tableMove, winnerMove, winnerScale).play();
     }
 }
