@@ -2287,6 +2287,7 @@ public class Renderer {
                         new String[]{"pick <id> lower", "take a character/event card from the lower row"},
                         new String[]{"build <id> upper", "take a building card from the upper row"},
                         new String[]{"build <id> lower", "take a building card from the lower row"},
+                        new String[]{"skipextra", "skip optional extra pick"},
                         new String[]{"see effect <id>", "show a building effect locally"},
                         new String[]{"show tribe <n>", "show one other tribe locally"},
                         new String[]{"help", "show quick help"},

@@ -107,7 +107,16 @@ final class PlayerDockView {
         debugEnd.setOnAction(event -> controller.send(
                 new it.polimi.ingsw.network.protocol.serverbound.ForceEndGameMessage()));
 
-        HBox statusRow = new HBox(14, status, spacer(), debugEnd, exit);
+HBox statusRow = new HBox(14, status, spacer());
+        if (model.isExtraPickAvailableForMe()) {
+            Button skipExtra = new Button("Skip extra pick");
+            skipExtra.getStyleClass().add("dock-exit");
+            skipExtra.setOnAction(event -> controller.send(
+                    new it.polimi.ingsw.network.protocol.serverbound.GameActionMessage(
+                            new it.polimi.ingsw.controller.action.SkipExtraPickAction())));
+            statusRow.getChildren().add(skipExtra);
+        }
+        statusRow.getChildren().addAll(debugEnd, exit);
         statusRow.getStyleClass().add("player-dock-status-row");
         statusRow.setAlignment(Pos.CENTER);
 

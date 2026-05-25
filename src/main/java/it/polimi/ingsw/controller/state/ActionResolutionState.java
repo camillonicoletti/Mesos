@@ -4,6 +4,7 @@ import it.polimi.ingsw.controller.GameController;
 import it.polimi.ingsw.controller.action.GameAction;
 import it.polimi.ingsw.controller.action.PickBuildingAction;
 import it.polimi.ingsw.controller.action.PickCardAction;
+import it.polimi.ingsw.controller.action.SkipExtraPickAction;
 import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.Round;
 import it.polimi.ingsw.model.board.OfferTile;
@@ -203,6 +204,14 @@ public class ActionResolutionState extends AbstractGameState {
 
         if (!currentPlayer.getNickname().equals(playerNickname)) {
             throw new IllegalStateException("It is not " + playerNickname + "'s turn");
+        }
+
+        // The extra pick is optional per the rulebook: SkipExtraPickAction
+        // forfeits the remaining picks for the current player and advances the queue.
+        if (action instanceof SkipExtraPickAction) {
+            queue.advance();
+            prepareExtraPickPlayer(ctx);
+            return;
         }
 
         List<CharacterCard> upperTribute = round.getUpperRowTribute();

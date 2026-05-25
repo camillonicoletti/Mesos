@@ -100,6 +100,13 @@ public class CommandParser {
             case "skip":
                 return new GameActionMessage(new DebugSkipRoundAction());
 
+            case "skipextra":
+                if (parts.length != 1) {
+                    System.out.println("Usage: skipextra");
+                    return null;
+                }
+                return new GameActionMessage(new SkipExtraPickAction());
+
             case "endgame":
                 return new GameActionMessage(new DebugSkipToEndAction());
 

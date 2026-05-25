@@ -54,6 +54,10 @@ public class ClientModel {
     private String pickBudgetPlayer;
     private int remainingUpperPicks = -1;
     private int remainingLowerPicks = -1;
+    // True when this client has just received an ExtraCardPickAvailableMessage
+    // targeted at its own nickname. Cleared as soon as the current player
+    // changes or the state leaves ActionResolutionState.
+    private boolean extraPickAvailableForMe = false;
     private String lastTurnEvent;
     private long lastTurnEventExpiresAtMillis = -1L;
     private Era currentEra;
@@ -183,6 +187,10 @@ public class ClientModel {
             actionResolvedPlayers = new ArrayList<>();
             clearPickBudget();
         }
+        // The extra-pick prompt is only valid inside ActionResolutionState.
+        if (!"ActionResolutionState".equals(gameState)) {
+            extraPickAvailableForMe = false;
+        }
         lastError = null;
         notifyChanged();
     }
@@ -190,6 +198,10 @@ public class ClientModel {
     public void applyCurrentPlayerChanged(CurrentPlayerChangedMessage m) {
         String previousPlayer = currentActionPlayer;
         currentActionPlayer = m.getNickname();
+        // Any current-player change clears a lingering extra-pick prompt: the
+        // server emits ExtraCardPickAvailableMessage right after onCurrentPlayerChanged
+        // when the next player has an extra pick, so we'd be re-set then.
+        extraPickAvailableForMe = false;
         if ("ActionResolutionState".equals(gameState)
                 && (!Objects.equals(previousPlayer, currentActionPlayer)
                 || !Objects.equals(pickBudgetPlayer, currentActionPlayer))) {
@@ -324,7 +336,20 @@ public class ClientModel {
         pickBudgetPlayer = m.getNickname();
         remainingUpperPicks = Math.max(0, m.getPicks());
         remainingLowerPicks = 0;
+        // Flag the local player so the GUI/TUI can offer the Skip button/command.
+        extraPickAvailableForMe = myNickname != null
+                && myNickname.equals(m.getNickname())
+                && remainingUpperPicks > 0;
         notifyChanged();
+    }
+
+    /**
+     * Returns {@code true} when the server has notified that the local player
+     * has an optional extra pick available (building #13). Cleared as soon as
+     * the current player changes or the game leaves ActionResolutionState.
+     */
+    public boolean isExtraPickAvailableForMe() {
+        return extraPickAvailableForMe;
     }
 
     public void applyConnectionLost(String reason) {

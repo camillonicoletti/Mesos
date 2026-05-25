@@ -89,7 +89,12 @@ public final class EndGameView {
                 })
                 .toList();
 
-        String winner = sorted.get(0).getKey();
+        Map.Entry<String, Integer> first = sorted.get(0);
+        List<String> winners = sorted.stream()
+                .filter(e -> e.getValue().equals(first.getValue()) && foodOf(e.getKey()) == foodOf(first.getKey()))
+                .map(Map.Entry::getKey)
+                .toList();
+
         standings.getChildren().add(tableHeader());
 
         int rank = 1;
@@ -98,7 +103,10 @@ public final class EndGameView {
             rank++;
         }
 
-        winnerBox.getChildren().addAll(winnerSectionLabel(), winnerStage(winner));
+        winnerBox.getChildren().add(winnerSectionLabel(winners.size() > 1));
+        for (String winner : winners) {
+            winnerBox.getChildren().add(winnerStage(winner));
+        }
         playIntroOnce();
     }
 
@@ -108,8 +116,8 @@ public final class EndGameView {
         return label;
     }
 
-    private Label winnerSectionLabel() {
-        Label label = new Label("WINNER");
+    private Label winnerSectionLabel(boolean tie) {
+        Label label = new Label(tie ? "WINNERS" : "WINNER");
         label.getStyleClass().add("endgame-winner-section");
         return label;
     }
