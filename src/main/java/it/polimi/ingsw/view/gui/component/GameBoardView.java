@@ -8,12 +8,14 @@ import it.polimi.ingsw.view.gui.GuiApplication;
 import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignB;
 import javafx.animation.FadeTransition;
+import javafx.animation.Interpolator;
 import javafx.animation.ParallelTransition;
 import javafx.animation.PauseTransition;
-import javafx.animation.SequentialTransition;
 import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -27,10 +29,13 @@ import javafx.util.Duration;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public final class GameBoardView {
     private static final double DETAIL_CARD_WIDTH = 330;
     private static final double DETAIL_CARD_HEIGHT = 466;
+    private static final double MARKET_CARD_W = 96;
+    private static final double MARKET_CARD_H = 135;
 
     private final ClientModel model;
     private final CardDescriptionService cardDescriptions;
@@ -52,6 +57,12 @@ public final class GameBoardView {
     private boolean fitBindingInstalled;
     private int lastSeenRound = 0;
     private boolean roundTransitionPlaying = false;
+    private List<Integer> displayedUpperCharIds  = List.of();
+    private List<Integer> displayedUpperBuildIds = List.of();
+    private List<Integer> displayedLowerCharIds  = List.of();
+    private List<Integer> displayedLowerBuildIds = List.of();
+    private String displayedActionPlayer = null;
+    private String displayedGameState    = null;
 
     public GameBoardView(ClientController controller, ClientModel model, GuiAssetCatalog assetCatalog) {
         this.model = model;
@@ -114,92 +125,299 @@ public final class GameBoardView {
         instructionLabel.setText(actionInstruction());
 
         int currentRound = model.getLastFinishedRound();
-        boolean roundJustEnded = currentRound > 0 && currentRound > lastSeenRound;
-        lastSeenRound = currentRound;
+        if (currentRound > 0 && currentRound > lastSeenRound) {
+            lastSeenRound = currentRound;
+        }
 
-        if (roundJustEnded && !roundTransitionPlaying) {
-            refreshCenterTrack();
-            playerDockSlot.getChildren().setAll(playerDockView.render());
-            Platform.runLater(this::updateBoardScale);
-            playRoundEndAnimation(() -> {
-                refreshMarketBand(upperMarketBand,
-                        cardMarketView.characterRow(true),
-                        cardMarketView.buildingRow(true));
-                refreshMarketBand(lowerMarketBand,
-                        cardMarketView.characterRow(false),
-                        cardMarketView.buildingRow(false));
-            });
-        } else if (!roundTransitionPlaying) {
-            refreshMarketBand(upperMarketBand,
-                    cardMarketView.characterRow(true),
-                    cardMarketView.buildingRow(true));
-            refreshCenterTrack();
-            refreshMarketBand(lowerMarketBand,
-                    cardMarketView.characterRow(false),
-                    cardMarketView.buildingRow(false));
-            playerDockSlot.getChildren().setAll(playerDockView.render());
-            Platform.runLater(this::updateBoardScale);
+        refreshCenterTrack();
+        playerDockSlot.getChildren().setAll(playerDockView.render());
+        Platform.runLater(this::updateBoardScale);
+
+        if (roundTransitionPlaying) {
+            return;
+        }
+
+        // Trigger an animation whenever the model has cards that weren't
+        // shown before. Initial deal (round 0) fills both rows from the deck;
+        // round-end transitions (round > 0) slide upper to lower then refill
+        // only the upper row.
+        if (newCardsAppeared()) {
+            if (lastSeenRound > 0) {
+                // Buildings only move at era change (when their IDs differ).
+                boolean buildingsChanged = !model.getUpperRowBuildingIds().equals(displayedUpperBuildIds)
+                                        || !model.getLowerRowBuildingIds().equals(displayedLowerBuildIds);
+                Runnable rebuild = buildingsChanged
+                        ? () -> {
+                            refreshMarketBandTracked(upperMarketBand, true);
+                            refreshMarketBandTracked(lowerMarketBand, false);
+                        }
+                        : () -> {
+                            refreshCharactersOnly(upperMarketBand, true);
+                            refreshCharactersOnly(lowerMarketBand, false);
+                        };
+                playRoundEndAnimation(buildingsChanged, rebuild);
+            } else {
+                playInitialDealAnimation(() -> {
+                    refreshMarketBandTracked(upperMarketBand, true);
+                    refreshMarketBandTracked(lowerMarketBand, false);
+                });
+            }
+        } else if (marketBandsOutOfDate()) {
+            refreshMarketBandTracked(upperMarketBand, true);
+            refreshMarketBandTracked(lowerMarketBand, false);
         }
     }
 
-    private void playRoundEndAnimation(Runnable onDealNewCards) {
+    private boolean newCardsAppeared() {
+        java.util.Set<Integer> displayed = new java.util.HashSet<>();
+        displayed.addAll(displayedUpperCharIds);
+        displayed.addAll(displayedUpperBuildIds);
+        displayed.addAll(displayedLowerCharIds);
+        displayed.addAll(displayedLowerBuildIds);
+
+        return hasNewId(model.getUpperRowCharacterIds(), displayed)
+            || hasNewId(model.getUpperRowBuildingIds(), displayed)
+            || hasNewId(model.getLowerRowCharacterIds(), displayed)
+            || hasNewId(model.getLowerRowBuildingIds(), displayed);
+    }
+
+    private boolean hasNewId(List<Integer> currentIds, java.util.Set<Integer> displayed) {
+        for (Integer id : currentIds) {
+            if (!displayed.contains(id)) return true;
+        }
+        return false;
+    }
+
+    private boolean marketBandsOutOfDate() {
+        return !model.getUpperRowCharacterIds().equals(displayedUpperCharIds)
+            || !model.getUpperRowBuildingIds().equals(displayedUpperBuildIds)
+            || !model.getLowerRowCharacterIds().equals(displayedLowerCharIds)
+            || !model.getLowerRowBuildingIds().equals(displayedLowerBuildIds)
+            || !Objects.equals(model.getCurrentActionPlayer(), displayedActionPlayer)
+            || !Objects.equals(model.getGameState(), displayedGameState);
+    }
+
+    private void refreshMarketBandTracked(HBox band, boolean upper) {
+        refreshMarketBand(band,
+                cardMarketView.characterRow(upper),
+                cardMarketView.buildingRow(upper));
+        if (upper) {
+            displayedUpperCharIds  = new ArrayList<>(model.getUpperRowCharacterIds());
+            displayedUpperBuildIds = new ArrayList<>(model.getUpperRowBuildingIds());
+        } else {
+            displayedLowerCharIds  = new ArrayList<>(model.getLowerRowCharacterIds());
+            displayedLowerBuildIds = new ArrayList<>(model.getLowerRowBuildingIds());
+        }
+        displayedActionPlayer = model.getCurrentActionPlayer();
+        displayedGameState    = model.getGameState();
+    }
+
+    private void refreshCharactersOnly(HBox band, boolean upper) {
+        VBox newCharacters = cardMarketView.characterRow(upper);
+        HBox.setHgrow(newCharacters, Priority.ALWAYS);
+        if (!band.getChildren().isEmpty()) {
+            band.getChildren().set(0, newCharacters);
+        } else {
+            band.getChildren().add(newCharacters);
+        }
+        if (upper) {
+            displayedUpperCharIds = new ArrayList<>(model.getUpperRowCharacterIds());
+        } else {
+            displayedLowerCharIds = new ArrayList<>(model.getLowerRowCharacterIds());
+        }
+        displayedActionPlayer = model.getCurrentActionPlayer();
+        displayedGameState    = model.getGameState();
+    }
+
+    private void playRoundEndAnimation(boolean includeBuildings, Runnable onRebuildBands) {
         roundTransitionPlaying = true;
-        double sweepX = 900;
-        Duration exitDur = Duration.millis(300);
-        Duration pauseDur = Duration.millis(120);
-        Duration enterDur = Duration.millis(300);
+        upperMarketBand.setOpacity(1);
+        lowerMarketBand.setOpacity(1);
 
-        // Exit: upper sweeps left immediately, lower follows with slight stagger
-        TranslateTransition exitUpper = new TranslateTransition(exitDur, upperMarketBand);
-        exitUpper.setToX(-sweepX);
-        FadeTransition fadeOutUpper = new FadeTransition(exitDur, upperMarketBand);
-        fadeOutUpper.setToValue(0);
-        ParallelTransition exitUpperAnim = new ParallelTransition(exitUpper, fadeOutUpper);
+        // Old upper: always characters, plus buildings only on era change
+        List<Node> oldUpperCards = new ArrayList<>(collectCharacterCardNodes(upperMarketBand));
+        List<Node> oldLowerCards = new ArrayList<>(collectCharacterCardNodes(lowerMarketBand));
+        if (includeBuildings) {
+            oldUpperCards.addAll(collectBuildingCardNodes(upperMarketBand));
+            oldLowerCards.addAll(collectBuildingCardNodes(lowerMarketBand));
+        }
 
-        TranslateTransition exitLower = new TranslateTransition(exitDur, lowerMarketBand);
-        exitLower.setToX(-sweepX);
-        FadeTransition fadeOutLower = new FadeTransition(exitDur, lowerMarketBand);
-        fadeOutLower.setToValue(0);
-        ParallelTransition exitLowerAnim = new ParallelTransition(exitLower, fadeOutLower);
-        exitLowerAnim.setDelay(Duration.millis(80));
+        double scale = board.getScaleX();
+        if (scale <= 0) scale = 1.0;
+        double translateDeltaY = computeBandsDistanceY() / scale;
 
-        ParallelTransition exitAll = new ParallelTransition(exitUpperAnim, exitLowerAnim);
+        Duration slideDur = Duration.millis(600);
 
-        PauseTransition pause = new PauseTransition(pauseDur);
+        // Old lower row: fade out (they're being overwritten by the slide-down)
+        ParallelTransition fadeLower = new ParallelTransition();
+        for (Node c : oldLowerCards) {
+            FadeTransition ft = new FadeTransition(slideDur, c);
+            ft.setToValue(0);
+            fadeLower.getChildren().add(ft);
+        }
 
-        SequentialTransition sequence = new SequentialTransition(exitAll, pause);
-        sequence.setOnFinished(e -> {
-            // Deal new cards
-            onDealNewCards.run();
+        // Old upper row: slide down to the lower row's vertical position
+        ParallelTransition slideUpper = new ParallelTransition();
+        for (Node card : oldUpperCards) {
+            TranslateTransition tt = new TranslateTransition(slideDur, card);
+            tt.setToY(translateDeltaY);
+            tt.setInterpolator(Interpolator.EASE_BOTH);
+            slideUpper.getChildren().add(tt);
+        }
 
-            // Position off-screen to the right before entering
-            upperMarketBand.setTranslateX(sweepX);
-            lowerMarketBand.setTranslateX(sweepX);
-            upperMarketBand.setOpacity(0);
-            lowerMarketBand.setOpacity(0);
+        ParallelTransition phase1 = new ParallelTransition(slideUpper, fadeLower);
+        phase1.setOnFinished(ev -> {
+            // Replace the affected sections (characters always; buildings only on era change)
+            onRebuildBands.run();
+            upperMarketBand.setOpacity(1);
+            lowerMarketBand.setOpacity(1);
 
-            // Enter: upper slides in first, lower follows staggered
-            TranslateTransition enterUpper = new TranslateTransition(enterDur, upperMarketBand);
-            enterUpper.setToX(0);
-            FadeTransition fadeInUpper = new FadeTransition(enterDur, upperMarketBand);
-            fadeInUpper.setToValue(1);
-            ParallelTransition enterUpperAnim = new ParallelTransition(enterUpper, fadeInUpper);
+            // Deal only the upper row sections that we actually rebuilt
+            List<Node> newUpperCards = new ArrayList<>(collectCharacterCardNodes(upperMarketBand));
+            if (includeBuildings) {
+                newUpperCards.addAll(collectBuildingCardNodes(upperMarketBand));
+            }
+            for (Node c : newUpperCards) c.setOpacity(0);
 
-            TranslateTransition enterLower = new TranslateTransition(enterDur, lowerMarketBand);
-            enterLower.setToX(0);
-            FadeTransition fadeInLower = new FadeTransition(enterDur, lowerMarketBand);
-            fadeInLower.setToValue(1);
-            ParallelTransition enterLowerAnim = new ParallelTransition(enterLower, fadeInLower);
-            enterLowerAnim.setDelay(Duration.millis(80));
-
-            ParallelTransition enterAll = new ParallelTransition(enterUpperAnim, enterLowerAnim);
-            enterAll.setOnFinished(ev -> {
-                roundTransitionPlaying = false;
-                Platform.runLater(this::updateBoardScale);
-            });
-            enterAll.play();
+            Platform.runLater(() -> dealCardsFromDeck(newUpperCards, List.of()));
         });
-        sequence.play();
+        phase1.play();
+    }
+
+    private void playInitialDealAnimation(Runnable onRebuildBands) {
+        roundTransitionPlaying = true;
+        upperMarketBand.setOpacity(1);
+        lowerMarketBand.setOpacity(1);
+
+        onRebuildBands.run();
+
+        List<Node> upperCards = collectCardNodes(upperMarketBand);
+        List<Node> lowerCards = collectCardNodes(lowerMarketBand);
+        for (Node c : upperCards) c.setOpacity(0);
+        for (Node c : lowerCards) c.setOpacity(0);
+
+        Platform.runLater(() -> dealCardsFromDeck(upperCards, lowerCards));
+    }
+
+    private double computeBandsDistanceY() {
+        if (upperMarketBand.getScene() == null || lowerMarketBand.getScene() == null) {
+            return 0;
+        }
+        Bounds upperScene = upperMarketBand.localToScene(upperMarketBand.getBoundsInLocal());
+        Bounds lowerScene = lowerMarketBand.localToScene(lowerMarketBand.getBoundsInLocal());
+        double upperCenterY = (upperScene.getMinY() + upperScene.getMaxY()) / 2.0;
+        double lowerCenterY = (lowerScene.getMinY() + lowerScene.getMaxY()) / 2.0;
+        return lowerCenterY - upperCenterY;
+    }
+
+    private void dealCardsFromDeck(List<Node> upperCards, List<Node> lowerCards) {
+        // Interleave upper/lower like a real dealer
+        List<Node> dealOrder = new ArrayList<>();
+        int maxLen = Math.max(upperCards.size(), lowerCards.size());
+        for (int i = 0; i < maxLen; i++) {
+            if (i < upperCards.size()) dealOrder.add(upperCards.get(i));
+            if (i < lowerCards.size()) dealOrder.add(lowerCards.get(i));
+        }
+
+        long staggerMs = 280;
+        Duration dealDur = Duration.millis(420);
+
+        StackPane deckCard = deckView.getCardBackNode();
+        Point2D deckCenter = computeDeckCenter(deckCard);
+        double scale = board.getScaleX();
+        if (scale <= 0) scale = 1.0;
+
+        // Pre-position every card so it visually sits on the deck (still invisible)
+        for (Node card : dealOrder) {
+            if (card.getScene() == null) continue;
+            Bounds cb = card.localToScene(card.getBoundsInLocal());
+            Bounds cr = rootLayer.sceneToLocal(cb);
+            double cardCX = (cr.getMinX() + cr.getMaxX()) / 2.0;
+            double cardCY = (cr.getMinY() + cr.getMaxY()) / 2.0;
+            // Translate happens in parent coords (un-scaled) -> divide scene delta by board scale
+            card.setTranslateX((deckCenter.getX() - cardCX) / scale);
+            card.setTranslateY((deckCenter.getY() - cardCY) / scale);
+        }
+
+        // Animate each card from deck to its final slot, staggered
+        for (int i = 0; i < dealOrder.size(); i++) {
+            final Node card = dealOrder.get(i);
+            PauseTransition wait = new PauseTransition(Duration.millis(i * staggerMs));
+            wait.setOnFinished(ev -> {
+                card.setOpacity(1);
+                TranslateTransition slide = new TranslateTransition(dealDur, card);
+                slide.setToX(0);
+                slide.setToY(0);
+                slide.setInterpolator(Interpolator.EASE_OUT);
+                slide.play();
+            });
+            wait.play();
+        }
+
+        // Release the transition lock and sync the displayed-state tracker once
+        // everything has landed, so a subsequent refresh() won't redraw the bands.
+        long totalMs = dealOrder.size() * staggerMs + (long) dealDur.toMillis() + 80;
+        PauseTransition done = new PauseTransition(Duration.millis(totalMs));
+        done.setOnFinished(ev -> {
+            for (Node card : dealOrder) {
+                card.setTranslateX(0);
+                card.setTranslateY(0);
+                card.setOpacity(1);
+            }
+            displayedActionPlayer = model.getCurrentActionPlayer();
+            displayedGameState    = model.getGameState();
+            roundTransitionPlaying = false;
+            Platform.runLater(this::updateBoardScale);
+        });
+        done.play();
+    }
+
+    private Point2D computeDeckCenter(StackPane deckCardNode) {
+        if (deckCardNode != null && deckCardNode.getScene() != null) {
+            Bounds db = deckCardNode.localToScene(deckCardNode.getBoundsInLocal());
+            Bounds dr = rootLayer.sceneToLocal(db);
+            return new Point2D((dr.getMinX() + dr.getMaxX()) / 2.0,
+                               (dr.getMinY() + dr.getMaxY()) / 2.0);
+        }
+        Bounds bb = board.localToScene(board.getBoundsInLocal());
+        Bounds br = rootLayer.sceneToLocal(bb);
+        return new Point2D((br.getMinX() + br.getMaxX()) / 2.0,
+                           (br.getMinY() + br.getMaxY()) / 2.0);
+    }
+
+    private List<Node> collectCardNodes(HBox marketBand) {
+        List<Node> cards = new ArrayList<>();
+        for (Node child : marketBand.getChildren()) {
+            if (child instanceof VBox row) {
+                for (Node rowChild : row.getChildren()) {
+                    if (rowChild instanceof HBox hbox) {
+                        cards.addAll(hbox.getChildren());
+                    }
+                }
+            }
+        }
+        return cards;
+    }
+
+    private List<Node> collectCardNodesFromSection(HBox marketBand, int sectionIndex) {
+        List<Node> cards = new ArrayList<>();
+        if (marketBand.getChildren().size() > sectionIndex
+                && marketBand.getChildren().get(sectionIndex) instanceof VBox row) {
+            for (Node rowChild : row.getChildren()) {
+                if (rowChild instanceof HBox hbox) {
+                    cards.addAll(hbox.getChildren());
+                }
+            }
+        }
+        return cards;
+    }
+
+    private List<Node> collectCharacterCardNodes(HBox marketBand) {
+        return collectCardNodesFromSection(marketBand, 0);
+    }
+
+    private List<Node> collectBuildingCardNodes(HBox marketBand) {
+        return collectCardNodesFromSection(marketBand, 1);
     }
 
     private void installBoardFitBinding() {
