@@ -39,6 +39,10 @@ public final class LoginView {
     private StackPane panelShell;
     private VBox panel;
     private Label error;
+    private VBox totemGroup;
+    private Label fullLobbyMessage;
+    private CheckBox reconnectCheckBox;
+    private Button enterButton;
 
     public LoginView(ClientController controller, ClientModel model,
                      String pendingNickname, Consumer<String> onNicknameSubmitted) {
@@ -58,26 +62,32 @@ public final class LoginView {
         panel.getStyleClass().add("login-panel");
         panel.setPrefWidth(350);
         panel.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
-        panel.setAlignment(Pos.CENTER_LEFT);
+        panel.setAlignment(Pos.CENTER);
 
         TextField nickname = new TextField(pendingNickname != null ? pendingNickname : "");
         nickname.setPromptText("Enter your totem name");
         nickname.setMaxWidth(Double.MAX_VALUE);
 
         HBox totemSelector = totemSelector();
+        totemGroup = formGroup("CHOOSE YOUR TOTEM", totemSelector);
 
-        CheckBox reconnect = new CheckBox("Reconnect");
-        reconnect.selectedProperty().addListener((obs, oldValue, selected) -> totemSelector.setDisable(selected));
+        reconnectCheckBox = new CheckBox("Reconnect");
+        reconnectCheckBox.selectedProperty().addListener((obs, oldValue, selected) -> {
+            totemSelector.setDisable(selected);
+            refresh();
+        });
 
-        Button enter = primaryButton("JOIN");
-        enter.setMaxWidth(Double.MAX_VALUE);
-        enter.setOnAction(event -> submit(nickname, reconnect));
+        enterButton = primaryButton("JOIN");
+        enterButton.setMaxWidth(Double.MAX_VALUE);
+        enterButton.setOnAction(event -> submit(nickname, reconnectCheckBox));
 
+        fullLobbyMessage = fullLobbyMessage();
         error = errorLabel();
         panel.getChildren().addAll(
                 formGroup("TOTEM NAME", nickname),
-                formGroup("CHOOSE YOUR TOTEM", totemSelector),
-                reconnect, enter, error);
+                totemGroup,
+                fullLobbyMessage,
+                reconnectCheckBox, enterButton, error);
         refresh();
 
         panelShell = framedPanel(panel);
@@ -85,6 +95,26 @@ public final class LoginView {
     }
 
     public void refresh() {
+        boolean fullLobby = areAllTotemsTaken();
+        boolean reconnecting = fullLobby || reconnectCheckBox != null && reconnectCheckBox.isSelected();
+
+        if (totemGroup != null) {
+            boolean showTotems = !fullLobby && !reconnecting;
+            totemGroup.setVisible(showTotems);
+            totemGroup.setManaged(showTotems);
+        }
+        if (fullLobbyMessage != null) {
+            fullLobbyMessage.setVisible(fullLobby);
+            fullLobbyMessage.setManaged(fullLobby);
+        }
+        if (reconnectCheckBox != null) {
+            reconnectCheckBox.setVisible(!fullLobby);
+            reconnectCheckBox.setManaged(!fullLobby);
+        }
+        if (enterButton != null) {
+            enterButton.setText(reconnecting ? "RECONNECT" : "JOIN");
+        }
+
         if (error != null) {
             error.setText(model.getLastError() == null ? "" : model.getLastError());
         }
@@ -110,7 +140,7 @@ public final class LoginView {
             return;
         }
         onNicknameSubmitted.accept(name);
-        if (reconnect.isSelected()) {
+        if (reconnect.isSelected() || areAllTotemsTaken()) {
             controller.send(new ReconnectMessage(name));
         } else {
             controller.send(new LoginMessage(name, selectedTotem));
@@ -129,6 +159,18 @@ public final class LoginView {
         label.getStyleClass().add("error");
         label.setWrapText(true);
         return label;
+    }
+
+    private Label fullLobbyMessage() {
+        Label label = new Label("Numero massimo di giocatori raggiunto. Puoi rientrare solo con Reconnect.");
+        label.getStyleClass().add("login-full-message");
+        label.setWrapText(true);
+        return label;
+    }
+
+    private boolean areAllTotemsTaken() {
+        Set<TotemColor> taken = new HashSet<>(model.getLobbyPlayerColors().values());
+        return taken.size() >= TotemColor.values().length;
     }
 
     private Label fieldLabel(String text) {

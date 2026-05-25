@@ -6,6 +6,7 @@ import it.polimi.ingsw.network.client.ClientModel;
 import it.polimi.ingsw.network.protocol.serverbound.ReadyMessage;
 import it.polimi.ingsw.network.protocol.serverbound.SetPlayersCountMessage;
 import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
+import it.polimi.ingsw.view.gui.util.GuiAnimations;
 import it.polimi.ingsw.view.gui.util.GuiIcons;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -55,8 +56,7 @@ public final class LobbyView {
         center.setAlignment(Pos.CENTER);
         center.getStyleClass().add("lobby-stage");
 
-        Label title = new Label("Mesos");
-        title.getStyleClass().add("lobby-title");
+        Node title = MesosLogo.create(360, "lobby-title-logo");
         subtitle = new Label();
         subtitle.getStyleClass().add("lobby-subtitle");
 
@@ -102,11 +102,14 @@ public final class LobbyView {
         Button readyToggle = ready
                 ? secondaryButton("Not ready", MaterialDesignC.CLOSE_CIRCLE_OUTLINE)
                 : primaryButton("Ready", MaterialDesignC.CHECK_CIRCLE);
-        readyToggle.getStyleClass().add(ready ? "ready-toggle-on" : "ready-toggle-off");
+        readyToggle.getStyleClass().addAll("lobby-action-button", ready ? "ready-toggle-on" : "ready-toggle-off");
+        GuiAnimations.addHoverScale(readyToggle);
         readyToggle.setOnAction(event -> controller.send(new ReadyMessage(!ready)));
         box.getChildren().add(readyToggle);
 
         Button rulesBtn = secondaryButton("Regolamento", MaterialDesignB.BOOK_OPEN);
+        rulesBtn.getStyleClass().addAll("game-rules-button", "lobby-action-button");
+        GuiAnimations.addHoverScale(rulesBtn);
         rulesBtn.setOnAction(event -> GuiApplication.openRulesPdf());
         box.getChildren().add(rulesBtn);
 
@@ -142,6 +145,7 @@ public final class LobbyView {
                 choice.setDisable(true);
             }
             int chosen = count;
+            GuiAnimations.addHoverScale(choice);
             choice.setOnAction(event -> controller.send(new SetPlayersCountMessage(chosen)));
             choices.getChildren().add(choice);
         }
@@ -208,6 +212,8 @@ public final class LobbyView {
 
     private Button disconnectButton() {
         Button quit = secondaryButton("Quit", MaterialDesignL.LOGOUT);
+        quit.getStyleClass().addAll("lobby-action-button", "lobby-quit-button");
+        GuiAnimations.addHoverScale(quit);
         quit.setOnAction(event -> {
             controller.disconnect();
             Platform.exit();

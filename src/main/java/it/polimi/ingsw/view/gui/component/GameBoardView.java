@@ -6,6 +6,8 @@ import it.polimi.ingsw.network.client.ClientModel;
 import it.polimi.ingsw.network.client.PlayerView;
 import it.polimi.ingsw.view.gui.GuiApplication;
 import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
+import it.polimi.ingsw.view.gui.util.GuiAnimations;
+import it.polimi.ingsw.view.gui.util.GuiIcons;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignB;
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
@@ -476,19 +478,13 @@ public final class GameBoardView {
         StackPane headerStack = new StackPane();
         headerStack.setMaxWidth(Double.MAX_VALUE);
 
-        Label title = new Label("MESOS");
-        title.getStyleClass().add("game-title");
-        title.setAlignment(Pos.CENTER);
-        title.setMaxWidth(Double.MAX_VALUE);
+        Node title = MesosLogo.create(190, "game-title-logo");
 
         Button rulesBtn = new Button("Regolamento");
-        rulesBtn.getStyleClass().add("secondary-button");
-        rulesBtn.setPrefHeight(30);
-        org.kordamp.ikonli.javafx.FontIcon rulesIcon = org.kordamp.ikonli.javafx.FontIcon.of(MaterialDesignB.BOOK_OPEN, 14);
-        rulesIcon.setIconColor(javafx.scene.paint.Color.web("#552435"));
-        rulesBtn.setGraphic(rulesIcon);
-        rulesBtn.setContentDisplay(javafx.scene.control.ContentDisplay.LEFT);
-        rulesBtn.setGraphicTextGap(6);
+        rulesBtn.getStyleClass().addAll("secondary-button", "game-rules-button");
+        rulesBtn.setPrefHeight(34);
+        GuiIcons.decorateButton(rulesBtn, MaterialDesignB.BOOK_OPEN);
+        GuiAnimations.addHoverScale(rulesBtn);
         rulesBtn.setOnAction(event -> GuiApplication.openRulesPdf());
 
         StackPane.setAlignment(title, Pos.CENTER);
