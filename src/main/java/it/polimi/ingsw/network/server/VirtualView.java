@@ -86,6 +86,9 @@ public class VirtualView implements GameListener {
     public void onGameEnded(Player winner, Map<Player, Integer> finalScores) {
         Map<String, Integer> scoresByNickname = finalScores.entrySet().stream()
                 .collect(Collectors.toMap(e -> e.getKey().getNickname(), Map.Entry::getValue));
+        // Read food directly from server-side Player objects so the client receives
+        // the authoritative final value (after Sustenance and end-round penalties),
+        // not a stale value cached in PlayerView.
         Map<String, Integer> foodByNickname = finalScores.keySet().stream()
                 .collect(Collectors.toMap(Player::getNickname, Player::getFood));
         String winnerNickname = winner != null ? winner.getNickname() : null;
