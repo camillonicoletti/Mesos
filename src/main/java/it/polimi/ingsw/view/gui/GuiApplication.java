@@ -12,6 +12,7 @@ import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.ParallelTransition;
 import javafx.animation.PauseTransition;
+import javafx.animation.ScaleTransition;
 import javafx.animation.SequentialTransition;
 import javafx.animation.Timeline;
 import javafx.animation.TranslateTransition;
@@ -22,6 +23,9 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.control.Button;
+import org.kordamp.ikonli.materialdesign2.MaterialDesignA;
+import org.kordamp.ikonli.materialdesign2.MaterialDesignC;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -36,6 +40,160 @@ public final class GuiApplication extends Application {
     private static final Duration TOAST_ANIMATION_DURATION = Duration.millis(180);
 
     private static LaunchContext launchContext;
+    private static GuiApplication instance;
+
+    private StackPane rulesOverlay;
+    private int currentRulesPage = 1;
+
+    public static void openRulesPdf() {
+        if (instance == null) {
+            return;
+        }
+        Platform.runLater(() -> instance.showRulesModal());
+    }
+
+    public void showRulesModal() {
+        if (rulesOverlay != null) {
+            sceneRoot.getChildren().remove(rulesOverlay);
+        }
+
+        currentRulesPage = 1;
+        rulesOverlay = createRulesOverlay();
+        sceneRoot.getChildren().add(rulesOverlay);
+
+        Node card = rulesOverlay.getChildren().get(0);
+        
+        // Initial state for animation
+        rulesOverlay.setOpacity(0);
+        card.setScaleX(0.94);
+        card.setScaleY(0.94);
+
+        FadeTransition fade = new FadeTransition(Duration.millis(240), rulesOverlay);
+        fade.setFromValue(0);
+        fade.setToValue(1);
+
+        ScaleTransition scale = new ScaleTransition(Duration.millis(240), card);
+        scale.setToX(1.0);
+        scale.setToY(1.0);
+
+        ParallelTransition pt = new ParallelTransition(fade, scale);
+        pt.play();
+    }
+
+    public void hideRulesModal() {
+        if (rulesOverlay != null) {
+            Node card = rulesOverlay.getChildren().get(0);
+            
+            FadeTransition fade = new FadeTransition(Duration.millis(180), rulesOverlay);
+            fade.setFromValue(1);
+            fade.setToValue(0);
+
+            ScaleTransition scale = new ScaleTransition(Duration.millis(180), card);
+            scale.setToX(0.94);
+            scale.setToY(0.94);
+
+            ParallelTransition pt = new ParallelTransition(fade, scale);
+            pt.setOnFinished(event -> {
+                sceneRoot.getChildren().remove(rulesOverlay);
+                rulesOverlay = null;
+            });
+            pt.play();
+        }
+    }
+
+    private StackPane createRulesOverlay() {
+        StackPane overlay = new StackPane();
+        overlay.getStyleClass().add("rules-overlay");
+        overlay.setStyle("-fx-background-color: rgba(0, 0, 0, 0.64);");
+
+        VBox card = new VBox(15);
+        card.getStyleClass().add("rules-card");
+        card.setStyle(
+            "-fx-background-color: #2b2b2b;" +
+            "-fx-background-radius: 16;" +
+            "-fx-border-color: #d7a93d;" +
+            "-fx-border-radius: 16;" +
+            "-fx-border-width: 2;" +
+            "-fx-max-width: 760px;" +
+            "-fx-padding: 16;"
+        );
+        card.setAlignment(Pos.CENTER);
+        
+        // Responsive modal height bound to 86% of application height
+        card.maxHeightProperty().bind(overlay.heightProperty().multiply(0.86));
+
+        HBox header = new HBox(10);
+        header.setAlignment(Pos.CENTER_LEFT);
+        header.setMaxWidth(Double.MAX_VALUE);
+        
+        Label title = new Label("REGOLAMENTO DI MESOS");
+        title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #d7a93d;");
+        
+        Region headerSpacer = new Region();
+        HBox.setHgrow(headerSpacer, Priority.ALWAYS);
+        
+        Button closeBtn = new Button();
+        closeBtn.getStyleClass().add("secondary-button");
+        closeBtn.setGraphic(org.kordamp.ikonli.javafx.FontIcon.of(MaterialDesignC.CLOSE, 16));
+        closeBtn.setOnAction(event -> hideRulesModal());
+        
+        header.getChildren().addAll(title, headerSpacer, closeBtn);
+
+        javafx.scene.control.ScrollPane scrollPane = new javafx.scene.control.ScrollPane();
+        scrollPane.setFitToWidth(true);
+        scrollPane.setHbarPolicy(javafx.scene.control.ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setVbarPolicy(javafx.scene.control.ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scrollPane.setStyle("-fx-background: #1e1e1e; -fx-background-color: #1e1e1e; -fx-background-radius: 8; -fx-border-radius: 8;");
+        VBox.setVgrow(scrollPane, Priority.ALWAYS);
+
+        VBox pagesBox = new VBox(22);
+        pagesBox.setPadding(new Insets(16));
+        pagesBox.setAlignment(Pos.TOP_CENTER);
+        pagesBox.setStyle("-fx-background-color: #1e1e1e;");
+
+        for (int p = 1; p <= 8; p++) {
+            try {
+                String path = "gui/assets/rules/page-" + p + ".png";
+                java.net.URL url = GuiApplication.class.getClassLoader().getResource(path);
+                if (url != null) {
+                    javafx.scene.image.ImageView imgView = new javafx.scene.image.ImageView();
+                    javafx.scene.image.Image img = new javafx.scene.image.Image(url.toExternalForm(), true);
+                    imgView.setImage(img);
+                    imgView.setPreserveRatio(true);
+                    
+                    // Perfect responsive width binding
+                    imgView.fitWidthProperty().bind(scrollPane.widthProperty().subtract(48));
+                    imgView.setStyle("-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 8, 0, 0, 4); -fx-background-radius: 6;");
+                    
+                    pagesBox.getChildren().add(imgView);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        
+        scrollPane.setContent(pagesBox);
+
+        overlay.setOnMouseClicked(event -> {
+            if (event.getTarget() == overlay) {
+                hideRulesModal();
+            }
+        });
+
+        card.getChildren().addAll(header, scrollPane);
+        overlay.getChildren().add(card);
+        StackPane.setAlignment(card, Pos.CENTER);
+
+        overlay.setFocusTraversable(true);
+        Platform.runLater(() -> overlay.requestFocus());
+        overlay.setOnKeyPressed(event -> {
+            if (event.getCode() == javafx.scene.input.KeyCode.ESCAPE) {
+                hideRulesModal();
+            }
+        });
+
+        return overlay;
+    }
 
 
     private ClientController controller;
@@ -70,6 +228,7 @@ public final class GuiApplication extends Application {
 
     @Override
     public void start(Stage stage) {
+        instance = this;
         if (launchContext == null) {
             throw new IllegalStateException("GUI launched without client context");
         }

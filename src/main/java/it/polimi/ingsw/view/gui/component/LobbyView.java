@@ -19,8 +19,10 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import it.polimi.ingsw.view.gui.GuiApplication;
 import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignA;
+import org.kordamp.ikonli.materialdesign2.MaterialDesignB;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignC;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignL;
 
@@ -103,6 +105,10 @@ public final class LobbyView {
         readyToggle.getStyleClass().add(ready ? "ready-toggle-on" : "ready-toggle-off");
         readyToggle.setOnAction(event -> controller.send(new ReadyMessage(!ready)));
         box.getChildren().add(readyToggle);
+
+        Button rulesBtn = secondaryButton("Regolamento", MaterialDesignB.BOOK_OPEN);
+        rulesBtn.setOnAction(event -> GuiApplication.openRulesPdf());
+        box.getChildren().add(rulesBtn);
 
         if (model.isLobbyLeader()) {
             box.getChildren().add(playerCountSelector());
