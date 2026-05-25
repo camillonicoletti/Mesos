@@ -116,7 +116,8 @@ public class MockClientConnection implements ClientSideConnection {
                 respond(new RoundEndedMessage(2));
                 sleep(300);
                 respond(new GameEndedMessage(myNickname,
-                        Map.of(myNickname, 42, "Bot", 17)));
+                        Map.of(myNickname, 42, "Bot", 17),
+                        Map.of(myNickname, 3, "Bot", 1)));
             }).start();
         }
     }

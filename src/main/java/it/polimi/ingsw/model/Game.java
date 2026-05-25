@@ -253,6 +253,7 @@ public class Game implements Serializable {
     }
 
 
+
     private int calculateBuilderPoints(Player player) {
         int points = 0;
         CardVisitor<Integer> builderPoints = new CardVisitor<>() {
@@ -480,10 +481,7 @@ public class Game implements Serializable {
             return liveScores;
         }
 
-        if (!finalScoresCalculated) {
-            calculateFinalScores();
-        }
-
+        calculateFinalScores();
         return new HashMap<>(finalScores);
     }
     /**

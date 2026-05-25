@@ -79,6 +79,7 @@ public class ClientModel {
 
     private String winnerNickname;
     private Map<String, Integer> finalScores = new HashMap<>();
+    private Map<String, Integer> finalFood = new HashMap<>();
 
     private final List<Listener> listeners = new ArrayList<>();
 
@@ -293,6 +294,9 @@ public class ClientModel {
         finalScores    = new HashMap<>(m.getFinalScores());
         gameState      = "EndGameState";
         gameEndedReceived = true;
+        if (m.getFinalFood() != null) {
+            finalFood = new HashMap<>(m.getFinalFood());
+        }
         notifyChanged();
     }
 
@@ -417,6 +421,7 @@ public class ClientModel {
     public int getRemainingTribeDeckCards()        { return remainingTribeDeckCards; }
     public String getWinnerNickname()              { return winnerNickname; }
     public Map<String, Integer> getFinalScores()   { return Collections.unmodifiableMap(finalScores); }
+    public Map<String, Integer> getFinalFood()     { return Collections.unmodifiableMap(finalFood); }
     public boolean isGameSuspended()               { return gameSuspended; }
     public long getSuspensionRemainingMillis() {
         if (!gameSuspended || suspensionDeadlineMillis < 0L) {

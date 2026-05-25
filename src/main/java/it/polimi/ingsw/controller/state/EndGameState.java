@@ -19,7 +19,9 @@ public class EndGameState extends AbstractGameState {
     @Override
     public void onEnter(GameController ctx) {
         Game game = ctx.getGame();
-        game.calculateFinalScores();
+        // end() calculates and freezes final scores, then sets gameEnded=true.
+        // Must be called before getFinalScores()/getWinner() so they read the frozen values.
+        game.end();
         // A suspension timeout can override normal score-based winner calculation.
         Player winner = ctx.consumeForcedWinner();
         if (winner == null) {
@@ -31,8 +33,6 @@ public class EndGameState extends AbstractGameState {
         ctx.notifyListeners(l -> l.onGameEnded(finalWinner, scores));
 
         persistToLeaderboard(ctx, scores);
-
-        game.end();
     }
 
     private void persistToLeaderboard(GameController ctx, Map<Player, Integer> scores) {

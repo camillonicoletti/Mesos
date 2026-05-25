@@ -4,6 +4,7 @@ import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.client.ClientModel;
 import it.polimi.ingsw.network.client.PlayerView;
 import it.polimi.ingsw.network.protocol.clientbound.EventResolvedMessage;
+import it.polimi.ingsw.view.EndGameHelper;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -374,8 +375,8 @@ public class Renderer {
 
     private void endGameScreen(ClientModel model) {
         final int panelW = 72;
-        // null winner = shared victory: resolve co-winners via the same tiebreaker the server uses.
-        List<String> tiedList = tiedWinners(model.getWinnerNickname(), model.getFinalScores(), model);
+        // null winner = shared victory: resolve co-winners via the shared tiebreaker utility.
+        List<String> tiedList = EndGameHelper.resolveWinners(model);
         String winner = tiedList.isEmpty()
                 ? "DRAW"
                 : String.join(" & ", tiedList);
@@ -685,23 +686,6 @@ public class Renderer {
             case '·' -> YLW + BOLD + "·" + RST;
             default -> RED + "─" + RST;
         };
-    }
-
-    private List<String> tiedWinners(String declaredWinner, Map<String, Integer> scores, ClientModel model) {
-        if (scores.isEmpty()) {
-            return declaredWinner != null ? List.of(declaredWinner) : List.of();
-        }
-        int maxScore = scores.values().stream().mapToInt(x -> x).max().orElse(Integer.MIN_VALUE);
-        List<String> topScorers = scores.entrySet().stream()
-                .filter(e -> e.getValue() == maxScore)
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
-        if (topScorers.size() == 1) return topScorers;
-        int maxFood = topScorers.stream().mapToInt(n -> foodOf(n, model)).max().orElse(0);
-        List<String> finalTied = topScorers.stream()
-                .filter(n -> foodOf(n, model) == maxFood)
-                .collect(Collectors.toList());
-        return finalTied.isEmpty() ? topScorers : finalTied;
     }
 
     private int foodOf(String nickname, ClientModel model) {

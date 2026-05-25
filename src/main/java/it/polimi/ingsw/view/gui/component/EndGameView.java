@@ -4,6 +4,7 @@ import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.client.ClientController;
 import it.polimi.ingsw.network.client.ClientModel;
 import it.polimi.ingsw.network.client.PlayerView;
+import it.polimi.ingsw.view.EndGameHelper;
 import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
 import it.polimi.ingsw.view.gui.util.GuiAnimations;
 import it.polimi.ingsw.view.gui.util.GuiIcons;
@@ -89,11 +90,7 @@ public final class EndGameView {
                 })
                 .toList();
 
-        Map.Entry<String, Integer> first = sorted.get(0);
-        List<String> winners = sorted.stream()
-                .filter(e -> e.getValue().equals(first.getValue()) && foodOf(e.getKey()) == foodOf(first.getKey()))
-                .map(Map.Entry::getKey)
-                .toList();
+        List<String> winners = EndGameHelper.resolveWinners(model);
 
         standings.getChildren().add(tableHeader());
 
@@ -274,6 +271,9 @@ public final class EndGameView {
     }
 
     private int foodOf(String nickname) {
+        // Prefer server-authoritative finalFood over the cached PlayerView value.
+        Map<String, Integer> finalFood = model.getFinalFood();
+        if (finalFood.containsKey(nickname)) return finalFood.get(nickname);
         PlayerView pv = model.getPlayers().get(nickname);
         return pv != null ? pv.getFood() : 0;
     }
