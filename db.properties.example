@@ -1,4 +1,3 @@
-db.url=jdbc:postgresql://localhost:5432/mesos
+db.url=jdbc:mysql://localhost:3306/mesos?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
 db.user=mesos
 db.password=mesos
-db.poolSize=4

@@ -1,12 +1,14 @@
 package it.polimi.ingsw.controller.leaderboard;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Properties;
 
 public final class LeaderboardFactory {
@@ -35,7 +37,6 @@ public final class LeaderboardFactory {
         String url      = props.getProperty("db.url");
         String user     = props.getProperty("db.user");
         String password = props.getProperty("db.password");
-        int    poolSize = Integer.parseInt(props.getProperty("db.poolSize", "4"));
 
         if (url == null || user == null || password == null) {
             System.err.println("[Leaderboard] db.properties is missing required keys, "
@@ -44,21 +45,33 @@ public final class LeaderboardFactory {
         }
 
         try {
-            HikariConfig cfg = new HikariConfig();
-            cfg.setJdbcUrl(url);
-            cfg.setUsername(user);
-            cfg.setPassword(password);
-            cfg.setMaximumPoolSize(poolSize);
-            cfg.setPoolName("mesos-leaderboard");
-
-            HikariDataSource ds = new HikariDataSource(cfg);
-            // touch the pool so a bad config fails fast instead of at first save
-            ds.getConnection().close();
-            return new JdbcLeaderboardService(ds);
+            // smoke-test the connection so a bad config fails fast
+            try (Connection probe = DriverManager.getConnection(url, user, password)) {
+                initSchema(probe);
+            }
+            return new JdbcLeaderboardService(url, user, password);
         } catch (Exception ex) {
-            System.err.println("[Leaderboard] failed to initialize datasource: "
+            System.err.println("[Leaderboard] failed to initialize database: "
                     + ex.getMessage() + " — leaderboard disabled");
             return new NoOpLeaderboardService();
+        }
+    }
+
+    private static void initSchema(Connection conn) throws SQLException, IOException {
+        try (InputStream in = LeaderboardFactory.class
+                .getResourceAsStream("/db/schema.sql")) {
+            if (in == null) {
+                throw new IOException("schema.sql not found on classpath");
+            }
+            String script = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+            try (Statement st = conn.createStatement()) {
+                for (String stmt : script.split(";")) {
+                    String trimmed = stmt.trim();
+                    if (!trimmed.isEmpty()) {
+                        st.execute(trimmed);
+                    }
+                }
+            }
         }
     }
 

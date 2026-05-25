@@ -1,9 +1,8 @@
 package it.polimi.ingsw.controller.leaderboard;
 
-import com.zaxxer.hikari.HikariDataSource;
-
-import javax.sql.DataSource;
+import java.nio.ByteBuffer;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -40,12 +39,12 @@ public final class JdbcLeaderboardService implements LeaderboardService, AutoClo
                            ORDER BY mr.final_score    DESC,
                                     ps.games_played   ASC,
                                     ps.first_played_at DESC
-                       ) AS rank
+                       ) AS rnk
                 FROM   match_result mr
                 JOIN   player_stats ps ON ps.nickname = mr.nickname
                 WHERE  mr.players_count = ?
             )
-            SELECT nickname, rank
+            SELECT nickname, rnk
             FROM   ranked
             WHERE  match_id = ?
             """;
@@ -67,18 +66,26 @@ public final class JdbcLeaderboardService implements LeaderboardService, AutoClo
                        ORDER BY mr.final_score    DESC,
                                 ps.games_played   ASC,
                                 ps.first_played_at DESC
-                   ) AS rank
+                   ) AS rnk
             FROM   match_result mr
             JOIN   player_stats ps ON ps.nickname = mr.nickname
             WHERE  mr.players_count = ?
-            ORDER  BY rank
+            ORDER  BY rnk
             LIMIT  ?
             """;
 
-    private final DataSource dataSource;
+    private final String url;
+    private final String user;
+    private final String password;
 
-    public JdbcLeaderboardService(DataSource dataSource) {
-        this.dataSource = dataSource;
+    public JdbcLeaderboardService(String url, String user, String password) {
+        this.url = url;
+        this.user = user;
+        this.password = password;
+    }
+
+    private Connection openConnection() throws SQLException {
+        return DriverManager.getConnection(url, user, password);
     }
 
     @Override
@@ -89,7 +96,7 @@ public final class JdbcLeaderboardService implements LeaderboardService, AutoClo
             return Collections.emptyMap();
         }
 
-        try (Connection conn = dataSource.getConnection()) {
+        try (Connection conn = openConnection()) {
             conn.setAutoCommit(false);
             try {
                 insertRows(conn, matchId, playedAt, playersCount, finalScores);
@@ -110,7 +117,7 @@ public final class JdbcLeaderboardService implements LeaderboardService, AutoClo
 
     @Override
     public List<LeaderboardEntry> getTop(int playersCount, int limit) {
-        try (Connection conn = dataSource.getConnection();
+        try (Connection conn = openConnection();
              PreparedStatement ps = conn.prepareStatement(TOP_SQL)) {
 
             ps.setInt(1, playersCount);
@@ -121,7 +128,7 @@ public final class JdbcLeaderboardService implements LeaderboardService, AutoClo
                 List<LeaderboardEntry> out = new ArrayList<>();
                 while (rs.next()) {
                     out.add(new LeaderboardEntry(
-                            rs.getInt("rank"),
+                            rs.getInt("rnk"),
                             rs.getString("nickname"),
                             rs.getInt("final_score"),
                             rs.getTimestamp("played_at").toInstant(),
@@ -138,9 +145,7 @@ public final class JdbcLeaderboardService implements LeaderboardService, AutoClo
 
     @Override
     public void close() {
-        if (dataSource instanceof HikariDataSource hikari) {
-            hikari.close();
-        }
+        // no pooled resources to release: each call opens and closes its own Connection
     }
 
     private void insertRows(Connection conn, UUID matchId, Instant playedAt,
@@ -148,8 +153,9 @@ public final class JdbcLeaderboardService implements LeaderboardService, AutoClo
             throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(INSERT_SQL)) {
             Timestamp ts = Timestamp.from(playedAt);
+            byte[] matchIdBytes = uuidToBytes(matchId);
             for (Map.Entry<String, Integer> e : finalScores.entrySet()) {
-                ps.setObject(1, matchId);
+                ps.setBytes(1, matchIdBytes);
                 ps.setString(2, e.getKey());
                 ps.setInt(3, e.getValue());
                 ps.setTimestamp(4, ts);
@@ -165,14 +171,21 @@ public final class JdbcLeaderboardService implements LeaderboardService, AutoClo
         try (PreparedStatement ps = conn.prepareStatement(RANK_SQL)) {
             ps.setInt(1, playersCount);
             ps.setInt(2, playersCount);
-            ps.setObject(3, matchId);
+            ps.setBytes(3, uuidToBytes(matchId));
             try (ResultSet rs = ps.executeQuery()) {
                 Map<String, Integer> out = new HashMap<>();
                 while (rs.next()) {
-                    out.put(rs.getString("nickname"), rs.getInt("rank"));
+                    out.put(rs.getString("nickname"), rs.getInt("rnk"));
                 }
                 return out;
             }
         }
+    }
+
+    private static byte[] uuidToBytes(UUID uuid) {
+        ByteBuffer buf = ByteBuffer.allocate(16);
+        buf.putLong(uuid.getMostSignificantBits());
+        buf.putLong(uuid.getLeastSignificantBits());
+        return buf.array();
     }
 }
