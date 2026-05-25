@@ -35,6 +35,7 @@ pedine_specs.pdf
 !src/main/resources/assets/manifest/*.json
 
 # User-specific stuff
+.idea/
 .idea/**/workspace.xml
 .idea/**/tasks.xml
 .idea/**/usage.statistics.xml
@@ -127,6 +128,9 @@ __MACOSX/
 # temporary archives
 src/test.zip
 deliverables/homework/
+docs/
+scripts/
+local-tools/
 
 
 db.properties
