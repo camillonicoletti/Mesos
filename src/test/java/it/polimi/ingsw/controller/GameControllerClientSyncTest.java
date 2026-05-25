@@ -24,11 +24,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Regression tests for client-side synchronisation after game events.
  *
- * Bug #4: {@code onFoodChanged} must be fired after a building purchase so the TUI
- * does not show stale food until the next full snapshot arrives.
- *
- * Bug #5: {@code onFoodChanged} / {@code onPointsChanged} must be fired after the
- * totem lands on a TurnOrderTile slot so the TUI reflects slot effects immediately.
+ * These tests cover updates that must reach the client immediately, without
+ * waiting for the next full snapshot.
  */
 class GameControllerClientSyncTest {
 
@@ -121,7 +118,7 @@ class GameControllerClientSyncTest {
         return ctrl;
     }
 
-    // ── Bug #4: food notification after building purchase ─────────────────────
+    // ── Food notification after building purchase ─────────────────────────────
 
     /**
      * After a player buys a building, {@code onFoodChanged} must be fired immediately
@@ -218,7 +215,7 @@ class GameControllerClientSyncTest {
                         "Notified food amount must always equal the current model food"));
     }
 
-    // ── Bug #5: turn-order slot effect notifications ───────────────────────────
+    // ── Turn-order slot effect notifications ──────────────────────────────────
 
     /**
      * When a player's totem lands on slot 1 (GainFoodSlotEffect, +1 food in a 2-player game),

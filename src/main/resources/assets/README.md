@@ -1,13 +1,13 @@
-GUI asset layout
-================
+Asset GUI
+=========
 
-This folder contains runtime assets for the Java GUI.
+Questa cartella contiene le immagini usate dalla GUI Java.
 
-Do not load the original PDF files directly from the GUI. Convert them to
-optimized PNG files and keep the file names stable, so the view can resolve
-assets through the generated manifests.
+La GUI non legge direttamente i PDF originali. Le immagini vanno tenute in PNG
+o JPEG con nomi stabili, in modo che il codice possa trovarle tramite i file
+manifest.
 
-Expected layout:
+Struttura attesa:
 
 - cards/characters/card_001.png ... card_084.png
 - cards/events/card_085.png ... card_096.png
@@ -26,12 +26,11 @@ Expected layout:
 - manifest/cards.json
 - manifest/components.json
 
-Image files in this folder are professor-provided local assets and are ignored
-by git. The tracked manifest files document the expected runtime names; keep
-the local PNG/JPEG files next to them when running the GUI.
+Le immagini sono risorse fornite dai docenti e non vanno caricate su Git.
+I manifest rimangono tracciati per documentare i nomi attesi a runtime.
 
-Original source PDFs currently live outside the project at:
+I PDF originali sono conservati fuori dal progetto, ad esempio in:
 
 /Users/giorgio/Desktop/Risorse Grafiche Mesos
 
-Keep those as source material. Do not commit the extracted PNG/JPEG assets.
+Quei file vanno usati solo come materiale locale di partenza.

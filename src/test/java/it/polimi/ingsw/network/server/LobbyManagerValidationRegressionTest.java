@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Bug hunter tests for lobby login edge cases.
  */
-class LobbyManagerBugHunterTest {
+class LobbyManagerValidationRegressionTest {
 
     /**
      * Null nickname must be rejected and must not crash the lobby.

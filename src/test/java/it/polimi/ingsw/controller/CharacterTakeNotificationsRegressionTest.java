@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * These tests confirm whether the bug exists and document the expected fix.
  */
-class CharacterTakeNotificationsBugHunterTest {
+class CharacterTakeNotificationsRegressionTest {
 
     record FoodEvent(String nick, int newAmount, int delta) {}
 
@@ -115,12 +115,12 @@ class CharacterTakeNotificationsBugHunterTest {
         return c;
     }
 
-    // ── Bug #K — Hunter immediate food bonus is not notified ─────────────────
+    // ── Hunter immediate food bonus notification ─────────────────────────────
 
     /**
      * When a Hunter with the "food icon" (Hunter that grants +1 food per Hunter
      * already in tribe) is picked, the player gains food via
-     * {@code applyCharacterImmediateEffects} but no onFoodChanged is fired.
+     * {@code applyCharacterImmediateEffects} and the client must be notified.
      *
      * Reproduction:
      *   1. Give the player a Hunter card (no food icon) before the action.
@@ -129,7 +129,7 @@ class CharacterTakeNotificationsBugHunterTest {
      *   4. Expect onFoodChanged with delta &gt; 0 (the hunter immediate effect).
      */
     @Test
-    void hunterWithFoodIconPickedDoesNotFireFoodChanged() {
+    void hunterWithFoodIconPickedFiresFoodChanged() {
         GameController ctrl = reachActionResolutionBthenC();
         RecordingListener listener = new RecordingListener();
         ctrl.addListener(listener);
@@ -153,11 +153,8 @@ class CharacterTakeNotificationsBugHunterTest {
 
         ctrl.onMessageReceived(resolver, new PickCardAction("601", false));
 
-        // Expectation A (current bug) — no positive food event arrived for the
-        // hunter immediate bonus.  The slot-1 GainFoodSlotEffect WILL fire
-        // (already covered by the Round.placeTotemOrderForPlayer fix), so any
-        // positive event might come from there.  We need to detect whether
-        // the immediate bonus was emitted as a separate event.
+        // The slot-1 GainFoodSlotEffect also fires here, so we check that the
+        // immediate hunter bonus is emitted as a separate event.
         long positiveEvents = listener.food.stream()
                 .filter(e -> e.nick().equals(resolver) && e.delta() > 0)
                 .count();
@@ -166,22 +163,17 @@ class CharacterTakeNotificationsBugHunterTest {
         //   +1 (slot-1 GainFoodSlotEffect)
         //   +2 (hunter immediate: 2 hunters in tribe AFTER add)
         // = +3 total.
-        // But only ONE onFoodChanged event would currently fire (the slot one).
-        // If two events fired, the bug is fixed.
         int expectedDelta = 3;
         int actualDelta   = resolverPlayer.getFood() - foodBefore;
         assertEquals(expectedDelta, actualDelta,
                 "Sanity: food should have grown by 1 (slot) + 2 (hunter immediate)");
 
-        // KEY ASSERTION: with the bug, only 1 positive event fires (slot).
-        // If the bug is fixed, 2 positive events fire (slot + hunter immediate).
         assertEquals(2L, positiveEvents,
                 "Expected TWO positive food events — slot-1 gain and hunter " +
-                "immediate bonus.  If only 1 fires, the hunter immediate effect " +
-                "is silently mutating food without notification (Bug #K).");
+                "immediate bonus.");
     }
 
-    // ── Bug — FullSetFoodEffect triggers food on character add but not notified ──
+    // ── FullSetFoodEffect notification ────────────────────────────────────────
 
     /**
      * When picking a character card that completes a "full set" of all 6
@@ -240,10 +232,10 @@ class CharacterTakeNotificationsBugHunterTest {
                 "adding food without notification.");
     }
 
-    // ── Bug — InventorPairFoodEffect via building, same pattern as full-set ──
+    // ── InventorPairFoodEffect notification ──────────────────────────────────
 
     @Test
-    void inventorPairFoodEffectFromBuildingDoesNotFireFoodChanged() {
+    void inventorPairFoodEffectFromBuildingFiresFoodChanged() {
         GameController ctrl = reachActionResolutionBthenC();
         RecordingListener listener = new RecordingListener();
         ctrl.addListener(listener);

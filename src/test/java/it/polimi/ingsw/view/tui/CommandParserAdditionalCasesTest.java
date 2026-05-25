@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *   - extra spaces between tokens
  *   - missing or partial arguments
  */
-class CommandParserDeepBugHunterTest {
+class CommandParserAdditionalCasesTest {
 
     private final CommandParser parser = new CommandParser();
 

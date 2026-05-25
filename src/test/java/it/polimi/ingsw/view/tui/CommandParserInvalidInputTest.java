@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 /**
  * Bug hunter tests for malformed TUI commands.
  */
-class CommandParserBugHunterTest {
+class CommandParserInvalidInputTest {
 
     /**
      * Invalid row names must not be silently interpreted as lower row.

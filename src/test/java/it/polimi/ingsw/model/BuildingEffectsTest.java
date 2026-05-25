@@ -354,7 +354,6 @@ public class BuildingEffectsTest {
 
     @Test
     void endBuilderPPEffectAddsBuilderPointsAtEndOfGame() {
-        // TODO: known double counting bug — calculateBuilderPoints() + EndBuilderPPEffect both add points
         Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addCharacterCard(new BuilderCard(1, Era.I, 2, 3, 0)); // pointsEndOfMatch=3
         player.addBuildingCard(new BuildingCard(2, Era.I, 0, new EndBuilderPPEffect(), 0));
@@ -362,7 +361,7 @@ public class BuildingEffectsTest {
         Game game = buildGame(List.of(player));
         game.calculateFinalScores();
 
-        // calculateBuilderPoints aggiunge 3, EndBuilderPPEffect aggiunge altri 3 → totale 6 (bug noto)
+        // calculateBuilderPoints aggiunge 3, EndBuilderPPEffect aggiunge altri 3.
         assertEquals(6, game.getFinalScores().get(player));
     }
 

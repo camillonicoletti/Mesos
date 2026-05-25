@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * Bug hunter tests for model encapsulation.
  * These tests verify that external code cannot corrupt core model collections directly.
  */
-class ModelEncapsulationBugHunterTest {
+class ModelEncapsulationRegressionTest {
 
     /**
      * External code must not be able to clear the game's player list through getPlayers().

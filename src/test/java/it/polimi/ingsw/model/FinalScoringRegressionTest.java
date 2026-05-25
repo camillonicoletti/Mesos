@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * Bug hunter tests for final scoring lifecycle.
  */
-class FinalScoringBugHunterTest {
+class FinalScoringRegressionTest {
 
     /**
      * Reading the winner before the game is actually over must not freeze final scores.

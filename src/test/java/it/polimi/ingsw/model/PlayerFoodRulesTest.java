@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Bug hunter tests for food spending semantics after spendFood was made strict.
  */
-class PlayerFoodBugHunterTest {
+class PlayerFoodRulesTest {
 
     /**
      * Generic food spending must be strict: penalties are handled by dedicated rule methods.

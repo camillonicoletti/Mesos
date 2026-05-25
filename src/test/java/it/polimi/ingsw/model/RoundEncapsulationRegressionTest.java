@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * Bug hunter tests for Round board encapsulation.
  * External code must not be able to mutate board rows directly through getters.
  */
-class RoundEncapsulationBugHunterTest {
+class RoundEncapsulationRegressionTest {
 
     /**
      * External code must not be able to clear lower row character cards.

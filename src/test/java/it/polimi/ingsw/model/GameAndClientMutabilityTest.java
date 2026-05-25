@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * The brief states: "usare copie difensive, List.copyOf, getter immutabili."
  * These tests detect exposed mutability so we can fix only what's needed.
  */
-class GameAndClientMutabilityBugHunterTest {
+class GameAndClientMutabilityTest {
 
     private Game minimalGame() {
         List<Player> players = List.of(

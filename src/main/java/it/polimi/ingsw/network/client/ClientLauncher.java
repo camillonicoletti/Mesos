@@ -11,13 +11,6 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.Arrays;
 
-/**
- * Single client entry point used by the final executable JAR.
- *
- * Usage:
- *   java -jar mesos-client.jar socket <host> <socketPort>
- *   java -jar mesos-client.jar rmi <host> [registryPort] [bindingName]
- */
 public final class ClientLauncher {
 
     private ClientLauncher() {

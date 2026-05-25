@@ -8,14 +8,6 @@ import java.io.IOException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
-/**
- * Unified server bootstrap: starts both the Socket and the RMI transports
- * sharing a single {@link LobbyManager}, so clients connecting via different
- * technologies can take part in the same match.
- *
- * Usage: java ServerLauncher [--fresh] [socketPort] [rmiPort] [rmiBindingName]
- * Defaults: socketPort=1234, rmiPort=1099, rmiBindingName="MesosServer".
- */
 public final class ServerLauncher {
 
     private ServerLauncher() {}

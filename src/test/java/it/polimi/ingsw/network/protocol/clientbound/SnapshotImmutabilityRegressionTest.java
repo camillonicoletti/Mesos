@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * Bug hunter tests for client-bound snapshots and messages.
  * DTOs sent to clients must not expose mutable internal collections.
  */
-class SnapshotImmutabilityBugHunterTest {
+class SnapshotImmutabilityRegressionTest {
 
     /**
      * GameSnapshot must not expose its players list as a mutable internal collection.

@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Bug hunter tests for duplicated/replayed game actions.
  */
-class GameControllerBugHunterReplayTest {
+class GameControllerReplayRegressionTest {
 
     /**
      * Replaying the same card-pick action after it has already been accepted must be rejected.

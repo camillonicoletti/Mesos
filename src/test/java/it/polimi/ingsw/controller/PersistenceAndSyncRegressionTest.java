@@ -55,7 +55,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *   - Disconnection mid-event-resolution
  *   - ExtraCardPickAvailable information preservation
  */
-class PersistenceAndSyncBugHunterTest {
+class PersistenceAndSyncRegressionTest {
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 

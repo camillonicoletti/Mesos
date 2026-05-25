@@ -97,7 +97,7 @@ public class LobbyManager {
         return leaderboardService;
     }
 
-    /** DEBUG ONLY — forces immediate transition to EndGameState. Remove before release. */
+    /** Comando disponibile solo in modalita debug. */
     public synchronized void handleForceEndGame() {
         gameController.changeState(new it.polimi.ingsw.controller.state.EndGameState());
     }
