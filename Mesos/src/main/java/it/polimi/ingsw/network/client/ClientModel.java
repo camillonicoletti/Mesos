@@ -4,9 +4,15 @@ import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.protocol.clientbound.*;
 
-import java.util.*;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 public class ClientModel {
 
@@ -251,6 +257,7 @@ public class ClientModel {
     }
 
     public void applyBuildingCardTaken(BuildingCardTakenMessage m) {
+        lastError = null;
         if (m.isFromUpperRow()) upperRowBuildingIds.remove(Integer.valueOf(m.getCardId()));
         else                    lowerRowBuildingIds.remove(Integer.valueOf(m.getCardId()));
         decrementPickBudget(m.getNickname(), m.isFromUpperRow());
@@ -264,8 +271,8 @@ public class ClientModel {
     }
 
     public void applyRoundEnded(RoundEndedMessage m) {
-        roundNumber = m.getRoundNumber();
-        lastFinishedRound = m.getRoundNumber();   // ← ADD THIS
+        lastFinishedRound = m.getRoundNumber();
+        roundNumber = Math.max(roundNumber, m.getRoundNumber());
         notifyChanged();
     }
 

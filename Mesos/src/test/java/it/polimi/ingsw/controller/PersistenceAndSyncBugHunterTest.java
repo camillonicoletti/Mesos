@@ -195,21 +195,17 @@ class PersistenceAndSyncBugHunterTest {
 
     /**
      * Reverse order: GameSync first, then RoundEnded (degenerate case, e.g.
-     * if a future protocol change splits emission across channels).  Verify
-     * what happens — currently roundNumber regresses.  Documents the fragility.
+     * if a future protocol change splits emission across channels).
+     * The client must keep the newer current round from the sync.
      */
     @Test
-    void reverseOrderGameSyncThenRoundEndedRegressesRoundNumber() {
+    void reverseOrderGameSyncThenRoundEndedDoesNotRegressRoundNumber() {
         ClientModel m = new ClientModel();
         m.applyGameSync(new GameSyncMessage(snapshotForRound(2)));
         m.applyRoundEnded(new RoundEndedMessage(1));
 
-        // BUG/Fragility: applyRoundEnded unconditionally writes m.getRoundNumber().
-        // After this swap, the client reverts to roundNumber = 1.
-        assertEquals(1, m.getRoundNumber(),
-                "applyRoundEnded clobbers roundNumber unconditionally — fragile " +
-                "if message order is ever swapped.  A safer impl would only " +
-                "update roundNumber if it is currently behind.");
+        assertEquals(2, m.getRoundNumber(),
+                "RoundEnded must not make the client go back to an older round.");
         assertEquals(1, m.getLastFinishedRound());
     }
 
