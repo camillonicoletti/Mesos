@@ -166,14 +166,6 @@ public class ActionResolutionState extends AbstractGameState {
         } else if (action instanceof PickBuildingAction pickBuilding) {
             getRegularPickBudget().requireCanPick(pickBuilding.isFromUpperRow(), "buildings");
 
-            List<CharacterCard> tributeRow = pickBuilding.isFromUpperRow()
-                    ? round.getUpperRowTribute()
-                    : round.getLowerRowTribute();
-            // Buildings can be picked from a row only after all character cards in that row are gone.
-            if (!tributeRow.isEmpty())
-                throw new IllegalStateException(
-                        "Must pick a Character card before a Building when Characters are available in the same row");
-
             List<BuildingCard> row = pickBuilding.isFromUpperRow()
                     ? round.getUpperRowBuildings()
                     : round.getLowerRowBuildings();

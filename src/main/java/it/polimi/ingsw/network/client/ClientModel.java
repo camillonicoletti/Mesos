@@ -13,12 +13,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import it.polimi.ingsw.controller.leaderboard.LeaderboardEntry;
-
 import java.util.function.BiConsumer;
 import it.polimi.ingsw.controller.leaderboard.LeaderboardEntry;
 
-import java.util.function.BiConsumer;
 public class ClientModel {
 
     private static final long CONNECTION_EVENT_VISIBLE_MILLIS = 10_000L;

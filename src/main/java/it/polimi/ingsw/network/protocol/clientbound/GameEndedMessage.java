@@ -1,7 +1,6 @@
 package it.polimi.ingsw.network.protocol.clientbound;
 
 import java.io.Serial;
-import java.util.Collections;
 import java.util.Map;
 
 public class GameEndedMessage implements ServerMessage {
