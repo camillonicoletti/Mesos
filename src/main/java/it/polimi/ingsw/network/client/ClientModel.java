@@ -13,7 +13,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import it.polimi.ingsw.controller.leaderboard.LeaderboardEntry;
 
+import java.util.function.BiConsumer;
+import it.polimi.ingsw.controller.leaderboard.LeaderboardEntry;
+
+import java.util.function.BiConsumer;
 public class ClientModel {
 
     private static final long CONNECTION_EVENT_VISIBLE_MILLIS = 10_000L;
@@ -76,6 +81,8 @@ public class ClientModel {
     private int remainingTribeDeckCards = -1;
 
     private Map<String, PlayerView> players = new LinkedHashMap<>();
+    private final List<BiConsumer<Integer, List<LeaderboardEntry>>> leaderboardListeners = new ArrayList<>();
+    private final List<BiConsumer<Integer, Integer>> myRankListeners = new ArrayList<>();
 
     private String winnerNickname;
     private Map<String, Integer> finalScores = new HashMap<>();
@@ -84,7 +91,22 @@ public class ClientModel {
     private final List<Listener> listeners = new ArrayList<>();
 
     public void addListener(Listener l) { listeners.add(l); }
+    /**
+     * Subscribes to leaderboard responses. The listener is invoked with
+     * {@code (playersCount, entries)} every time a LeaderboardMessage arrives.
+     */
+    public void addLeaderboardListener(BiConsumer<Integer, List<LeaderboardEntry>> l) {
+        leaderboardListeners.add(l);
+    }
 
+    /**
+     * Subscribes to "my rank" notifications. The listener is invoked with
+     * {@code (rank, playersCount)} every time a LeaderboardRankMessage arrives
+     * (typically once per match, at end-game).
+     */
+    public void addMyRankListener(BiConsumer<Integer, Integer> l) {
+        myRankListeners.add(l);
+    }
     private void notifyChanged() {
         for (Listener l : listeners) l.onModelChanged();
     }
@@ -362,7 +384,21 @@ public class ClientModel {
         lastErrorVersion++;
         notifyChanged();
     }
+    public void applyLeaderboard(LeaderboardMessage m) {
+        int pc = m.playersCount();
+        List<LeaderboardEntry> entries = m.entries();
+        for (BiConsumer<Integer, List<LeaderboardEntry>> l : leaderboardListeners) {
+            l.accept(pc, entries);
+        }
+    }
 
+    public void applyMyLeaderboardRank(LeaderboardRankMessage m) {
+        int rank = m.rank();
+        int pc = m.playersCount();
+        for (BiConsumer<Integer, Integer> l : myRankListeners) {
+            l.accept(rank, pc);
+        }
+    }
     // ── setters ──────────────────────────────────────────────────────────────
 
     public void setMyNickname(String nickname) {

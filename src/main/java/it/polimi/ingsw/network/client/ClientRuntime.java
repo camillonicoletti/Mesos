@@ -18,11 +18,13 @@ final class ClientRuntime {
         ClientController controller = new ClientController(model, connection);
         View view = ClientViewSelector.select(controller, model);
 
+
         try {
             beforeViewRun.execute();
             view.run();
         } catch (Exception exception) {
             System.err.println("Error: " + exception.getMessage());
+            exception.printStackTrace(System.err);
             System.exit(1);
         } finally {
             connection.close();
