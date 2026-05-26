@@ -9,6 +9,8 @@ import it.polimi.ingsw.network.transport.ClientSideConnection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import it.polimi.ingsw.network.protocol.serverbound.GetLeaderboardMessage;
+
 
 public class ClientController {
 
@@ -34,6 +36,7 @@ public class ClientController {
         this.dispatcher = dispatcher;
     }
 
+
     public void send(ClientMessage message) {
         try {
             connection.send(message);
@@ -41,6 +44,16 @@ public class ClientController {
             model.applyConnectionLost("Connection to the server lost");
             throw exception;
         }
+    }
+    /**
+     * Sends a leaderboard request to the server. The result will be delivered
+     * asynchronously through {@link View#showLeaderboard}.
+     *
+     * @param playersCount the player-count bucket to query (e.g. 2, 3, 4)
+     * @param limit        maximum number of rows to return
+     */
+    public void requestLeaderboard(int playersCount, int limit) {
+        send(new GetLeaderboardMessage(playersCount, limit));
     }
 
     public void disconnect() {
@@ -92,6 +105,8 @@ public class ClientController {
         register(handlers, PlayerDisconnectedMessage.class, model::applyPlayerDisconnected);
         register(handlers, PlayerReconnectedMessage.class, model::applyPlayerReconnected);
         register(handlers, ExtraCardPickAvailableMessage.class, model::applyExtraCardPickAvailable);
+        register(handlers, LeaderboardMessage.class, model::applyLeaderboard);
+        register(handlers, LeaderboardRankMessage.class, model::applyMyLeaderboardRank);
         return Map.copyOf(handlers);
     }
 

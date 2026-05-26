@@ -7,12 +7,26 @@ import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.protocol.serverbound.*;
 
 import java.util.Scanner;
+import it.polimi.ingsw.controller.leaderboard.LeaderboardEntry;
+
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import it.polimi.ingsw.controller.leaderboard.LeaderboardEntry;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import it.polimi.ingsw.controller.leaderboard.LeaderboardEntry;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 public class Tui implements View {
 
     private static final long TRIBE_VISIBLE_MILLIS = 10_000L;
     private static final long BUILDING_EFFECT_VISIBLE_MILLIS = 8_000L;
 
+    private Thread inputThread;
     private final ClientController controller;
     private final ClientModel model;
     private final CommandParser parser;
@@ -24,6 +38,11 @@ public class Tui implements View {
     private volatile long buildingEffectVisibleUntilMillis = -1L;
     private volatile int visibleTribeNumber;
     private volatile int visibleBuildingEffectId;
+    // Leaderboard
+    private volatile Integer endGameMyRank = null;
+    private volatile int endGameMyRankPlayersCount = 0;
+    private volatile List<LeaderboardEntry> endGameLeaderboard = null;
+    private volatile int endGameLeaderboardPlayersCount = 0;
 
     public Tui(ClientController controller, ClientModel model) {
         this.controller = controller;
@@ -34,6 +53,7 @@ public class Tui implements View {
 
         model.addListener(() -> {
             renderer.render(model);
+            paintEndGameLeaderboardArtifacts();
             if (activePrompt != null) {
                 System.out.print(activePrompt);
             }
@@ -41,6 +61,8 @@ public class Tui implements View {
                 modelLock.notifyAll();
             }
         });
+        model.addLeaderboardListener(this::showLeaderboard);
+        model.addMyRankListener(this::showMyRank);
     }
 
     @Override
@@ -56,7 +78,7 @@ public class Tui implements View {
             return;
         }
 
-        Thread inputThread = new Thread(this::interactiveInputLoop);
+        inputThread = new Thread(this::interactiveInputLoop);
         inputThread.setDaemon(true);
         inputThread.start();
 
@@ -289,7 +311,14 @@ public class Tui implements View {
             return;
         }
         System.out.println("\nGame ended. Press ENTER to quit.");
-        readLineWithPrompt("");
+
+        if (inputThread != null) {
+            try {
+                inputThread.join();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
         controller.disconnect();
     }
 
@@ -532,5 +561,82 @@ public class Tui implements View {
         if (activePrompt != null) {
             System.out.print(activePrompt);
         }
+    }
+
+    // ── Leaderboard rendering ───────────────────────────────────────────────
+
+    private static final DateTimeFormatter LEADERBOARD_DATE_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+                    .withZone(ZoneId.systemDefault());
+
+    @Override
+    public void showMyRank(int rank, int playersCount) {
+        endGameMyRank = rank;
+        endGameMyRankPlayersCount = playersCount;
+        paintMyRank(rank, playersCount);
+        if (activePrompt != null) {
+            System.out.print(activePrompt);
+        }
+        // Auto-fetch the full leaderboard so it shows up right below the rank banner.
+        controller.requestLeaderboard(playersCount, 10);
+    }
+
+    @Override
+    public void showLeaderboard(int playersCount, List<LeaderboardEntry> entries) {
+        endGameLeaderboard = entries;
+        endGameLeaderboardPlayersCount = playersCount;
+        paintLeaderboard(playersCount, entries);
+        if (activePrompt != null) {
+            System.out.print(activePrompt);
+        }
+    }
+
+    /**
+     * Re-prints the rank banner and leaderboard table after each render cycle,
+     * so they survive the screen wipe done by Renderer.render().
+     */
+    private void paintEndGameLeaderboardArtifacts() {
+        Integer rank = endGameMyRank;
+        if (rank != null) {
+            paintMyRank(rank, endGameMyRankPlayersCount);
+        }
+        List<LeaderboardEntry> entries = endGameLeaderboard;
+        if (entries != null) {
+            paintLeaderboard(endGameLeaderboardPlayersCount, entries);
+        }
+    }
+
+    private void paintMyRank(int rank, int playersCount) {
+        System.out.println();
+        System.out.printf("You finished #%d in the %d-player leaderboard.%n",
+                rank, playersCount);
+    }
+
+    private void paintLeaderboard(int playersCount, List<LeaderboardEntry> entries) {
+        StringBuilder out = new StringBuilder();
+        out.append('\n');
+        out.append("══════════════ LEADERBOARD (").append(playersCount).append(" players) ══════════════\n");
+
+        if (entries == null || entries.isEmpty()) {
+            out.append("  (no matches recorded yet)\n");
+        } else {
+            out.append(String.format("  %-6s %-20s %-7s %s%n", "RANK", "NICKNAME", "SCORE", "DATE"));
+            out.append("  ──────────────────────────────────────────────────────────\n");
+            for (LeaderboardEntry e : entries) {
+                out.append(String.format("  #%-5d %-20s %-7d %s%n",
+                        e.rank(),
+                        truncate(e.nickname(), 20),
+                        e.finalScore(),
+                        LEADERBOARD_DATE_FORMAT.format(e.playedAt())));
+            }
+        }
+        out.append("══════════════════════════════════════════════════════════════");
+
+        System.out.println(out);
+    }
+
+    private static String truncate(String s, int max) {
+        if (s == null) return "";
+        return s.length() <= max ? s : s.substring(0, max - 1) + "…";
     }
 }
