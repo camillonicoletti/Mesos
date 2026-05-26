@@ -74,7 +74,15 @@ public class ActionResolutionState extends AbstractGameState {
     private void startExtraPickPhase(GameController ctx) {
         ExtraPickQueue queue = getExtraPickQueue();
         queue.clear();
+        // Build a totem→player map so we can follow the turn-order tile's ordering.
+        java.util.Map<it.polimi.ingsw.model.Totem, Player> totemOwner = new java.util.HashMap<>();
         for (Player p : ctx.getGame().getPlayers()) {
+            totemOwner.put(p.getTotem(), p);
+        }
+        // Iterate players in turn-order-tile sequence, not join order.
+        for (it.polimi.ingsw.model.Totem totem : ctx.getGame().getBoard().getTurnOrderTile().getTurnOrder()) {
+            Player p = totemOwner.get(totem);
+            if (p == null) continue;
             int count = 0;
             for (BuildingCard b : p.getTribe().getBuildingCards()) {
                 count += extraUpperRowPicksFrom(b);
