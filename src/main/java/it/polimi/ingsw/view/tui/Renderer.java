@@ -689,6 +689,9 @@ public class Renderer {
     }
 
     private int foodOf(String nickname, ClientModel model) {
+        // Prefer server-authoritative finalFood over the cached PlayerView value.
+        java.util.Map<String, Integer> finalFood = model.getFinalFood();
+        if (finalFood.containsKey(nickname)) return finalFood.get(nickname);
         PlayerView pv = model.getPlayers().get(nickname);
         return pv != null ? pv.getFood() : 0;
     }
