@@ -17,7 +17,7 @@ public class EventCardTest {
     }
 
     // -------------------------------------------------------
-    // HuntEventCard — base resolve (senza edificio)
+    // HuntEventCard — base resolve (without building)
     // -------------------------------------------------------
 
     @Test
@@ -29,8 +29,8 @@ public class EventCardTest {
         Game game = buildGame(List.of(player));
         new HuntEventCard(1, Era.I, false, 2, 3).resolve(game);
 
-        assertEquals(4, player.getFood());           // 2 cacciatori × 2 cibo
-        assertEquals(6, player.getPrestigePoints()); // 2 cacciatori × 3 PP
+        assertEquals(4, player.getFood());           // 2 hunters × 2 food
+        assertEquals(6, player.getPrestigePoints()); // 2 hunters × 3 PP
     }
 
     @Test
@@ -61,14 +61,14 @@ public class EventCardTest {
     }
 
     // -------------------------------------------------------
-    // CavePaintingsEventCard — casi mancanti
+    // CavePaintingsEventCard — missing cases
     // -------------------------------------------------------
 
     @Test
     void cavePaintingsEventCard_exactlyAtMinimum_gainsPP() {
         Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addCharacterCard(new ArtistCard(1, Era.I, 2));
-        player.addCharacterCard(new ArtistCard(2, Era.I, 2)); // esattamente 2, minimo 2
+        player.addCharacterCard(new ArtistCard(2, Era.I, 2)); // exactly 2, minimum 2
 
         Game game = buildGame(List.of(player));
         new CavePaintingsEventCard(1, Era.I, false, 2, 3, 1).resolve(game);
@@ -80,24 +80,24 @@ public class EventCardTest {
     @Test
     void cavePaintingsEventCard_noArtists_losesPrestigePoints() {
         Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
-        // nessun artista
+        // no artist
 
         Game game = buildGame(List.of(player));
         new CavePaintingsEventCard(1, Era.I, false, 2, 3, 1).resolve(game);
 
-        assertEquals(-3, player.getPrestigePoints()); // sotto soglia → perde 3 PP
+        assertEquals(-3, player.getPrestigePoints()); // below threshold → loses 3 PP
     }
 
     // -------------------------------------------------------
-    // SustenanceEventCard — casi mancanti
+    // SustenanceEventCard — missing cases
     // -------------------------------------------------------
 
     @Test
     void sustenanceEventCard_gathererReducesFoodRequiredBy3() {
         Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addFood(10);
-        // 2 gatherer + 2 artisti = 4 personaggi → 4 cibo richiesto
-        // sconto: 2 gatherer × 3 = 6 → cibo richiesto = max(0, 4-6) = 0
+        // 2 gatherer + 2 artists = 4 characters → 4 food required
+        // discount: 2 gatherer × 3 = 6 → food required = max(0, 4-6) = 0
         player.addCharacterCard(new GathererCard(1, Era.I, 2));
         player.addCharacterCard(new GathererCard(2, Era.I, 2));
         player.addCharacterCard(new ArtistCard(3, Era.I, 2));
@@ -106,7 +106,7 @@ public class EventCardTest {
         Game game = buildGame(List.of(player));
         new SustenanceEventCard(1, Era.I, false, 2).resolve(game);
 
-        assertEquals(10, player.getFood());         // non paga nulla
+        assertEquals(10, player.getFood());         // pays nothing
         assertEquals(0, player.getPrestigePoints());
     }
 
@@ -116,7 +116,7 @@ public class EventCardTest {
         player.addFood(3);
         player.addCharacterCard(new ArtistCard(1, Era.I, 2));
         player.addCharacterCard(new ArtistCard(2, Era.I, 2));
-        player.addCharacterCard(new ArtistCard(3, Era.I, 2)); // 3 personaggi, 3 cibo
+        player.addCharacterCard(new ArtistCard(3, Era.I, 2)); // 3 characters, 3 food
 
         Game game = buildGame(List.of(player));
         new SustenanceEventCard(1, Era.I, false, 2).resolve(game);
@@ -129,17 +129,17 @@ public class EventCardTest {
     void sustenanceEventCard_moreFoodThanNeeded_noRefund() {
         Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addFood(10);
-        player.addCharacterCard(new ArtistCard(1, Era.I, 2)); // 1 personaggio, 1 cibo
+        player.addCharacterCard(new ArtistCard(1, Era.I, 2)); // 1 character, 1 food
 
         Game game = buildGame(List.of(player));
         new SustenanceEventCard(1, Era.I, false, 2).resolve(game);
 
-        assertEquals(9, player.getFood()); // paga solo 1, il resto rimane
+        assertEquals(9, player.getFood()); // pays only 1, the rest remains
         assertEquals(0, player.getPrestigePoints());
     }
 
     // -------------------------------------------------------
-    // ShamanicRitualEventCard — parità
+    // ShamanicRitualEventCard — ties
     // -------------------------------------------------------
 
     @Test
@@ -148,16 +148,16 @@ public class EventCardTest {
         Player p2 = new Player("Bob",   new Totem(TotemColor.BLUE,   "OFFER_TRACK"));
         Player p3 = new Player("Carol", new Totem(TotemColor.PURPLE, "OFFER_TRACK"));
 
-        p1.addCharacterCard(new ShamanCard(1, Era.I, 2, 2)); // 2 stelle
-        p2.addCharacterCard(new ShamanCard(2, Era.I, 2, 2)); // 2 stelle (parità per il max)
-        // p3 ha 0 stelle → perdente
+        p1.addCharacterCard(new ShamanCard(1, Era.I, 2, 2)); // 2 stars
+        p2.addCharacterCard(new ShamanCard(2, Era.I, 2, 2)); // 2 stars (tied for the max)
+        // p3 has 0 stars → loser
 
         Game game = buildGame(List.of(p1, p2, p3));
         new ShamanicRitualEventCard(1, Era.I, false, 4, 2).resolve(game);
 
-        assertEquals(4,  p1.getPrestigePoints()); // vincitore
-        assertEquals(4,  p2.getPrestigePoints()); // vincitore (parità)
-        assertEquals(-2, p3.getPrestigePoints()); // perdente
+        assertEquals(4,  p1.getPrestigePoints()); // winner
+        assertEquals(4,  p2.getPrestigePoints()); // winner (tie)
+        assertEquals(-2, p3.getPrestigePoints()); // loser
     }
 
     @Test
@@ -166,20 +166,20 @@ public class EventCardTest {
         Player p2 = new Player("Bob",   new Totem(TotemColor.BLUE,   "OFFER_TRACK"));
         Player p3 = new Player("Carol", new Totem(TotemColor.PURPLE, "OFFER_TRACK"));
 
-        p1.addCharacterCard(new ShamanCard(1, Era.I, 2, 3)); // 3 stelle → vincitore
-        // p2 e p3 hanno 0 stelle → parità per il min
+        p1.addCharacterCard(new ShamanCard(1, Era.I, 2, 3)); // 3 stars → winner
+        // p2 and p3 have 0 stars → tied for the min
 
         Game game = buildGame(List.of(p1, p2, p3));
         new ShamanicRitualEventCard(1, Era.I, false, 4, 2).resolve(game);
 
-        assertEquals(4,  p1.getPrestigePoints()); // vincitore
-        assertEquals(-2, p2.getPrestigePoints()); // perdente
-        assertEquals(-2, p3.getPrestigePoints()); // perdente (parità)
+        assertEquals(4,  p1.getPrestigePoints()); // winner
+        assertEquals(-2, p2.getPrestigePoints()); // loser
+        assertEquals(-2, p3.getPrestigePoints()); // loser (tie)
     }
 
     @Test
     void shamanicRitualEventCard_allPlayersHaveSameStars_allGetPPAndLosePP() {
-        // tutti con stesse stelle → tutti sono sia massimo che minimo
+        // all with the same stars → everyone is both max and min
         Player p1 = new Player("Alice", new Totem(TotemColor.RED,  "OFFER_TRACK"));
         Player p2 = new Player("Bob",   new Totem(TotemColor.BLUE, "OFFER_TRACK"));
 
@@ -187,7 +187,7 @@ public class EventCardTest {
         p2.addCharacterCard(new ShamanCard(2, Era.I, 2, 2));
 
         Game game = buildGame(List.of(p1, p2));
-        // guadagnano 4 PP (vincitori) e perdono 2 PP (perdenti) → netto +2
+        // they gain 4 PP (winners) and lose 2 PP (losers) → net +2
         new ShamanicRitualEventCard(1, Era.I, false, 4, 2).resolve(game);
 
         assertEquals(2, p1.getPrestigePoints());

@@ -162,7 +162,7 @@ public final class LoginView {
     }
 
     private Label fullLobbyMessage() {
-        Label label = new Label("Numero massimo di giocatori raggiunto. Puoi rientrare solo con Reconnect.");
+        Label label = new Label("Maximum number of players reached. You can only join back using Reconnect.");
         label.getStyleClass().add("login-full-message");
         label.setWrapText(true);
         return label;

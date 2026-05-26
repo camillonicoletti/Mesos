@@ -113,9 +113,9 @@ public class BuildingEffectsTest {
         );
         game.setCurrentRound(round);
 
-        round.placeTotemOrderForPlayer(player); // slot 1 → GAIN_FOOD 2 + 1 bonus edificio
+        round.placeTotemOrderForPlayer(player); // slot 1 → GAIN_FOOD 2 + 1 building bonus
 
-        assertEquals(3, player.getFood()); // 2 base + 1 bonus edificio
+        assertEquals(3, player.getFood()); // 2 base + 1 building bonus
     }
 
     @Test
@@ -138,9 +138,9 @@ public class BuildingEffectsTest {
         );
         game.setCurrentRound(round);
 
-        round.placeTotemOrderForPlayer(player); // slot 1 → PAY_FOOD, no bonus edificio
+        round.placeTotemOrderForPlayer(player); // slot 1 → PAY_FOOD, no building bonus
 
-        assertEquals(4, player.getFood()); // 5 - 1, nessun bonus
+        assertEquals(4, player.getFood()); // 5 - 1, no bonus
     }
 
     @Test
@@ -163,7 +163,7 @@ public class BuildingEffectsTest {
 
         round.placeTotemOrderForPlayer(player);
 
-        assertEquals(2, player.getFood()); // solo base, nessun bonus
+        assertEquals(2, player.getFood()); // base only, no bonus
     }
 
     // -------------------------------------------------------
@@ -182,7 +182,7 @@ public class BuildingEffectsTest {
         new HuntEventCard(1, Era.I, false, 1, 2).resolve(game);
 
         // base: 2×1 food + 2×2 PP = 2 food + 4 PP
-        // bonus edificio: 2×1 food + 2×1 PP = 2 food + 2 PP
+        // building bonus: 2×1 food + 2×1 PP = 2 food + 2 PP
         assertEquals(4, player.getFood());
         assertEquals(6, player.getPrestigePoints());
     }
@@ -217,7 +217,7 @@ public class BuildingEffectsTest {
         new CavePaintingsEventCard(1, Era.I, false, 2, 3, 1).resolve(game);
 
         // base: 3×1 PP = 3 PP
-        // bonus edificio: 3×1 food = 3 food
+        // building bonus: 3×1 food = 3 food
         assertEquals(3, player.getFood());
         assertEquals(3, player.getPrestigePoints());
     }
@@ -225,14 +225,14 @@ public class BuildingEffectsTest {
     @Test
     void cavePaintingsFoodEffectTriggersEvenWhenBelowMinimum() {
         Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
-        player.addCharacterCard(new ArtistCard(1, Era.I, 2)); // 1, minimo è 2
+        player.addCharacterCard(new ArtistCard(1, Era.I, 2)); // 1, minimum is 2
         player.addBuildingCard(new BuildingCard(1, Era.I, 0, new CavePaintingsFoodEffect(), 0));
 
         Game game = buildGame(List.of(player));
         new CavePaintingsEventCard(1, Era.I, false, 2, 3, 1).resolve(game);
 
-        assertEquals(1, player.getFood());        // 1 artista × 1 food, anche sotto soglia
-        assertEquals(-3, player.getPrestigePoints()); // sotto soglia → perde PP
+        assertEquals(1, player.getFood());        // 1 artist × 1 food, even below threshold
+        assertEquals(-3, player.getPrestigePoints()); // below threshold → loses PP
     }
 
     // -------------------------------------------------------
@@ -248,16 +248,16 @@ public class BuildingEffectsTest {
         player.addCharacterCard(new ArtistCard(1, Era.I, 2));
         player.addCharacterCard(new ArtistCard(2, Era.I, 2));
         player.addCharacterCard(new ArtistCard(3, Era.I, 2));
-        player.addCharacterCard(new ArtistCard(4, Era.I, 2)); // 4 personaggi
+        player.addCharacterCard(new ArtistCard(4, Era.I, 2)); // 4 characters
 
-        // sconto 1 per ogni Artista → sconto totale 4 → cibo richiesto 0
+        // 1 discount per Artist → total discount 4 → food required 0
         player.addBuildingCard(new BuildingCard(1, Era.I, 0,
                 new SustenanceFoodDiscountEffect(ArtistCard.class), 0));
 
         Game game = buildGame(List.of(player));
         new SustenanceEventCard(1, Era.I, false, 2).resolve(game);
 
-        assertEquals(10, player.getFood()); // non paga nulla
+        assertEquals(10, player.getFood()); // pays nothing
         assertEquals(0, player.getPrestigePoints());
     }
 
@@ -274,7 +274,7 @@ public class BuildingEffectsTest {
         Game game = buildGame(List.of(player));
         new SustenanceEventCard(1, Era.I, false, 2).resolve(game);
 
-        // 4 richiesti, 2 disponibili → paga 2 cibo + 2 PP per mancante
+        // 4 required, 2 available → pays 2 food + 2 PP per missing
         assertEquals(0, player.getFood());
         assertEquals(-4, player.getPrestigePoints());
     }
@@ -291,7 +291,7 @@ public class BuildingEffectsTest {
         Player p1 = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         Player p2 = new Player("Bob", new Totem(TotemColor.BLUE, "OFFER_TRACK"));
 
-        // p1 ha 0 stelle reali ma +3 dall'edificio → vince su p2 con 1 stella
+        // p1 has 0 real stars but +3 from the building → beats p2 who has 1 star
         p1.addBuildingCard(new BuildingCard(1, Era.I, 0, new Shaman3ExtraStarsEffect(), 0));
         p2.addCharacterCard(new ShamanCard(1, Era.I, 2, 1)); // 1 star
 
@@ -387,13 +387,13 @@ public class BuildingEffectsTest {
         Player player = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addCharacterCard(new ArtistCard(1, Era.I, 2));
         player.addCharacterCard(new ArtistCard(2, Era.I, 2));
-        player.addCharacterCard(new ArtistCard(3, Era.I, 2)); // 3 artisti → 2 PP ciascuno
+        player.addCharacterCard(new ArtistCard(3, Era.I, 2)); // 3 artists → 2 PP each
         player.addBuildingCard(new BuildingCard(4, Era.I, 0,
                 new EndCharacterCountPPEffect(2, ArtistCard.class), 0));
 
         Game game = buildGame(List.of(player));
         game.calculateFinalScores();
 
-        assertTrue(game.getFinalScores().get(player) >= 6); // almeno 3×2 = 6 PP dall'effetto
+        assertTrue(game.getFinalScores().get(player) >= 6); // at least 3×2 = 6 PP from the effect
     }
 }

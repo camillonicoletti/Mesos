@@ -101,7 +101,7 @@ public class CardFactoryTest {
 
     @Test
     void tribeDeck_sizeIsConsistentBetweenCalls() {
-        // numPlayers fissato → stessa size, contenuto può variare per shuffle
+        // numPlayers fixed → same size, contents may vary due to shuffle
         int s1 = CardFactory.createTribeDeck(4).size();
         int s2 = CardFactory.createTribeDeck(4).size();
         assertEquals(s1, s2);
@@ -118,12 +118,12 @@ public class CardFactoryTest {
 
     @Test
     void buildings_eraIII_containsExpectedEffectTypes() {
-        // Garantisce che parseEffect funzioni con effetti parametrizzati
+        // Ensures parseEffect works with parameterized effects
         List<BuildingCard> all = CardFactory.createBuildingCards(Era.III, 5);
         boolean hasParameterized = all.stream().anyMatch(b ->
                 b.getEffect().getClass().getSimpleName().contains("EndCharacterCountPP"));
-        // Su 5 carte da una pool che contiene molti EndCharacterCountPP, è quasi certo (statistico, ma deterministico nei range)
-        // Se vuoi un controllo non statistico, usa un loop ripetuto:
+        // Out of 5 cards from a pool containing many EndCharacterCountPP, it is almost certain (statistical, but deterministic within ranges).
+        // For a non-statistical check, use a repeated loop:
         for (int i = 0; i < 20 && !hasParameterized; i++) {
             hasParameterized = CardFactory.createBuildingCards(Era.III, 5).stream().anyMatch(b ->
                     b.getEffect().getClass().getSimpleName().contains("EndCharacterCountPP"));

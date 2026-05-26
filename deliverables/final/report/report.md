@@ -1,59 +1,59 @@
-# Mesos - Report finale
+# Mesos - Final report
 
-## Componenti del gruppo
+## Team members
 
 - Giorgio Ortona
 - Mazzeo
 - Oliva
 - Nicoletti
 
-## Funzionalita implementate
+## Implemented features
 
-- Regole complete del gioco Mesos, con gestione delle ere, delle tessere offerta, delle tessere ordine turno, degli eventi e del punteggio finale.
-- Interfaccia TUI.
-- Interfaccia GUI JavaFX.
-- Comunicazione Socket.
-- Comunicazione RMI.
-- Server unico capace di accettare client Socket e RMI nella stessa partita.
-- Gestione di disconnessione e riconnessione dei giocatori.
-- Sospensione della partita quando rimane un solo giocatore connesso, con timer e vittoria automatica allo scadere.
-- Salvataggio e ripristino dello stato della partita.
-- Classifica persistente opzionale tramite PostgreSQL.
-- Modalita debug per velocizzare alcune prove manuali.
+- Complete Mesos game rules, with management of eras, offer tiles, turn order tiles, events and final scoring.
+- TUI interface.
+- JavaFX GUI interface.
+- Socket communication.
+- RMI communication.
+- Single server able to accept both Socket and RMI clients in the same game.
+- Player disconnection and reconnection handling.
+- Game suspension when only one player remains connected, with a timer and automatic victory upon expiration.
+- Game state saving and restoring.
+- Optional persistent leaderboard via PostgreSQL.
+- Debug mode to speed up some manual tests.
 
-## Divisione indicativa del lavoro
+## Approximate division of work
 
-- Giorgio Ortona: Socket, RMI, riconnessioni/disconnessioni, GUI.
-- Altri componenti: modello, controller, regole di gioco, test, persistenza, supporto TUI e integrazione.
+- Giorgio Ortona: Socket, RMI, reconnections/disconnections, GUI.
+- Other members: model, controller, game rules, tests, persistence, TUI support and integration.
 
-## Scelte implementative principali
+## Main implementation choices
 
-- Pattern State per distinguere le fasi della partita: lobby, ready check, piazzamento totem, risoluzione azioni, eventi, fine round, sospensione e fine partita.
-- Pattern Observer tramite `GameListener` e viste virtuali, cosi il controller notifica gli eventi senza dipendere direttamente da TUI o GUI.
-- DTO di rete separati tra messaggi client-bound e server-bound.
-- Pattern Command per rappresentare le azioni inviate dal client al controller.
-- Visitor sulle carte e sugli effetti, usato per evitare controlli sparsi con `instanceof`.
-- Snapshot di sincronizzazione per riallineare i client, utile soprattutto dopo reconnect o dopo eventi importanti.
-- Separazione tra trasporto Socket/RMI e logica applicativa tramite interfacce comuni di connessione.
+- State pattern to distinguish game phases: lobby, ready check, totem placement, action resolution, events, end of round, suspension and end of game.
+- Observer pattern via `GameListener` and virtual views, so the controller notifies events without depending directly on the TUI or GUI.
+- Network DTOs separated between client-bound and server-bound messages.
+- Command pattern to represent the actions sent from the client to the controller.
+- Visitor pattern on cards and effects, used to avoid scattered `instanceof` checks.
+- Synchronization snapshots to realign clients, especially useful after reconnect or after important events.
+- Separation between the Socket/RMI transport and the application logic through common connection interfaces.
 
-## Protocolli di comunicazione
+## Communication protocols
 
 ### Socket
 
-Il client apre una socket TCP verso il server. I messaggi vengono scambiati tramite oggetti serializzati. Ogni client e' gestito lato server da una connessione dedicata, che inoltra i messaggi al `LobbyManager`.
+The client opens a TCP socket to the server. Messages are exchanged as serialized objects. Each client is handled on the server side by a dedicated connection, which forwards messages to the `LobbyManager`.
 
 ### RMI
 
-Nel caso RMI il client non invia pacchetti manuali al server: invoca metodi remoti esposti dal server. Il server usa a sua volta una callback remota registrata dal client per notificare gli eventi di gioco.
+In the RMI case the client does not send manual packets to the server: it invokes remote methods exposed by the server. The server in turn uses a remote callback registered by the client to notify game events.
 
 ## Database
 
-La classifica usa PostgreSQL quando e' presente `db.properties`. Se il file non esiste o la connessione non e' disponibile, il gioco rimane avviabile e la classifica viene disabilitata.
+The leaderboard uses PostgreSQL when `db.properties` is present. If the file does not exist or the connection is not available, the game remains runnable and the leaderboard is disabled.
 
-Lo schema SQL si trova in:
+The SQL schema can be found in:
 
 `deliverables/final/dump/schema.sql`
 
-## Test
+## Tests
 
-Sono presenti test unitari e di integrazione su controller, stati di gioco, disconnessioni, sincronizzazione client, carte, eventi e casi limite. La percentuale di copertura definitiva va inserita dopo l'ultima esecuzione dello strumento scelto per la coverage.
+Unit and integration tests cover the controller, game states, disconnections, client synchronization, cards, events and edge cases. The final coverage percentage is to be filled in after the last run of the chosen coverage tool.

@@ -30,8 +30,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Bug-hunter tests for the delta payloads of {@link EventResolvedMessage}.
  *
- * Brief: "Event resolution può mostrare totali incoerenti se i messaggi
- * parziali non includono tutti i delta."
+ * Brief: "Event resolution can show inconsistent totals if partial messages
+ * do not include all the deltas."
  *
  * These tests verify that for every event the message carries:
  *   - foodDelta and pointsDelta matching what actually changed in the model

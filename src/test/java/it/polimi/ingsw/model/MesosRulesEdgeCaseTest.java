@@ -96,12 +96,12 @@ class MesosRulesEdgeCaseTest {
     }
 
     // ╔══════════════════════════════════════════════════════════════════════╗
-    // ║ T1 — TotemSlotFoodBonusEffect (Edificio "+1🍖 sui bonus turn order") ║
+    // ║ T1 — TotemSlotFoodBonusEffect (Building "+1🍖 on turn-order bonuses")║
     // ║                                                                      ║
-    // ║ Rule (Regolamento p.8): "Se alla fine del vostro turno ... lo        ║
-    // ║ piazzate in uno spazio che riporta un bonus in Cibo, prendete 1      ║
-    // ║ Cibo addizionale.  Se piazzate nell'ultimo spazio, pagate            ║
-    // ║ normalmente il Cibo e l'Edificio non ha effetto."                    ║
+    // ║ Rule (Rulebook p.8): "If, at the end of your turn ... you place      ║
+    // ║ your totem on a slot that grants a food bonus, take 1 additional     ║
+    // ║ food. If you place it on the last slot, you pay the food normally   ║
+    // ║ and the building has no effect."                                     ║
     // ╚══════════════════════════════════════════════════════════════════════╝
 
     /**
@@ -195,10 +195,10 @@ class MesosRulesEdgeCaseTest {
     // ╔══════════════════════════════════════════════════════════════════════╗
     // ║ T2 — Sustenance: cannot choose to skip food payment                  ║
     // ║                                                                      ║
-    // ║ Rule (Regolamento p.6): "Non potete scegliere di perdere Punti       ║
-    // ║ Prestigio per non pagare Cibo (per esempio, se avete 2 Personaggi    ║
-    // ║ e 1 solo Cibo, dovete comunque pagare 1 Cibo e perdere 2 PP; non     ║
-    // ║ potete decidere di perdere 4 PP e conservare il Cibo)."              ║
+    // ║ Rule (Rulebook p.6): "You cannot choose to lose Prestige Points      ║
+    // ║ instead of paying Food (for example, if you have 2 Characters and    ║
+    // ║ only 1 Food, you must still pay 1 Food and lose 2 PP; you cannot     ║
+    // ║ decide to lose 4 PP and keep the Food)."                             ║
     // ╚══════════════════════════════════════════════════════════════════════╝
 
     @Test
@@ -242,8 +242,8 @@ class MesosRulesEdgeCaseTest {
     // ╔══════════════════════════════════════════════════════════════════════╗
     // ║ T3 — Shamanic Ritual: all tied + ImmunityEffect                      ║
     // ║                                                                      ║
-    // ║ Rule (Regolamento p.6): "nel raro caso di un pareggio tra tutti i    ║
-    // ║ giocatori, tutti prima guadagnano PP e poi perdono PP."              ║
+    // ║ Rule (Rulebook p.6): "in the rare case of a tie among all players,   ║
+    // ║ everyone first gains PP and then loses PP."                          ║
     // ║ Plus appendix: ShamanicRitualImmunityEffect prevents PP loss.        ║
     // ╚══════════════════════════════════════════════════════════════════════╝
 
@@ -270,7 +270,7 @@ class MesosRulesEdgeCaseTest {
     // ╔══════════════════════════════════════════════════════════════════════╗
     // ║ T4 — Cave Paintings boundary on minArtists                           ║
     // ║                                                                      ║
-    // ║ Rule (Regolamento p.6): "se avete zero o un Artista perdete 3 PP"    ║
+    // ║ Rule (Rulebook p.6): "if you have zero or one Artist you lose 3 PP"  ║
     // ║ (i.e. minArtists = 2: penalty when artists < minArtists).            ║
     // ╚══════════════════════════════════════════════════════════════════════╝
 
@@ -324,9 +324,9 @@ class MesosRulesEdgeCaseTest {
     // ╔══════════════════════════════════════════════════════════════════════╗
     // ║ T5 — Initial food per turn-order position                            ║
     // ║                                                                      ║
-    // ║ Rule (Regolamento p.3): "il 1° giocatore riceve 2 Cibo, il 2° e il   ║
-    // ║ 3° giocatore ricevono 3 Cibo, mentre il 4° e il 5° giocatore         ║
-    // ║ ricevono 4 Cibo."                                                    ║
+    // ║ Rule (Rulebook p.3): "the 1st player receives 2 Food, the 2nd and    ║
+    // ║ 3rd player receive 3 Food, while the 4th and 5th player receive      ║
+    // ║ 4 Food."                                                             ║
     // ╚══════════════════════════════════════════════════════════════════════╝
 
     @Test
@@ -367,9 +367,9 @@ class MesosRulesEdgeCaseTest {
     // ╔══════════════════════════════════════════════════════════════════════╗
     // ║ T6 — Builder discount cannot reduce cost below zero                  ║
     // ║                                                                      ║
-    // ║ Rule (Regolamento p.5): "Se avete più Costruttori, sommate gli       ║
-    // ║ sconti di tutte le carte ma non potete mai ridurre il costo sotto    ║
-    // ║ a zero."                                                             ║
+    // ║ Rule (Rulebook p.5): "If you have multiple Builders, sum the         ║
+    // ║ discounts from all the cards, but you can never reduce the cost      ║
+    // ║ below zero."                                                         ║
     // ╚══════════════════════════════════════════════════════════════════════╝
 
     @Test

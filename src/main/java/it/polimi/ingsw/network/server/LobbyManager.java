@@ -97,7 +97,7 @@ public class LobbyManager {
         return leaderboardService;
     }
 
-    /** Comando disponibile solo in modalita debug. */
+    /** Command available only in debug mode. */
     public synchronized void handleForceEndGame() {
         gameController.changeState(new it.polimi.ingsw.controller.state.EndGameState());
     }

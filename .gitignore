@@ -138,3 +138,4 @@ db.properties
 # Final executable JARs required by the delivery slides.
 !deliverables/final/jar/
 !deliverables/final/jar/*.jar
+mesos-savestate*.bin

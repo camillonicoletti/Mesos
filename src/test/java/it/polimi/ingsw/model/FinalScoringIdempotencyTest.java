@@ -19,8 +19,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Bug-hunter tests for final scoring idempotency.
  *
- * Brief: "Final scoring deve essere chiamato solo a game over, dopo eventi finali,
- * e una sola volta."
+ * Brief: "Final scoring must be invoked only at game over, after the final events,
+ * and only once."
  *
  * These tests verify the cached behaviour and that calling
  * {@link Game#calculateFinalScores()} twice does not double-count.

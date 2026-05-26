@@ -13,9 +13,9 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Regression test for the ShamanicRitualImmunityEffect behavior when all players are tied.
  *
- * Rule §19: "Nel raro caso in cui tutti i giocatori siano pari: tutti guadagnano prima i PP
- * previsti; poi tutti perdono i PP previsti."
- * Rule §25.3: The immunity building protects the player "se ha MENO icone degli altri."
+ * Rule §19: "In the rare case where all players are tied: everyone first gains the
+ * expected PP; then everyone loses the expected PP."
+ * Rule §25.3: The immunity building protects the player "if they have FEWER icons than the others."
  *
  * When all players have the same number of shaman stars, nobody has FEWER stars than
  * the others. Therefore ShamanicRitualImmunityEffect must NOT prevent the loss in this case.

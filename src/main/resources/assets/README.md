@@ -1,13 +1,13 @@
-Asset GUI
-=========
+GUI assets
+==========
 
-Questa cartella contiene le immagini usate dalla GUI Java.
+This folder contains the images used by the Java GUI.
 
-La GUI non legge direttamente i PDF originali. Le immagini vanno tenute in PNG
-o JPEG con nomi stabili, in modo che il codice possa trovarle tramite i file
-manifest.
+The GUI does not read the original PDFs directly. Images must be kept as PNG
+or JPEG with stable names, so that the code can find them through the manifest
+files.
 
-Struttura attesa:
+Expected structure:
 
 - cards/characters/card_001.png ... card_084.png
 - cards/events/card_085.png ... card_096.png
@@ -26,11 +26,12 @@ Struttura attesa:
 - manifest/cards.json
 - manifest/components.json
 
-Le immagini sono risorse fornite dai docenti e non vanno caricate su Git.
-I manifest rimangono tracciati per documentare i nomi attesi a runtime.
+The images are resources provided by the course instructors and must not be
+committed to Git. The manifest files remain tracked to document the names
+expected at runtime.
 
-I PDF originali sono conservati fuori dal progetto, ad esempio in:
+The original PDFs are kept outside the project, for example in:
 
 /Users/giorgio/Desktop/Risorse Grafiche Mesos
 
-Quei file vanno usati solo come materiale locale di partenza.
+Those files should be used only as local source material.
