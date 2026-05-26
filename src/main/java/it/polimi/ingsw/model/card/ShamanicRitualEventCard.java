@@ -86,18 +86,15 @@ public class ShamanicRitualEventCard extends EventCard {
             player.addPrestigePoints(pp);
         }
 
-        // remove PP from players with least stars — unless they have ShamanicRitualImmunityEffect
+        // remove PP from players with least stars — unless they have ShamanicRitualImmunityEffect.
+        // Immunity only applies when the player genuinely has fewer stars than someone else;
+        // when all players are tied (maxStars == minStars) nobody has fewer stars, so immunity is bypassed.
+        boolean allPlayersTied = maxStars == minStars;
         for (Player player : playersWithLeastStars) {
-            boolean immune = false;
-            for (BuildingCard building : player.getTribe().getBuildingCards()) {
-                if (grantsShamanicRitualImmunity(building)) {
-                    immune = true;
-                    break;
-                }
+            if (!allPlayersTied && hasShamanicRitualImmunity(player)) {
+                continue;
             }
-            if (!immune) {
-                player.removePrestigePoints(ppLoss);
-            }
+            player.removePrestigePoints(ppLoss);
         }
     }
 
@@ -125,15 +122,20 @@ public class ShamanicRitualEventCard extends EventCard {
         }));
     }
 
-    private boolean grantsShamanicRitualImmunity(BuildingCard building) {
-        return Boolean.TRUE.equals(building.acceptEffect(new EffectVisitor<>() {
-            @Override public Boolean visitShamanicRitualImmunity(ShamanicRitualImmunityEffect effect) {
+    private boolean hasShamanicRitualImmunity(Player player) {
+        for (BuildingCard building : player.getTribe().getBuildingCards()) {
+            if (Boolean.TRUE.equals(building.acceptEffect(new EffectVisitor<>() {
+                @Override public Boolean visitShamanicRitualImmunity(ShamanicRitualImmunityEffect effect) {
+                    return true;
+                }
+
+                @Override public Boolean visitEffect(Effect effect) {
+                    return false;
+                }
+            }))) {
                 return true;
             }
-
-            @Override public Boolean visitEffect(Effect effect) {
-                return false;
-            }
-        }));
+        }
+        return false;
     }
 }
