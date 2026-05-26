@@ -26,6 +26,11 @@ src/main/resources/assets/**/*.jpg
 src/main/resources/assets/**/*.jpeg
 src/main/resources/assets/**/*.webp
 src/main/resources/assets/**/*.pdf
+src/main/resources/gui/**/*.png
+src/main/resources/gui/**/*.jpg
+src/main/resources/gui/**/*.jpeg
+src/main/resources/gui/**/*.webp
+src/main/resources/gui/**/*.pdf
 
 !src/main/resources/assets/README.md
 !src/main/resources/assets/manifest/
