@@ -2,6 +2,11 @@ package it.polimi.ingsw.model.card.effect;
 
 import it.polimi.ingsw.model.Player;
 
+/**
+ * Passive marker effect: presence of a building with this effect lets the
+ * action-resolution phase grant the owning player one extra pick from the
+ * upper row.
+ */
 public class ExtraCardUpperRowEffect implements Effect{
     private static final long serialVersionUID = 1L;
     @Override

@@ -28,6 +28,13 @@ import java.util.stream.Collectors;
 import it.polimi.ingsw.controller.listener.GameListener;
 import java.util.function.Consumer;
 
+/**
+ * Aggregate root of a Mesos match. Owns the players, the board, the
+ * current era and round, and the building/tribute decks. It is the
+ * authoritative source for final scoring and winner resolution and is
+ * mutated only through the controller. Listener notifications are
+ * dispatched through a transient notifier wired by the controller.
+ */
 public class Game implements Serializable {
     private static final long serialVersionUID = 1L;
     private static final int MAX_ROUNDS = 10;
@@ -76,6 +83,11 @@ public class Game implements Serializable {
         };
     }
 
+    /**
+     * Builds a game with pre-arranged decks and state. Used both by the normal
+     * setup flow (with currentRound=null, which is created by {@link #start()})
+     * and by the persistence layer when restoring a saved match.
+     */
     public Game(List<Player> players, int currentRoundNumber, Round currentRound,
                 Era currentEra, LocalDateTime date,
                 Board board, List<Card> tributeDeck, List<BuildingCard> era1BuildingDeck, List<BuildingCard> era2BuildingDeck, List<BuildingCard> era3BuildingDeck) {
@@ -92,6 +104,11 @@ public class Game implements Serializable {
         this.era3BuildingDeck = era3BuildingDeck != null ? era3BuildingDeck : new ArrayList<>();
     }
 
+    /**
+     * Initializes the match: creates the board, links every player to this game,
+     * assigns a random turn order, opens round 1 in Era I, fills the initial
+     * rows and distributes the starting food. Called once after construction.
+     */
     public void start() {
 
         currentRoundNumber = 1;
@@ -153,6 +170,11 @@ public class Game implements Serializable {
         };
     }
 
+    /**
+     * Marks the game as finished and freezes the final scores. Idempotent: a
+     * second call has no further effect because {@link #calculateFinalScores()}
+     * is guarded.
+     */
     public void end() {
         gameEnded = true;
         calculateFinalScores();
@@ -162,6 +184,7 @@ public class Game implements Serializable {
         return gameEnded;
     }
 
+    /** Advances the current era marker by one step; throws when already in Era III. */
     public void nextEra() {
         switch (currentEra) {
             case I -> currentEra = Era.II;
@@ -171,6 +194,12 @@ public class Game implements Serializable {
         }
     }
 
+    /**
+     * Performs the end-of-era transition: discards lower-row buildings on the
+     * II→III shift, promotes the upper buildings to the lower row, advances
+     * the era marker and reveals the next era's buildings. No-op when the
+     * current era is already III.
+     */
     public void endEra() {
         if (currentEra == Era.III) {
             return;
@@ -190,6 +219,11 @@ public class Game implements Serializable {
         newEraBuildings.clear();
     }
 
+    /**
+     * Closes the current round and opens the next one. When the maximum number
+     * of rounds has been reached the game is ended instead. No-op once the
+     * game is over.
+     */
     public void nextRound() {
         if (isGameOver()) {
             return;
@@ -237,6 +271,11 @@ public class Game implements Serializable {
         });
     }
 
+    /**
+     * Computes and caches the final score for every player. Guarded so that
+     * subsequent calls do not re-apply scoring. After this runs, per-player
+     * scores are read back through {@link #getFinalScore(Player)}.
+     */
     public void calculateFinalScores() {
         // Prevent final scoring from being applied more than once.
         if (finalScoresCalculated) {
@@ -282,6 +321,7 @@ public class Game implements Serializable {
         int pairs = artists / 2;
         return pairs * 10;
     }
+    /** Returns the still-unrevealed building deck for the given era. */
     public List<BuildingCard> getBuildingsForEra(Era era) {
         return switch (era) {
             case I -> era1BuildingDeck;
@@ -290,6 +330,7 @@ public class Game implements Serializable {
         };
     }
 
+    /** Draws and removes the top card of the tribute deck, or returns null when empty. */
     public Card drawTribeCard() {
         if (tributeDeck == null || tributeDeck.isEmpty()) {
             return null;
@@ -298,6 +339,13 @@ public class Game implements Serializable {
         return tributeDeck.remove(0);
     }
 
+    /**
+     * Moves a character card from the chosen row of the current round to the
+     * player's tribe and applies its immediate effects (e.g. Hunter food gain).
+     * Emits food/PP listener events for every delta produced.
+     *
+     * @throws IllegalArgumentException if arguments are null or the card does not belong to the given row
+     */
     public void takeCharacterCard(Player player, List<CharacterCard> row, CharacterCard chosenCard) {
         if (player == null) {
             throw new IllegalArgumentException("Player cannot be null");
@@ -359,6 +407,14 @@ public class Game implements Serializable {
         });
     }
 
+    /**
+     * Moves a building card from the chosen row to the player's tribe and
+     * spends the food required, applying any builder discount. Emits a
+     * food-changed listener event when food is actually spent.
+     *
+     * @throws IllegalArgumentException if arguments are null or the card does not belong to the given row
+     * @throws IllegalStateException if the player cannot afford the discounted cost
+     */
     public void takeBuildingCard(Player player, List<BuildingCard> row, BuildingCard chosenCard) {
         if (player == null) {
             throw new IllegalArgumentException("Player cannot be null");
@@ -400,6 +456,7 @@ public class Game implements Serializable {
         mutableRow.remove(chosenCard);
         player.addBuildingCard(chosenCard);
     }
+    /** Returns true when the current round is the final one; upper-row events resolve only this round. */
     public boolean isLastRound() {
         return currentRoundNumber == MAX_ROUNDS;
     }
@@ -407,6 +464,7 @@ public class Game implements Serializable {
         return player.getTribe().getBuildingDiscount();
     }
 
+    /** Tells whether the player has enough food to take the given building once builder discounts are applied. */
     public boolean canAffordBuilding(Player player, BuildingCard card) {
         int finalCost = Math.max(0, card.getFoodCost() - getBuildingDiscount(player));
         return player.canAfford(finalCost);
@@ -470,6 +528,11 @@ public class Game implements Serializable {
         return finalScores.getOrDefault(player, player.getPrestigePoints());
     }
 
+    /**
+     * Returns a map of every player to their score. Before the game ends the
+     * map contains a live preview that is recomputed on each call; afterwards
+     * it returns a defensive copy of the cached final scores.
+     */
     public Map<Player, Integer> getFinalScores() {
         if (!gameEnded) {
             Map<Player, Integer> liveScores = new HashMap<>();
@@ -512,10 +575,16 @@ public class Game implements Serializable {
         return winners.size() == 1 ? winners.get(0) : null;
     }
     // LISTENER
+    /**
+     * Wires the dispatcher used to fan out listener events to the controller's
+     * registered listeners. The notifier is transient, so the controller must
+     * call this again after restoring a persisted game.
+     */
     public void setNotifier(Consumer<Consumer<GameListener>> notifier) {
         this.notifier = notifier;
     }
 
+    /** Forwards a listener event through the wired notifier, if any. */
     public void notifyListeners(Consumer<GameListener> event) {
         if (notifier != null) notifier.accept(event);
     }

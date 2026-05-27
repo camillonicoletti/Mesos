@@ -3,6 +3,11 @@ package it.polimi.ingsw.model.card.effect;
 import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.card.CharacterCard;
 
+/**
+ * Passive building effect: during a Sustenance event, reduces the food
+ * required by one for every character of the configured {@code targetType}
+ * in the tribe.
+ */
 public class SustenanceFoodDiscountEffect implements Effect{
     private static final long serialVersionUID = 1L;
     private final Class<? extends CharacterCard> targetType;

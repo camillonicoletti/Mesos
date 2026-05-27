@@ -4,6 +4,11 @@ import it.polimi.ingsw.model.enums.TotemColor;
 
 import java.io.Serializable;
 
+/**
+ * A player's coloured marker placed on board slots: turn-order tiles during
+ * round setup and offer tiles during totem placement. Identifies the owning
+ * player wherever it sits.
+ */
 public class Totem implements Serializable {
     private static final long serialVersionUID = 1L;
     private TotemColor color;

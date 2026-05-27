@@ -2,6 +2,11 @@ package it.polimi.ingsw.model.card.effect;
 
 import it.polimi.ingsw.model.Player;
 
+/**
+ * Building effect that grants 5 food per newly completed full set. Tracks the
+ * number of sets already rewarded to avoid paying twice for the same set when
+ * the tribe composition changes.
+ */
 public class FullSetFoodEffect implements Effect{
 
     private static final long serialVersionUID = 1L;

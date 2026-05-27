@@ -2,6 +2,10 @@ package it.polimi.ingsw.model.card.effect;
 
 import it.polimi.ingsw.model.Player;
 
+/**
+ * End-game effect that grants 6 PP for every full set (one character of each
+ * of the six archetypes) present in the tribe.
+ */
 public class EndFullSetPPEffect implements EndGameEffect {
     private static final long serialVersionUID = 1L;
     @Override

@@ -12,6 +12,12 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Collections;
 
+/**
+ * The collection of cards a player has acquired during the match: characters
+ * and buildings. Exposes derived queries used by scoring, event resolution and
+ * effect application (counts by type, full sets, inventor pairs, shaman stars,
+ * building discounts).
+ */
 public class Tribe implements Serializable {
     private static final long serialVersionUID = 1L;
     private static final Map<Class<? extends CharacterCard>, CardVisitor<Boolean>> CHARACTER_TYPE_MATCHERS = Map.of(

@@ -8,6 +8,11 @@ import it.polimi.ingsw.model.card.effect.Hunt1Food1PPEffect;
 import it.polimi.ingsw.model.enums.Era;
 
 
+/**
+ * Event card that rewards each player based on the number of Hunter cards in
+ * their tribe: every hunter contributes {@code foodPerHunter} food and
+ * {@code ppPerHunter} prestige points, plus any building-side hunt bonuses.
+ */
 public class HuntEventCard extends EventCard {
     private static final long serialVersionUID = 1L;
     private final int foodPerHunter;

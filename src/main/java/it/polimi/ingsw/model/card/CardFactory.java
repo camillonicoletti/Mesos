@@ -16,6 +16,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Builds the tribute and building decks for a match by loading card definitions
+ * from the bundled JSON resources, filtering by player count and era, and
+ * shuffling. Encapsulates the rulebook setup tables so that
+ * {@link it.polimi.ingsw.model.Game} never deals with raw card construction.
+ */
 public class CardFactory {
 
 

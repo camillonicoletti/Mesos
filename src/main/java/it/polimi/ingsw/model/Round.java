@@ -13,6 +13,13 @@ import java.io.Serializable;
 import java.util.*;
 
 
+/**
+ * Per-round state of a Mesos match: the lower/upper rows of tribute, event and
+ * building cards, the round number and phase, and the per-player offer-tile
+ * choices made during totem placement. Provides the operations that mutate
+ * these rows (setup, refill, era transition, discard) and the deterministic
+ * event-resolution ordering consumed by {@link Game}.
+ */
 public class Round implements Serializable {
     private static final long serialVersionUID = 1L;
     private final int number;

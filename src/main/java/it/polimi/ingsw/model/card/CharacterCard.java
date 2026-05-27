@@ -2,6 +2,11 @@ package it.polimi.ingsw.model.card;
 
 import it.polimi.ingsw.model.enums.Era;
 
+/**
+ * Base type for the six character archetypes (Hunter, Gatherer, Shaman,
+ * Builder, Artist, Inventor). Adds the minimum player count required for the
+ * card to be playable, used by {@link CardFactory} when assembling the deck.
+ */
 public abstract class CharacterCard extends Card {
 
     private static final long serialVersionUID = 1L;

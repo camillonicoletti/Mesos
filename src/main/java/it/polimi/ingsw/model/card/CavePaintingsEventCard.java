@@ -8,6 +8,12 @@ import it.polimi.ingsw.model.card.effect.EffectVisitor;
 import it.polimi.ingsw.model.enums.Era;
 
 
+/**
+ * Event card that rewards or penalises players based on Artist count: those
+ * below {@code minArtists} lose {@code ppPenalty} PP, the others gain
+ * {@code ppPerArtist} for every Artist. Building-side cave-painting bonuses
+ * are applied afterwards.
+ */
 public class CavePaintingsEventCard extends EventCard {
 
     private static final long serialVersionUID = 1L;

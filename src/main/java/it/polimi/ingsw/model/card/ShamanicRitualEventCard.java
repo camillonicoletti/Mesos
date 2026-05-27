@@ -12,6 +12,14 @@ import it.polimi.ingsw.model.enums.Era;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Event card that ranks players by shaman stars (plus Shaman3ExtraStars
+ * bonuses). Top-ranked players gain {@code ppGain} PP (doubled by the
+ * ShamanicRitualDoublePP building effect); bottom-ranked players lose
+ * {@code ppLoss} PP unless protected by ShamanicRitualImmunity. When every
+ * player is tied, immunity does not apply because nobody has strictly fewer
+ * stars than another.
+ */
 public class ShamanicRitualEventCard extends EventCard {
     private static final long serialVersionUID = 1L;
     private final int ppGain;

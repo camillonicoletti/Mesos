@@ -3,6 +3,10 @@ package it.polimi.ingsw.model.card.effect;
 import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.card.CharacterCard;
 
+/**
+ * End-game effect that grants {@code pointsPerCard} PP for every character of
+ * the configured {@code targetType} held in the tribe.
+ */
 public class EndCharacterCountPPEffect implements EndGameEffect {
     private static final long serialVersionUID = 1L;
     private final Class<? extends CharacterCard> targetType;

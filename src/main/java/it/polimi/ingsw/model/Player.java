@@ -9,6 +9,12 @@ import it.polimi.ingsw.model.card.effect.InventorPairFoodEffect;
 
 import java.io.Serializable;
 
+/**
+ * A participant in a Mesos match. Holds the player's food and prestige-point
+ * counters, the owned {@link Tribe} of character/building cards and the
+ * {@link Totem} used for turn-order and offer-tile placement. Adding a card
+ * may trigger building-side effects that depend on tribe composition.
+ */
 public class Player implements Serializable {
     private static final long serialVersionUID = 1L;
     private final String nickname;

@@ -4,6 +4,11 @@ import it.polimi.ingsw.model.card.effect.Effect;
 import it.polimi.ingsw.model.card.effect.EffectVisitor;
 import it.polimi.ingsw.model.enums.Era;
 
+/**
+ * A building card players acquire by paying food. Carries an attached
+ * {@link Effect} (typically passive, triggered during specific events or at
+ * end-of-game) and a fixed end-of-match point value added to the final score.
+ */
 public class BuildingCard extends Card{
     private static final long serialVersionUID = 1L;
     private final int foodCost;

@@ -2,6 +2,11 @@ package it.polimi.ingsw.model.card.effect;
 
 import it.polimi.ingsw.model.Player;
 
+/**
+ * Building effect that grants 3 food per newly completed inventor pair
+ * (two inventors sharing the same icon). The {@code rewardedPairs} counter
+ * prevents the same pair from being paid twice.
+ */
 public class InventorPairFoodEffect implements Effect{
     private static final long serialVersionUID = 1L;
     private int rewardedPairs = 0;

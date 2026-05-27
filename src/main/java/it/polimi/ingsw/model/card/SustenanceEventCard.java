@@ -8,6 +8,11 @@ import it.polimi.ingsw.model.card.effect.SustenanceFoodDiscountEffect;
 import it.polimi.ingsw.model.enums.Era;
 
 
+/**
+ * Event card that demands food to feed the tribe. Each Gatherer (and any
+ * SustenanceFoodDiscount building) reduces the required amount; food the
+ * player cannot pay is converted into a PP penalty per unfed character.
+ */
 public class SustenanceEventCard extends EventCard {
 
     private static final long serialVersionUID = 1L;

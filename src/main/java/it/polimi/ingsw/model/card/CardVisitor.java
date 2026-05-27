@@ -1,5 +1,13 @@
 package it.polimi.ingsw.model.card;
 
+/**
+ * Visitor over the {@link Card} hierarchy. Each concrete card forwards to the
+ * most specific {@code visitXxx} hook; default implementations cascade up to
+ * the broader category (character, event, generic card) so that visitors only
+ * override the cases they care about.
+ *
+ * @param <R> result type produced by the visit
+ */
 public interface CardVisitor<R> {
 
     default R visitArtist(ArtistCard card) {

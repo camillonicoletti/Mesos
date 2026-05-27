@@ -4,6 +4,12 @@ import it.polimi.ingsw.model.Game;
 import it.polimi.ingsw.model.enums.Era;
 
 
+/**
+ * Base type for cards drawn into the event rows (Hunt, Sustenance, Shamanic
+ * Ritual, Cave Paintings). Subclasses implement {@link #resolve(Game)} with
+ * the rule-specific behaviour applied to every player. The {@code closeEvent}
+ * flag marks the bottom-of-deck events that signal end of game.
+ */
 public abstract class EventCard extends Card {
     private static final long serialVersionUID = 1L;
     private final boolean closeEvent;

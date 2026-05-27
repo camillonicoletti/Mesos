@@ -2,6 +2,10 @@ package it.polimi.ingsw.model.card;
 
 import it.polimi.ingsw.model.enums.Era;
 
+/**
+ * Character that grants a food discount when the player takes a building card
+ * and contributes end-of-match points equal to {@code pointsEndOfMatch}.
+ */
 public class BuilderCard extends CharacterCard{
     private static final long serialVersionUID = 1L;
     private final int foodDiscount;
