@@ -27,8 +27,8 @@ public class TotemPlacementState extends AbstractGameState {
         if (!(action instanceof PlaceTotemAction)) {
             rejectAction(action);
         }
-        if (ctx.isPlayerDisconnected(playerNickname)) {
-            throw new IllegalStateException("Disconnected players cannot act");
+        if (ctx.isPlayerUnavailableThisRound(playerNickname)) {
+            throw new IllegalStateException("This player cannot act in the current round");
         }
         PlaceTotemAction placeTotem = (PlaceTotemAction) action;
 
@@ -82,7 +82,13 @@ public class TotemPlacementState extends AbstractGameState {
         }
 
         boolean wasCurrentPlayer = playerNickname.equals(getCurrentPlayerNickname(ctx));
+        Player disconnectedPlayer = findPlayer(ctx, playerNickname);
         ctx.markPlayerDisconnected(playerNickname);
+        if (disconnectedPlayer != null
+                && ctx.getGame().getCurrentRound().clearOfferChoiceForPlayer(disconnectedPlayer)) {
+            turnQueue.unmarkPlaced(playerNickname);
+            ctx.notifyListeners(l -> l.onGameSnapshotChanged());
+        }
         if (wasCurrentPlayer && ctx.canContinueAfterDisconnection()) {
             skipCurrentPlayer(ctx);
         }
@@ -96,6 +102,9 @@ public class TotemPlacementState extends AbstractGameState {
         if (!ctx.containsGamePlayer(playerNickname)) {
             return;
         }
+        ctx.waitUntilNextRound(playerNickname);
+        turnQueue.advanceToNextAvailablePlayer(ctx);
+        notifyCurrentPlayer(ctx);
     }
 
     @Override

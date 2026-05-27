@@ -56,6 +56,10 @@ final class TotemPlacementTurnQueue implements Serializable {
         return playersWhoPlaced.contains(nickname);
     }
 
+    void unmarkPlaced(String nickname) {
+        playersWhoPlaced.remove(nickname);
+    }
+
     void markPlaced(String nickname, GameController ctx) {
         playersWhoPlaced.add(nickname);
         currentTurnIndex++;
@@ -71,7 +75,7 @@ final class TotemPlacementTurnQueue implements Serializable {
         // Skip players who are disconnected or have already placed their totem this round.
         while (currentTurnIndex < placementOrder.size()) {
             String nickname = placementOrder.get(currentTurnIndex);
-            if (!ctx.isPlayerDisconnected(nickname) && !playersWhoPlaced.contains(nickname)) {
+            if (!ctx.isPlayerUnavailableThisRound(nickname) && !playersWhoPlaced.contains(nickname)) {
                 return;
             }
             currentTurnIndex++;
@@ -80,7 +84,7 @@ final class TotemPlacementTurnQueue implements Serializable {
 
     boolean haveAllConnectedPlayersPlaced(GameController ctx) {
         for (Player player : ctx.getGame().getPlayers()) {
-            if (!ctx.isPlayerDisconnected(player.getNickname())
+            if (!ctx.isPlayerUnavailableThisRound(player.getNickname())
                     && !playersWhoPlaced.contains(player.getNickname())) {
                 return false;
             }

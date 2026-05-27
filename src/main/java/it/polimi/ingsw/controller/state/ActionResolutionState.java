@@ -49,7 +49,7 @@ public class ActionResolutionState extends AbstractGameState {
         OfferTile tile = queue.currentTile();
         Round round = ctx.getGame().getCurrentRound();
 
-        if (ctx.isPlayerDisconnected(player.getNickname())) {
+        if (ctx.isPlayerUnavailableThisRound(player.getNickname())) {
             round.placeTotemOrderForPlayer(player);
             queue.advance();
             prepareCurrentPlayer(ctx);
@@ -113,7 +113,7 @@ public class ActionResolutionState extends AbstractGameState {
 
         Player player = queue.currentPlayer();
 
-        if (ctx.isPlayerDisconnected(player.getNickname())) {
+        if (ctx.isPlayerUnavailableThisRound(player.getNickname())) {
             queue.advance();
             prepareExtraPickPlayer(ctx);
             return;
@@ -138,8 +138,8 @@ public class ActionResolutionState extends AbstractGameState {
 
     @Override
     public void handleAction(GameController ctx, String playerNickname, GameAction action) {
-        if (ctx.isPlayerDisconnected(playerNickname)) {
-            throw new IllegalStateException("Disconnected players cannot act");
+        if (ctx.isPlayerUnavailableThisRound(playerNickname)) {
+            throw new IllegalStateException("This player cannot act in the current round");
         }
 
         if (isInExtraPickPhase()) {
@@ -272,6 +272,7 @@ public class ActionResolutionState extends AbstractGameState {
         if (!ctx.containsGamePlayer(playerNickname)) {
             return;
         }
+        ctx.waitUntilNextRound(playerNickname);
     }
 
     @Override

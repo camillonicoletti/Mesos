@@ -867,7 +867,7 @@
 
 .offer-tile:disabled,
 .offer-tile-occupied:disabled {
-    -fx-opacity: .7;
+    -fx-opacity: 1;
 }
 
 .offer-letter {

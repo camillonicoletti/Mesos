@@ -38,6 +38,7 @@ public class EndRoundState extends AbstractGameState {
             round.refillUpperRow();
             round.checkEraTransition();
             game.nextRound();
+            ctx.activateWaitingPlayersForNextRound();
 
             ctx.notifyListeners(l -> l.onRoundEnded(finishedRound));
             ctx.notifyListeners(GameListener::onGameSnapshotChanged);
@@ -71,6 +72,7 @@ public class EndRoundState extends AbstractGameState {
         if (!ctx.containsGamePlayer(playerNickname)) {
             return;
         }
+        ctx.waitUntilNextRound(playerNickname);
     }
 
 }

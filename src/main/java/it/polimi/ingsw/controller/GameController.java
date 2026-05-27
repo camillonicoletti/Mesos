@@ -58,6 +58,7 @@ public class GameController implements Serializable {
 
     private final Set<String> readyPlayers;
     private final Set<String> disconnectedPlayers;
+    private Set<String> playersWaitingNextRound;
 
     // LISTENER
     private transient List<GameListener> listeners = new ArrayList<>();
@@ -69,6 +70,7 @@ public class GameController implements Serializable {
         this.chosenPlayersCount = -1;
         this.readyPlayers = new HashSet<>();
         this.disconnectedPlayers = new HashSet<>();
+        this.playersWaitingNextRound = new HashSet<>();
         this.suspensionManager = new SuspensionManager(DEFAULT_SUSPENSION_TIMEOUT_MILLIS);
         this.persistenceService = new GamePersistenceService();
         this.disconnectionManager = new DisconnectionManager();
@@ -390,6 +392,37 @@ public class GameController implements Serializable {
         getDisconnectionManager().markConnected(nickname, disconnectedPlayers);
     }
 
+    public void waitUntilNextRound(String nickname) {
+        if (nickname != null && containsGamePlayer(nickname)) {
+            playersWaitingNextRound.add(nickname);
+        }
+    }
+
+    public boolean isPlayerWaitingNextRound(String nickname) {
+        return nickname != null && playersWaitingNextRound.contains(nickname);
+    }
+
+    public boolean isPlayerUnavailableThisRound(String nickname) {
+        return isPlayerDisconnected(nickname) || isPlayerWaitingNextRound(nickname);
+    }
+
+    public void activateWaitingPlayersForNextRound() {
+        if (game == null || playersWaitingNextRound.isEmpty()) {
+            return;
+        }
+
+        for (String nickname : new ArrayList<>(playersWaitingNextRound)) {
+            Player player = game.getPlayers().stream()
+                    .filter(p -> p.getNickname().equals(nickname))
+                    .findFirst()
+                    .orElse(null);
+            if (player != null) {
+                game.getCurrentRound().returnTotemToLowestFreeTurnOrderSlot(player);
+            }
+        }
+        playersWaitingNextRound.clear();
+    }
+
     public boolean isPlayerDisconnected(String nickname) {
         return getDisconnectionManager().isDisconnected(nickname, disconnectedPlayers);
     }
@@ -574,6 +607,9 @@ public class GameController implements Serializable {
         persistenceService = new GamePersistenceService();
         disconnectionManager = new DisconnectionManager();
         turnRecoveryService = new TurnRecoveryService();
+        if (playersWaitingNextRound == null) {
+            playersWaitingNextRound = new HashSet<>();
+        }
         getSuspensionManager().ensureValidTimeout(DEFAULT_SUSPENSION_TIMEOUT_MILLIS);
     }
 

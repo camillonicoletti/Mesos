@@ -180,6 +180,48 @@ public class Round implements Serializable {
         return true;
     }
 
+    public boolean clearOfferChoiceForPlayer(Player player) {
+        if (player == null) {
+            return false;
+        }
+
+        OfferTile chosenTile = playerChoices.remove(player);
+        if (chosenTile == null) {
+            return false;
+        }
+
+        if (chosenTile.getTotemSlot() == player.getTotem()) {
+            chosenTile.removeTotem();
+        }
+        return true;
+    }
+
+    public boolean returnTotemToLowestFreeTurnOrderSlot(Player player) {
+        if (player == null || player.getTotem() == null) {
+            return false;
+        }
+
+        Board board = game.getBoard();
+        TurnOrderTile turnOrderTile = board.getTurnOrderTile();
+        for (TurnSlot slot : turnOrderTile.getSlots()) {
+            if (slot.getOccupiedBy() == player.getTotem()) {
+                return false;
+            }
+        }
+
+        removeTotemFromOfferTiles(player.getTotem());
+
+        List<TurnSlot> slots = new ArrayList<>(turnOrderTile.getSlots());
+        slots.sort(Comparator.comparingInt(TurnSlot::getPosition).reversed());
+        for (TurnSlot slot : slots) {
+            if (!slot.isOccupied()) {
+                slot.placeTotem(player.getTotem());
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void placeTotemOrderForPlayer(Player player) {
         Board board = game.getBoard();
         TurnOrderTile turnOrderTile = board.getTurnOrderTile();

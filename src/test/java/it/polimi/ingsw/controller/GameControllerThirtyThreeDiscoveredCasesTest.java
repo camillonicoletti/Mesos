@@ -183,19 +183,23 @@ public class GameControllerThirtyThreeDiscoveredCasesTest {
                 () -> controller.onMessageReceived("Alice", new PlaceTotemAction('A')));
     }
 
-    /** 11. A tile occupied by a player who disconnects should not silently become free during that round. */
+    /** 11. A tile occupied by a player who disconnects during placement becomes available again. */
     @Test
-    void occupiedTileRemainsOccupiedAfterItsPlayerDisconnectsDuringPlacement() {
+    void occupiedTileBecomesAvailableAfterItsPlayerDisconnectsDuringPlacement() {
         Player alice = new Player("Alice", createTotem(TotemColor.RED));
         Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
+        Player carol = new Player("Carol", createTotem(TotemColor.PURPLE));
         OfferTile tileA = foodTile('A', 1);
         OfferTile tileB = foodTile('B', 1);
-        GameController controller = createTotemPlacementController(List.of(alice, bob), List.of(tileA, tileB));
+        OfferTile tileC = foodTile('C', 1);
+        GameController controller = createTotemPlacementController(List.of(alice, bob, carol), List.of(tileA, tileB, tileC));
 
         controller.onMessageReceived("Alice", new PlaceTotemAction('A'));
         controller.onPlayerDisconnection("Alice");
+        controller.onMessageReceived("Bob", new PlaceTotemAction('A'));
 
         assertTrue(controller.getGame().getBoard().getOfferTiles().get(0).isOccupied());
+        assertSame(bob.getTotem(), controller.getGame().getBoard().getOfferTiles().get(0).getTotemSlot());
     }
 
     /** 12. A player reconnecting during TotemPlacement should still be able to place if the phase is not over. */
@@ -213,6 +217,26 @@ public class GameControllerThirtyThreeDiscoveredCasesTest {
 
         assertThrows(IllegalStateException.class,
                 () -> controller.onMessageReceived("Bob", new PlaceTotemAction('B'))); }
+
+    @Test
+    void reconnectedPlayerDuringTotemPlacementWaitsForNextRound() {
+        Player alice = new Player("Alice", createTotem(TotemColor.RED));
+        Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
+        Player carol = new Player("Carol", createTotem(TotemColor.PURPLE));
+        GameController controller = createTotemPlacementController(
+                List.of(alice, bob, carol),
+                List.of(foodTile('A', 1), foodTile('B', 1), foodTile('C', 1))
+        );
+
+        controller.onPlayerDisconnection("Carol");
+        controller.onMessageReceived("Alice", new PlaceTotemAction('A'));
+        controller.onPlayerReconnection("Carol");
+        controller.onMessageReceived("Bob", new PlaceTotemAction('B'));
+
+        assertNotEquals("Bob", controller.getCurrentTurnPlayerNickname());
+        assertThrows(IllegalStateException.class,
+                () -> controller.onMessageReceived("Carol", new PlaceTotemAction('C')));
+    }
 
     // ------------------------------------------------------------------
     // D. ACTION RESOLUTION CASES
