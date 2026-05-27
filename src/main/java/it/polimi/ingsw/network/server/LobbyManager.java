@@ -170,6 +170,12 @@ public class LobbyManager {
                     "Player does not appear to be disconnected"));
             return;
         }
+        // Reject reconnects once the match has already ended (e.g. forced-winner timeout in FA4):
+        // resuming would resurrect a concluded game and bypass the recorded result.
+        if (gameController.getGame() != null && gameController.getGame().isGameOver()) {
+            connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, "Match has already ended"));
+            return;
+        }
 
         // 1. Send the ack and the baseline snapshot BEFORE wiring any listener,
         //    so the client always renders state in this order:
@@ -266,6 +272,11 @@ public class LobbyManager {
         LobbyUpdateMessage message = buildLobbyUpdateMessage();
 
         for (ServerSideConnection connection : connections.values()) {
+            connection.send(message);
+        }
+        // Pending connections (clients still on the login screen) must also see lobby changes
+        // so taken totem colors and nicknames disappear from their selection in real time.
+        for (ServerSideConnection connection : pendingConnections) {
             connection.send(message);
         }
     }

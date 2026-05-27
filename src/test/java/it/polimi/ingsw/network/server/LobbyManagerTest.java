@@ -5,8 +5,11 @@ import it.polimi.ingsw.network.protocol.clientbound.GameEndedMessage;
 import it.polimi.ingsw.network.protocol.clientbound.GameStartedMessage;
 import it.polimi.ingsw.network.protocol.clientbound.ServerMessage;
 import it.polimi.ingsw.network.protocol.clientbound.StateChangedMessage;
+import it.polimi.ingsw.network.protocol.clientbound.LobbyUpdateMessage;
+import it.polimi.ingsw.network.protocol.clientbound.LoginAckMessage;
 import it.polimi.ingsw.network.protocol.serverbound.ClientMessage;
 import it.polimi.ingsw.network.protocol.serverbound.LoginMessage;
+import it.polimi.ingsw.network.protocol.serverbound.ReconnectMessage;
 import it.polimi.ingsw.network.protocol.serverbound.SetPlayersCountMessage;
 import it.polimi.ingsw.network.transport.ServerSideConnection;
 import org.junit.jupiter.api.Test;
@@ -78,6 +81,82 @@ class LobbyManagerTest {
                             .orElseThrow()
             );
             assertEquals("Alice", gameEnded.getWinnerNickname());
+        } finally {
+            lobby.shutdown();
+        }
+    }
+
+    @Test
+    void reconnectAfterForcedWinnerTimeoutIsRejected() throws Exception {
+        // Regression: when a suspension timeout has already declared a forced winner,
+        // a late reconnect from the disconnected player must NOT resurrect the match.
+        LobbyManager lobby = new LobbyManager();
+        RecordingConnection alice = new RecordingConnection();
+        RecordingConnection bob = new RecordingConnection();
+
+        try {
+            lobby.handleLogin(alice, new LoginMessage("Alice", TotemColor.RED));
+            lobby.handleLogin(bob, new LoginMessage("Bob", TotemColor.BLUE));
+            lobby.handleSetPlayersCount("Alice", new SetPlayersCountMessage(2));
+            lobby.handleReady("Alice", true);
+            lobby.handleReady("Bob", true);
+
+            lobby.getGameController().setSuspensionTimeoutMillis(10L);
+            lobby.handleDisconnect("Bob");
+
+            long deadline = System.currentTimeMillis() + 2_000L;
+            while (System.currentTimeMillis() < deadline
+                    && alice.messages.stream().noneMatch(GameEndedMessage.class::isInstance)) {
+                Thread.sleep(25L);
+            }
+            assertTrue(lobby.getGameController().getGame().isGameOver(),
+                    "precondition: forced-winner timeout must have ended the game");
+
+            RecordingConnection bobReconnect = new RecordingConnection();
+            lobby.handleReconnect(bobReconnect, new ReconnectMessage("Bob"));
+
+            LoginAckMessage ack = assertInstanceOf(
+                    LoginAckMessage.class,
+                    bobReconnect.messages.stream()
+                            .filter(LoginAckMessage.class::isInstance)
+                            .findFirst()
+                            .orElseThrow()
+            );
+            assertEquals(LoginAckMessage.Outcome.REJECTED, ack.getOutcome());
+            assertEquals("Match has already ended", ack.getErrorReason());
+        } finally {
+            lobby.shutdown();
+        }
+    }
+
+    @Test
+    void pendingConnectionsReceiveLobbyUpdatesAfterAnotherPlayerLogsIn() {
+        // Regression: a client still on the login screen must see totem/nickname picks
+        // happening in real time, otherwise it offers already-taken options.
+        LobbyManager lobby = new LobbyManager();
+        RecordingConnection pending = new RecordingConnection();
+        RecordingConnection alice = new RecordingConnection();
+
+        try {
+            lobby.registerPendingConnection(pending);
+            int messagesBeforeAliceLogin = pending.messages.size();
+
+            lobby.handleLogin(alice, new LoginMessage("Alice", TotemColor.RED));
+
+            long updatesAfter = pending.messages.stream()
+                    .skip(messagesBeforeAliceLogin)
+                    .filter(LobbyUpdateMessage.class::isInstance)
+                    .count();
+            assertTrue(updatesAfter >= 1,
+                    "pending client must receive a LobbyUpdate after another player logs in");
+            LobbyUpdateMessage last = (LobbyUpdateMessage) pending.messages.stream()
+                    .filter(LobbyUpdateMessage.class::isInstance)
+                    .reduce((a, b) -> b)
+                    .orElseThrow();
+            assertTrue(last.getPlayers().stream()
+                            .anyMatch(p -> "Alice".equals(p.getNickname())
+                                    && p.getTotemColor() == TotemColor.RED),
+                    "pending client's latest lobby snapshot must reflect Alice's RED totem");
         } finally {
             lobby.shutdown();
         }

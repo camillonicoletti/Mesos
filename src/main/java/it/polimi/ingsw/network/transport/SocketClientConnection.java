@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -32,6 +34,12 @@ public class SocketClientConnection implements ClientSideConnection {
     private volatile boolean alive;
     private volatile boolean disconnectNotified;
     private volatile long lastReceivedAtMillis;
+    // Guarded by handlerLock: messages received before the real handler is installed
+    // are stashed here and drained on the first setOnMessage call. Avoids dropping the
+    // initial LobbyUpdate that the server sends as soon as the socket is accepted.
+    private final Object handlerLock = new Object();
+    private final List<ServerMessage> pendingMessages = new ArrayList<>();
+    private boolean handlerInstalled;
     private volatile Consumer<ServerMessage> onMessage;
     private volatile Runnable onDisconnect;
 
@@ -50,7 +58,8 @@ public class SocketClientConnection implements ClientSideConnection {
         this.alive = true;
         this.disconnectNotified = false;
         this.lastReceivedAtMillis = System.currentTimeMillis();
-        this.onMessage = message -> { };
+        this.handlerInstalled = false;
+        this.onMessage = this::bufferUntilHandlerInstalled;
         this.onDisconnect = () -> { };
         this.out = new ObjectOutputStream(socket.getOutputStream());
         this.out.flush();
@@ -107,7 +116,30 @@ public class SocketClientConnection implements ClientSideConnection {
 
     @Override
     public void setOnMessage(Consumer<ServerMessage> onMessage) {
-        this.onMessage = onMessage != null ? onMessage : message -> { };
+        Consumer<ServerMessage> handler = onMessage != null ? onMessage : message -> { };
+        List<ServerMessage> drain;
+        synchronized (handlerLock) {
+            // Capture and clear the buffer under the lock; new arrivals will see handlerInstalled=true
+            // and be delivered directly to the real handler, preserving overall arrival order.
+            drain = new ArrayList<>(pendingMessages);
+            pendingMessages.clear();
+            this.onMessage = handler;
+            handlerInstalled = true;
+        }
+        for (ServerMessage queued : drain) {
+            handler.accept(queued);
+        }
+    }
+
+    private void bufferUntilHandlerInstalled(ServerMessage message) {
+        synchronized (handlerLock) {
+            if (!handlerInstalled) {
+                pendingMessages.add(message);
+                return;
+            }
+        }
+        // Lost the race against setOnMessage: deliver to the now-installed handler.
+        onMessage.accept(message);
     }
 
     @Override
