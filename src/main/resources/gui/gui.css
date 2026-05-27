@@ -1269,35 +1269,76 @@
 
 /* ── Suspension overlay ───────────────────────────────────────────────────── */
 
-.suspension-overlay {
-    -fx-background-color: rgba(43, 23, 32, .93);
-    -fx-background-radius: 8px;
-    -fx-border-color: rgba(255, 226, 168, .34);
-    -fx-border-radius: 8px;
-    -fx-border-width: 1px;
-    -fx-padding: 24px 30px;
-    -fx-effect: dropshadow(three-pass-box, rgba(18, 8, 12, .56), 28, 0, 0, 9);
+/* Root is left transparent so the inline background-image set in Java is honored.
+   The fallback class kicks in only when the PNG is missing. */
+.suspension-overlay-root {
+}
+
+.suspension-overlay-fallback {
+    -fx-background-color: linear-gradient(to bottom, #1a0d12 0%, #2a1620 50%, #1a0d12 100%);
+}
+
+.suspension-dim {
+    -fx-background-color: rgba(6, 3, 6, .55);
+}
+
+.suspension-card {
+    -fx-background-color: rgba(28, 16, 22, .94);
+    -fx-background-radius: 14px;
+    -fx-border-color: rgba(255, 226, 168, .42);
+    -fx-border-radius: 14px;
+    -fx-border-width: 1.5px;
+    -fx-padding: 34px 44px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, .72), 40, 0, 0, 14);
 }
 
 .suspension-title {
-    -fx-text-fill: #fff2cf;
-    -fx-font-size: 28px;
+    -fx-text-fill: #ffd166;
+    -fx-font-size: 38px;
     -fx-font-weight: 900;
-    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .88), 7, 0, 0, 2);
+    -fx-letter-spacing: 4px;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .88), 10, 0, 0, 3);
 }
 
 .suspension-message {
     -fx-text-fill: #f7ddac;
-    -fx-font-size: 15px;
-    -fx-font-weight: 800;
+    -fx-font-size: 16px;
+    -fx-font-weight: 700;
+    -fx-text-alignment: center;
+}
+
+.suspension-hint {
+    -fx-text-fill: #c9b08c;
+    -fx-font-size: 13px;
+    -fx-font-style: italic;
+    -fx-text-alignment: center;
+}
+
+.suspension-roster-connected {
+    -fx-text-fill: #9be39b;
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+    -fx-text-alignment: center;
+}
+
+.suspension-roster-disconnected {
+    -fx-text-fill: #e88a8a;
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
     -fx-text-alignment: center;
 }
 
 .suspension-timer {
     -fx-text-fill: #ffd166;
-    -fx-font-size: 22px;
+    -fx-font-size: 26px;
     -fx-font-weight: 900;
-    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .78), 5, 0, 0, 1);
+    -fx-padding: 8px 0 0 0;
+    -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .78), 6, 0, 0, 2);
+}
+
+.suspension-timer-critical {
+    -fx-text-fill: #ff5c5c;
+    -fx-effect: dropshadow(three-pass-box, rgba(255, 60, 60, .65), 12, 0, 0, 0);
 }
 
 /* ── Toast messages ───────────────────────────────────────────────────────── */

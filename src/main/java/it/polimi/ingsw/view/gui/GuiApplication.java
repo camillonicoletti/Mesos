@@ -24,6 +24,7 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.Button;
+import javafx.scene.image.Image;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignA;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignC;
 import javafx.scene.layout.BorderPane;
@@ -201,8 +202,10 @@ public final class GuiApplication extends Application {
     private GuiAssetCatalog assetCatalog;
     private StackPane sceneRoot;
     private BorderPane root;
-    private VBox suspensionOverlay;
+    private StackPane suspensionOverlay;
     private Label suspensionTimerLabel;
+    private Label suspensionConnectedLabel;
+    private Label suspensionDisconnectedLabel;
     private VBox toastHost;
     private Label timerLabel;
     private Label endGameSubtitleLabel;
@@ -394,7 +397,7 @@ public final class GuiApplication extends Application {
         }
         if (model.isGameSuspended()) {
             long remaining = model.getSuspensionRemainingMillis();
-            timerLabel.setText("Game suspended — timeout " + formatMillis(remaining));
+            timerLabel.setText("MATCH PAUSED — " + formatMillis(remaining));
             timerLabel.getStyleClass().setAll("timer", "timer-alert");
         } else {
             timerLabel.setText("Connection active");
@@ -402,35 +405,106 @@ public final class GuiApplication extends Application {
         }
     }
 
-    private VBox createSuspensionOverlay() {
-        VBox overlay = new VBox(10);
-        overlay.getStyleClass().add("suspension-overlay");
-        overlay.setAlignment(Pos.CENTER);
-        overlay.setMaxWidth(520);
+    /**
+     * Builds the full-screen overlay shown when the server reports the match is suspended
+     * (only one player remains connected, FA4 — disconnection resilience). The overlay is
+     * purely visual: the server stays authoritative on the suspension timeout and on the
+     * forced-winner decision; this view only mirrors {@code ClientModel} state.
+     */
+    private StackPane createSuspensionOverlay() {
+        StackPane overlay = new StackPane();
+        overlay.getStyleClass().add("suspension-overlay-root");
         overlay.setVisible(false);
         overlay.setManaged(false);
+        // pickOnBounds = true so the overlay swallows clicks on the underlying board while suspended.
+        overlay.setPickOnBounds(true);
 
-        Label title = new Label("Game suspended");
+        Image bg = loadSuspensionBackground();
+        if (bg != null) {
+            // Apply via inline style so CSS rules don't override BackgroundImage; cover so it fills the screen.
+            overlay.setStyle("-fx-background-image: url('"
+                    + getClass().getResource("/assets/suspension/suspended_match_bg.png").toExternalForm()
+                    + "'); -fx-background-size: cover; -fx-background-position: center;");
+        } else {
+            // No image available: fall back to the CSS gradient defined for this class.
+            overlay.getStyleClass().add("suspension-overlay-fallback");
+        }
+
+        Region dim = new Region();
+        dim.getStyleClass().add("suspension-dim");
+
+        VBox card = new VBox(14);
+        card.getStyleClass().add("suspension-card");
+        card.setAlignment(Pos.CENTER);
+        card.setMaxWidth(560);
+        card.setMaxHeight(Region.USE_PREF_SIZE);
+
+        Label title = new Label("MATCH PAUSED");
         title.getStyleClass().add("suspension-title");
 
-        Label message = new Label("Only one player remains connected. The game resumes when at least one other player reconnects.");
+        Label message = new Label("Waiting for at least one other player to reconnect...");
         message.getStyleClass().add("suspension-message");
         message.setWrapText(true);
-        message.setMaxWidth(460);
+        message.setMaxWidth(500);
         message.setAlignment(Pos.CENTER);
+
+        Label hint = new Label("Only one player is still connected to this match.");
+        hint.getStyleClass().add("suspension-hint");
+        hint.setWrapText(true);
+        hint.setMaxWidth(500);
+        hint.setAlignment(Pos.CENTER);
+
+        suspensionConnectedLabel = new Label();
+        suspensionConnectedLabel.getStyleClass().add("suspension-roster-connected");
+        suspensionConnectedLabel.setWrapText(true);
+        suspensionConnectedLabel.setMaxWidth(500);
+        suspensionConnectedLabel.setAlignment(Pos.CENTER);
+
+        suspensionDisconnectedLabel = new Label();
+        suspensionDisconnectedLabel.getStyleClass().add("suspension-roster-disconnected");
+        suspensionDisconnectedLabel.setWrapText(true);
+        suspensionDisconnectedLabel.setMaxWidth(500);
+        suspensionDisconnectedLabel.setAlignment(Pos.CENTER);
 
         suspensionTimerLabel = new Label();
         suspensionTimerLabel.getStyleClass().add("suspension-timer");
 
-        overlay.getChildren().addAll(title, message, suspensionTimerLabel);
+        card.getChildren().addAll(title, message, hint,
+                suspensionConnectedLabel, suspensionDisconnectedLabel,
+                suspensionTimerLabel);
+
+        overlay.getChildren().addAll(dim, card);
+        StackPane.setAlignment(card, Pos.CENTER);
         return overlay;
+    }
+
+    /**
+     * Attempts to load the dedicated suspended-match background. The asset folder
+     * ({@code src/main/resources/assets/}) is git-ignored, so the file may legitimately
+     * be missing on some machines; in that case we silently fall back to the gradient
+     * defined in {@code .suspension-overlay-root}.
+     */
+    private Image loadSuspensionBackground() {
+        try {
+            var url = getClass().getResource("/assets/suspension/suspended_match_bg.png");
+            if (url == null) {
+                return null;
+            }
+            Image image = new Image(url.toExternalForm(), false);
+            return image.isError() ? null : image;
+        } catch (RuntimeException ex) {
+            // Any loader failure (corrupt file, unsupported format) falls back to the CSS gradient.
+            return null;
+        }
     }
 
     private void refreshSuspensionOverlay() {
         if (suspensionOverlay == null) {
             return;
         }
-        boolean suspended = model.isGameSuspended();
+        // Hide overlay once the game has actually ended (e.g. forced-winner timeout fired):
+        // the EndGameView is the authoritative end screen, the suspension overlay must step aside.
+        boolean suspended = model.isGameSuspended() && !model.isGameEnded();
         suspensionOverlay.setVisible(suspended);
         suspensionOverlay.setManaged(suspended);
         if (!suspended) {
@@ -438,8 +512,46 @@ public final class GuiApplication extends Application {
         }
 
         long remaining = model.getSuspensionRemainingMillis();
-        String countdown = remaining >= 0L ? formatMillis(remaining) : "--:--";
-        suspensionTimerLabel.setText("Automatic victory in " + countdown);
+        if (remaining >= 0L) {
+            suspensionTimerLabel.setText("Automatic win timeout: " + formatMillis(remaining));
+        } else {
+            suspensionTimerLabel.setText("Automatic win timeout: waiting for the server");
+        }
+        // Last 10 seconds: switch to the critical style (red glow) for visual urgency.
+        if (remaining >= 0L && remaining <= 10_000L) {
+            if (!suspensionTimerLabel.getStyleClass().contains("suspension-timer-critical")) {
+                suspensionTimerLabel.getStyleClass().add("suspension-timer-critical");
+            }
+        } else {
+            suspensionTimerLabel.getStyleClass().remove("suspension-timer-critical");
+        }
+
+        java.util.List<String> connected = new java.util.ArrayList<>();
+        java.util.List<String> disconnected = new java.util.ArrayList<>();
+        for (String nick : model.getPlayers().keySet()) {
+            if (model.isPlayerDisconnected(nick)) {
+                disconnected.add(nick);
+            } else {
+                connected.add(nick);
+            }
+        }
+        java.util.Collections.sort(connected);
+        java.util.Collections.sort(disconnected);
+
+        if (connected.isEmpty()) {
+            suspensionConnectedLabel.setText("Still connected: —");
+        } else {
+            suspensionConnectedLabel.setText("Still connected: " + String.join(", ", connected));
+        }
+        if (disconnected.isEmpty()) {
+            suspensionDisconnectedLabel.setText("Disconnected: —");
+            suspensionDisconnectedLabel.setVisible(false);
+            suspensionDisconnectedLabel.setManaged(false);
+        } else {
+            suspensionDisconnectedLabel.setText("Disconnected: " + String.join(", ", disconnected));
+            suspensionDisconnectedLabel.setVisible(true);
+            suspensionDisconnectedLabel.setManaged(true);
+        }
     }
 
     private void showPendingToasts() {
