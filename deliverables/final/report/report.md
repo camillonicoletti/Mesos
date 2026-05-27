@@ -2,10 +2,10 @@
 
 ## Team members
 
+- Benedetto Oliva
 - Giorgio Ortona
-- Mazzeo
-- Oliva
-- Nicoletti
+- Alessandro Mazzeo
+- Camillo Nicoletti
 
 ## Implemented features
 
@@ -18,8 +18,8 @@
 - Player disconnection and reconnection handling.
 - Game suspension when only one player remains connected, with a timer and automatic victory upon expiration.
 - Game state saving and restoring.
-- Optional persistent leaderboard via PostgreSQL.
-- Debug mode to speed up some manual tests.
+- Optional persistent leaderboard via JDBC (loaded through a `db.properties` file).
+- Debug mode, enabled by starting the server with `-Dgame.debug=true`, which exposes auxiliary TUI commands to skip rounds or force end-of-game for manual testing.
 
 ## Approximate division of work
 
@@ -48,7 +48,9 @@ In the RMI case the client does not send manual packets to the server: it invoke
 
 ## Database
 
-The leaderboard uses PostgreSQL when `db.properties` is present. If the file does not exist or the connection is not available, the game remains runnable and the leaderboard is disabled.
+The leaderboard reads JDBC credentials from `db.properties` in the server working directory. If the file does not exist or the connection is not available, the game remains runnable and the leaderboard is disabled.
+
+The dependency declared in `pom.xml` is `mysql-connector-j`, and `db.properties.example` targets MySQL. The SQL dump in `deliverables/final/dump/schema.sql` currently uses PostgreSQL-specific types (`BIGSERIAL`, `UUID`) and must be adapted to the database engine actually used.
 
 The SQL schema can be found in:
 
