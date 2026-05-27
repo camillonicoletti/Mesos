@@ -244,11 +244,16 @@ class MesosRulesEdgeCaseTest {
     // ║                                                                      ║
     // ║ Rule (Rulebook p.6): "in the rare case of a tie among all players,   ║
     // ║ everyone first gains PP and then loses PP."                          ║
-    // ║ Plus appendix: ShamanicRitualImmunityEffect prevents PP loss.        ║
+    // ║                                                                      ║
+    // ║ Team policy on ImmunityEffect under all-tied: the building text      ║
+    // ║ reads "you do not lose PP if you have fewer icons than the others".  ║
+    // ║ When everyone is tied nobody has fewer icons, so the precondition is ║
+    // ║ not met and the immunity is bypassed. (Contrast with DoublePP, whose ║
+    // ║ printed text explicitly extends the bonus to ties.)                  ║
     // ╚══════════════════════════════════════════════════════════════════════╝
 
     @Test
-    void shamanicRitualAllTiedWithImmunityKeepsGainsAndAvoidsLoss() {
+    void shamanicRitualAllTiedImmunityIsBypassedSoLossStillApplies() {
         Game game = minimalTwoPlayerGame();
         Player alice = game.getPlayers().get(0);
         Player bob   = game.getPlayers().get(1);
@@ -260,9 +265,10 @@ class MesosRulesEdgeCaseTest {
         new ShamanicRitualEventCard(800, Era.I, false, 10, 5).resolve(game);
 
         // Both gain ppGain (10) because both are in maxStars.
-        // Then both are also in minStars: Alice immune → no loss; Bob loses 5.
-        assertEquals(10, alice.getPrestigePoints(),
-                "Alice gains 10 (max-stars tie) and is immune to the loss");
+        // Both are also in minStars; immunity does NOT trigger under all-tied
+        // (Alice does not have fewer icons than Bob), so both lose ppLoss (5).
+        assertEquals(5, alice.getPrestigePoints(),
+                "Alice gains 10 then loses 5 = 5: immunity bypassed in all-tied");
         assertEquals(5, bob.getPrestigePoints(),
                 "Bob gains 10 then loses 5 = 5 net");
     }
