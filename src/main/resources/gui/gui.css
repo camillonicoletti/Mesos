@@ -1341,6 +1341,28 @@
     -fx-effect: dropshadow(three-pass-box, rgba(255, 60, 60, .65), 12, 0, 0, 0);
 }
 
+.suspension-quit {
+    -fx-background-color: rgba(120, 30, 40, .85);
+    -fx-text-fill: #fff2cf;
+    -fx-font-size: 13px;
+    -fx-font-weight: 800;
+    -fx-letter-spacing: 2px;
+    -fx-padding: 8px 22px;
+    -fx-background-radius: 6px;
+    -fx-border-color: rgba(255, 226, 168, .42);
+    -fx-border-radius: 6px;
+    -fx-border-width: 1px;
+    -fx-cursor: hand;
+}
+
+.suspension-quit:hover {
+    -fx-background-color: rgba(170, 50, 60, .95);
+}
+
+.suspension-quit:pressed {
+    -fx-background-color: rgba(90, 22, 30, .95);
+}
+
 /* ── Toast messages ───────────────────────────────────────────────────────── */
 
 .toast-host {

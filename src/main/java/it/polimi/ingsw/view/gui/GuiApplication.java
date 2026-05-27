@@ -469,9 +469,21 @@ public final class GuiApplication extends Application {
         suspensionTimerLabel = new Label();
         suspensionTimerLabel.getStyleClass().add("suspension-timer");
 
+        // Voluntary quit from the suspension screen: sends an explicit QuitMessage so the
+        // server terminates the match for everyone instead of keeping it suspended on the
+        // assumption this player might come back. Server-side handling in LobbyManager#handleQuit.
+        // Then close the window: the local model still carries the stale suspension flag and
+        // its countdown is no longer meaningful for someone who chose to leave.
+        Button quitButton = new Button("QUIT");
+        quitButton.getStyleClass().add("suspension-quit");
+        quitButton.setOnAction(event -> {
+            controller.quit();
+            Platform.exit();
+        });
+
         card.getChildren().addAll(title, message, hint,
                 suspensionConnectedLabel, suspensionDisconnectedLabel,
-                suspensionTimerLabel);
+                suspensionTimerLabel, quitButton);
 
         overlay.getChildren().addAll(dim, card);
         StackPane.setAlignment(card, Pos.CENTER);
@@ -504,7 +516,9 @@ public final class GuiApplication extends Application {
         }
         // Hide overlay once the game has actually ended (e.g. forced-winner timeout fired):
         // the EndGameView is the authoritative end screen, the suspension overlay must step aside.
-        boolean suspended = model.isGameSuspended() && !model.isGameEnded();
+        // Also hide it after a voluntary quit (!isConnected): the local model still carries the
+        // pre-quit suspension flag, but the countdown is no longer meaningful to a player who left.
+        boolean suspended = model.isGameSuspended() && !model.isGameEnded() && model.isConnected();
         suspensionOverlay.setVisible(suspended);
         suspensionOverlay.setManaged(suspended);
         if (!suspended) {

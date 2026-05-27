@@ -261,6 +261,53 @@ public class LobbyManager {
             broadcastLobbyUpdate();
         }
     }
+
+    /**
+     * Handles a voluntary quit (player explicitly leaving the match). Different from
+     * {@link #handleDisconnect}: a quit is irreversible (no reconnect path) and, if the
+     * match is in progress, terminates the game for everyone rather than entering / staying
+     * in the FA4 suspended state. Pre-game quits behave like a regular disconnect.
+     */
+    public synchronized void handleQuit(String nickname) {
+        if (nickname == null || nickname.isBlank()) {
+            return;
+        }
+
+        unregisterConnection(nickname);
+
+        if (!gameController.containsLobbyPlayer(nickname) && !gameController.containsGamePlayer(nickname)) {
+            return;
+        }
+
+        boolean gameInProgress = gameController.getGame() != null && !gameController.getGame().isGameOver();
+
+        if (!gameInProgress) {
+            // Pre-game quit or already game-over: same cleanup as a disconnect (remove from lobby).
+            try {
+                gameController.onPlayerDisconnection(nickname);
+            } catch (Exception ignored) {
+            }
+            if (gameController.getGame() == null) {
+                broadcastLobbyUpdate();
+            }
+            return;
+        }
+
+        // Mid-game quit: the match must end for everyone. Mark the quitter disconnected
+        // first so any state-specific cleanup (e.g. clearing their turn slot) runs, then
+        // transition to EndGameState which freezes scores and notifies all listeners.
+        try {
+            if (!gameController.isPlayerDisconnected(nickname)) {
+                gameController.onPlayerDisconnection(nickname);
+            }
+        } catch (Exception ignored) {
+        }
+        try {
+            gameController.changeState(new it.polimi.ingsw.controller.state.EndGameState());
+        } catch (Exception ignored) {
+            // If the controller cannot transition (already game-over), there is nothing more to do.
+        }
+    }
     public synchronized void handleGetLeaderboard(ServerSideConnection connection,
                                                   GetLeaderboardMessage message) {
         int requestedLimit = Math.min(message.limit(), 10);

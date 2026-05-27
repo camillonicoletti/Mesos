@@ -91,6 +91,12 @@ public class GameController implements Serializable {
         getPersistenceService().saveAfterAction(this, currentState);
     }
 
+    /**
+     * Records a player disconnection, notifies listeners, recomputes suspension
+     * status and enters {@link SuspendedState} if the connected count drops
+     * below the FA4 threshold. When no game player remains connected the match
+     * is terminated to avoid a zombie game.
+     */
     public void onPlayerDisconnection(String playerNickname) {
         String normalizedNickname = normalizePlayerNickname(playerNickname);
         if (isPlayerDisconnected(normalizedNickname)) {
@@ -109,8 +115,21 @@ public class GameController implements Serializable {
             enterSuspendedState();
             notifyListeners(GameListener::onGameSuspended);
         }
+        // If everyone has disconnected mid-game there is no candidate for the FA4 forced-winner
+        // timeout and no one to keep the match alive: terminate cleanly to avoid a zombie game.
+        if (game != null && !game.isGameOver() && getConnectedGamePlayersCount() == 0) {
+            changeState(new it.polimi.ingsw.controller.state.EndGameState());
+        }
     }
 
+    /**
+     * Records a player reconnection, forwards it to the current state for
+     * recovery, notifies listeners and resumes from {@link SuspendedState}
+     * when the connected count climbs back above the suspension threshold.
+     *
+     * @throws IllegalArgumentException if the player is unknown to this match
+     * @throws IllegalStateException if the player was already connected
+     */
     public void onPlayerReconnection(String playerNickname) {
         String normalizedNickname = normalizePlayerNickname(playerNickname);
         if (!containsGamePlayer(normalizedNickname)) {
@@ -170,6 +189,11 @@ public class GameController implements Serializable {
         return game;
     }
 
+    /**
+     * Installs the game instance for this match, resets suspension tracking
+     * and wires the model's listener notifier so that domain events surface
+     * through the controller's listener list.
+     */
     public void setGame(Game game) {
         this.game = game;
         getSuspensionManager().resetForGame(game);
@@ -194,6 +218,7 @@ public class GameController implements Serializable {
         return Collections.unmodifiableList(lobbyPlayers);
     }
 
+    /** Adds a player to the pre-game lobby and clears any previous disconnect record for them. */
     public void addLobbyPlayer(Player player) {
         if (player == null) {
             throw new IllegalArgumentException("Player cannot be null");
@@ -227,6 +252,12 @@ public class GameController implements Serializable {
         return chosenPlayersCount;
     }
 
+    /**
+     * Sets the target player count for this lobby. Must be in [2, 5] and
+     * cannot be lower than the players already joined.
+     *
+     * @throws IllegalArgumentException if out of range or below current lobby size
+     */
     public void setChosenPlayersCount(int chosenPlayersCount) {
         if (chosenPlayersCount < 2 || chosenPlayersCount > 5) {
             throw new IllegalArgumentException("Players count must be between 2 and 5");
@@ -308,6 +339,13 @@ public class GameController implements Serializable {
                 .anyMatch(player -> player.getNickname().equals(nickname));
     }
 
+    /**
+     * Removes a player from the lobby, clears their ready and disconnect
+     * records and, when the lobby becomes empty, resets the chosen player
+     * count so the next joiner can pick again.
+     *
+     * @throws IllegalArgumentException if the player is not in the lobby
+     */
     public void removePlayerFromLobby(String nickname) {
         if (nickname == null || nickname.isBlank()) {
             throw new IllegalArgumentException("Nickname cannot be null or blank");
@@ -375,6 +413,7 @@ public class GameController implements Serializable {
         return getSuspensionManager().getSuspendedStateReturn();
     }
 
+    /** True when the match is still live and at least two players are connected (FA4 threshold). */
     public boolean canContinueAfterDisconnection() {
         return game != null && !game.isGameOver() && getConnectedGamePlayersCount() >= 2;
     }
@@ -407,6 +446,11 @@ public class GameController implements Serializable {
         return checkSuspensionTimeout(System.currentTimeMillis());
     }
 
+    /**
+     * Checks whether the suspension timeout elapsed and, if so, ends the
+     * match in favour of the only connected player by transitioning to
+     * {@link EndGameState}. Returns true when the timeout triggered.
+     */
     public boolean checkSuspensionTimeout(long nowMillis) {
         boolean timedOut = getSuspensionManager().checkTimeout(
                 game,
@@ -459,6 +503,7 @@ public class GameController implements Serializable {
     }
 
     // LISTENER
+    /** Registers a listener for controller and game events. Listener cannot be null. */
     public void addListener(GameListener listener) {
         if (listener == null) {
             throw new IllegalArgumentException("Listener cannot be null");
@@ -473,6 +518,11 @@ public class GameController implements Serializable {
         listeners.remove(listener);
     }
 
+    /**
+     * Dispatches an event to every registered listener. Exceptions thrown by
+     * individual listeners are logged and swallowed so that one misbehaving
+     * client cannot break the broadcast for the others.
+     */
     public void notifyListeners(Consumer<GameListener> event) {
         for (GameListener listener : listeners) {
             try {

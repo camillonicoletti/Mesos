@@ -4,6 +4,7 @@ import it.polimi.ingsw.network.protocol.clientbound.*;
 import it.polimi.ingsw.network.protocol.serverbound.ClientMessage;
 import it.polimi.ingsw.network.protocol.serverbound.DisconnectMessage;
 import it.polimi.ingsw.network.protocol.serverbound.PongMessage;
+import it.polimi.ingsw.network.protocol.serverbound.QuitMessage;
 import it.polimi.ingsw.network.transport.ClientSideConnection;
 
 import java.util.HashMap;
@@ -47,7 +48,7 @@ public class ClientController {
     }
     /**
      * Sends a leaderboard request to the server. The result will be delivered
-     * asynchronously through {@link View#showLeaderboard}.
+     * asynchronously through {@link it.polimi.ingsw.view.View#showLeaderboard(int, java.util.List)}.
      *
      * @param playersCount the player-count bucket to query (e.g. 2, 3, 4)
      * @param limit        maximum number of rows to return
@@ -64,6 +65,21 @@ public class ClientController {
         } finally {
             connection.close();
             model.applyConnectionLost("Connection closed.");
+        }
+    }
+
+    /**
+     * Voluntary quit from the match. Tells the server this is an explicit exit
+     * (irreversible, terminates the game) rather than a recoverable network drop.
+     */
+    public void quit() {
+        try {
+            connection.send(new QuitMessage());
+        } catch (RuntimeException ignored) {
+            // Socket already down: terminate locally anyway.
+        } finally {
+            connection.close();
+            model.applyConnectionLost("You left the match.");
         }
     }
 

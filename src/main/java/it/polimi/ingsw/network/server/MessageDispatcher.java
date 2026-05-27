@@ -30,6 +30,8 @@ public class MessageDispatcher {
                 // Pong keeps the connection alive; no game-state update needed.
             } else if (msg instanceof DisconnectMessage) {
                 lobby.handleDisconnect(conn.getNickname());
+            } else if (msg instanceof QuitMessage) {
+                lobby.handleQuit(conn.getNickname());
             } else if (msg instanceof ForceEndGameMessage) {
                 lobby.handleForceEndGame();
             }

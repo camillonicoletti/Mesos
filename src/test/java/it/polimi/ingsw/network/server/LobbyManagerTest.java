@@ -87,6 +87,58 @@ class LobbyManagerTest {
     }
 
     @Test
+    void voluntaryQuitDuringGameEndsMatchForEveryone() throws Exception {
+        // FA4 policy: a voluntary quit (QuitMessage) terminates the match for all players,
+        // it does NOT enter / stay in the suspended state waiting for reconnection.
+        LobbyManager lobby = new LobbyManager();
+        RecordingConnection alice = new RecordingConnection();
+        RecordingConnection bob = new RecordingConnection();
+
+        try {
+            lobby.handleLogin(alice, new LoginMessage("Alice", TotemColor.RED));
+            lobby.handleLogin(bob, new LoginMessage("Bob", TotemColor.BLUE));
+            lobby.handleSetPlayersCount("Alice", new SetPlayersCountMessage(2));
+            lobby.handleReady("Alice", true);
+            lobby.handleReady("Bob", true);
+            assertTrue(lobby.getGameController().getGame() != null,
+                    "precondition: game must be started");
+
+            lobby.handleQuit("Alice");
+
+            assertTrue(lobby.getGameController().getGame().isGameOver(),
+                    "voluntary quit must terminate the running match");
+            assertTrue(bob.messages.stream().anyMatch(GameEndedMessage.class::isInstance),
+                    "remaining player must be notified the match ended");
+        } finally {
+            lobby.shutdown();
+        }
+    }
+
+    @Test
+    void voluntaryQuitInLobbyJustRemovesPlayer() {
+        // Pre-game quit must not crash and should not break the lobby for the other players.
+        LobbyManager lobby = new LobbyManager();
+        RecordingConnection alice = new RecordingConnection();
+        RecordingConnection bob = new RecordingConnection();
+
+        try {
+            lobby.handleLogin(alice, new LoginMessage("Alice", TotemColor.RED));
+            lobby.handleLogin(bob, new LoginMessage("Bob", TotemColor.BLUE));
+
+            lobby.handleQuit("Bob");
+
+            assertTrue(lobby.getGameController().getGame() == null,
+                    "no game should have been created by a lobby-phase quit");
+            assertTrue(lobby.getGameController().containsLobbyPlayer("Alice"),
+                    "Alice must still be in the lobby after Bob's quit");
+            assertTrue(!lobby.getGameController().containsLobbyPlayer("Bob"),
+                    "Bob must no longer be in the lobby");
+        } finally {
+            lobby.shutdown();
+        }
+    }
+
+    @Test
     void reconnectAfterForcedWinnerTimeoutIsRejected() throws Exception {
         // Regression: when a suspension timeout has already declared a forced winner,
         // a late reconnect from the disconnected player must NOT resurrect the match.
