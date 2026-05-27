@@ -5,6 +5,11 @@ import it.polimi.ingsw.controller.action.GameAction;
 import it.polimi.ingsw.controller.action.ReadyAction;
 import it.polimi.ingsw.controller.action.SetPlayerCountAction;
 
+/**
+ * State entered when the lobby is full. Collects {@link ReadyAction} from every
+ * player and, once all are ready, transitions to {@link StartGameState}.
+ * Rejects any action outside the ready / set-player-count subset.
+ */
 public class ReadyCheckState extends AbstractGameState {
 
     private static final long serialVersionUID = 1L;

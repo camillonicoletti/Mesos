@@ -9,6 +9,12 @@ import java.io.Serial;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+/**
+ * Terminal state of the {@link GameController} state machine. Freezes final
+ * scores, resolves the winner (consuming any forced winner set by a suspension
+ * timeout) and notifies listeners with the end-of-game result. Persists the
+ * match outcome to the leaderboard when one is configured.
+ */
 public class EndGameState extends AbstractGameState {
     @Serial
     private static final long serialVersionUID = 1L;

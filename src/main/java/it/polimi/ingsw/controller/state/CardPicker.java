@@ -7,6 +7,11 @@ import it.polimi.ingsw.model.card.CharacterCard;
 
 import java.util.List;
 
+/**
+ * Internal helper that performs a character or building pick on behalf of an
+ * action state: resolves the card by id, delegates to the model and fires the
+ * corresponding listener notification.
+ */
 final class CardPicker {
 
     private CardPicker() {

@@ -10,13 +10,15 @@ public class CommandParser {
 
     /**
      * Supported commands:
+     * <pre>
      *   ready
      *   unready
-     *   players <n>           (2..5)
-     *   place <tileId>        e.g. place A
-     *   pick <cardId> upper|lower
-     *   build <cardId> upper|lower
+     *   players {@code <n>}           (2..5)
+     *   place {@code <tileId>}        e.g. place A
+     *   pick {@code <cardId>} upper|lower
+     *   build {@code <cardId>} upper|lower
      *   quit
+     * </pre>
      */
     public ClientMessage parse(String input) {
         if (input == null || input.isBlank()) return null;

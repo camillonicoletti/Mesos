@@ -5,6 +5,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Optional persistent leaderboard plugged into the end-of-game flow.
+ * Implementations are best-effort: if the backing store is unavailable they
+ * must degrade gracefully (return empty results) rather than propagating
+ * exceptions, so that gameplay is never blocked by a leaderboard failure.
+ */
 public interface LeaderboardService {
 
     /**

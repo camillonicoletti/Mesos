@@ -13,6 +13,11 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * One-shot state that materialises the {@link Game}: builds the decks via
+ * {@link CardFactory}, instantiates the model, calls {@code start()} on it and
+ * transitions to {@link TotemPlacementState}. Rejects any incoming action.
+ */
 public class StartGameState extends AbstractGameState {
 
     private static final long serialVersionUID = 1L;

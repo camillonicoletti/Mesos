@@ -6,6 +6,11 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Internal helper of {@link ActionResolutionState} that schedules the extra
+ * upper-row picks granted by ExtraCardUpperRow buildings, preserving the
+ * turn-order of the players entitled to them.
+ */
 final class ExtraPickQueue implements Serializable {
 
     private static final long serialVersionUID = 1L;

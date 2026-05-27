@@ -11,6 +11,12 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
+/**
+ * Builds a {@link LeaderboardService} from {@code db.properties}, applying
+ * the bundled MySQL schema on first connect. Falls back to a no-op service
+ * whenever the configuration is missing, malformed, or the database cannot
+ * be reached, so the rest of the application can run without a leaderboard.
+ */
 public final class LeaderboardFactory {
 
     private static final String DEFAULT_PROPERTIES_PATH = "db.properties";

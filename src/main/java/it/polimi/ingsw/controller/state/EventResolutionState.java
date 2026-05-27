@@ -20,6 +20,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * State that resolves the events triggered at the end of the action phase.
+ * Drives the model through the deterministic event order (sustenance last)
+ * and emits one client-facing message per event, including per-player effect
+ * deltas, before transitioning to {@link EndRoundState}.
+ */
 public class EventResolutionState extends AbstractGameState {
     @Serial
     private static final long serialVersionUID = 1L;

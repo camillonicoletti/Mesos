@@ -2,6 +2,10 @@ package it.polimi.ingsw.controller.action;
 
 import java.io.Serializable;
 
+/**
+ * Command: the player buys the building identified by {@code cardId} from
+ * either the upper or lower row, paying its discounted food cost.
+ */
 public class PickBuildingAction implements GameAction, Serializable {
 
     private final String cardId;

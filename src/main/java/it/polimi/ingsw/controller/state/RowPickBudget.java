@@ -4,6 +4,11 @@ import it.polimi.ingsw.model.Round;
 
 import java.io.Serializable;
 
+/**
+ * Tracks how many picks from the upper and lower rows a player is still
+ * entitled to during their action turn. Consumed by {@link ActionResolutionState}
+ * as the player resolves pick/build actions.
+ */
 final class RowPickBudget implements Serializable {
 
     private static final long serialVersionUID = 1L;

@@ -8,6 +8,14 @@ import it.polimi.ingsw.network.protocol.clientbound.EventResolvedMessage;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Observer of {@link it.polimi.ingsw.controller.GameController} and model events.
+ * Concrete listeners (virtual views, persistence hook, GUI/TUI adapters)
+ * implement only the callbacks they care about; methods declared {@code default}
+ * are optional and no-op by default. The controller broadcasts events to every
+ * registered listener and swallows individual listener exceptions so that one
+ * misbehaving client cannot break the broadcast.
+ */
 public interface GameListener {
     // Lobby
     void onPlayerJoined(String nickname);
