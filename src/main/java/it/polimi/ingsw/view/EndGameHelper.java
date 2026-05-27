@@ -26,10 +26,18 @@ public final class EndGameHelper {
      * @return list of winning nicknames
      */
     public static List<String> resolveWinners(ClientModel model) {
+        // Server is authoritative on the single winner: this covers both the normal end
+        // (highest score, tiebreak applied server-side) and the FA4 forced-winner-by-timeout,
+        // where the unique still-connected player wins regardless of score. Only fall back to
+        // local recomputation when the server signals a tie (winnerNickname == null).
+        String declared = model.getWinnerNickname();
+        if (declared != null) {
+            return List.of(declared);
+        }
+
         Map<String, Integer> scores = model.getFinalScores();
         if (scores.isEmpty()) {
-            String declared = model.getWinnerNickname();
-            return declared != null ? List.of(declared) : List.of();
+            return List.of();
         }
 
         int maxScore = scores.values().stream().mapToInt(x -> x).max().orElse(Integer.MIN_VALUE);
