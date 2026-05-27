@@ -12,53 +12,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static it.polimi.ingsw.view.tui.TuiStyle.*;
+import static it.polimi.ingsw.view.tui.TuiText.*;
+
 
 public class Renderer {
 
-    private static final String RST  = "\033[0m";
-    private static final String BLINK = "\033[5m";
-    private static final String BOLD = "\033[1m";
-    private static final String DIM  = "\033[2m";
-    private static final String CYN  = "\033[96m";
-    private static final String YLW  = "\033[93m";
-    private static final String GRN  = "\033[92m";
-    private static final String RED  = "\033[91m";
-    private static final String MGN  = "\033[95m";
-    private static final String BLU  = "\033[94m";
-    private static final String ORG  = "\033[38;5;208m";
-    private static final String WHT  = "\033[97m";
-    private static final String GRY  = "\033[90m";
-
-    private static final int W = 140;
-    private static final int CARD_W   = 16;
-    private static final int CARD_H   = 10;
-    private static final int CARD_GAP = 2;
-    private static final int OFFER_W  = 14;
-    private static final int OFFER_H  = 10;
-    private static final int ORDER_W  = 38;
-    private static final int LEFT_COL_W  = 88;
-    private static final int TRIBE_BOX_W = 46;
-    private static final int TOP_TRIBE_ROW_W = 192;
-    private static final int END_PLAYER_W = 24;
-    private static final int END_PP_W = 18;
-    private static final int END_FOOD_W = 12;
     private static final int LAST_ROUND = 10;
-
-    private static final List<Character> TILE_ORDER = List.of('A','B','C','D','E','F','G');
-
-    private static final Map<Character, String[]> TILE_ARROWS = new LinkedHashMap<>() {{
-        put('A', new String[]{"+3c", ""});
-        put('B', new String[]{"down", ""});
-        put('C', new String[]{"up", ""});
-        put('D', new String[]{"down2", ""});
-        put('E', new String[]{"up", "down"});
-        put('F', new String[]{"up2", ""});
-        put('G', new String[]{"up2", "down"});
-    }};
-
-    private static final Map<Character, Integer> TILE_MIN = Map.of(
-            'A', 5, 'B', 2, 'C', 2, 'D', 3, 'E', 2, 'F', 2, 'G', 4
-    );
 
     private volatile int visibleTribeNumber;
     private volatile int visibleTribeCountdownSeconds;
@@ -503,90 +463,9 @@ public class Renderer {
         }
     }
 
-    private String[] asciiWordLines(String text, int maxWidth) {
-        String safe = text == null ? "" : text.toUpperCase().replaceAll("[^A-Z0-9 _-]", "");
-        if (safe.isBlank()) {
-            safe = "?";
-        }
-        for (int spacing = 2; spacing >= 1; spacing--) {
-            String[] lines = buildAsciiWordLines(safe, spacing);
-            if (lines[0].length() <= maxWidth) {
-                return lines;
-            }
-        }
-        while (safe.length() > 1 && buildAsciiWordLines(safe, 1)[0].length() > maxWidth) {
-            safe = safe.substring(0, safe.length() - 1);
-        }
-        return buildAsciiWordLines(safe, 1);
-    }
-
-    private String[] buildAsciiWordLines(String text, int spacing) {
-        StringBuilder top = new StringBuilder();
-        StringBuilder mid = new StringBuilder();
-        StringBuilder bot = new StringBuilder();
-        String gap = " ".repeat(spacing);
-        for (int i = 0; i < text.length(); i++) {
-            if (i > 0) {
-                top.append(gap);
-                mid.append(gap);
-                bot.append(gap);
-            }
-            String[] glyph = asciiGlyph(text.charAt(i));
-            top.append(glyph[0]);
-            mid.append(glyph[1]);
-            bot.append(glyph[2]);
-        }
-        return new String[]{top.toString(), mid.toString(), bot.toString()};
-    }
-
     private String winnerColor(ClientModel model, String winner) {
         PlayerView player = model.getPlayers().get(winner);
         return player != null ? totemColor(player.getTotemColor()) : YLW;
-    }
-
-    private String[] asciiGlyph(char c) {
-        return switch (c) {
-            case 'A' -> new String[]{"█▀█", "█▀█", "▀ ▀"};
-            case 'B' -> new String[]{"█▀▄", "█▀▄", "▀▀ "};
-            case 'C' -> new String[]{"█▀▀", "█  ", "▀▀▀"};
-            case 'D' -> new String[]{"█▀▄", "█ █", "▀▀ "};
-            case 'E' -> new String[]{"█▀▀", "█▀ ", "▀▀▀"};
-            case 'F' -> new String[]{"█▀▀", "█▀ ", "▀  "};
-            case 'G' -> new String[]{"█▀▀", "█ ▄", "▀▀▀"};
-            case 'H' -> new String[]{"█ █", "█▀█", "▀ ▀"};
-            case 'I' -> new String[]{"█", "█", "▀"};
-            case 'J' -> new String[]{"  █", "  █", "▀▀ "};
-            case 'K' -> new String[]{"█ █", "██ ", "▀ ▀"};
-            case 'L' -> new String[]{"█  ", "█  ", "▀▀▀"};
-            case 'M' -> new String[]{"█▄ ▄█", "█ ▀ █", "▀   ▀"};
-            case 'N' -> new String[]{"█▄  █", "█ ▀▄█", "▀   ▀"};
-            case 'O' -> new String[]{"█▀█", "█ █", "▀▀▀"};
-            case 'P' -> new String[]{"█▀▄", "█▀ ", "▀  "};
-            case 'Q' -> new String[]{"█▀█", "█ █", "▀▀█"};
-            case 'R' -> new String[]{"█▀▄", "█▀▄", "▀ ▀"};
-            case 'S' -> new String[]{"█▀▀", "▀▀█", "▀▀▀"};
-            case 'T' -> new String[]{"▀█▀", " █ ", " ▀ "};
-            case 'U' -> new String[]{"█ █", "█ █", "▀▀▀"};
-            case 'V' -> new String[]{"█ █", "█ █", " ▀ "};
-            case 'W' -> new String[]{"█   █", "█ █ █", "▀▀ ▀▀"};
-            case 'X' -> new String[]{"█ █", " █ ", "▀ ▀"};
-            case 'Y' -> new String[]{"█ █", " ▀█", "  ▀"};
-            case 'Z' -> new String[]{"▀▀█", " █ ", "▀▀▀"};
-            case '0' -> new String[]{"█▀█", "█ █", "▀▀▀"};
-            case '1' -> new String[]{" █ ", " █ ", " ▀ "};
-            case '2' -> new String[]{"▀▀█", "█▀ ", "▀▀▀"};
-            case '3' -> new String[]{"▀▀█", " ▀█", "▀▀▀"};
-            case '4' -> new String[]{"█ █", "▀▀█", "  ▀"};
-            case '5' -> new String[]{"█▀▀", "▀▀█", "▀▀▀"};
-            case '6' -> new String[]{"█▀▀", "█▀█", "▀▀▀"};
-            case '7' -> new String[]{"▀▀█", "  █", "  ▀"};
-            case '8' -> new String[]{"█▀█", "█▀█", "▀▀▀"};
-            case '9' -> new String[]{"█▀█", "▀▀█", "▀▀▀"};
-            case '-' -> new String[]{"   ", "▀▀▀", "   "};
-            case '_' -> new String[]{"   ", "   ", "▀▀▀"};
-            case ' ' -> new String[]{"   ", "   ", "   "};
-            default -> new String[]{"▀▀█", " ▄▀", " ▀ "};
-        };
     }
 
     private String endGameHeaderLine(int panelW) {
@@ -1144,430 +1023,12 @@ public class Renderer {
         return sb.toString();
     }
 
+    // Renderer owns the selected building-effect id; CardRenderer only
+    // receives the resolved rendering flag.
     private String[] drawCard(int id) {
-        CardCatalog.CardInfo c = CardCatalog.get(id);
-
-        if (c.kind == CardCatalog.Kind.CHARACTER) {
-            return drawCharacterCard(c);
-        }
-        if (c.kind == CardCatalog.Kind.BUILDING) {
-            if (c.id == visibleBuildingEffectId) {
-                return drawBuildingEffectCard(c);
-            }
-            return drawBuildingCard(c);
-        }
-        if (c.kind == CardCatalog.Kind.EVENT && "Hunt".equals(c.eventTag)) {
-            return drawHuntEventCard(c);
-        }
-        if (c.kind == CardCatalog.Kind.EVENT && "Cave".equals(c.eventTag)) {
-            return drawCavePaintEventCard(c);
-        }
-        if (c.kind == CardCatalog.Kind.EVENT && "Sust".equals(c.eventTag)) {
-            return drawSustenanceEventCard(c);
-        }
-        if (c.kind == CardCatalog.Kind.EVENT && "Sham".equals(c.eventTag)) {
-            return drawShamanicRitualEventCard(c);
-        }
-
-        String bc = switch (c.kind) {
-            case CHARACTER -> WHT;
-            case BUILDING  -> YLW;
-            case EVENT     -> MGN;
-            default        -> GRY;
-        };
-
-        String idStr = "#" + c.id;
-        String typeLine = c.typeName;
-        String detLine = c.detail;
-        String eraLine = "Era " + c.era;
-        String extraLine = (c.kind == CardCatalog.Kind.BUILDING)
-                ? c.foodCost + " food  +" + c.pointsEnd + "PP"
-                : "";
-
-        String[] out = new String[CARD_H];
-        out[0] = makeCardTopBorder(idStr, CARD_W, bc);
-        out[1] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-        out[2] = bc + "|" + RST + BOLD + bc + centerStr(typeLine, CARD_W) + RST + bc + "|" + RST;
-        out[3] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-
-        if (!extraLine.isEmpty()) {
-            out[4] = bc + "|" + RST + GRY + centerStr(extraLine, CARD_W) + RST + bc + "|" + RST;
-            out[5] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-            out[6] = bc + "|" + RST + GRY + centerStr(detLine, CARD_W) + RST + bc + "|" + RST;
-            out[7] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-            out[8] = bc + "|" + RST + DIM + centerStr(eraLine, CARD_W) + RST + bc + "|" + RST;
-        } else {
-            out[4] = bc + "|" + RST + GRY + centerStr(detLine, CARD_W) + RST + bc + "|" + RST;
-            out[5] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-            out[6] = bc + "|" + RST + DIM + centerStr(eraLine, CARD_W) + RST + bc + "|" + RST;
-            out[7] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-            out[8] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-        }
-
-        out[9] = bc + "+" + "-".repeat(CARD_W) + "+" + RST;
-        return out;
+        return CardRenderer.drawCard(id, id == visibleBuildingEffectId);
     }
 
-    private String[] drawBuildingCard(CardCatalog.CardInfo c) {
-        String[] out = new String[CARD_H];
-        String bc = YLW;
-
-        out[0] = makeCardTopBorder("#" + c.id, CARD_W, bc);
-        out[1] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-        out[2] = bc + "|" + RST + BOLD + bc + centerVisual("BUILDING", CARD_W) + RST + bc + "|" + RST;
-        out[3] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-        out[4] = bc + "|" + RST + GRY + BOLD
-                + centerVisual(c.foodCost + "🍖  +" + c.pointsEnd + "🌟", CARD_W)
-                + RST + bc + "|" + RST;
-        out[5] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-        out[6] = bc + "|" + RST + DIM + centerVisual("type see effect", CARD_W) + RST + bc + "|" + RST;
-        out[7] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-        out[8] = bc + "|" + RST + DIM + centerVisual("Era " + c.era, CARD_W) + RST + bc + "|" + RST;
-        out[9] = bc + "+" + "-".repeat(CARD_W) + "+" + RST;
-
-        return out;
-    }
-
-    private String[] drawBuildingEffectCard(CardCatalog.CardInfo c) {
-        String[] out = new String[CARD_H];
-        String bc = YLW;
-        List<String> lines = buildingEffectLines(c);
-
-        out[0] = makeCardTopBorder("#" + c.id, CARD_W, bc);
-        out[1] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-        out[2] = bc + "|" + RST + BOLD + bc + centerVisual("EFFECT", CARD_W) + RST + bc + "|" + RST;
-        out[3] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-        out[4] = buildingEffectLine(lines, 0, WHT + BOLD);
-        out[5] = buildingEffectLine(lines, 1, WHT + BOLD);
-        out[6] = buildingEffectLine(lines, 2, YLW + BOLD);
-        out[7] = buildingEffectLine(lines, 3, YLW + BOLD);
-        out[8] = bc + "|" + RST + DIM + centerVisual("Era " + c.era, CARD_W) + RST + bc + "|" + RST;
-        out[9] = bc + "+" + "-".repeat(CARD_W) + "+" + RST;
-
-        return out;
-    }
-
-    private String buildingEffectLine(List<String> lines, int index, String color) {
-        String text = index < lines.size() ? lines.get(index) : "";
-        return YLW + "|" + RST + color + centerVisual(text, CARD_W) + RST + YLW + "|" + RST;
-    }
-
-    private List<String> buildingEffectLines(CardCatalog.CardInfo c) {
-        String target = buildingTargetName(c.buildingEffectTarget);
-        return switch (c.buildingEffectName) {
-            case "FullSetFood" -> List.of("FULL SET", "+5🍖");
-            case "SustenanceFoodDiscount" -> List.of("SUSTENANCE", target, "-1🍖 EACH");
-            case "ShamanicRitualImmunity" -> List.of("SHAMANIC", "NO LOSS");
-            case "TotemSlotFoodBonus" -> List.of("TOTEM SLOT", "+1🍖");
-            case "InventorPairFood" -> List.of("INVENTOR PAIR", "+3🍖");
-            case "ShamanicRitualDoublePP" -> List.of("SHAMANIC", "DOUBLE 🌟");
-            case "Shaman3ExtraStars" -> List.of("SHAMAN", "+3🌟");
-            case "Hunt1Food1PP" -> List.of("HUNT", "EACH HUNTER", "+1🍖 +1🌟");
-            case "EndBuilderPP" -> List.of("END GAME", "BUILDER 🌟");
-            case "CavePaintingsFood" -> List.of("CAVE PAINT", "EACH ARTIST", "+1🍖");
-            case "EndFullSetPP" -> List.of("END GAME", "FULL SET", "+6🌟 EACH");
-            case "EndCharacterCountPP" -> List.of("END GAME", target, "+" + c.buildingEffectPointsPerCard + "🌟 EACH");
-            case "ExtraCardUpperRow" -> List.of("UPPER ROW", "+1 CARD");
-            case "EndPP" -> List.of("END GAME", "+25🌟");
-            default -> List.of("SPECIAL", "EFFECT");
-        };
-    }
-
-    private String buildingTargetName(String target) {
-        if (target == null || target.isBlank()) {
-            return "";
-        }
-        return target.toUpperCase();
-    }
-
-    private String[] drawHuntEventCard(CardCatalog.CardInfo c) {
-        String[] out = new String[CARD_H];
-        String bc = MGN;
-
-        out[0] = makeCardTopBorder("#" + c.id, CARD_W, bc);
-        out[1] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-        out[2] = bc + "|" + RST + BOLD + bc + centerVisual("EVENT", CARD_W) + RST + bc + "|" + RST;
-        out[3] = bc + "|" + RST + BOLD + bc + centerVisual("HUNT", CARD_W) + RST + bc + "|" + RST;
-        out[4] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-        out[5] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-        out[6] = bc + "|" + RST + YLW + BOLD
-                + centerVisual("+" + c.eventFood + "🍖 +" + c.eventPoints + "🌟", CARD_W)
-                + RST + bc + "|" + RST;
-        out[7] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-        out[8] = bc + "|" + RST + DIM + centerVisual("Era " + c.era, CARD_W) + RST + bc + "|" + RST;
-        out[9] = bc + "+" + "-".repeat(CARD_W) + "+" + RST;
-
-        return out;
-    }
-
-    private String[] drawCavePaintEventCard(CardCatalog.CardInfo c) {
-        String[] out = new String[CARD_H];
-        String bc = MGN;
-
-        out[0] = makeCardTopBorder("#" + c.id, CARD_W, bc);
-        out[1] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-        out[2] = bc + "|" + RST + BOLD + bc + centerVisual("EVENT", CARD_W) + RST + bc + "|" + RST;
-        out[3] = bc + "|" + RST + BOLD + bc + centerVisual("CAVE PAINT", CARD_W) + RST + bc + "|" + RST;
-        out[4] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-        out[5] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-        out[6] = bc + "|" + RST + YLW + BOLD
-                + centerVisual(c.eventRequired + "🎨  +" + c.eventPoints + "🌟", CARD_W)
-                + RST + bc + "|" + RST;
-        out[7] = bc + "|" + RST + RED + BOLD
-                + centerVisual("OR -" + c.eventPenalty + "🌟", CARD_W)
-                + RST + bc + "|" + RST;
-        out[8] = bc + "|" + RST + DIM + centerVisual("Era " + c.era, CARD_W) + RST + bc + "|" + RST;
-        out[9] = bc + "+" + "-".repeat(CARD_W) + "+" + RST;
-
-        return out;
-    }
-
-    private String[] drawSustenanceEventCard(CardCatalog.CardInfo c) {
-        String[] out = new String[CARD_H];
-        String bc = MGN;
-
-        out[0] = makeCardTopBorder("#" + c.id, CARD_W, bc);
-        out[1] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-        out[2] = bc + "|" + RST + BOLD + bc + centerVisual("EVENT", CARD_W) + RST + bc + "|" + RST;
-        out[3] = bc + "|" + RST + BOLD + bc + centerVisual("SUSTENANCE", CARD_W) + RST + bc + "|" + RST;
-        out[4] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-        out[5] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-        out[6] = bc + "|" + RST + RED + BOLD
-                + centerVisual("-" + c.eventPenalty + "🌟", CARD_W)
-                + RST + bc + "|" + RST;
-        out[7] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-        out[8] = bc + "|" + RST + DIM + centerVisual("Era " + c.era, CARD_W) + RST + bc + "|" + RST;
-        out[9] = bc + "+" + "-".repeat(CARD_W) + "+" + RST;
-
-        return out;
-    }
-
-    private String[] drawShamanicRitualEventCard(CardCatalog.CardInfo c) {
-        String[] out = new String[CARD_H];
-        String bc = MGN;
-
-        out[0] = makeCardTopBorder("#" + c.id, CARD_W, bc);
-        out[1] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-        out[2] = bc + "|" + RST + BOLD + bc + centerVisual("EVENT", CARD_W) + RST + bc + "|" + RST;
-        out[3] = bc + "|" + RST + BOLD + bc + centerVisual("SHAMANIC", CARD_W) + RST + bc + "|" + RST;
-        out[4] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-        out[5] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-        String gain = "+" + c.eventPoints + "🌟";
-        String loss = "-" + c.eventPenalty + "🌟";
-        int gap = Math.max(1, CARD_W - visualWidth(gain) - visualWidth(loss) - 3);
-        out[6] = bc + "|" + RST
-                + " ".repeat(gap / 2)
-                + YLW + BOLD + gain + RST
-                + WHT + BOLD + " / " + RST
-                + RED + BOLD + loss + RST
-                + " ".repeat(gap - gap / 2)
-                + bc + "|" + RST;
-        out[7] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-        out[8] = bc + "|" + RST + DIM + centerVisual("Era " + c.era, CARD_W) + RST + bc + "|" + RST;
-        out[9] = bc + "+" + "-".repeat(CARD_W) + "+" + RST;
-
-        return out;
-    }
-
-    private String[] drawCharacterCard(CardCatalog.CardInfo c) {
-        String[] out = new String[CARD_H];
-
-        out[0] = makeAsciiCardTopBorder(String.valueOf(c.id), CARD_W, WHT);
-        out[1] = characterLine("");
-        out[2] = characterLine(BOLD + characterName(c.typeName) + RST);
-        out[3] = characterLine(characterIcon(c));
-
-        switch (c.typeName) {
-            case "Hunter" -> {
-                out[4] = characterLine("");
-
-                if ("+".equals(c.detail)) {
-                    out[5] = characterMiniBoxTop();
-                    out[6] = characterMiniBoxText("+1🍖");
-                    out[7] = characterMiniBoxBottom();
-                } else {
-                    out[5] = characterLine("");
-                    out[6] = characterLine("");
-                    out[7] = characterLine("");
-                }
-
-                out[8] = characterLine("");
-            }
-            case "Builder" -> {
-                int pp = parseBuilderPoints(c.detail);
-                int discount = parseBuilderDiscount(c.detail);
-                out[4] = builderMiniBoxTop();
-                out[5] = builderMiniBoxText("-" + discount + "🍖");
-                out[6] = builderMiniBoxBottom();
-                out[7] = builderMiniBoxText("+" + pp + "🌟");
-                out[8] = builderMiniBoxBottom();
-            }
-
-            case "Shaman" -> {
-                out[4] = characterLine("");
-                out[5] = characterMiniBoxTop();
-                out[6] = characterMiniBoxText(c.detail.replace("★", " 🔯"));
-                out[7] = characterMiniBoxBottom();
-                out[8] = characterLine("");
-            }
-
-            case "Inventor" -> {
-                out[4] = characterLine("");
-                out[5] = characterMiniBoxTop();
-                out[6] = characterMiniBoxText("No. " + inventorNumber(c.detail));
-                out[7] = characterMiniBoxBottom();
-                out[8] = characterLine("");
-            }
-
-            default -> {
-                out[4] = characterLine("");
-                out[5] = characterLine("");
-                out[6] = characterLine("");
-                out[7] = characterLine("");
-                out[8] = characterLine("");
-            }
-        }
-
-        out[9] = WHT + "+" + "-".repeat(CARD_W) + "+" + RST;
-
-        return out;
-    }
-
-
-    private String characterName(String typeName) {
-        return switch (typeName) {
-            case "Hunter"   -> "Hunter";
-            case "Builder"  -> "Builder";
-            case "Gatherer" -> "Gatherer";
-            case "Artist"   -> "Artist";
-            case "Inventor" -> "Inventor";
-            case "Shaman"   -> "Shaman";
-            default         -> typeName;
-        };
-    }
-
-    private String characterIcon(CardCatalog.CardInfo c) {
-        return switch (c.typeName) {
-            case "Hunter"   -> "🏹";
-            case "Builder"  -> "🔨";
-            case "Gatherer" -> "🌾";
-            case "Artist"   -> "🎨";
-            case "Inventor" -> "🧠";
-            case "Shaman"   -> "🔮";
-            default         -> "";
-        };
-    }
-
-    private String characterInfoLine(CardCatalog.CardInfo c, boolean bottomLine) {
-        return switch (c.typeName) {
-            case "Hunter" -> bottomLine && "+".equals(c.detail) ? "+1🍖" : "";
-
-            case "Builder" -> {
-                int pp = parseBuilderPoints(c.detail);
-                int discount = parseBuilderDiscount(c.detail);
-                yield bottomLine ? "+" + pp + "🌟" : "−" + discount + "🍖";
-            }
-
-            case "Shaman" -> bottomLine ? c.detail.replace("★", "🔯") : "";
-
-            default -> "";
-        };
-    }
-
-    private int parseBuilderPoints(String detail) {
-        if (detail == null || detail.isBlank()) return 0;
-
-        String[] parts = detail.split(" ");
-        for (String part : parts) {
-            if (part.startsWith("+")) {
-                return Integer.parseInt(part.substring(1));
-            }
-        }
-
-        return 0;
-    }
-
-    private int parseBuilderDiscount(String detail) {
-        if (detail == null || detail.isBlank()) return 0;
-
-        String[] parts = detail.split(" ");
-        for (String part : parts) {
-            if (part.startsWith("-") && part.endsWith("c")) {
-                return Integer.parseInt(part.substring(1, part.length() - 1));
-            }
-        }
-
-        return 0;
-    }
-
-
-
-    private String characterLine(String text) {
-        return WHT + "|" + RST + centerCardText(text) + WHT + "|" + RST;
-    }
-
-    private String characterMiniBoxTop() {
-        return characterLine("+" + "-".repeat(8) + "+");
-    }
-
-    private String characterMiniBoxBottom() {
-        return characterLine("+" + "-".repeat(8) + "+");
-    }
-
-    private String characterMiniBoxText(String text) {
-        return characterLine("|" + centerVisual(text, 8) + "|");
-    }
-
-    private String centerCardText(String text) {
-        if (text == null || text.isBlank()) {
-            return " ".repeat(CARD_W);
-        }
-
-        String clean = stripAnsi(text);
-
-        if (isSingleCardEmoji(clean)) {
-            return centerSingleEmoji(text);
-        }
-
-        return centerVisual(text, CARD_W);
-    }
-
-    private boolean isSingleCardEmoji(String text) {
-        return text.equals("🏹")
-                || text.equals("🔨")
-                || text.equals("🌾")
-                || text.equals("🎨")
-                || text.equals("🔮")
-                || text.equals("1️⃣")
-                || text.equals("2️⃣")
-                || text.equals("3️⃣")
-                || text.equals("4️⃣")
-                || text.equals("5️⃣")
-                || text.equals("6️⃣")
-                || text.equals("7️⃣")
-                || text.equals("8️⃣")
-                || text.equals("9️⃣");
-    }
-
-    private String centerSingleEmoji(String emoji) {
-        return " ".repeat(7) + emoji + " ".repeat(7);
-    }
-
-
-
-
-
-    private String makeCardTopBorder(String idStr, int cardW, String bc) {
-        String label = " " + idStr + " ";
-        int dashTotal = cardW - label.length();
-        if (dashTotal < 0) {
-            label = idStr;
-            dashTotal = cardW - label.length();
-        }
-        int ld = dashTotal / 2;
-        int rd = dashTotal - ld;
-        return bc + "+" + "-".repeat(ld) + label + "-".repeat(rd) + "+" + RST;
-    }
 
     private void renderCenterZone(ClientModel model) {
         String[] orderBox = drawOrderBox(model);
@@ -1869,7 +1330,7 @@ public class Renderer {
                     case EVENT     -> MGN;
                     default        -> GRY;
                 };
-                String label   = tribeCardLabel(ci);
+                String label   = CardRenderer.tribeCardLabel(ci);
                 String era     = GRY + "  [Era " + ci.era + "]" + RST;
                 String content = " " + kindColor + BOLD + label + RST + era;
                 lines.add(tribeColor + "|" + RST + padVisual(content, bw) + tribeColor + "|" + RST);
@@ -1914,7 +1375,7 @@ public class Renderer {
                     default        -> GRY;
                 };
                 String era = GRY + "  [Era " + ci.era + "]" + RST;
-                String content = " " + kindColor + BOLD + tribeCardLabel(ci) + RST + era;
+                String content = " " + kindColor + BOLD + CardRenderer.tribeCardLabel(ci) + RST + era;
                 lines.add(color + "|" + RST + padVisual(content, bw) + color + "|" + RST);
                 if (i < cards.size() - 1) {
                     lines.add(tribeEmptyLine(color, bw));
@@ -1941,55 +1402,6 @@ public class Renderer {
 
     private String tribeEmptyLine(String color, int width) {
         return color + "|" + RST + " ".repeat(width) + color + "|" + RST;
-    }
-
-    private String tribeCardLabel(CardCatalog.CardInfo ci) {
-        return cardIcon(ci) + " " + ci.typeName + tribeCardExtra(ci);
-    }
-
-    private String tribeCardExtra(CardCatalog.CardInfo ci) {
-        if (ci.kind == CardCatalog.Kind.BUILDING) {
-            return "  " + ci.foodCost + "🍖 +" + ci.pointsEnd + "PP";
-        }
-        if (ci.kind == CardCatalog.Kind.CHARACTER && "Builder".equals(ci.typeName)) {
-            int pp = parseBuilderPoints(ci.detail);
-            int discount = parseBuilderDiscount(ci.detail);
-            return "  -" + discount + "🍖 +" + pp + "🌟";
-        }
-        if (ci.kind == CardCatalog.Kind.CHARACTER
-                && "Hunter".equals(ci.typeName)
-                && "+".equals(ci.detail)) {
-            return "  +1🍖";
-        }
-        if (ci.kind == CardCatalog.Kind.CHARACTER && "Inventor".equals(ci.typeName)) {
-            return "  " + inventorNumber(ci.detail);
-        }
-        if (ci.kind == CardCatalog.Kind.CHARACTER && "Shaman".equals(ci.typeName)) {
-            return "  " + ci.detail.replace("★", "🌟");
-        }
-        return ci.detail.isEmpty() ? "" : "  " + ci.detail;
-    }
-
-    private String cardIcon(CardCatalog.CardInfo c) {
-        if (c.kind == CardCatalog.Kind.CHARACTER) {
-            return switch (c.typeName) {
-                case "Hunter"   -> "🏹";
-                case "Builder"  -> "🔨";
-                case "Gatherer" -> "🌾";
-                case "Artist"   -> "🎨";
-                case "Inventor" -> "🧠";
-                case "Shaman"   -> "🔮";
-                default -> "?";
-            };
-        }
-        if (c.kind == CardCatalog.Kind.BUILDING) return "🏛";
-        return "📋";
-    }
-
-    private String padVisual(String s, int targetW) {
-        int w   = visualWidth(stripAnsi(s));
-        int pad = Math.max(0, targetW - w);
-        return s + " ".repeat(pad);
     }
 
 
@@ -2045,26 +1457,6 @@ public class Renderer {
     }
 
 
-    private int vis(String s) {
-        if (s == null) return 0;
-        return s.replaceAll("\033\\[[0-9;]*m", "").length();
-    }
-
-    private String center(String coloredText, int targetVisW) {
-        int textVis = vis(coloredText);
-        int pad = Math.max(0, targetVisW - textVis);
-        return " ".repeat(pad / 2) + coloredText + " ".repeat(pad - pad / 2);
-    }
-
-
-
-    private String centerStr(String text, int targetW) {
-        if (text == null) text = "";
-        if (text.length() > targetW) text = text.substring(0, targetW);
-        int pad = targetW - text.length();
-        return " ".repeat(pad / 2) + text + " ".repeat(pad - pad / 2);
-    }
-
     private String turnEffectLabel(int numPlayers, int position) {
         return switch (numPlayers) {
             case 2 -> switch (position) {
@@ -2101,46 +1493,7 @@ public class Renderer {
         return GRY;
     }
 
-    private String titledTop(String title, int width, String color) {
-        String label = " " + title + " ";
-        int dashTotal = Math.max(0, width - vis(label));
-        int left = dashTotal / 2;
-        int right = dashTotal - left;
-        return color + "•" + "-".repeat(left) + label + "-".repeat(right) + "•" + RST;
-    }
 
-    private String roundedBottom(int width, String color) {
-        return color + "'" + "-".repeat(width) + "'" + RST;
-    }
-
-
-
-    private String padRight(String text, int targetVisW) {
-        int pad = Math.max(0, targetVisW - vis(text));
-        return text + " ".repeat(pad);
-    }
-
-    private String ellipsize(String text, int maxVisW) {
-        if (text == null) return "";
-        if (vis(text) <= maxVisW) return text;
-        if (maxVisW <= 1) return ".";
-        return text.substring(0, Math.min(text.length(), maxVisW - 1)) + ".";
-    }
-
-
-
-
-
-
-    private String rankLabel(int rank) {
-        String label = rank + ".";
-        return switch (rank) {
-            case 1 -> YLW + BOLD + label + RST;
-            case 2 -> WHT + BOLD + label + RST;
-            case 3 -> GRY + BOLD + label + RST;
-            default -> GRY + label + RST;
-        };
-    }
 
     private void printCommandPanel(ClientModel model) {
         List<String[]> commands = commandsForState(model);
@@ -2333,13 +1686,6 @@ public class Renderer {
         return ordered;
     }
 
-    private String formatDuration(long millis) {
-        long totalSeconds = Math.max(0L, (millis + 999L) / 1000L);
-        long minutes = totalSeconds / 60L;
-        long seconds = totalSeconds % 60L;
-        return String.format("%02d:%02d", minutes, seconds);
-    }
-
     private void printMesosLogoPlain() {
         System.out.println(centerPlain(RED + BOLD + "███╗   ███╗   ███████╗   ███████╗    ██████╗    ███████╗" + RST, W));
         System.out.println(centerPlain(RED + BOLD + "████╗ ████║   ██╔════╝   ██╔════╝   ██╔═══██╗   ██╔════╝" + RST, W));
@@ -2347,11 +1693,6 @@ public class Renderer {
         System.out.println(centerPlain(RED + BOLD + "██║╚██╔╝██║   ██╔══╝     ╚════██║   ██║   ██║   ╚════██║" + RST, W));
         System.out.println(centerPlain(RED + BOLD + "██║ ╚═╝ ██║   ███████╗   ███████║   ╚██████╔╝   ███████║" + RST, W));
         System.out.println(centerPlain(RED + BOLD + "╚═╝     ╚═╝   ╚══════╝   ╚══════╝    ╚═════╝    ╚══════╝" + RST, W));
-    }
-
-    private String centerPlain(String text, int width) {
-        int pad = Math.max(0, width - vis(text));
-        return " ".repeat(pad / 2) + text;
     }
 
     private String availableColorLabels(ClientModel model) {
@@ -2377,97 +1718,4 @@ public class Renderer {
         };
     }
 
-    private String makeAsciiCardTopBorder(String idStr, int cardW, String color) {
-        String label = " " + idStr + " ";
-        int dashTotal = Math.max(0, cardW - visualWidth(label));
-        int left = dashTotal / 2;
-        int right = dashTotal - left;
-
-        return color + "+" + "-".repeat(left) + label + "-".repeat(right) + "+" + RST;
-    }
-
-    private String centerVisual(String text, int targetW) {
-        if (text == null) text = "";
-
-        int textW = visualWidth(text);
-        if (textW > targetW) {
-            return centerStr(stripAnsi(text), targetW);
-        }
-
-        int pad = targetW - textW;
-        return " ".repeat(pad / 2) + text + " ".repeat(pad - pad / 2);
-    }
-
-    private int visualWidth(String text) {
-        if (text == null) return 0;
-
-        String clean = stripAnsi(text);
-        int width = 0;
-
-        for (int i = 0; i < clean.length(); ) {
-            int cp = clean.codePointAt(i);
-            int charCount = Character.charCount(cp);
-
-            if (isKeycapEmoji(clean, i)) {
-                width += 2;
-                i += charCount;
-
-                if (i < clean.length() && clean.codePointAt(i) == 0xFE0F) {
-                    i += Character.charCount(clean.codePointAt(i));
-                }
-                if (i < clean.length() && clean.codePointAt(i) == 0x20E3) {
-                    i += Character.charCount(clean.codePointAt(i));
-                }
-                continue;
-            }
-
-            if (cp == 0xFE0F || cp == 0x20E3 || Character.getType(cp) == Character.NON_SPACING_MARK) {
-                i += charCount;
-                continue;
-            }
-
-            width += isWideEmoji(cp) ? 2 : 1;
-            i += charCount;
-        }
-
-        return width;
-    }
-
-    private boolean isKeycapEmoji(String text, int index) {
-        int cp = text.codePointAt(index);
-        if (!Character.isDigit(cp)) return false;
-
-        int next = index + Character.charCount(cp);
-        if (next < text.length() && text.codePointAt(next) == 0xFE0F) {
-            next += Character.charCount(text.codePointAt(next));
-        }
-
-        return next < text.length() && text.codePointAt(next) == 0x20E3;
-    }
-
-    private boolean isWideEmoji(int cp) {
-        return (cp >= 0x1F300 && cp <= 0x1FAFF)
-                || (cp >= 0x2600 && cp <= 0x27BF);
-    }
-
-    private String stripAnsi(String text) {
-        return text.replaceAll("\\u001B\\[[;\\d]*m", "");
-    }
-
-    private String builderMiniBoxTop() {
-        return characterLine("+" + "-".repeat(10) + "+");
-    }
-
-    private String builderMiniBoxBottom() {
-        return characterLine("+" + "-".repeat(10) + "+");
-    }
-
-    private String builderMiniBoxText(String text) {
-        return characterLine("|" + centerVisual(text, 10) + "|");
-    }
-
-    private String inventorNumber(String detail) {
-        if (detail == null || detail.isBlank()) return "";
-        return detail.replace("[", "").replace("]", "");
-    }
 }
