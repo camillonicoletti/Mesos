@@ -26,6 +26,19 @@ import java.io.ObjectInputStream;
  * Main controller context of the application.
  * It stores the current controller state and the data needed
  * before and during the game.
+ *
+ * <h2>Thread-safety</h2>
+ * This class is <strong>not</strong> thread-safe and must not be invoked
+ * concurrently from multiple threads. All external access (network handlers,
+ * heartbeat-triggered disconnects, suspension-timeout ticks, RMI calls) is
+ * serialized through the intrinsic lock of {@link it.polimi.ingsw.network.server.LobbyManager},
+ * which owns this controller. Listener notifications fired during a state
+ * transition run on the same thread that triggered the transition, so they
+ * inherit the same serialization without any reentrancy hazard.
+ *
+ * <p>Callers that bypass {@code LobbyManager} (for example tests that drive
+ * the controller directly) are responsible for providing their own
+ * synchronization.
  */
 public class GameController implements Serializable {
 

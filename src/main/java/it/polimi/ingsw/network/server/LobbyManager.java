@@ -27,6 +27,38 @@ import java.util.concurrent.TimeUnit;
 import it.polimi.ingsw.controller.leaderboard.NoOpLeaderboardService;
 import it.polimi.ingsw.network.protocol.clientbound.LeaderboardMessage;
 
+/**
+ * Network-side coordinator that owns the single {@link GameController} of a
+ * server instance and routes inbound client messages to it.
+ *
+ * <h2>Thread-safety / concurrency model</h2>
+ * The server is multi-threaded: every Socket client has its own reader and
+ * heartbeat threads, RMI calls run on the RMI runtime's thread pool, and a
+ * dedicated scheduler ticks the FA4 suspension timeout every second. All of
+ * these paths eventually invoke a {@code handle*} method on this class.
+ *
+ * <p>Every public {@code handle*} entry point, plus {@link #checkSuspensionTimeout()}
+ * and the {@code registerPendingConnection}/{@code unregisterPendingConnection}
+ * pair, is declared {@code synchronized}. The intrinsic lock of this instance
+ * is therefore the single serialization point for the entire server: at most
+ * one thread at a time mutates the {@link GameController}, the connection
+ * maps, or fires listener notifications. Because {@code GameController}
+ * listeners run inside the handler that triggered them, listener fan-out is
+ * also covered by the same lock without reentrancy across different monitors.
+ *
+ * <p>The internal collections ({@code connections}, {@code views},
+ * {@code pendingConnections}) are plain non-concurrent maps/lists on purpose:
+ * they are only ever touched under this lock. Per-connection outbound writes
+ * ({@code connection.send(...)}) are additionally synchronized inside the
+ * connection object, so two threads writing to the same client cannot
+ * interleave bytes.
+ *
+ * <p><strong>Known trade-off:</strong> outbound writes happen while the lock
+ * is held. A slow client therefore slows down every other client until its
+ * write completes. This is acceptable for the expected match size (2-5
+ * players on a LAN) and avoids the complexity of per-connection outbound
+ * queues.
+ */
 public class LobbyManager {
 
     private static final int SUSPENSION_TIMEOUT_CHECK_INTERVAL_SECONDS = 1;
