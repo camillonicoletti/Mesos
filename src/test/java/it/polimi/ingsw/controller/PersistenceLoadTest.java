@@ -14,6 +14,11 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for Persistence.load().
+ *
+ * <p>Verifies: save-file deserialization, missing-file and corrupted-file handling (controller persistence facade).
+ */
 class PersistenceLoadTest {
 
     @Test

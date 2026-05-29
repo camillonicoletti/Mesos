@@ -9,6 +9,11 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+/**
+ * Unit tests for GameController state machine transitions.
+ *
+ * <p>Verifies: transitions between Lobby, ReadyCheck, TotemPlacement, ActionResolution, EventResolution and Suspended states.
+ */
 public class GameControllerStateTransitionTest {
 
     @Test

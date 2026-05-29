@@ -19,6 +19,11 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for GameController initial setup.
+ *
+ * <p>Verifies: game start-up: board, decks, players, totems and first round assembly.
+ */
 class GameControllerInitialSetupStrongTest {
 
     /**

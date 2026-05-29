@@ -20,6 +20,11 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for GameController state machine.
+ *
+ * <p>Verifies: edge cases across lobby, totem placement, action resolution and end-game.
+ */
 public class GameControllerEdgeCaseTest {
 
     @Test

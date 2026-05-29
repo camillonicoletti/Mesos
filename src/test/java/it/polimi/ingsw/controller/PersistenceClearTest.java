@@ -9,6 +9,11 @@ import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * Unit tests for Persistence.clear().
+ *
+ * <p>Verifies: save-file deletion (controller persistence facade).
+ */
 class PersistenceClearTest {
 
     @Test

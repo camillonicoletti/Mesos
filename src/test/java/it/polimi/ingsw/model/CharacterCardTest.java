@@ -7,6 +7,11 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for CharacterCard hierarchy (model.card).
+ *
+ * <p>Verifies: Hunter, Shaman, Artist, Builder, Inventor and Gatherer construction and accessor contracts.
+ */
 public class CharacterCardTest {
 
     // -------------------------------------------------------

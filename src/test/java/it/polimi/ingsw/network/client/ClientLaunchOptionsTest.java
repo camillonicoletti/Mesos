@@ -8,6 +8,11 @@ import java.rmi.registry.Registry;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+/**
+ * Unit tests for ClientLaunchOptions (network.client).
+ *
+ * <p>Verifies: command-line option parsing for the client entry point.
+ */
 class ClientLaunchOptionsTest {
 
     @Test

@@ -10,6 +10,11 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * Unit tests for EndGameHelper (view).
+ *
+ * <p>Verifies: leaderboard text formatting from final scoring results.
+ */
 class EndGameHelperTest {
 
     @Test

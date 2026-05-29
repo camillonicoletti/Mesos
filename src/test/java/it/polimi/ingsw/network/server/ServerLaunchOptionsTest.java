@@ -10,6 +10,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * Unit tests for ServerLaunchOptions (network.server).
+ *
+ * <p>Verifies: command-line option parsing for the server entry point.
+ */
 class ServerLaunchOptionsTest {
 
     @Test

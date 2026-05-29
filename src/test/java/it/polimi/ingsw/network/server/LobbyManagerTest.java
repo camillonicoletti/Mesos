@@ -22,6 +22,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * Unit tests for LobbyManager (network.server).
+ *
+ * <p>Verifies: login, set-player-count, ready, reconnect handling and broadcast contents.
+ */
 class LobbyManagerTest {
 
     @Test

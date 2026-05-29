@@ -16,6 +16,11 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for GameController totem placement state.
+ *
+ * <p>Verifies: valid and invalid totem placements on offer tiles and turn-order tiles.
+ */
 class GameControllerTotemPlacementStrongTest {
 
     /**

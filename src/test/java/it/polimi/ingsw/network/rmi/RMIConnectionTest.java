@@ -14,6 +14,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * Unit tests for RMI transport (network.rmi).
+ *
+ * <p>Verifies: round-trip callback exchange between RMIClientConnection and a remote server stub.
+ */
 class RMIConnectionTest {
 
     @Test

@@ -8,6 +8,11 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+/**
+ * Unit tests for GameController lobby validation.
+ *
+ * <p>Verifies: nickname uniqueness, totem color uniqueness and player count bounds.
+ */
 public class GameControllerLobbyValidationTest {
 
     @Test

@@ -14,6 +14,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+/**
+ * Unit tests for Socket transport (network.transport).
+ *
+ * <p>Verifies: round-trip message exchange between SocketClientConnection and SocketServerConnection over a real loopback socket.
+ */
 class SocketConnectionTest {
 
     @Test

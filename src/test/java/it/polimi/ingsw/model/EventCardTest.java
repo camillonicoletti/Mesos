@@ -9,6 +9,11 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for EventCard hierarchy (model.card).
+ *
+ * <p>Verifies: Hunt, Shamanic Ritual, Cave Paintings and Sustenance event card behaviour.
+ */
 public class EventCardTest {
 
     private Game buildGame(List<Player> players) {

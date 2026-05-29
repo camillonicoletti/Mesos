@@ -19,6 +19,11 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for End-of-round handling in Game (model).
+ *
+ * <p>Verifies: end-of-round refill, totem return and era-transition trigger.
+ */
 class GameEndRoundStrongTest {
 
     /**

@@ -13,6 +13,11 @@ import java.util.function.Consumer;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
+/**
+ * Unit tests for ClientController (network.client).
+ *
+ * <p>Verifies: client-side handling of server messages and user commands.
+ */
 class ClientControllerTest {
 
     @Test

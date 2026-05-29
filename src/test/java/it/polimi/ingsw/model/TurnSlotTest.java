@@ -10,6 +10,11 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for TurnSlot (model.board).
+ *
+ * <p>Verifies: turn-slot effect application and ordering on the turn-order tile.
+ */
 public class TurnSlotTest {
 
     private TurnSlot slot;

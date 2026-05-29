@@ -8,6 +8,11 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for CardFactory (model.card).
+ *
+ * <p>Verifies: deterministic construction of tribute and building decks per era.
+ */
 public class CardFactoryTest {
 
     // ---------- createBuildingCards ----------

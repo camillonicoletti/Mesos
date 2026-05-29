@@ -20,12 +20,9 @@ import it.polimi.ingsw.model.Totem;
 import it.polimi.ingsw.model.board.ActionSlot;
 import it.polimi.ingsw.model.board.Board;
 import it.polimi.ingsw.model.board.FoodSlot;
-import it.polimi.ingsw.model.board.GainFoodSlotEffect;
 import it.polimi.ingsw.model.board.LowerRowSlot;
-import it.polimi.ingsw.model.board.NoSlotEffect;
 import it.polimi.ingsw.model.board.OfferTile;
 import it.polimi.ingsw.model.board.TurnOrderTile;
-import it.polimi.ingsw.model.board.TurnSlot;
 import it.polimi.ingsw.model.board.UpperRowSlot;
 import it.polimi.ingsw.model.card.ArtistCard;
 import it.polimi.ingsw.model.card.BuilderCard;
@@ -41,6 +38,8 @@ import it.polimi.ingsw.model.card.effect.ExtraCardUpperRowEffect;
 import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.enums.TotemColor;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -50,522 +49,556 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * One-file suite containing the 33 uncovered cases discussed for the controller/game flow.
+ * Behaviour-grouped suite covering previously uncovered controller cases.
  *
- * Some tests are intentionally strict BUG-HUNTER tests: if they fail, they indicate a behavior
- * to discuss/fix, not necessarily a syntax problem in the test.
+ * <p>Scope: controller / state / action layer. Tests are organized into
+ * {@link Nested} groups by behaviour: lobby and ready flow, totem placement,
+ * card picking and validation, event resolution, end-of-round and era
+ * transition. Some tests are intentionally strict probes that pin down
+ * design decisions discussed by the team.
  */
 public class GameControllerThirtyThreeDiscoveredCasesTest {
 
     // ------------------------------------------------------------------
-    // A. LOBBY CASES
+    // Nested groups
     // ------------------------------------------------------------------
 
-    /** 1. Nicknames that differ only by leading/trailing spaces should not bypass uniqueness. */
-    @Test
-    void nicknameWithLeadingOrTrailingSpacesShouldNotBypassUniqueness() {
-        GameController controller = new GameController();
+    /**
+     * Verifies lobby join validation (whitespace, casing, control characters)
+     * and the ready-check transitions, including disconnections happening
+     * before the final ready signal.
+     */
+    @Nested
+    @DisplayName("Lobby and ready flow")
+    class LobbyAndReadyFlow {
 
-        controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
+        /** Nicknames that differ only by leading/trailing spaces must not bypass uniqueness. */
+        @Test
+        void nicknameWithLeadingOrTrailingSpacesShouldNotBypassUniqueness() {
+            GameController controller = new GameController();
 
-        assertThrows(IllegalArgumentException.class,
-                () -> controller.onMessageReceived(" Alice ", new JoinGameAction(createTotem(TotemColor.BLUE))));
+            controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> controller.onMessageReceived(" Alice ", new JoinGameAction(createTotem(TotemColor.BLUE))));
+        }
+
+        /** Documents the current policy: case-different nicknames are accepted as different. */
+        @Test
+        void caseDifferentNicknamesAreTreatedAsDifferentPlayersByCurrentPolicy() {
+            GameController controller = new GameController();
+
+            controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
+            assertDoesNotThrow(() ->
+                    controller.onMessageReceived("alice", new JoinGameAction(createTotem(TotemColor.BLUE))));
+
+            assertEquals(2, controller.getLobbyPlayers().size());
+        }
+
+        /** Newline/control-character nicknames must be rejected before entering the lobby. */
+        @Test
+        void nicknameWithNewlineShouldBeRejected() {
+            GameController controller = new GameController();
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> controller.onMessageReceived("Bob\nAlice", new JoinGameAction(createTotem(TotemColor.RED))));
+        }
+
+        /** Once the lobby is full and the controller is in ReadyCheck, a new join must be rejected. */
+        @Test
+        void joinAfterReadyCheckStartedIsRejected() {
+            GameController controller = createReadyCheckController();
+
+            assertThrows(IllegalStateException.class,
+                    () -> controller.onMessageReceived("Charlie", new JoinGameAction(createTotem(TotemColor.PURPLE))));
+        }
+
+        /** Only the first player may change the player count after ReadyCheck started. */
+        @Test
+        void changingPlayerCountAfterReadyCheckStartedIsAllowedForFirstPlayer() {
+            GameController controller = createReadyCheckController();
+
+            assertDoesNotThrow(() -> controller.onMessageReceived("Alice", new SetPlayerCountAction(3)));
+            assertEquals(3, controller.getChosenPlayersCount());
+            assertInstanceOf(LobbyState.class, controller.getCurrentState());
+        }
+
+        /** A disconnected/removed player must not be able to become ready. */
+        @Test
+        void disconnectedPlayerCannotSendReadyTrue() {
+            GameController controller = createReadyCheckController();
+
+            controller.onPlayerDisconnection("Bob");
+
+            assertThrows(IllegalArgumentException.class, () -> controller.onMessageReceived("Bob", new ReadyAction(true)));
+        }
+
+        /** Sending ReadyAction(true) twice must be idempotent and must not create duplicated readiness. */
+        @Test
+        void sendingReadyTrueTwiceIsIdempotent() {
+            GameController controller = createReadyCheckControllerWithThreePlayers();
+
+            controller.onMessageReceived("Alice", new ReadyAction(true));
+            controller.onMessageReceived("Alice", new ReadyAction(true));
+
+            assertTrue(controller.isPlayerReady("Alice"));
+            assertFalse(controller.isPlayerReady("Bob"));
+            assertFalse(controller.isPlayerReady("Charlie"));
+            assertInstanceOf(ReadyCheckState.class, controller.getCurrentState());
+        }
+
+        /** If a player disconnects before everyone is ready, the game must not start. */
+        @Test
+        void disconnectionBeforeFinalReadyPreventsGameStart() {
+            GameController controller = createReadyCheckController();
+
+            controller.onMessageReceived("Alice", new ReadyAction(true));
+            controller.onPlayerDisconnection("Bob");
+
+            assertNull(controller.getGame());
+            assertInstanceOf(LobbyState.class, controller.getCurrentState());
+            assertFalse(controller.isPlayerReady("Bob"));
+        }
     }
 
-    /** 2. This documents the current policy: case-different nicknames are accepted as different. */
-    @Test
-    void caseDifferentNicknamesAreTreatedAsDifferentPlayersByCurrentPolicy() {
-        GameController controller = new GameController();
+    /**
+     * Verifies totem placement rules: turn-order enforcement, tile
+     * availability per player count, behaviour on disconnection during
+     * placement and on reconnection before the phase ends.
+     */
+    @Nested
+    @DisplayName("Totem placement")
+    class TotemPlacement {
 
-        controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
-        assertDoesNotThrow(() ->
-                controller.onMessageReceived("alice", new JoinGameAction(createTotem(TotemColor.BLUE))));
+        /** Players must place totems following the current turn-order tile. */
+        @Test
+        void totemPlacementOutOfTurnShouldBeRejected() {
+            Player alice = new Player("Alice", createTotem(TotemColor.RED));
+            Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
+            GameController controller = createTotemPlacementController(
+                    List.of(alice, bob),
+                    List.of(foodTile('A', 1), foodTile('B', 1))
+            );
+            setTurnOrder(controller, alice, bob);
 
-        assertEquals(2, controller.getLobbyPlayers().size());
+            assertThrows(IllegalStateException.class,
+                    () -> controller.onMessageReceived("Bob", new PlaceTotemAction('A')));
+        }
+
+        /** Tile A (5-player only) must be rejected in a 2-player game. */
+        @Test
+        void fivePlayerOnlyTileIsRejectedInTwoPlayerGame() {
+            GameController controller = createTotemPlacementController(
+                    createPlayers(2),
+                    List.of(new OfferTile('A', 5, List.of(new ActionSlot(new FoodSlot(), 3))), foodTile('B', 1))
+            );
+
+            assertThrows(IllegalStateException.class,
+                    () -> controller.onMessageReceived("Alice", new PlaceTotemAction('A')));
+        }
+
+        /** A tile occupied by a player who disconnects must not silently become free during that round. */
+        @Test
+        void occupiedTileRemainsOccupiedAfterItsPlayerDisconnectsDuringPlacement() {
+            Player alice = new Player("Alice", createTotem(TotemColor.RED));
+            Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
+            OfferTile tileA = foodTile('A', 1);
+            OfferTile tileB = foodTile('B', 1);
+            GameController controller = createTotemPlacementController(List.of(alice, bob), List.of(tileA, tileB));
+
+            controller.onMessageReceived("Alice", new PlaceTotemAction('A'));
+            controller.onPlayerDisconnection("Alice");
+
+            assertTrue(controller.getGame().getBoard().getOfferTiles().get(0).isOccupied());
+        }
+
+        /** A player reconnecting during TotemPlacement should still be able to place if the phase is not over. */
+        @Test
+        void reconnectedPlayerCanStillPlaceTotemIfPlacementPhaseIsNotOver() {
+            List<Player> players = createPlayers(3);
+            GameController controller = createTotemPlacementController(
+                    players,
+                    List.of(foodTile('A', 1), foodTile('B', 1), foodTile('C', 1))
+            );
+
+            controller.onMessageReceived("Alice", new PlaceTotemAction('A'));
+            controller.onPlayerDisconnection("Bob");
+            controller.onPlayerReconnection("Bob");
+
+            assertThrows(IllegalStateException.class,
+                    () -> controller.onMessageReceived("Bob", new PlaceTotemAction('B')));
+        }
     }
 
-    /** 3. Newline/control-character nicknames should be rejected before entering the lobby. */
-    @Test
-    void nicknameWithNewlineShouldBeRejected() {
-        GameController controller = new GameController();
+    /**
+     * Verifies action resolution and extra-pick behaviour: turn order, wrong
+     * rows, over-picking, mixed upper+lower tiles, event-card non-pickability,
+     * building affordability with builder discounts, and skipping
+     * disconnected players.
+     */
+    @Nested
+    @DisplayName("Card picking and validation")
+    class CardPickingAndValidation {
 
-        assertThrows(IllegalArgumentException.class,
-                () -> controller.onMessageReceived("Bob\nAlice", new JoinGameAction(createTotem(TotemColor.RED))));
+        /** A player cannot pick when it is another player's action-resolution turn. */
+        @Test
+        void playerOutsideTurnCannotPickCard() {
+            ActionScenario scenario = createAliceUpperPickScenario();
+
+            assertThrows(IllegalStateException.class,
+                    () -> scenario.controller.onMessageReceived("Bob", new PickCardAction("101", true)));
+        }
+
+        /** A player cannot pick from the wrong row. */
+        @Test
+        void playerCannotPickFromWrongRow() {
+            ActionScenario scenario = createAliceUpperPickScenario();
+
+            assertThrows(IllegalStateException.class,
+                    () -> scenario.controller.onMessageReceived("Alice", new PickCardAction("201", false)));
+        }
+
+        /** A player cannot pick more cards than the selected offer tile allows. */
+        @Test
+        void playerCannotPickMoreCardsThanTileAllows() {
+            ActionScenario scenario = createAliceUpperPickScenario();
+
+            scenario.controller.onMessageReceived("Alice", new PickCardAction("101", true));
+
+            assertThrows(IllegalStateException.class,
+                    () -> scenario.controller.onMessageReceived("Alice", new PickCardAction("102", true)));
+        }
+
+        /** If a tile allows upper + lower, the player may choose the order freely. */
+        @Test
+        void upperAndLowerPickTileAllowsBothOrders() {
+            Player alice = new Player("Alice", createTotem(TotemColor.RED));
+            Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
+            OfferTile aliceTile = new OfferTile('A', 1, List.of(
+                    new ActionSlot(new UpperRowSlot(), 1),
+                    new ActionSlot(new LowerRowSlot(), 1)
+            ));
+            OfferTile bobTile = foodTile('B', 0);
+            Round round = createRoundWithRows(
+                    List.of(new HunterCard(201, Era.I, 1, false)),
+                    List.of(new HunterCard(101, Era.I, 1, false)),
+                    new ArrayList<>(),
+                    new ArrayList<>()
+            );
+            GameController controller = createActionResolutionController(
+                    List.of(alice, bob), List.of(aliceTile, bobTile), round, Map.of(alice, aliceTile, bob, bobTile)
+            );
+
+            controller.onMessageReceived("Alice", new PickCardAction("101", true));
+            controller.onMessageReceived("Alice", new PickCardAction("201", false));
+
+            assertEquals(2, alice.getTribe().countCharacterCards());
+        }
+
+        /** Event cards on a row must never be pickable as tribute cards. */
+        @Test
+        void eventCardCannotBePickedFromRow() {
+            Player alice = new Player("Alice", createTotem(TotemColor.RED));
+            Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
+            OfferTile aliceTile = new OfferTile('A', 1, List.of(new ActionSlot(new UpperRowSlot(), 1)));
+            OfferTile bobTile = foodTile('B', 0);
+            Round round = createRoundWithEvents(
+                    new ArrayList<>(),
+                    List.of(new HuntEventCard(900, Era.I, false, 1, 1)),
+                    new ArrayList<>(), List.of(new HunterCard(901, Era.I, 1, false)),
+                    new ArrayList<>(), new ArrayList<>()
+            );
+            GameController controller = createActionResolutionController(
+                    List.of(alice, bob), List.of(aliceTile, bobTile), round, Map.of(alice, aliceTile, bob, bobTile)
+            );
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> controller.onMessageReceived("Alice", new PickCardAction("900", true)));
+        }
+
+        /** A building that the player cannot afford must be rejected and remain on the board. */
+        @Test
+        void unaffordableBuildingIsRejectedAndRemainsOnBoard() {
+            Player alice = new Player("Alice", createTotem(TotemColor.RED));
+            Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
+            BuildingCard expensive = new BuildingCard(301, Era.I, 10, new EndPPEffect(), 0);
+            OfferTile aliceTile = new OfferTile('A', 1, List.of(new ActionSlot(new UpperRowSlot(), 1)));
+            OfferTile bobTile = foodTile('B', 0);
+            Round round = createRoundWithRows(new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), List.of(expensive));
+            GameController controller = createActionResolutionController(
+                    List.of(alice, bob), List.of(aliceTile, bobTile), round, Map.of(alice, aliceTile, bob, bobTile)
+            );
+
+            assertThrows(IllegalStateException.class,
+                    () -> controller.onMessageReceived("Alice", new PickBuildingAction("301", true)));
+            assertTrue(controller.getGame().getCurrentRound().getUpperRowBuildings().contains(expensive));
+        }
+
+        /** Builder cards should reduce the cost paid for a building. */
+        @Test
+        void builderDiscountReducesBuildingCost() {
+            Player alice = new Player("Alice", createTotem(TotemColor.RED));
+            Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
+            alice.addFood(1);
+            alice.addCharacterCard(new BuilderCard(700, Era.I, 1, 0, 2));
+            BuildingCard building = new BuildingCard(302, Era.I, 3, new EndPPEffect(), 0);
+            OfferTile aliceTile = new OfferTile('A', 1, List.of(new ActionSlot(new UpperRowSlot(), 1)));
+            OfferTile bobTile = foodTile('B', 0);
+            Round round = createRoundWithRows(new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), List.of(building));
+            GameController controller = createActionResolutionController(
+                    List.of(alice, bob), List.of(aliceTile, bobTile), round, Map.of(alice, aliceTile, bob, bobTile)
+            );
+
+            controller.onMessageReceived("Alice", new PickBuildingAction("302", true));
+
+            // Alice pays 1 food after the builder discount, then receives +1 food
+            // from the first turn-order slot.
+            assertEquals(1, alice.getFood());
+            assertEquals(1, alice.getTribe().getBuildingCards().size());
+        }
+
+        /** Builder discount must never make the final building cost negative. */
+        @Test
+        void builderDiscountCannotMakeBuildingCostNegative() {
+            Player alice = new Player("Alice", createTotem(TotemColor.RED));
+            Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
+            alice.addCharacterCard(new BuilderCard(701, Era.I, 1, 0, 5));
+            BuildingCard building = new BuildingCard(303, Era.I, 2, new EndPPEffect(), 0);
+            OfferTile aliceTile = new OfferTile('A', 1, List.of(new ActionSlot(new UpperRowSlot(), 1)));
+            OfferTile bobTile = foodTile('B', 0);
+            Round round = createRoundWithRows(new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), List.of(building));
+            GameController controller = createActionResolutionController(
+                    List.of(alice, bob), List.of(aliceTile, bobTile), round, Map.of(alice, aliceTile, bob, bobTile)
+            );
+
+            controller.onMessageReceived("Alice", new PickBuildingAction("303", true));
+
+            // The discount reduces the building cost to 0, then Alice receives +1 food
+            // from the first turn-order slot.
+            assertEquals(1, alice.getFood());
+            assertEquals(1, alice.getTribe().getBuildingCards().size());
+        }
+
+        /** If the current action player disconnects and at least two remain connected, their turn is skipped. */
+        @Test
+        void currentActionPlayerDisconnectionSkipsToNextConnectedPlayer() {
+            ThreePlayerActionScenario scenario = createThreePlayerAliceThenBobThenCharlieScenario();
+
+            scenario.controller.onPlayerDisconnection("Alice");
+
+            assertDoesNotThrow(() -> scenario.controller.onMessageReceived("Bob", new PickCardAction("102", true)));
+            assertEquals(1, scenario.bob.getTribe().countCharacterCards());
+        }
+
+        /** A player already disconnected before their action turn is skipped. */
+        @Test
+        void disconnectedPlayerBeforeOwnActionTurnIsSkipped() {
+            ThreePlayerActionScenario scenario = createThreePlayerAliceThenBobThenCharlieScenario();
+            scenario.controller.markPlayerDisconnected("Bob");
+            scenario.controller.changeState(new ActionResolutionState());
+
+            scenario.controller.onMessageReceived("Alice", new PickCardAction("101", true));
+
+            assertDoesNotThrow(() -> scenario.controller.onMessageReceived("Charlie", new PickCardAction("103", true)));
+        }
+
+        /** Extra pick effects must only allow picking from the upper row. */
+        @Test
+        void extraPickRejectsLowerRowCharacterPick() {
+            ExtraPickScenario scenario = createExtraPickScenarioWithUpperCard();
+
+            assertThrows(IllegalStateException.class,
+                    () -> scenario.controller.onMessageReceived("Alice", new PickCardAction("901", false)));
+        }
+
+        /** Extra pick with an empty upper row should not leave the controller waiting forever. */
+        @Test
+        void extraPickWithEmptyUpperRowShouldAutoSkip() {
+            ExtraPickScenario scenario = createExtraPickScenarioWithEmptyUpperRow();
+
+            assertFalse(scenario.controller.getCurrentState() instanceof ActionResolutionState);
+        }
+
+        /** Extra pick for a disconnected player should be skipped. */
+        @Test
+        void disconnectedExtraPickPlayerIsSkipped() {
+            ExtraPickScenario scenario = createExtraPickScenarioWithUpperCard();
+
+            scenario.controller.onPlayerDisconnection("Alice");
+
+            assertThrows(IllegalStateException.class,
+                    () -> scenario.controller.onMessageReceived("Alice", new PickCardAction("901", true)));
+        }
     }
 
-    /** 4. Once the lobby is full and the controller is in ReadyCheck, a new join must be rejected. */
-    @Test
-    void joinAfterReadyCheckStartedIsRejected() {
-        GameController controller = createReadyCheckController();
+    /**
+     * Verifies the EventResolutionState behaviour: manual actions are
+     * rejected, Sustenance is resolved after Hunt, and same-type events are
+     * resolved in Era order.
+     */
+    @Nested
+    @DisplayName("Event resolution")
+    class EventResolution {
 
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Charlie", new JoinGameAction(createTotem(TotemColor.PURPLE))));
+        /** EventResolutionState must reject manual player actions. */
+        @Test
+        void eventResolutionStateRejectsManualActions() {
+            EventResolutionState state = new EventResolutionState();
+            GameController controller = createBaseGameController(
+                    createPlayers(2),
+                    List.of(foodTile('A', 0), foodTile('B', 0)),
+                    createRoundWithRows(new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>())
+            );
+
+            assertThrows(IllegalStateException.class,
+                    () -> state.handleAction(controller, "Alice", new PickCardAction("1", true)));
+        }
+
+        /** Sustenance must be resolved after other events. */
+        @Test
+        void sustenanceEventIsResolvedAfterHuntEvent() {
+            Player alice = new Player("Alice", createTotem(TotemColor.RED));
+            Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
+            alice.addCharacterCard(new HunterCard(1, Era.I, 1, false));
+            Round round = createRoundWithEvents(
+                    List.of(new SustenanceEventCard(1001, Era.I, false, 10), new HuntEventCard(1002, Era.I, false, 1, 5)),
+                    new ArrayList<>(),
+                    new ArrayList<>(), new ArrayList<>(),
+                    new ArrayList<>(), new ArrayList<>()
+            );
+            GameController controller = createBaseGameController(List.of(alice, bob), List.of(foodTile('A', 0), foodTile('B', 0)), round);
+
+            controller.changeState(new EventResolutionState());
+
+            assertEquals(5, alice.getPrestigePoints());
+            assertEquals(0, alice.getFood());
+        }
+
+        /** Two events of the same type should be resolved in Era order. */
+        @Test
+        void eventsOfSameTypeAreResolvedInEraOrder() {
+            List<String> order = new ArrayList<>();
+            Round round = createRoundWithEvents(
+                    List.of(new TrackingEventCard(2002, Era.II, "II", order), new TrackingEventCard(2001, Era.I, "I", order)),
+                    new ArrayList<>(),
+                    new ArrayList<>(), new ArrayList<>(),
+                    new ArrayList<>(), new ArrayList<>()
+            );
+            GameController controller = createBaseGameController(createPlayers(2), List.of(foodTile('A', 0), foodTile('B', 0)), round);
+
+            controller.changeState(new EventResolutionState());
+
+            assertEquals(List.of("I", "II"), order);
+        }
     }
 
-    /** 5. The player count cannot be changed after the lobby has moved to ReadyCheckState. */
-    @Test
-    void changingPlayerCountAfterReadyCheckStartedIsAllowedForFirstPlayer() {
-        GameController controller = createReadyCheckController();
+    /**
+     * Verifies end-of-round row cleanup, shifting between upper and lower
+     * rows, last-round upper-row event resolution and the final scoring /
+     * tie-breaker rules.
+     */
+    @Nested
+    @DisplayName("End round and era transition")
+    class EndRoundAndEraTransition {
 
-        assertDoesNotThrow(() -> controller.onMessageReceived("Alice", new SetPlayerCountAction(3)));
-        assertEquals(3, controller.getChosenPlayersCount());
-        assertInstanceOf(LobbyState.class, controller.getCurrentState());
+        /** End-of-round lower row cleanup must remove characters/events but keep lower buildings. */
+        @Test
+        void lowerRowCleanupDiscardsOnlyTributeAndEventsButKeepsBuildings() {
+            BuildingCard lowerBuilding = new BuildingCard(3001, Era.I, 0, new EndPPEffect(), 0);
+            Round round = createRoundWithEvents(
+                    List.of(new HuntEventCard(3002, Era.I, false, 1, 1)),
+                    new ArrayList<>(),
+                    List.of(new HunterCard(3003, Era.I, 1, false)),
+                    new ArrayList<>(),
+                    List.of(lowerBuilding),
+                    new ArrayList<>()
+            );
+
+            round.discardLowerRow();
+
+            assertTrue(round.getLowerRowEvents().isEmpty());
+            assertTrue(round.getLowerRowTribute().isEmpty());
+            assertTrue(round.getLowerRowBuildings().contains(lowerBuilding));
+        }
+
+        /** Shifting upper to lower must move only tribute/events, not buildings. */
+        @Test
+        void shiftUpperToLowerDoesNotMoveBuildings() {
+            BuildingCard upperBuilding = new BuildingCard(4001, Era.I, 0, new EndPPEffect(), 0);
+            CharacterCard upperCharacter = new HunterCard(4002, Era.I, 1, false);
+            EventCard upperEvent = new HuntEventCard(4003, Era.I, false, 1, 1);
+            Round round = createRoundWithEvents(
+                    new ArrayList<>(), List.of(upperEvent),
+                    new ArrayList<>(), List.of(upperCharacter),
+                    new ArrayList<>(), List.of(upperBuilding)
+            );
+
+            round.shiftUpperToLowerRow();
+
+            assertTrue(round.getLowerRowTribute().contains(upperCharacter));
+            assertTrue(round.getLowerRowEvents().contains(upperEvent));
+            assertTrue(round.getUpperRowBuildings().contains(upperBuilding));
+        }
+
+        /** At the end of the last round, visible upper-row events must also be resolved. */
+        @Test
+        void finalRoundResolvesUpperRowEventsToo() {
+            Player alice = new Player("Alice", createTotem(TotemColor.RED));
+            Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
+            alice.addCharacterCard(new HunterCard(5001, Era.I, 1, false));
+            Round round = createRoundWithEvents(
+                    new ArrayList<>(),
+                    List.of(new HuntEventCard(5002, Era.I, false, 1, 4)),
+                    new ArrayList<>(), new ArrayList<>(),
+                    new ArrayList<>(), new ArrayList<>()
+            );
+            GameController controller = createBaseGameController(List.of(alice, bob), List.of(foodTile('A', 0), foodTile('B', 0)), round, null, 10);
+
+            controller.changeState(new EventResolutionState());
+
+            assertTrue(alice.getPrestigePoints() >= 4);
+        }
+
+        /** If final points are tied, food should be the tie-breaker. */
+        @Test
+        void finalTieOnPointsIsBrokenByFood() {
+            Player alice = new Player("Alice", createTotem(TotemColor.RED));
+            Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
+            alice.addPrestigePoints(10);
+            bob.addPrestigePoints(10);
+            alice.addFood(3);
+            bob.addFood(1);
+            Game game = createPlainGame(List.of(alice, bob), 1);
+
+            assertEquals(alice, game.getWinner());
+        }
+
+        /**
+         * If points and food are tied, victory is shared: getWinner() returns
+         * null and getWinners() contains all co-winners.
+         */
+        @Test
+        void finalTieOnPointsAndFoodProducesSharedVictory() {
+            Player alice = new Player("Alice", createTotem(TotemColor.RED));
+            Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
+            alice.addPrestigePoints(10);
+            bob.addPrestigePoints(10);
+            alice.addFood(2);
+            bob.addFood(2);
+            Game game = createPlainGame(List.of(alice, bob), 1);
+
+            assertEquals(game.getFinalScore(alice), game.getFinalScore(bob),
+                    "scores must remain equal on a full tie");
+            assertNull(game.getWinner(),
+                    "full PP+food tie → shared victory: getWinner() must return null");
+            List<Player> winners = game.getWinners();
+            assertTrue(winners.contains(alice), "Alice must be in getWinners() on a full tie");
+            assertTrue(winners.contains(bob),   "Bob must be in getWinners() on a full tie");
+        }
     }
 
     // ------------------------------------------------------------------
-    // B. READY CHECK CASES
-    // ------------------------------------------------------------------
-
-    /** 6. A disconnected/removed player must not be able to become ready. */
-    @Test
-    void disconnectedPlayerCannotSendReadyTrue() {
-        GameController controller = createReadyCheckController();
-
-        controller.onPlayerDisconnection("Bob");
-
- assertThrows(IllegalArgumentException.class, () -> controller.onMessageReceived("Bob", new ReadyAction(true))); }
-
-    /** 7. Sending ReadyAction(true) twice must be stable and must not create duplicated readiness. */
-    @Test
-    void samePlayerCanSendReadyTrueTwiceWithoutChangingStateUnexpectedly() {
-        GameController controller = createReadyCheckControllerWithThreePlayers();
-
-        controller.onMessageReceived("Alice", new ReadyAction(true));
-        controller.onMessageReceived("Alice", new ReadyAction(true));
-
-        assertTrue(controller.isPlayerReady("Alice"));
-        assertFalse(controller.isPlayerReady("Bob"));
-        assertFalse(controller.isPlayerReady("Charlie"));
-        assertInstanceOf(ReadyCheckState.class, controller.getCurrentState());
-    }
-
-    /** 8. If a player disconnects before everyone is ready, the game must not start. */
-    @Test
-    void disconnectionBeforeFinalReadyPreventsGameStart() {
-        GameController controller = createReadyCheckController();
-
-        controller.onMessageReceived("Alice", new ReadyAction(true));
-        controller.onPlayerDisconnection("Bob");
-
-        assertNull(controller.getGame());
-        assertInstanceOf(LobbyState.class, controller.getCurrentState());
-        assertFalse(controller.isPlayerReady("Bob"));
-    }
-
-    // ------------------------------------------------------------------
-    // C. TOTEM PLACEMENT CASES
-    // ------------------------------------------------------------------
-
-    /** 9. Players should place totems following the current turn-order tile. */
-    @Test
-    void totemPlacementOutOfTurnShouldBeRejected() {
-        Player alice = new Player("Alice", createTotem(TotemColor.RED));
-        Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
-        GameController controller = createTotemPlacementController(
-                List.of(alice, bob),
-                List.of(foodTile('A', 1), foodTile('B', 1))
-        );
-        setTurnOrder(controller, alice, bob);
-
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Bob", new PlaceTotemAction('A')));
-    }
-
-    /** 10. Tile A / 5-player-only tiles must be rejected in a 2-player game. */
-    @Test
-    void fivePlayerOnlyTileIsRejectedInTwoPlayerGame() {
-        GameController controller = createTotemPlacementController(
-                createPlayers(2),
-                List.of(new OfferTile('A', 5, List.of(new ActionSlot(new FoodSlot(), 3))), foodTile('B', 1))
-        );
-
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Alice", new PlaceTotemAction('A')));
-    }
-
-    /** 11. A tile occupied by a player who disconnects should not silently become free during that round. */
-    @Test
-    void occupiedTileRemainsOccupiedAfterItsPlayerDisconnectsDuringPlacement() {
-        Player alice = new Player("Alice", createTotem(TotemColor.RED));
-        Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
-        OfferTile tileA = foodTile('A', 1);
-        OfferTile tileB = foodTile('B', 1);
-        GameController controller = createTotemPlacementController(List.of(alice, bob), List.of(tileA, tileB));
-
-        controller.onMessageReceived("Alice", new PlaceTotemAction('A'));
-        controller.onPlayerDisconnection("Alice");
-
-        assertTrue(controller.getGame().getBoard().getOfferTiles().get(0).isOccupied());
-    }
-
-    /** 12. A player reconnecting during TotemPlacement should still be able to place if the phase is not over. */
-    @Test
-    void reconnectedPlayerCanStillPlaceTotemIfPlacementPhaseIsNotOver() {
-        List<Player> players = createPlayers(3);
-        GameController controller = createTotemPlacementController(
-                players,
-                List.of(foodTile('A', 1), foodTile('B', 1), foodTile('C', 1))
-        );
-
-        controller.onMessageReceived("Alice", new PlaceTotemAction('A'));
-        controller.onPlayerDisconnection("Bob");
-        controller.onPlayerReconnection("Bob");
-
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Bob", new PlaceTotemAction('B'))); }
-
-    // ------------------------------------------------------------------
-    // D. ACTION RESOLUTION CASES
-    // ------------------------------------------------------------------
-
-    /** 13. A player cannot pick when it is another player's action-resolution turn. */
-    @Test
-    void playerOutsideTurnCannotPickCard() {
-        ActionScenario scenario = createAliceUpperPickScenario();
-
-        assertThrows(IllegalStateException.class,
-                () -> scenario.controller.onMessageReceived("Bob", new PickCardAction("101", true)));
-    }
-
-    /** 14. A player cannot pick from the wrong row. */
-    @Test
-    void playerCannotPickFromWrongRow() {
-        ActionScenario scenario = createAliceUpperPickScenario();
-
-        assertThrows(IllegalStateException.class,
-                () -> scenario.controller.onMessageReceived("Alice", new PickCardAction("201", false)));
-    }
-
-    /** 15. A player cannot pick more cards than the selected offer tile allows. */
-    @Test
-    void playerCannotPickMoreCardsThanTileAllows() {
-        ActionScenario scenario = createAliceUpperPickScenario();
-
-        scenario.controller.onMessageReceived("Alice", new PickCardAction("101", true));
-
-        assertThrows(IllegalStateException.class,
-                () -> scenario.controller.onMessageReceived("Alice", new PickCardAction("102", true)));
-    }
-
-    /** 16. If a tile allows upper + lower, the player may choose the order freely. */
-    @Test
-    void upperAndLowerPickTileAllowsBothOrders() {
-        Player alice = new Player("Alice", createTotem(TotemColor.RED));
-        Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
-        OfferTile aliceTile = new OfferTile('A', 1, List.of(
-                new ActionSlot(new UpperRowSlot(), 1),
-                new ActionSlot(new LowerRowSlot(), 1)
-        ));
-        OfferTile bobTile = foodTile('B', 0);
-        Round round = createRoundWithRows(
-                List.of(new HunterCard(201, Era.I, 1, false)),
-                List.of(new HunterCard(101, Era.I, 1, false)),
-                new ArrayList<>(),
-                new ArrayList<>()
-        );
-        GameController controller = createActionResolutionController(
-                List.of(alice, bob), List.of(aliceTile, bobTile), round, Map.of(alice, aliceTile, bob, bobTile)
-        );
-
-        controller.onMessageReceived("Alice", new PickCardAction("101", true));
-        controller.onMessageReceived("Alice", new PickCardAction("201", false));
-
-        assertEquals(2, alice.getTribe().countCharacterCards());
-    }
-
-    /** 17. Event cards on a row must never be pickable as tribute cards. */
-    @Test
-    void eventCardCannotBePickedFromRow() {
-        Player alice = new Player("Alice", createTotem(TotemColor.RED));
-        Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
-        OfferTile aliceTile = new OfferTile('A', 1, List.of(new ActionSlot(new UpperRowSlot(), 1)));
-        OfferTile bobTile = foodTile('B', 0);
-        Round round = createRoundWithEvents(
-                new ArrayList<>(),
-                List.of(new HuntEventCard(900, Era.I, false, 1, 1)),
-                new ArrayList<>(), List.of(new HunterCard(901, Era.I, 1, false)),
-                new ArrayList<>(), new ArrayList<>()
-        );
-        GameController controller = createActionResolutionController(
-                List.of(alice, bob), List.of(aliceTile, bobTile), round, Map.of(alice, aliceTile, bob, bobTile)
-        );
-
-        assertThrows(IllegalArgumentException.class,
-                () -> controller.onMessageReceived("Alice", new PickCardAction("900", true)));
-    }
-
-    /** 18. A building that the player cannot afford must be rejected and remain on the board. */
-    @Test
-    void unaffordableBuildingIsRejectedAndRemainsOnBoard() {
-        Player alice = new Player("Alice", createTotem(TotemColor.RED));
-        Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
-        BuildingCard expensive = new BuildingCard(301, Era.I, 10, new EndPPEffect(), 0);
-        OfferTile aliceTile = new OfferTile('A', 1, List.of(new ActionSlot(new UpperRowSlot(), 1)));
-        OfferTile bobTile = foodTile('B', 0);
-        Round round = createRoundWithRows(new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), List.of(expensive));
-        GameController controller = createActionResolutionController(
-                List.of(alice, bob), List.of(aliceTile, bobTile), round, Map.of(alice, aliceTile, bob, bobTile)
-        );
-
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Alice", new PickBuildingAction("301", true)));
-        assertTrue(controller.getGame().getCurrentRound().getUpperRowBuildings().contains(expensive));
-    }
-
-    /** 19. Builder cards should reduce the cost paid for a building. */
-    @Test
-    void builderDiscountReducesBuildingCost() {
-        Player alice = new Player("Alice", createTotem(TotemColor.RED));
-        Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
-        alice.addFood(1);
-        alice.addCharacterCard(new BuilderCard(700, Era.I, 1, 0, 2));
-        BuildingCard building = new BuildingCard(302, Era.I, 3, new EndPPEffect(), 0);
-        OfferTile aliceTile = new OfferTile('A', 1, List.of(new ActionSlot(new UpperRowSlot(), 1)));
-        OfferTile bobTile = foodTile('B', 0);
-        Round round = createRoundWithRows(new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), List.of(building));
-        GameController controller = createActionResolutionController(
-                List.of(alice, bob), List.of(aliceTile, bobTile), round, Map.of(alice, aliceTile, bob, bobTile)
-        );
-
-        controller.onMessageReceived("Alice", new PickBuildingAction("302", true));
-
-        // Alice pays 1 food after the builder discount, then receives +1 food
-// from the first turn-order slot.
-        assertEquals(1, alice.getFood());
-        assertEquals(1, alice.getTribe().getBuildingCards().size());
-    }
-
-    /** 20. Builder discount must never make the final building cost negative. */
-    @Test
-    void builderDiscountCannotMakeBuildingCostNegative() {
-        Player alice = new Player("Alice", createTotem(TotemColor.RED));
-        Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
-        alice.addCharacterCard(new BuilderCard(701, Era.I, 1, 0, 5));
-        BuildingCard building = new BuildingCard(303, Era.I, 2, new EndPPEffect(), 0);
-        OfferTile aliceTile = new OfferTile('A', 1, List.of(new ActionSlot(new UpperRowSlot(), 1)));
-        OfferTile bobTile = foodTile('B', 0);
-        Round round = createRoundWithRows(new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), List.of(building));
-        GameController controller = createActionResolutionController(
-                List.of(alice, bob), List.of(aliceTile, bobTile), round, Map.of(alice, aliceTile, bob, bobTile)
-        );
-
-        controller.onMessageReceived("Alice", new PickBuildingAction("303", true));
-
-        // The discount reduces the building cost to 0, then Alice receives +1 food
-// from the first turn-order slot.
-        assertEquals(1, alice.getFood());
-        assertEquals(1, alice.getTribe().getBuildingCards().size());
-    }
-
-    /** 21. If the current action player disconnects and at least two remain connected, their turn is skipped. */
-    @Test
-    void currentActionPlayerDisconnectionSkipsToNextConnectedPlayer() {
-        ThreePlayerActionScenario scenario = createThreePlayerAliceThenBobThenCharlieScenario();
-
-        scenario.controller.onPlayerDisconnection("Alice");
-
-        assertDoesNotThrow(() -> scenario.controller.onMessageReceived("Bob", new PickCardAction("102", true)));
-        assertEquals(1, scenario.bob.getTribe().countCharacterCards());
-    }
-
-    /** 22. A player already disconnected before their action turn is skipped. */
-    @Test
-    void disconnectedPlayerBeforeOwnActionTurnIsSkipped() {
-        ThreePlayerActionScenario scenario = createThreePlayerAliceThenBobThenCharlieScenario();
-        scenario.controller.markPlayerDisconnected("Bob");
-        scenario.controller.changeState(new ActionResolutionState());
-
-        scenario.controller.onMessageReceived("Alice", new PickCardAction("101", true));
-
-        assertDoesNotThrow(() -> scenario.controller.onMessageReceived("Charlie", new PickCardAction("103", true)));
-    }
-
-    // ------------------------------------------------------------------
-    // E. EXTRA PICK CASES
-    // ------------------------------------------------------------------
-
-    /** 23. Extra pick effects must only allow picking from the upper row. */
-    @Test
-    void extraPickRejectsLowerRowCharacterPick() {
-        ExtraPickScenario scenario = createExtraPickScenarioWithUpperCard();
-
-        assertThrows(IllegalStateException.class,
-                () -> scenario.controller.onMessageReceived("Alice", new PickCardAction("901", false)));
-    }
-
-    /** 24. Extra pick with an empty upper row should not leave the controller waiting forever. */
-    @Test
-    void extraPickWithEmptyUpperRowShouldAutoSkip() {
-        ExtraPickScenario scenario = createExtraPickScenarioWithEmptyUpperRow();
-
-        assertFalse(scenario.controller.getCurrentState() instanceof ActionResolutionState);
-    }
-
-    /** 25. Extra pick for a disconnected player should be skipped. */
-    @Test
-    void disconnectedExtraPickPlayerIsSkipped() {
-        ExtraPickScenario scenario = createExtraPickScenarioWithUpperCard();
-
-        scenario.controller.onPlayerDisconnection("Alice");
-
-        assertThrows(IllegalStateException.class,
-                () -> scenario.controller.onMessageReceived("Alice", new PickCardAction("901", true)));
-    }
-
-    // ------------------------------------------------------------------
-    // F. EVENT CASES
-    // ------------------------------------------------------------------
-
-    /** 26. EventResolutionState must reject manual player actions. */
-    @Test
-    void eventResolutionStateRejectsManualActions() {
-        EventResolutionState state = new EventResolutionState();
-        GameController controller = createBaseGameController(
-                createPlayers(2),
-                List.of(foodTile('A', 0), foodTile('B', 0)),
-                createRoundWithRows(new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>())
-        );
-
-        assertThrows(IllegalStateException.class,
-                () -> state.handleAction(controller, "Alice", new PickCardAction("1", true)));
-    }
-
-    /** 27. Sustenance must be resolved after other events. */
-    @Test
-    void sustenanceEventIsResolvedAfterHuntEvent() {
-        Player alice = new Player("Alice", createTotem(TotemColor.RED));
-        Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
-        alice.addCharacterCard(new HunterCard(1, Era.I, 1, false));
-        Round round = createRoundWithEvents(
-                List.of(new SustenanceEventCard(1001, Era.I, false, 10), new HuntEventCard(1002, Era.I, false, 1, 5)),
-                new ArrayList<>(),
-                new ArrayList<>(), new ArrayList<>(),
-                new ArrayList<>(), new ArrayList<>()
-        );
-        GameController controller = createBaseGameController(List.of(alice, bob), List.of(foodTile('A', 0), foodTile('B', 0)), round);
-
-        controller.changeState(new EventResolutionState());
-
-        assertEquals(5, alice.getPrestigePoints());
-        assertEquals(0, alice.getFood());
-    }
-
-    /** 28. Two events of the same type should be resolved in Era order. */
-    @Test
-    void eventsOfSameTypeAreResolvedInEraOrder() {
-        List<String> order = new ArrayList<>();
-        Round round = createRoundWithEvents(
-                List.of(new TrackingEventCard(2002, Era.II, "II", order), new TrackingEventCard(2001, Era.I, "I", order)),
-                new ArrayList<>(),
-                new ArrayList<>(), new ArrayList<>(),
-                new ArrayList<>(), new ArrayList<>()
-        );
-        GameController controller = createBaseGameController(createPlayers(2), List.of(foodTile('A', 0), foodTile('B', 0)), round);
-
-        controller.changeState(new EventResolutionState());
-
-        assertEquals(List.of("I", "II"), order);
-    }
-
-    // ------------------------------------------------------------------
-    // G. END ROUND / END GAME CASES
-    // ------------------------------------------------------------------
-
-    /** 29. End-of-round lower row cleanup must remove characters/events but keep lower buildings. */
-    @Test
-    void lowerRowCleanupDiscardsOnlyTributeAndEventsButKeepsBuildings() {
-        BuildingCard lowerBuilding = new BuildingCard(3001, Era.I, 0, new EndPPEffect(), 0);
-        Round round = createRoundWithEvents(
-                List.of(new HuntEventCard(3002, Era.I, false, 1, 1)),
-                new ArrayList<>(),
-                List.of(new HunterCard(3003, Era.I, 1, false)),
-                new ArrayList<>(),
-                List.of(lowerBuilding),
-                new ArrayList<>()
-        );
-
-        round.discardLowerRow();
-
-        assertTrue(round.getLowerRowEvents().isEmpty());
-        assertTrue(round.getLowerRowTribute().isEmpty());
-        assertTrue(round.getLowerRowBuildings().contains(lowerBuilding));
-    }
-
-    /** 30. Shifting upper to lower must move only tribute/events, not buildings. */
-    @Test
-    void shiftUpperToLowerDoesNotMoveBuildings() {
-        BuildingCard upperBuilding = new BuildingCard(4001, Era.I, 0, new EndPPEffect(), 0);
-        CharacterCard upperCharacter = new HunterCard(4002, Era.I, 1, false);
-        EventCard upperEvent = new HuntEventCard(4003, Era.I, false, 1, 1);
-        Round round = createRoundWithEvents(
-                new ArrayList<>(), List.of(upperEvent),
-                new ArrayList<>(), List.of(upperCharacter),
-                new ArrayList<>(), List.of(upperBuilding)
-        );
-
-        round.shiftUpperToLowerRow();
-
-        assertTrue(round.getLowerRowTribute().contains(upperCharacter));
-        assertTrue(round.getLowerRowEvents().contains(upperEvent));
-        assertTrue(round.getUpperRowBuildings().contains(upperBuilding));
-    }
-
-    /** 31. At the end of the last round, visible upper-row events must also be resolved. */
-    @Test
-    void finalRoundResolvesUpperRowEventsToo() {
-        Player alice = new Player("Alice", createTotem(TotemColor.RED));
-        Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
-        alice.addCharacterCard(new HunterCard(5001, Era.I, 1, false));
-        Round round = createRoundWithEvents(
-                new ArrayList<>(),
-                List.of(new HuntEventCard(5002, Era.I, false, 1, 4)),
-                new ArrayList<>(), new ArrayList<>(),
-                new ArrayList<>(), new ArrayList<>()
-        );
-        GameController controller = createBaseGameController(List.of(alice, bob), List.of(foodTile('A', 0), foodTile('B', 0)), round, null, 10);
-
-        controller.changeState(new EventResolutionState());
-
-        assertTrue(alice.getPrestigePoints() >= 4);
-    }
-
-    /** 32. If final points are tied, food should be the tie-breaker. */
-    @Test
-    void finalTieOnPointsIsBrokenByFood() {
-        Player alice = new Player("Alice", createTotem(TotemColor.RED));
-        Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
-        alice.addPrestigePoints(10);
-        bob.addPrestigePoints(10);
-        alice.addFood(3);
-        bob.addFood(1);
-        Game game = createPlainGame(List.of(alice, bob), 1);
-
-        assertEquals(alice, game.getWinner());
-    }
-
-    /** 33. If points and food are tied, victory is shared: getWinner() returns null,
-     *  getWinners() contains all co-winners. */
-    @Test
-    void finalTieOnPointsAndFoodProducesSharedVictory() {
-        Player alice = new Player("Alice", createTotem(TotemColor.RED));
-        Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
-        alice.addPrestigePoints(10);
-        bob.addPrestigePoints(10);
-        alice.addFood(2);
-        bob.addFood(2);
-        Game game = createPlainGame(List.of(alice, bob), 1);
-
-        assertEquals(game.getFinalScore(alice), game.getFinalScore(bob),
-                "scores must remain equal on a full tie");
-        assertNull(game.getWinner(),
-                "full PP+food tie → shared victory: getWinner() must return null");
-        List<Player> winners = game.getWinners();
-        assertTrue(winners.contains(alice), "Alice must be in getWinners() on a full tie");
-        assertTrue(winners.contains(bob),   "Bob must be in getWinners() on a full tie");
-    }
-
-    // ------------------------------------------------------------------
-    // HELPERS
+    // HELPERS — shared by all nested groups
     // ------------------------------------------------------------------
 
     private GameController createReadyCheckController() {

@@ -25,6 +25,11 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for GameController card picking action.
+ *
+ * <p>Verifies: pick-card flow including upper/lower row, building picks and event-card rejection.
+ */
 class GameControllerCardPickingStrongTest {
 
     /**

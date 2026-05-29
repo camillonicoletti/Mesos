@@ -29,6 +29,11 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for GameController disconnection / reconnection flow.
+ *
+ * <p>Verifies: behaviour when players disconnect during lobby, action resolution and event resolution.
+ */
 public class GameControllerDisconnectionTest {
 
     @Test

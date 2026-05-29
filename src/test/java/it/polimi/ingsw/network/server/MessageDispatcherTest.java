@@ -12,6 +12,11 @@ import java.util.function.Consumer;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
+/**
+ * Unit tests for MessageDispatcher (network.server).
+ *
+ * <p>Verifies: routing of client messages to the LobbyManager.
+ */
 class MessageDispatcherTest {
 
     @Test

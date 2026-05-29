@@ -11,6 +11,11 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for Player (model).
+ *
+ * <p>Verifies: tribe management, food / PP accounting and building-effect application on the Player entity.
+ */
 public class PlayerTest {
 
     @Test
@@ -258,23 +263,23 @@ public class PlayerTest {
         Player player = new Player("Test", new Totem(TotemColor.RED, "OFFER_TRACK"));
         player.addBuildingCard(new BuildingCard(1, Era.I, 0, new FullSetFoodEffect(), 0));
 
-        // primo set
+        // first set
         player.addCharacterCard(new ArtistCard(1, Era.I, 2));
         player.addCharacterCard(new BuilderCard(2, Era.I, 2, 1, 0));
         player.addCharacterCard(new GathererCard(3, Era.I, 2));
         player.addCharacterCard(new HunterCard(4, Era.I, 2, false));
         player.addCharacterCard(new InventorCard(5, Era.I, 2, InventorIcons.INVENTION_1));
-        player.addCharacterCard(new ShamanCard(6, Era.I, 1, 2)); // completa set 1 → +5
+        player.addCharacterCard(new ShamanCard(6, Era.I, 1, 2)); // completes set 1 → +5
 
         assertEquals(5, player.getFood());
 
-        // secondo set
+        // second set
         player.addCharacterCard(new ArtistCard(7, Era.I, 2));
         player.addCharacterCard(new BuilderCard(8, Era.I, 2, 1, 0));
         player.addCharacterCard(new GathererCard(9, Era.I, 2));
         player.addCharacterCard(new HunterCard(10, Era.I, 2, false));
         player.addCharacterCard(new InventorCard(11, Era.I, 2, InventorIcons.INVENTION_2));
-        player.addCharacterCard(new ShamanCard(12, Era.I, 1, 2)); // completa set 2 → +5
+        player.addCharacterCard(new ShamanCard(12, Era.I, 1, 2)); // completes set 2 → +5
 
         assertEquals(10, player.getFood()); // 5 + 5
     }

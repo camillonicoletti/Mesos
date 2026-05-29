@@ -12,6 +12,11 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for Round (model).
+ *
+ * <p>Verifies: round phases, turn order, offer-tile refill and end-of-round transitions.
+ */
 public class RoundTest {
 
     private Game game;

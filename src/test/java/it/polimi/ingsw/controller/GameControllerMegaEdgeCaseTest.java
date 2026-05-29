@@ -1,6 +1,5 @@
 package it.polimi.ingsw.controller;
 
-import it.polimi.ingsw.controller.action.GameAction;
 import it.polimi.ingsw.controller.action.JoinGameAction;
 import it.polimi.ingsw.controller.action.PickBuildingAction;
 import it.polimi.ingsw.controller.action.PickCardAction;
@@ -33,6 +32,8 @@ import it.polimi.ingsw.model.card.effect.ExtraCardUpperRowEffect;
 import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.enums.TotemColor;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -42,941 +43,985 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Mega edge-case test suite for the controller package.
+ * Behaviour-grouped edge-case suite for the controller package.
  *
- * Scope: controller/state/action/listener behavior only.
- * No network, server, client, VirtualView or socket/RMI classes are used.
+ * <p>Scope: controller / state / action / listener layer only. No network,
+ * server, client, VirtualView or socket/RMI classes are used.
  *
- * Some methods are intentionally BUG-HUNTER tests: if they fail, they reveal
- * a controller validation or state-flow issue worth discussing with the group.
+ * <p>Tests are organized into {@link Nested} groups by behaviour:
+ * lobby/ready flow, totem placement, card picking, disconnection and
+ * suspension, state machine and client-facing notifications. Some tests are
+ * intentionally strict probes: if they fail, they reveal a controller
+ * validation or state-flow issue worth discussing with the team.
  */
 public class GameControllerMegaEdgeCaseTest {
 
     // ---------------------------------------------------------------------
-    // BASIC INPUT VALIDATION
+    // Nested groups
     // ---------------------------------------------------------------------
 
-    @Test
-    void newControllerStartsCleanInLobby() {
-        GameController controller = new GameController();
+    /**
+     * Verifies lobby join validation, player-count selection, totem-color
+     * uniqueness, host promotion and the ready-check transitions until the
+     * game starts.
+     */
+    @Nested
+    @DisplayName("Lobby and ready flow")
+    class LobbyAndReadyFlow {
 
-        assertInstanceOf(LobbyState.class, controller.getCurrentState());
-        assertNull(controller.getGame());
-        assertEquals(-1, controller.getChosenPlayersCount());
-        assertTrue(controller.getLobbyPlayers().isEmpty());
-        assertFalse(controller.isSuspended());
-        assertEquals(0, controller.getConnectedGamePlayersCount());
+        @Test
+        void newControllerStartsCleanInLobby() {
+            GameController controller = new GameController();
+
+            assertInstanceOf(LobbyState.class, controller.getCurrentState());
+            assertNull(controller.getGame());
+            assertEquals(-1, controller.getChosenPlayersCount());
+            assertTrue(controller.getLobbyPlayers().isEmpty());
+            assertFalse(controller.isSuspended());
+            assertEquals(0, controller.getConnectedGamePlayersCount());
+        }
+
+        @Test
+        void nullBlankNicknameAndNullActionAreRejectedAtEntryPoint() {
+            GameController controller = new GameController();
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> controller.onMessageReceived(null, new JoinGameAction(createTotem(TotemColor.RED))));
+            assertThrows(IllegalArgumentException.class,
+                    () -> controller.onMessageReceived("   ", new JoinGameAction(createTotem(TotemColor.RED))));
+            assertThrows(IllegalArgumentException.class,
+                    () -> controller.onMessageReceived("Alice", null));
+        }
+
+        @Test
+        void nullAndBlankNamesAreSafelyRejectedByHelperMethods() {
+            GameController controller = new GameController();
+
+            assertFalse(controller.isNicknameAvailable(null));
+            assertFalse(controller.isNicknameAvailable("  "));
+            assertFalse(controller.isFirstPlayer(null));
+            assertFalse(controller.isFirstPlayer("  "));
+            assertFalse(controller.isPlayerReady(null));
+            assertFalse(controller.isPlayerReady("  "));
+            assertFalse(controller.isPlayerDisconnected(null));
+            assertFalse(controller.isPlayerDisconnected("  "));
+        }
+
+        @Test
+        void settingPlayerCountBeforeAnyJoinIsRejected() {
+            GameController controller = new GameController();
+
+            assertThrows(IllegalStateException.class,
+                    () -> controller.onMessageReceived("Alice", new SetPlayerCountAction(2)));
+
+            assertEquals(-1, controller.getChosenPlayersCount());
+            assertInstanceOf(LobbyState.class, controller.getCurrentState());
+        }
+
+        @Test
+        void invalidPlayerCountValuesAreRejected() {
+            GameController controller = new GameController();
+            controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> controller.onMessageReceived("Alice", new SetPlayerCountAction(-10)));
+            assertThrows(IllegalArgumentException.class,
+                    () -> controller.onMessageReceived("Alice", new SetPlayerCountAction(0)));
+            assertThrows(IllegalArgumentException.class,
+                    () -> controller.onMessageReceived("Alice", new SetPlayerCountAction(1)));
+            assertThrows(IllegalArgumentException.class,
+                    () -> controller.onMessageReceived("Alice", new SetPlayerCountAction(6)));
+            assertThrows(IllegalArgumentException.class,
+                    () -> controller.onMessageReceived("Alice", new SetPlayerCountAction(100)));
+
+            assertEquals(-1, controller.getChosenPlayersCount());
+        }
+
+        @Test
+        void firstPlayerCanChangePlayerCountBeforeGameStarts() {
+            GameController controller = new GameController();
+            controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
+
+            controller.onMessageReceived("Alice", new SetPlayerCountAction(4));
+
+            assertEquals(4, controller.getChosenPlayersCount());
+
+            assertDoesNotThrow(() -> controller.onMessageReceived("Alice", new SetPlayerCountAction(5)));
+            assertEquals(5, controller.getChosenPlayersCount());
+        }
+
+        @Test
+        void nonFirstPlayerCannotChoosePlayerCount() {
+            GameController controller = new GameController();
+            controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
+            controller.onMessageReceived("Bob", new JoinGameAction(createTotem(TotemColor.BLUE)));
+
+            assertThrows(IllegalStateException.class,
+                    () -> controller.onMessageReceived("Bob", new SetPlayerCountAction(2)));
+        }
+
+        @Test
+        void duplicateNicknameIsRejectedEvenWithDifferentTotem() {
+            GameController controller = new GameController();
+
+            controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.BLUE))));
+            assertEquals(1, controller.getLobbyPlayers().size());
+        }
+
+        @Test
+        void allFiveTotemColorsCanJoinExactlyOnceAndThenMoveToReadyCheck() {
+            GameController controller = new GameController();
+
+            controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
+            controller.onMessageReceived("Alice", new SetPlayerCountAction(5));
+            controller.onMessageReceived("Bob", new JoinGameAction(createTotem(TotemColor.BLUE)));
+            controller.onMessageReceived("Charlie", new JoinGameAction(createTotem(TotemColor.PURPLE)));
+            controller.onMessageReceived("Dario", new JoinGameAction(createTotem(TotemColor.YELLOW)));
+            controller.onMessageReceived("Eve", new JoinGameAction(createTotem(TotemColor.WHITE)));
+
+            assertEquals(5, controller.getLobbyPlayers().size());
+            assertInstanceOf(ReadyCheckState.class, controller.getCurrentState());
+        }
+
+        @Test
+        void sixthPlayerCannotJoinAfterFivePlayerLobbyIsFull() {
+            GameController controller = createReadyCheckControllerWithFivePlayers();
+
+            assertThrows(IllegalStateException.class,
+                    () -> controller.onMessageReceived("Frank", new JoinGameAction(createTotem(TotemColor.RED))));
+            assertEquals(5, controller.getLobbyPlayers().size());
+        }
+
+        @Test
+        void nullTotemJoinIsRejected() {
+            GameController controller = new GameController();
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> controller.onMessageReceived("Alice", new JoinGameAction(null)));
+            assertTrue(controller.getLobbyPlayers().isEmpty());
+        }
+
+        /** Probe: a Totem object with null color must be rejected at join time. */
+        @Test
+        void totemWithNullColorShouldBeRejected() {
+            GameController controller = new GameController();
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> controller.onMessageReceived("Alice", new JoinGameAction(new Totem(null, "OFFER_TRACK"))));
+            assertTrue(controller.getLobbyPlayers().isEmpty());
+        }
+
+        /** Probe: uniqueness must be on TotemColor, not on Totem object identity. */
+        @Test
+        void duplicateTotemColorShouldBeRejectedEvenWhenTotemObjectsAreDifferent() {
+            GameController controller = new GameController();
+
+            controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> controller.onMessageReceived("Bob", new JoinGameAction(createTotem(TotemColor.RED))));
+            assertEquals(1, controller.getLobbyPlayers().size());
+        }
+
+        /** Probe: cannot choose 2 players when 3 players are already in the lobby. */
+        @Test
+        void chosenPlayerCountCannotBeLowerThanCurrentLobbySize() {
+            GameController controller = new GameController();
+
+            controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
+            controller.onMessageReceived("Bob", new JoinGameAction(createTotem(TotemColor.BLUE)));
+            controller.onMessageReceived("Charlie", new JoinGameAction(createTotem(TotemColor.PURPLE)));
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> controller.onMessageReceived("Alice", new SetPlayerCountAction(2)));
+        }
+
+        @Test
+        void lobbyPlayersListCannotBeModifiedFromOutside() {
+            GameController controller = new GameController();
+            controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
+
+            assertThrows(UnsupportedOperationException.class,
+                    () -> controller.getLobbyPlayers().add(new Player("Injected", createTotem(TotemColor.BLUE))));
+            assertEquals(1, controller.getLobbyPlayers().size());
+        }
+
+        @Test
+        void firstPlayerLeavingBeforeChoosingCountAllowsSecondPlayerToBecomeFirst() {
+            GameController controller = new GameController();
+
+            controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
+            controller.onMessageReceived("Bob", new JoinGameAction(createTotem(TotemColor.BLUE)));
+            controller.onPlayerDisconnection("Alice");
+
+            assertTrue(controller.isFirstPlayer("Bob"));
+            assertDoesNotThrow(() -> controller.onMessageReceived("Bob", new SetPlayerCountAction(2)));
+            assertEquals(2, controller.getChosenPlayersCount());
+        }
+
+        /** Design choice: the new host may overwrite the previously chosen count. */
+        @Test
+        void promotedFirstPlayerCanChangePreviouslyChosenCount() {
+            GameController controller = new GameController();
+
+            controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
+            controller.onMessageReceived("Bob", new JoinGameAction(createTotem(TotemColor.BLUE)));
+            controller.onMessageReceived("Alice", new SetPlayerCountAction(3));
+
+            controller.onPlayerDisconnection("Alice");
+
+            assertEquals("Bob", controller.getLobbyPlayers().get(0).getNickname());
+            assertEquals(3, controller.getChosenPlayersCount());
+            assertTrue(controller.isFirstPlayer("Bob"));
+
+            assertDoesNotThrow(() -> controller.onMessageReceived("Bob", new SetPlayerCountAction(2)));
+            assertEquals(2, controller.getChosenPlayersCount());
+        }
+
+        @Test
+        void allPlayersLeavingLobbyResetsCountAndReadySet() {
+            GameController controller = new GameController();
+
+            controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
+            controller.onMessageReceived("Alice", new SetPlayerCountAction(2));
+            controller.onPlayerDisconnection("Alice");
+
+            assertTrue(controller.getLobbyPlayers().isEmpty());
+            assertEquals(-1, controller.getChosenPlayersCount());
+            assertFalse(controller.isPlayerReady("Alice"));
+            assertInstanceOf(LobbyState.class, controller.getCurrentState());
+        }
+
+        @Test
+        void unknownLobbyDisconnectionIsIgnoredAndDoesNotNotify() {
+            GameController controller = new GameController();
+            RecordingListener listener = new RecordingListener();
+            controller.addListener(listener);
+
+            controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
+            controller.onPlayerDisconnection("Ghost");
+
+            assertEquals(1, controller.getLobbyPlayers().size());
+            assertFalse(listener.events.contains("disconnected:Ghost"));
+        }
+
+        @Test
+        void directRemoveAndDirectDisconnectRejectUnknownPlayers() {
+            GameController controller = new GameController();
+
+            assertThrows(IllegalArgumentException.class, () -> controller.removePlayerFromLobby("Ghost"));
+            assertThrows(IllegalArgumentException.class, () -> controller.markPlayerDisconnected("Ghost"));
+        }
+
+        @Test
+        void directAddLobbyPlayerRejectsNull() {
+            GameController controller = new GameController();
+
+            assertThrows(IllegalArgumentException.class, () -> controller.addLobbyPlayer(null));
+        }
+
+        @Test
+        void readyTrueMarksPlayerReadyAndReadyFalseUnmarks() {
+            GameController controller = createReadyCheckController();
+
+            controller.onMessageReceived("Alice", new ReadyAction(true));
+            assertTrue(controller.isPlayerReady("Alice"));
+
+            controller.onMessageReceived("Alice", new ReadyAction(false));
+            assertFalse(controller.isPlayerReady("Alice"));
+            assertInstanceOf(ReadyCheckState.class, controller.getCurrentState());
+        }
+
+        @Test
+        void sendingReadyTrueTwiceIsIdempotentUntilEveryoneIsReady() {
+            GameController controller = createReadyCheckControllerWithThreePlayers();
+
+            controller.onMessageReceived("Alice", new ReadyAction(true));
+            controller.onMessageReceived("Alice", new ReadyAction(true));
+            controller.onMessageReceived("Bob", new ReadyAction(true));
+
+            assertTrue(controller.isPlayerReady("Alice"));
+            assertTrue(controller.isPlayerReady("Bob"));
+            assertFalse(controller.isPlayerReady("Charlie"));
+            assertInstanceOf(ReadyCheckState.class, controller.getCurrentState());
+        }
+
+        @Test
+        void unknownPlayerCannotSendReadyTrue() {
+            GameController controller = createReadyCheckController();
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> controller.onMessageReceived("Ghost", new ReadyAction(true)));
+        }
+
+        /** Probe: ReadyAction(false) must validate player existence before removing. */
+        @Test
+        void unknownPlayerCannotSendReadyFalse() {
+            GameController controller = createReadyCheckController();
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> controller.onMessageReceived("Ghost", new ReadyAction(false)));
+        }
+
+        @Test
+        void readyCheckRejectsGameActionsButAllowsFirstPlayerToChangeCount() {
+            GameController controller = createReadyCheckController();
+
+            assertThrows(IllegalStateException.class,
+                    () -> controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.PURPLE))));
+
+            assertDoesNotThrow(() -> controller.onMessageReceived("Alice", new SetPlayerCountAction(3)));
+            assertEquals(3, controller.getChosenPlayersCount());
+            assertInstanceOf(LobbyState.class, controller.getCurrentState());
+
+            assertThrows(IllegalStateException.class,
+                    () -> controller.onMessageReceived("Alice", new PlaceTotemAction('A')));
+
+            assertThrows(IllegalStateException.class,
+                    () -> controller.onMessageReceived("Alice", new PickCardAction("1", true)));
+
+            assertThrows(IllegalStateException.class,
+                    () -> controller.onMessageReceived("Alice", new PickBuildingAction("1", true)));
+        }
+
+        @Test
+        void disconnectionInReadyCheckReturnsToLobbyAndClearsThatPlayerReadyStatus() {
+            GameController controller = createReadyCheckController();
+
+            controller.onMessageReceived("Alice", new ReadyAction(true));
+            controller.onPlayerDisconnection("Bob");
+
+            assertInstanceOf(LobbyState.class, controller.getCurrentState());
+            assertEquals(1, controller.getLobbyPlayers().size());
+            assertEquals("Alice", controller.getLobbyPlayers().get(0).getNickname());
+            assertFalse(controller.isPlayerReady("Bob"));
+            assertNull(controller.getGame());
+        }
     }
 
-    @Test
-    void nullBlankNicknameAndNullActionAreRejectedAtEntryPoint() {
-        GameController controller = new GameController();
+    /**
+     * Verifies that the controller state machine rejects illegal transitions
+     * (null target, failing {@code onEnter}) and preserves the previous state
+     * when a transition fails.
+     */
+    @Nested
+    @DisplayName("Invalid actions and state machine")
+    class InvalidActionsAndStateMachine {
 
-        assertThrows(IllegalArgumentException.class,
-                () -> controller.onMessageReceived(null, new JoinGameAction(createTotem(TotemColor.RED))));
-        assertThrows(IllegalArgumentException.class,
-                () -> controller.onMessageReceived("   ", new JoinGameAction(createTotem(TotemColor.RED))));
-        assertThrows(IllegalArgumentException.class,
-                () -> controller.onMessageReceived("Alice", null));
+        /** Probe: changeState must not leave the controller in a state whose onEnter failed. */
+        @Test
+        void failedStateTransitionShouldKeepPreviousState() {
+            GameController controller = new GameController();
+
+            assertThrows(IllegalStateException.class,
+                    () -> controller.changeState(new ReadyCheckState()));
+
+            assertInstanceOf(LobbyState.class, controller.getCurrentState());
+        }
+
+        @Test
+        void changingToNullStateIsRejected() {
+            GameController controller = new GameController();
+
+            assertThrows(IllegalArgumentException.class, () -> controller.changeState(null));
+            assertInstanceOf(LobbyState.class, controller.getCurrentState());
+        }
     }
 
-    @Test
-    void nullAndBlankNamesAreSafelyRejectedByHelperMethods() {
-        GameController controller = new GameController();
+    /**
+     * Verifies the {@link GameListener} contract: null listeners are rejected,
+     * removed listeners receive no further events, a throwing listener does
+     * not block the others and state changes produce the expected
+     * notifications.
+     */
+    @Nested
+    @DisplayName("Client sync and notifications")
+    class ClientSyncAndNotifications {
 
-        assertFalse(controller.isNicknameAvailable(null));
-        assertFalse(controller.isNicknameAvailable("  "));
-        assertFalse(controller.isFirstPlayer(null));
-        assertFalse(controller.isFirstPlayer("  "));
-        assertFalse(controller.isPlayerReady(null));
-        assertFalse(controller.isPlayerReady("  "));
-        assertFalse(controller.isPlayerDisconnected(null));
-        assertFalse(controller.isPlayerDisconnected("  "));
+        @Test
+        void nullListenerCannotBeAddedOrRemoved() {
+            GameController controller = new GameController();
+
+            assertThrows(IllegalArgumentException.class, () -> controller.addListener(null));
+            assertThrows(IllegalArgumentException.class, () -> controller.removeListener(null));
+        }
+
+        @Test
+        void removedListenerDoesNotReceiveFutureEvents() {
+            GameController controller = new GameController();
+            RecordingListener listener = new RecordingListener();
+
+            controller.addListener(listener);
+            controller.removeListener(listener);
+            controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
+
+            assertFalse(listener.events.contains("joined:Alice"));
+        }
+
+        @Test
+        void listenerExceptionDoesNotPreventFollowingListenersFromReceivingEvent() {
+            GameController controller = new GameController();
+            RecordingListener listener = new RecordingListener();
+
+            controller.addListener(new ThrowingListener());
+            controller.addListener(listener);
+
+            assertDoesNotThrow(() ->
+                    controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED))));
+            assertTrue(listener.events.contains("joined:Alice"));
+        }
+
+        @Test
+        void stateChangeToReadyCheckIsNotified() {
+            GameController controller = new GameController();
+            RecordingListener listener = new RecordingListener();
+            controller.addListener(listener);
+
+            controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
+            controller.onMessageReceived("Bob", new JoinGameAction(createTotem(TotemColor.BLUE)));
+            controller.onMessageReceived("Alice", new SetPlayerCountAction(2));
+
+            assertTrue(listener.events.contains("count:2"));
+            assertTrue(listener.events.contains("state:ReadyCheckState"));
+        }
+    }
+
+    /**
+     * Verifies disconnection / reconnection input validation, the suspension
+     * threshold rule for two-player games, the resume path from a
+     * {@link SuspendedState}, the suspension timeout policy and the cleanup
+     * of suspension data when the game is cleared.
+     */
+    @Nested
+    @DisplayName("Disconnection and suspension")
+    class DisconnectionAndSuspension {
+
+        @Test
+        void disconnectionAndReconnectionRejectNullOrBlankNickname() {
+            GameController controller = new GameController();
+
+            assertThrows(IllegalArgumentException.class, () -> controller.onPlayerDisconnection(null));
+            assertThrows(IllegalArgumentException.class, () -> controller.onPlayerDisconnection("  "));
+            assertThrows(IllegalArgumentException.class, () -> controller.onPlayerReconnection(null));
+            assertThrows(IllegalArgumentException.class, () -> controller.onPlayerReconnection("  "));
+        }
+
+        @Test
+        void reconnectingBeforeGameStartsIsRejected() {
+            GameController controller = new GameController();
+            controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> controller.onPlayerReconnection("Alice"));
+        }
+
+        @Test
+        void unknownGamePlayerReconnectionIsRejected() {
+            GameController controller = createStartedTotemPlacementController(2, List.of(
+                    new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
+                    new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
+            ));
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> controller.onPlayerReconnection("Ghost"));
+        }
+
+        @Test
+        void disconnectionOfOnePlayerInThreePlayerGameDoesNotSuspend() {
+            GameController controller = createStartedTotemPlacementController(3, List.of(
+                    new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
+                    new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
+                    new OfferTile('C', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
+            ));
+
+            controller.onPlayerDisconnection("Charlie");
+
+            assertTrue(controller.isPlayerDisconnected("Charlie"));
+            assertFalse(controller.isSuspended());
+            assertInstanceOf(TotemPlacementState.class, controller.getCurrentState());
+        }
+
+        @Test
+        void disconnectionOfOnePlayerInTwoPlayerGameSuspendsAndBlocksActions() {
+            GameController controller = createStartedTotemPlacementController(2, List.of(
+                    new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
+                    new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
+            ));
+
+            controller.onPlayerDisconnection("Bob");
+
+            assertTrue(controller.isSuspended());
+            assertInstanceOf(SuspendedState.class, controller.getCurrentState());
+            assertThrows(IllegalStateException.class,
+                    () -> controller.onMessageReceived("Alice", new PlaceTotemAction('A')));
+        }
+
+        @Test
+        void reconnectionResumesFromSuspendedState() {
+            GameController controller = createStartedTotemPlacementController(2, List.of(
+                    new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
+                    new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
+            ));
+
+            controller.onPlayerDisconnection("Bob");
+            controller.onPlayerReconnection("Bob");
+
+            assertFalse(controller.isSuspended());
+            assertFalse(controller.isPlayerDisconnected("Bob"));
+            assertInstanceOf(TotemPlacementState.class, controller.getCurrentState());
+        }
+
+        @Test
+        void suspensionResumeKeepsTotemPlacementProgress() {
+            GameController controller = createStartedTotemPlacementController(2, List.of(
+                    new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
+                    new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
+            ));
+
+            controller.onMessageReceived("Alice", new PlaceTotemAction('A'));
+            controller.onPlayerDisconnection("Bob");
+            controller.onPlayerReconnection("Bob");
+
+            assertThrows(IllegalStateException.class,
+                    () -> controller.onMessageReceived("Alice", new PlaceTotemAction('B')));
+        }
+
+        /** Design choice: reconnecting an already-connected player must not produce a duplicate notification. */
+        @Test
+        void reconnectingAlreadyConnectedPlayerShouldBeRejectedOrIgnoredWithoutNotification() {
+            GameController controller = createStartedTotemPlacementController(2, List.of(
+                    new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
+                    new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
+            ));
+            RecordingListener listener = new RecordingListener();
+            controller.addListener(listener);
+
+            assertThrows(IllegalStateException.class,
+                    () -> controller.onPlayerReconnection("Alice"));
+            assertFalse(listener.events.contains("reconnected:Alice"));
+        }
+
+        /** Design choice: duplicate disconnections must not produce duplicate notifications. */
+        @Test
+        void disconnectingSamePlayerTwiceShouldNotNotifyTwice() {
+            GameController controller = createStartedTotemPlacementController(3, List.of(
+                    new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
+                    new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
+                    new OfferTile('C', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
+            ));
+            RecordingListener listener = new RecordingListener();
+            controller.addListener(listener);
+
+            controller.onPlayerDisconnection("Charlie");
+            controller.onPlayerDisconnection("Charlie");
+
+            assertEquals(1, listener.countEvents("disconnected:Charlie"));
+        }
+
+        @Test
+        void invalidSuspensionTimeoutIsRejected() {
+            GameController controller = new GameController();
+
+            assertThrows(IllegalArgumentException.class, () -> controller.setSuspensionTimeoutMillis(0));
+            assertThrows(IllegalArgumentException.class, () -> controller.setSuspensionTimeoutMillis(-1));
+        }
+
+        @Test
+        void suspensionTimeoutDoesNothingIfGameIsNotSuspended() {
+            GameController controller = createStartedTotemPlacementController(2, List.of(
+                    new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
+                    new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
+            ));
+
+            assertFalse(controller.checkSuspensionTimeout(System.currentTimeMillis() + 1_000_000));
+        }
+
+        @Test
+        void suspensionTimeoutBeforeThresholdDoesNotEndGameButAtThresholdDoes() {
+            GameController controller = createStartedTotemPlacementController(2, List.of(
+                    new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
+                    new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
+            ));
+            RecordingListener listener = new RecordingListener();
+            controller.addListener(listener);
+            controller.setSuspensionTimeoutMillis(10L);
+
+            controller.onPlayerDisconnection("Bob");
+            long start = controller.getSuspensionStartedAtMillis();
+
+            assertFalse(controller.checkSuspensionTimeout(start + 9L));
+            assertTrue(controller.checkSuspensionTimeout(start + 10L));
+            assertEquals("Alice", listener.gameEndedWinnerNickname);
+            assertTrue(controller.getGame().isGameOver());
+        }
+
+        @Test
+        void ifAllPlayersAreDisconnectedSuspensionTimeoutDoesNotDeclareWinner() {
+            GameController controller = createStartedTotemPlacementController(2, List.of(
+                    new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
+                    new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
+            ));
+            controller.setSuspensionTimeoutMillis(10L);
+
+            controller.onPlayerDisconnection("Bob");
+            long start = controller.getSuspensionStartedAtMillis();
+            controller.onPlayerDisconnection("Alice");
+
+            assertFalse(controller.checkSuspensionTimeout(start + 10L));
+        }
+
+        @Test
+        void setGameNullClearsSuspensionData() {
+            GameController controller = createStartedTotemPlacementController(2, List.of(
+                    new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
+                    new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
+            ));
+
+            controller.onPlayerDisconnection("Bob");
+            assertTrue(controller.isSuspended());
+
+            controller.setGame(null);
+
+            assertNull(controller.getGame());
+            assertFalse(controller.isSuspended());
+            assertEquals(-1L, controller.getSuspensionStartedAtMillis());
+        }
+    }
+
+    /**
+     * Verifies totem placement validation rules: unknown players, unknown or
+     * lowercase tile identifiers, tile availability per player count, double
+     * placement, disconnected players and forward progress to the action
+     * resolution phase once all connected players have placed.
+     */
+    @Nested
+    @DisplayName("Totem placement")
+    class TotemPlacement {
+
+        @Test
+        void unknownPlayerCannotPlaceTotem() {
+            GameController controller = createStartedTotemPlacementController(2, defaultTwoPlayerTiles());
+
+            assertThrows(IllegalStateException.class,
+                    () -> controller.onMessageReceived("Ghost", new PlaceTotemAction('A')));
+        }
+
+        @Test
+        void unknownOrLowercaseTileIsRejected() {
+            GameController controller = createStartedTotemPlacementController(2, defaultTwoPlayerTiles());
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> controller.onMessageReceived("Alice", new PlaceTotemAction('Z')));
+            assertThrows(IllegalArgumentException.class,
+                    () -> controller.onMessageReceived("Alice", new PlaceTotemAction('a')));
+        }
+
+        @Test
+        void tileUnavailableForCurrentPlayerCountIsRejected() {
+            GameController controller = createStartedTotemPlacementController(2, List.of(
+                    new OfferTile('A', 3, List.of(new ActionSlot(new FoodSlot(), 1))),
+                    new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
+            ));
+
+            assertThrows(IllegalStateException.class,
+                    () -> controller.onMessageReceived("Alice", new PlaceTotemAction('A')));
+        }
+
+        @Test
+        void samePlayerCannotPlaceTwiceAndTwoPlayersCannotUseSameTile() {
+            GameController controller = createStartedTotemPlacementController(2, defaultTwoPlayerTiles());
+
+            controller.onMessageReceived("Alice", new PlaceTotemAction('A'));
+
+            assertThrows(IllegalStateException.class,
+                    () -> controller.onMessageReceived("Alice", new PlaceTotemAction('B')));
+            assertThrows(IllegalStateException.class,
+                    () -> controller.onMessageReceived("Bob", new PlaceTotemAction('A')));
+        }
+
+        @Test
+        void disconnectedPlayerCannotPlaceTotem() {
+            GameController controller = createStartedTotemPlacementController(3, List.of(
+                    new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
+                    new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
+                    new OfferTile('C', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
+            ));
+
+            controller.onPlayerDisconnection("Charlie");
+
+            assertThrows(IllegalStateException.class,
+                    () -> controller.onMessageReceived("Charlie", new PlaceTotemAction('A')));
+        }
+
+        @Test
+        void totemPlacementNotifiesListenerAndMovesForwardWhenAllConnectedPlayersPlaced() {
+            GameController controller = createStartedTotemPlacementController(2, defaultTwoPlayerTiles());
+            RecordingListener listener = new RecordingListener();
+            controller.addListener(listener);
+
+            controller.onMessageReceived("Alice", new PlaceTotemAction('A'));
+            controller.onMessageReceived("Bob", new PlaceTotemAction('B'));
+
+            assertTrue(listener.events.contains("placed:Alice:A"));
+            assertTrue(listener.events.contains("placed:Bob:B"));
+            assertEquals(2, controller.getGame().getCurrentRound().getNumber());
+        }
+
+        @Test
+        void inThreePlayerPlacementDisconnectedPlayerIsSkippedWhenRemainingPlayersPlaced() {
+            GameController controller = createStartedTotemPlacementController(3, List.of(
+                    new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
+                    new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
+                    new OfferTile('C', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
+            ));
+
+            controller.onMessageReceived("Alice", new PlaceTotemAction('A'));
+            controller.onPlayerDisconnection("Charlie");
+            controller.onMessageReceived("Bob", new PlaceTotemAction('B'));
+
+            assertTrue(controller.isPlayerDisconnected("Charlie"));
+            assertEquals(2, controller.getGame().getCurrentRound().getNumber());
+        }
+
+        /** Probe: an empty required row must not leave the controller stuck waiting for an impossible pick. */
+        @Test
+        void emptyRequiredRowsShouldNotLeaveControllerWaitingForImpossiblePick() {
+            GameController controller = createStartedTotemPlacementController(2, List.of(
+                    new OfferTile('A', 1, List.of(new ActionSlot(new LowerRowSlot(), 1))),
+                    new OfferTile('B', 1, List.of(new ActionSlot(new UpperRowSlot(), 1)))
+            ));
+
+            controller.onMessageReceived("Alice", new PlaceTotemAction('A'));
+            controller.onMessageReceived("Bob", new PlaceTotemAction('B'));
+
+            assertInstanceOf(TotemPlacementState.class, controller.getCurrentState());
+        }
+    }
+
+    /**
+     * Verifies action resolution and extra-pick behaviour: tile-letter
+     * ordering, wrong-row rejection, unknown card IDs, valid character and
+     * building picks, affordability with food and the extra-pick phase
+     * triggered by building effects.
+     */
+    @Nested
+    @DisplayName("Card picking and validation")
+    class CardPickingAndValidation {
+
+        @Test
+        void actionResolutionUsesOfferTileLetterOrderNotPlacementOrder() {
+            ActionScenario scenario = createScenarioWhereBobFoodTileResolvesBeforeAliceUpperPick();
+            GameController controller = scenario.controller;
+
+            // Bob had tile A, so his automatic food action should have already resolved.
+            assertTrue(scenario.bob.getFood() > 0);
+
+            // Alice on tile B should now be the current waiting player.
+            assertThrows(IllegalStateException.class,
+                    () -> controller.onMessageReceived("Bob", new PickCardAction("101", true)));
+            assertDoesNotThrow(() -> controller.onMessageReceived("Alice", new PickCardAction("101", true)));
+        }
+
+        @Test
+        void currentPlayerCannotPickFromWrongRow() {
+            ActionScenario scenario = createScenarioWhereBobFoodTileResolvesBeforeAliceUpperPick();
+
+            assertThrows(IllegalStateException.class,
+                    () -> scenario.controller.onMessageReceived("Alice", new PickCardAction("101", false)));
+        }
+
+        @Test
+        void currentPlayerCannotPickUnknownCardId() {
+            ActionScenario scenario = createScenarioWhereBobFoodTileResolvesBeforeAliceUpperPick();
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> scenario.controller.onMessageReceived("Alice", new PickCardAction("9999", true)));
+        }
+
+        @Test
+        void currentPlayerCannotUseTotemPlacementActionDuringActionResolution() {
+            ActionScenario scenario = createScenarioWhereBobFoodTileResolvesBeforeAliceUpperPick();
+
+            assertThrows(IllegalStateException.class,
+                    () -> scenario.controller.onMessageReceived("Alice", new PlaceTotemAction('A')));
+        }
+
+        @Test
+        void validCharacterPickRemovesCardFromRowAndAddsItToTribe() {
+            ActionScenario scenario = createScenarioWhereBobFoodTileResolvesBeforeAliceUpperPick();
+
+            scenario.controller.onMessageReceived("Alice", new PickCardAction("101", true));
+
+            assertEquals(1, scenario.alice.getTribe().countCharacterCards());
+            assertTrue(scenario.round.getUpperRowTribute().stream().noneMatch(card -> card.getId() == 101));
+        }
+
+        @Test
+        void tileWithUpperAndLowerPicksAllowsPlayerToChooseOrderButNotEndEarly() {
+            Player alice = new Player("Alice", createTotem(TotemColor.RED));
+            Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
+            OfferTile aliceTile = new OfferTile('A', 1, List.of(
+                    new ActionSlot(new UpperRowSlot(), 1),
+                    new ActionSlot(new LowerRowSlot(), 1)
+            ));
+            OfferTile bobTile = new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 0)));
+            Round round = createRoundWithRows(
+                    List.of(new HunterCard(201, Era.I, 1, false)),
+                    List.of(new HunterCard(202, Era.I, 1, false)),
+                    new ArrayList<>(),
+                    new ArrayList<>()
+            );
+            GameController controller = createActionResolutionController(
+                    List.of(alice, bob),
+                    List.of(aliceTile, bobTile),
+                    round,
+                    Map.of(alice, aliceTile, bob, bobTile)
+            );
+
+            controller.onMessageReceived("Alice", new PickCardAction("201", false));
+
+            assertEquals(1, alice.getTribe().countCharacterCards());
+            assertThrows(IllegalStateException.class,
+                    () -> controller.onMessageReceived("Bob", new PickCardAction("202", true)));
+
+            controller.onMessageReceived("Alice", new PickCardAction("202", true));
+            assertEquals(2, alice.getTribe().countCharacterCards());
+        }
+
+        @Test
+        void unaffordableBuildingIsRejectedAndRemainsOnBoard() {
+            Player alice = new Player("Alice", createTotem(TotemColor.RED));
+            Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
+            BuildingCard expensive = new BuildingCard(301, Era.I, 10, new EndPPEffect(), 0);
+            OfferTile aliceTile = new OfferTile('A', 1, List.of(new ActionSlot(new UpperRowSlot(), 1)));
+            OfferTile bobTile = new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 0)));
+            Round round = createRoundWithRows(new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), List.of(expensive));
+
+            GameController controller = createActionResolutionController(
+                    List.of(alice, bob),
+                    List.of(aliceTile, bobTile),
+                    round,
+                    Map.of(alice, aliceTile, bob, bobTile)
+            );
+
+            assertThrows(IllegalStateException.class,
+                    () -> controller.onMessageReceived("Alice", new PickBuildingAction("301", true)));
+            assertTrue(round.getUpperRowBuildings().contains(expensive));
+            assertTrue(alice.getTribe().getBuildingCards().isEmpty());
+        }
+
+        @Test
+        void affordableBuildingIsTakenAndFoodIsSpent() {
+            Player alice = new Player("Alice", createTotem(TotemColor.RED));
+            Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
+
+            alice.addFood(5);
+
+            BuildingCard building = new BuildingCard(302, Era.I, 3, new EndPPEffect(), 0);
+
+            OfferTile aliceTile = new OfferTile('A', 1, List.of(new ActionSlot(new UpperRowSlot(), 1)));
+            OfferTile bobTile = new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 0)));
+
+            Round round = createRoundWithRows(
+                    new ArrayList<>(),
+                    new ArrayList<>(),
+                    new ArrayList<>(),
+                    List.of(building)
+            );
+
+            GameController controller = createActionResolutionController(
+                    List.of(alice, bob),
+                    List.of(aliceTile, bobTile),
+                    round,
+                    Map.of(alice, aliceTile, bob, bobTile)
+            );
+
+            controller.onMessageReceived("Alice", new PickBuildingAction("302", true));
+
+            // Alice starts with 5 food, pays 3 for the building, then receives +1 food
+            // when her totem returns to the first turn-order slot.
+            assertEquals(3, alice.getFood());
+
+            assertEquals(1, alice.getTribe().getBuildingCards().size());
+            assertFalse(controller.getGame().getCurrentRound().getUpperRowBuildings().contains(building));
+        }
+
+        @Test
+        void disconnectedCurrentPlayerIsSkippedInActionResolution() {
+            Player alice = new Player("Alice", createTotem(TotemColor.RED));
+            Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
+            OfferTile aliceTile = new OfferTile('A', 1, List.of(new ActionSlot(new UpperRowSlot(), 1)));
+            OfferTile bobTile = new OfferTile('B', 1, List.of(new ActionSlot(new UpperRowSlot(), 1)));
+            Round round = createRoundWithRows(new ArrayList<>(),
+                    List.of(new HunterCard(401, Era.I, 1, false), new HunterCard(402, Era.I, 1, false)),
+                    new ArrayList<>(), new ArrayList<>());
+
+            GameController controller = createBaseGameController(List.of(alice, bob), List.of(aliceTile, bobTile), round);
+            Round actualRound = controller.getGame().getCurrentRound();
+            OfferTile actualAliceTile = controller.getGame().getBoard().getOfferTiles().get(0);
+            OfferTile actualBobTile = controller.getGame().getBoard().getOfferTiles().get(1);
+            actualRound.placeTotemOffer(alice, actualAliceTile);
+            actualRound.placeTotemOffer(bob, actualBobTile);
+            controller.markPlayerDisconnected("Alice");
+            controller.changeState(new ActionResolutionState());
+
+            assertThrows(IllegalStateException.class,
+                    () -> controller.onMessageReceived("Alice", new PickCardAction("401", true)));
+            assertDoesNotThrow(() -> controller.onMessageReceived("Bob", new PickCardAction("401", true)));
+        }
+
+        @Test
+        void extraPickPhaseRejectsLowerRowPick() {
+            ExtraPickScenario scenario = createExtraPickScenario();
+
+            assertTrue(scenario.listener.events.contains("extra:Alice:1"));
+            assertThrows(IllegalStateException.class,
+                    () -> scenario.controller.onMessageReceived("Alice", new PickCardAction("501", false)));
+        }
+
+        @Test
+        void extraPickPhaseRejectsUnknownUpperCard() {
+            ExtraPickScenario scenario = createExtraPickScenario();
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> scenario.controller.onMessageReceived("Alice", new PickCardAction("999", true)));
+        }
+
+        @Test
+        void validExtraPickConsumesUpperCardAndContinuesRound() {
+            ExtraPickScenario scenario = createExtraPickScenario();
+
+            scenario.controller.onMessageReceived("Alice", new PickCardAction("501", true));
+
+            assertEquals(1, scenario.alice.getTribe().countCharacterCards());
+            assertTrue(scenario.round.getUpperRowTribute().stream().noneMatch(card -> card.getId() == 501));
+        }
+
+        @Test
+        void disconnectedExtraPickPlayerIsSkipped() {
+            Player alice = new Player("Alice", createTotem(TotemColor.RED));
+            Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
+            alice.addBuildingCard(new BuildingCard(601, Era.I, 0, new ExtraCardUpperRowEffect(), 0));
+            OfferTile aliceTile = new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 0)));
+            OfferTile bobTile = new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 0)));
+            Round round = createRoundWithRows(new ArrayList<>(),
+                    List.of(new HunterCard(602, Era.I, 1, false)),
+                    new ArrayList<>(), new ArrayList<>());
+            GameController controller = createBaseGameController(List.of(alice, bob), List.of(aliceTile, bobTile), round);
+            round.placeTotemOffer(alice, aliceTile);
+            round.placeTotemOffer(bob, bobTile);
+            controller.markPlayerDisconnected("Alice");
+
+            assertDoesNotThrow(() -> controller.changeState(new ActionResolutionState()));
+            assertFalse(controller.getCurrentState() instanceof ActionResolutionState);
+        }
     }
 
     // ---------------------------------------------------------------------
-    // LOBBY: JOINS, COUNTS, COLORS
-    // ---------------------------------------------------------------------
-
-    @Test
-    void settingPlayerCountBeforeAnyJoinIsRejected() {
-        GameController controller = new GameController();
-
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Alice", new SetPlayerCountAction(2)));
-
-        assertEquals(-1, controller.getChosenPlayersCount());
-        assertInstanceOf(LobbyState.class, controller.getCurrentState());
-    }
-
-    @Test
-    void invalidPlayerCountValuesAreRejected() {
-        GameController controller = new GameController();
-        controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
-
-        assertThrows(IllegalArgumentException.class,
-                () -> controller.onMessageReceived("Alice", new SetPlayerCountAction(-10)));
-        assertThrows(IllegalArgumentException.class,
-                () -> controller.onMessageReceived("Alice", new SetPlayerCountAction(0)));
-        assertThrows(IllegalArgumentException.class,
-                () -> controller.onMessageReceived("Alice", new SetPlayerCountAction(1)));
-        assertThrows(IllegalArgumentException.class,
-                () -> controller.onMessageReceived("Alice", new SetPlayerCountAction(6)));
-        assertThrows(IllegalArgumentException.class,
-                () -> controller.onMessageReceived("Alice", new SetPlayerCountAction(100)));
-
-        assertEquals(-1, controller.getChosenPlayersCount());
-    }
-
-    @Test
-    void firstPlayerCanChangePlayerCountBeforeGameStarts() {
-        GameController controller = new GameController();
-        controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
-
-        controller.onMessageReceived("Alice", new SetPlayerCountAction(4));
-
-        assertEquals(4, controller.getChosenPlayersCount());
-
-        assertDoesNotThrow(() -> controller.onMessageReceived("Alice", new SetPlayerCountAction(5)));
-        assertEquals(5, controller.getChosenPlayersCount());
-    }
-
-    @Test
-    void nonFirstPlayerCannotChoosePlayerCount() {
-        GameController controller = new GameController();
-        controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
-        controller.onMessageReceived("Bob", new JoinGameAction(createTotem(TotemColor.BLUE)));
-
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Bob", new SetPlayerCountAction(2)));
-    }
-
-    @Test
-    void duplicateNicknameIsRejectedEvenWithDifferentTotem() {
-        GameController controller = new GameController();
-
-        controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
-
-        assertThrows(IllegalArgumentException.class,
-                () -> controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.BLUE))));
-        assertEquals(1, controller.getLobbyPlayers().size());
-    }
-
-    @Test
-    void allFiveTotemColorsCanJoinExactlyOnceAndThenMoveToReadyCheck() {
-        GameController controller = new GameController();
-
-        controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
-        controller.onMessageReceived("Alice", new SetPlayerCountAction(5));
-        controller.onMessageReceived("Bob", new JoinGameAction(createTotem(TotemColor.BLUE)));
-        controller.onMessageReceived("Charlie", new JoinGameAction(createTotem(TotemColor.PURPLE)));
-        controller.onMessageReceived("Dario", new JoinGameAction(createTotem(TotemColor.YELLOW)));
-        controller.onMessageReceived("Eve", new JoinGameAction(createTotem(TotemColor.WHITE)));
-
-        assertEquals(5, controller.getLobbyPlayers().size());
-        assertInstanceOf(ReadyCheckState.class, controller.getCurrentState());
-    }
-
-    @Test
-    void sixthPlayerCannotJoinAfterFivePlayerLobbyIsFull() {
-        GameController controller = createReadyCheckControllerWithFivePlayers();
-
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Frank", new JoinGameAction(createTotem(TotemColor.RED))));
-        assertEquals(5, controller.getLobbyPlayers().size());
-    }
-
-    @Test
-    void nullTotemJoinIsRejected() {
-        GameController controller = new GameController();
-
-        assertThrows(IllegalArgumentException.class,
-                () -> controller.onMessageReceived("Alice", new JoinGameAction(null)));
-        assertTrue(controller.getLobbyPlayers().isEmpty());
-    }
-
-    /** BUG-HUNTER: current code may accept a Totem object with null color. */
-    @Test
-    void totemWithNullColorShouldBeRejected() {
-        GameController controller = new GameController();
-
-        assertThrows(IllegalArgumentException.class,
-                () -> controller.onMessageReceived("Alice", new JoinGameAction(new Totem(null, "OFFER_TRACK"))));
-        assertTrue(controller.getLobbyPlayers().isEmpty());
-    }
-
-    /** BUG-HUNTER: current code compares Totem objects, not TotemColor. */
-    @Test
-    void duplicateTotemColorShouldBeRejectedEvenWhenTotemObjectsAreDifferent() {
-        GameController controller = new GameController();
-
-        controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
-
-        assertThrows(IllegalArgumentException.class,
-                () -> controller.onMessageReceived("Bob", new JoinGameAction(createTotem(TotemColor.RED))));
-        assertEquals(1, controller.getLobbyPlayers().size());
-    }
-
-    /** BUG-HUNTER: cannot choose 2 players after 3 players are already in lobby. */
-    @Test
-    void chosenPlayerCountCannotBeLowerThanCurrentLobbySize() {
-        GameController controller = new GameController();
-
-        controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
-        controller.onMessageReceived("Bob", new JoinGameAction(createTotem(TotemColor.BLUE)));
-        controller.onMessageReceived("Charlie", new JoinGameAction(createTotem(TotemColor.PURPLE)));
-
-        assertThrows(IllegalArgumentException.class,
-                () -> controller.onMessageReceived("Alice", new SetPlayerCountAction(2)));
-    }
-
-    @Test
-    void lobbyPlayersListCannotBeModifiedFromOutside() {
-        GameController controller = new GameController();
-        controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
-
-        assertThrows(UnsupportedOperationException.class,
-                () -> controller.getLobbyPlayers().add(new Player("Injected", createTotem(TotemColor.BLUE))));
-        assertEquals(1, controller.getLobbyPlayers().size());
-    }
-
-    @Test
-    void firstPlayerLeavingBeforeChoosingCountAllowsSecondPlayerToBecomeFirst() {
-        GameController controller = new GameController();
-
-        controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
-        controller.onMessageReceived("Bob", new JoinGameAction(createTotem(TotemColor.BLUE)));
-        controller.onPlayerDisconnection("Alice");
-
-        assertTrue(controller.isFirstPlayer("Bob"));
-        assertDoesNotThrow(() -> controller.onMessageReceived("Bob", new SetPlayerCountAction(2)));
-        assertEquals(2, controller.getChosenPlayersCount());
-    }
-
-    /** BUG-HUNTER / design decision: host leaves after choosing count. */
-    @Test
-    void promotedFirstPlayerCanChangePreviouslyChosenCount() {
-        GameController controller = new GameController();
-
-        controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
-        controller.onMessageReceived("Bob", new JoinGameAction(createTotem(TotemColor.BLUE)));
-        controller.onMessageReceived("Alice", new SetPlayerCountAction(3));
-
-        controller.onPlayerDisconnection("Alice");
-
-        assertEquals("Bob", controller.getLobbyPlayers().get(0).getNickname());
-        assertEquals(3, controller.getChosenPlayersCount());
-        assertTrue(controller.isFirstPlayer("Bob"));
-
-        assertDoesNotThrow(() -> controller.onMessageReceived("Bob", new SetPlayerCountAction(2)));
-        assertEquals(2, controller.getChosenPlayersCount());
-    }
-    @Test
-    void allPlayersLeavingLobbyResetsCountAndReadySet() {
-        GameController controller = new GameController();
-
-        controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
-        controller.onMessageReceived("Alice", new SetPlayerCountAction(2));
-        controller.onPlayerDisconnection("Alice");
-
-        assertTrue(controller.getLobbyPlayers().isEmpty());
-        assertEquals(-1, controller.getChosenPlayersCount());
-        assertFalse(controller.isPlayerReady("Alice"));
-        assertInstanceOf(LobbyState.class, controller.getCurrentState());
-    }
-
-    @Test
-    void unknownLobbyDisconnectionIsIgnoredAndDoesNotNotify() {
-        GameController controller = new GameController();
-        RecordingListener listener = new RecordingListener();
-        controller.addListener(listener);
-
-        controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
-        controller.onPlayerDisconnection("Ghost");
-
-        assertEquals(1, controller.getLobbyPlayers().size());
-        assertFalse(listener.events.contains("disconnected:Ghost"));
-    }
-
-    @Test
-    void directRemoveAndDirectDisconnectRejectUnknownPlayers() {
-        GameController controller = new GameController();
-
-        assertThrows(IllegalArgumentException.class, () -> controller.removePlayerFromLobby("Ghost"));
-        assertThrows(IllegalArgumentException.class, () -> controller.markPlayerDisconnected("Ghost"));
-    }
-
-    @Test
-    void directAddLobbyPlayerRejectsNull() {
-        GameController controller = new GameController();
-
-        assertThrows(IllegalArgumentException.class, () -> controller.addLobbyPlayer(null));
-    }
-
-    // ---------------------------------------------------------------------
-    // READY CHECK
-    // ---------------------------------------------------------------------
-
-    @Test
-    void readyTrueMarksPlayerReadyAndReadyFalseUnmarks() {
-        GameController controller = createReadyCheckController();
-
-        controller.onMessageReceived("Alice", new ReadyAction(true));
-        assertTrue(controller.isPlayerReady("Alice"));
-
-        controller.onMessageReceived("Alice", new ReadyAction(false));
-        assertFalse(controller.isPlayerReady("Alice"));
-        assertInstanceOf(ReadyCheckState.class, controller.getCurrentState());
-    }
-
-    @Test
-    void sendingReadyTrueTwiceIsIdempotentUntilEveryoneIsReady() {
-        GameController controller = createReadyCheckControllerWithThreePlayers();
-
-        controller.onMessageReceived("Alice", new ReadyAction(true));
-        controller.onMessageReceived("Alice", new ReadyAction(true));
-        controller.onMessageReceived("Bob", new ReadyAction(true));
-
-        assertTrue(controller.isPlayerReady("Alice"));
-        assertTrue(controller.isPlayerReady("Bob"));
-        assertFalse(controller.isPlayerReady("Charlie"));
-        assertInstanceOf(ReadyCheckState.class, controller.getCurrentState());
-    }
-
-    @Test
-    void unknownPlayerCannotSendReadyTrue() {
-        GameController controller = createReadyCheckController();
-
-        assertThrows(IllegalArgumentException.class,
-                () -> controller.onMessageReceived("Ghost", new ReadyAction(true)));
-    }
-
-    /** BUG-HUNTER: current ReadyAction(false) may remove from set without validating player existence. */
-    @Test
-    void unknownPlayerCannotSendReadyFalse() {
-        GameController controller = createReadyCheckController();
-
-        assertThrows(IllegalArgumentException.class,
-                () -> controller.onMessageReceived("Ghost", new ReadyAction(false)));
-    }
-
-    @Test
-    void readyCheckRejectsGameActionsButAllowsFirstPlayerToChangeCount() {
-        GameController controller = createReadyCheckController();
-
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.PURPLE))));
-
-        assertDoesNotThrow(() -> controller.onMessageReceived("Alice", new SetPlayerCountAction(3)));
-        assertEquals(3, controller.getChosenPlayersCount());
-        assertInstanceOf(LobbyState.class, controller.getCurrentState());
-
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Alice", new PlaceTotemAction('A')));
-
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Alice", new PickCardAction("1", true)));
-
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Alice", new PickBuildingAction("1", true)));
-    }
-
-    @Test
-    void disconnectionInReadyCheckReturnsToLobbyAndClearsThatPlayerReadyStatus() {
-        GameController controller = createReadyCheckController();
-
-        controller.onMessageReceived("Alice", new ReadyAction(true));
-        controller.onPlayerDisconnection("Bob");
-
-        assertInstanceOf(LobbyState.class, controller.getCurrentState());
-        assertEquals(1, controller.getLobbyPlayers().size());
-        assertEquals("Alice", controller.getLobbyPlayers().get(0).getNickname());
-        assertFalse(controller.isPlayerReady("Bob"));
-        assertNull(controller.getGame());
-    }
-
-    /** BUG-HUNTER: changeState should not leave controller in a state whose onEnter failed. */
-    @Test
-    void failedStateTransitionShouldKeepPreviousState() {
-        GameController controller = new GameController();
-
-        assertThrows(IllegalStateException.class,
-                () -> controller.changeState(new ReadyCheckState()));
-
-        assertInstanceOf(LobbyState.class, controller.getCurrentState());
-    }
-
-    @Test
-    void changingToNullStateIsRejected() {
-        GameController controller = new GameController();
-
-        assertThrows(IllegalArgumentException.class, () -> controller.changeState(null));
-        assertInstanceOf(LobbyState.class, controller.getCurrentState());
-    }
-
-    // ---------------------------------------------------------------------
-    // LISTENERS
-    // ---------------------------------------------------------------------
-
-    @Test
-    void nullListenerCannotBeAddedOrRemoved() {
-        GameController controller = new GameController();
-
-        assertThrows(IllegalArgumentException.class, () -> controller.addListener(null));
-        assertThrows(IllegalArgumentException.class, () -> controller.removeListener(null));
-    }
-
-    @Test
-    void removedListenerDoesNotReceiveFutureEvents() {
-        GameController controller = new GameController();
-        RecordingListener listener = new RecordingListener();
-
-        controller.addListener(listener);
-        controller.removeListener(listener);
-        controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
-
-        assertFalse(listener.events.contains("joined:Alice"));
-    }
-
-    @Test
-    void listenerExceptionDoesNotPreventFollowingListenersFromReceivingEvent() {
-        GameController controller = new GameController();
-        RecordingListener listener = new RecordingListener();
-
-        controller.addListener(new ThrowingListener());
-        controller.addListener(listener);
-
-        assertDoesNotThrow(() ->
-                controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED))));
-        assertTrue(listener.events.contains("joined:Alice"));
-    }
-
-    @Test
-    void stateChangeToReadyCheckIsNotified() {
-        GameController controller = new GameController();
-        RecordingListener listener = new RecordingListener();
-        controller.addListener(listener);
-
-        controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
-        controller.onMessageReceived("Bob", new JoinGameAction(createTotem(TotemColor.BLUE)));
-        controller.onMessageReceived("Alice", new SetPlayerCountAction(2));
-
-        assertTrue(listener.events.contains("count:2"));
-        assertTrue(listener.events.contains("state:ReadyCheckState"));
-    }
-
-    // ---------------------------------------------------------------------
-    // DISCONNECTIONS / RECONNECTIONS / SUSPENSION
-    // ---------------------------------------------------------------------
-
-    @Test
-    void disconnectionAndReconnectionRejectNullOrBlankNickname() {
-        GameController controller = new GameController();
-
-        assertThrows(IllegalArgumentException.class, () -> controller.onPlayerDisconnection(null));
-        assertThrows(IllegalArgumentException.class, () -> controller.onPlayerDisconnection("  "));
-        assertThrows(IllegalArgumentException.class, () -> controller.onPlayerReconnection(null));
-        assertThrows(IllegalArgumentException.class, () -> controller.onPlayerReconnection("  "));
-    }
-
-    @Test
-    void reconnectingBeforeGameStartsIsRejected() {
-        GameController controller = new GameController();
-        controller.onMessageReceived("Alice", new JoinGameAction(createTotem(TotemColor.RED)));
-
-        assertThrows(IllegalArgumentException.class,
-                () -> controller.onPlayerReconnection("Alice"));
-    }
-
-    @Test
-    void unknownGamePlayerReconnectionIsRejected() {
-        GameController controller = createStartedTotemPlacementController(2, List.of(
-                new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
-                new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
-        ));
-
-        assertThrows(IllegalArgumentException.class,
-                () -> controller.onPlayerReconnection("Ghost"));
-    }
-
-    @Test
-    void disconnectionOfOnePlayerInThreePlayerGameDoesNotSuspend() {
-        GameController controller = createStartedTotemPlacementController(3, List.of(
-                new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
-                new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
-                new OfferTile('C', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
-        ));
-
-        controller.onPlayerDisconnection("Charlie");
-
-        assertTrue(controller.isPlayerDisconnected("Charlie"));
-        assertFalse(controller.isSuspended());
-        assertInstanceOf(TotemPlacementState.class, controller.getCurrentState());
-    }
-
-    @Test
-    void disconnectionOfOnePlayerInTwoPlayerGameSuspendsAndBlocksActions() {
-        GameController controller = createStartedTotemPlacementController(2, List.of(
-                new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
-                new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
-        ));
-
-        controller.onPlayerDisconnection("Bob");
-
-        assertTrue(controller.isSuspended());
-        assertInstanceOf(SuspendedState.class, controller.getCurrentState());
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Alice", new PlaceTotemAction('A')));
-    }
-
-    @Test
-    void reconnectionResumesFromSuspendedState() {
-        GameController controller = createStartedTotemPlacementController(2, List.of(
-                new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
-                new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
-        ));
-
-        controller.onPlayerDisconnection("Bob");
-        controller.onPlayerReconnection("Bob");
-
-        assertFalse(controller.isSuspended());
-        assertFalse(controller.isPlayerDisconnected("Bob"));
-        assertInstanceOf(TotemPlacementState.class, controller.getCurrentState());
-    }
-
-    @Test
-    void suspensionResumeKeepsTotemPlacementProgress() {
-        GameController controller = createStartedTotemPlacementController(2, List.of(
-                new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
-                new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
-        ));
-
-        controller.onMessageReceived("Alice", new PlaceTotemAction('A'));
-        controller.onPlayerDisconnection("Bob");
-        controller.onPlayerReconnection("Bob");
-
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Alice", new PlaceTotemAction('B')));
-    }
-
-    /** BUG-HUNTER / design choice: reconnecting an already-connected player may be accepted and notified. */
-    @Test
-    void reconnectingAlreadyConnectedPlayerShouldBeRejectedOrIgnoredWithoutNotification() {
-        GameController controller = createStartedTotemPlacementController(2, List.of(
-                new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
-                new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
-        ));
-        RecordingListener listener = new RecordingListener();
-        controller.addListener(listener);
-
-        assertThrows(IllegalStateException.class,
-                () -> controller.onPlayerReconnection("Alice"));
-        assertFalse(listener.events.contains("reconnected:Alice"));
-    }
-
-    /** BUG-HUNTER / design choice: duplicate disconnection should not produce duplicate notifications. */
-    @Test
-    void disconnectingSamePlayerTwiceShouldNotNotifyTwice() {
-        GameController controller = createStartedTotemPlacementController(3, List.of(
-                new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
-                new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
-                new OfferTile('C', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
-        ));
-        RecordingListener listener = new RecordingListener();
-        controller.addListener(listener);
-
-        controller.onPlayerDisconnection("Charlie");
-        controller.onPlayerDisconnection("Charlie");
-
-        assertEquals(1, listener.countEvents("disconnected:Charlie"));
-    }
-
-    @Test
-    void invalidSuspensionTimeoutIsRejected() {
-        GameController controller = new GameController();
-
-        assertThrows(IllegalArgumentException.class, () -> controller.setSuspensionTimeoutMillis(0));
-        assertThrows(IllegalArgumentException.class, () -> controller.setSuspensionTimeoutMillis(-1));
-    }
-
-    @Test
-    void suspensionTimeoutDoesNothingIfGameIsNotSuspended() {
-        GameController controller = createStartedTotemPlacementController(2, List.of(
-                new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
-                new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
-        ));
-
-        assertFalse(controller.checkSuspensionTimeout(System.currentTimeMillis() + 1_000_000));
-    }
-
-    @Test
-    void suspensionTimeoutBeforeThresholdDoesNotEndGameButAtThresholdDoes() {
-        GameController controller = createStartedTotemPlacementController(2, List.of(
-                new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
-                new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
-        ));
-        RecordingListener listener = new RecordingListener();
-        controller.addListener(listener);
-        controller.setSuspensionTimeoutMillis(10L);
-
-        controller.onPlayerDisconnection("Bob");
-        long start = controller.getSuspensionStartedAtMillis();
-
-        assertFalse(controller.checkSuspensionTimeout(start + 9L));
-        assertTrue(controller.checkSuspensionTimeout(start + 10L));
-        assertEquals("Alice", listener.gameEndedWinnerNickname);
-        assertTrue(controller.getGame().isGameOver());
-    }
-
-    @Test
-    void ifAllPlayersAreDisconnectedSuspensionTimeoutDoesNotDeclareWinner() {
-        GameController controller = createStartedTotemPlacementController(2, List.of(
-                new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
-                new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
-        ));
-        controller.setSuspensionTimeoutMillis(10L);
-
-        controller.onPlayerDisconnection("Bob");
-        long start = controller.getSuspensionStartedAtMillis();
-        controller.onPlayerDisconnection("Alice");
-
-        assertFalse(controller.checkSuspensionTimeout(start + 10L));
-    }
-
-    @Test
-    void setGameNullClearsSuspensionData() {
-        GameController controller = createStartedTotemPlacementController(2, List.of(
-                new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
-                new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
-        ));
-
-        controller.onPlayerDisconnection("Bob");
-        assertTrue(controller.isSuspended());
-
-        controller.setGame(null);
-
-        assertNull(controller.getGame());
-        assertFalse(controller.isSuspended());
-        assertEquals(-1L, controller.getSuspensionStartedAtMillis());
-    }
-
-    // ---------------------------------------------------------------------
-    // TOTEM PLACEMENT
-    // ---------------------------------------------------------------------
-
-    @Test
-    void unknownPlayerCannotPlaceTotem() {
-        GameController controller = createStartedTotemPlacementController(2, defaultTwoPlayerTiles());
-
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Ghost", new PlaceTotemAction('A')));
-    }
-
-    @Test
-    void unknownOrLowercaseTileIsRejected() {
-        GameController controller = createStartedTotemPlacementController(2, defaultTwoPlayerTiles());
-
-        assertThrows(IllegalArgumentException.class,
-                () -> controller.onMessageReceived("Alice", new PlaceTotemAction('Z')));
-        assertThrows(IllegalArgumentException.class,
-                () -> controller.onMessageReceived("Alice", new PlaceTotemAction('a')));
-    }
-
-    @Test
-    void tileUnavailableForCurrentPlayerCountIsRejected() {
-        GameController controller = createStartedTotemPlacementController(2, List.of(
-                new OfferTile('A', 3, List.of(new ActionSlot(new FoodSlot(), 1))),
-                new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
-        ));
-
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Alice", new PlaceTotemAction('A')));
-    }
-
-    @Test
-    void samePlayerCannotPlaceTwiceAndTwoPlayersCannotUseSameTile() {
-        GameController controller = createStartedTotemPlacementController(2, defaultTwoPlayerTiles());
-
-        controller.onMessageReceived("Alice", new PlaceTotemAction('A'));
-
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Alice", new PlaceTotemAction('B')));
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Bob", new PlaceTotemAction('A')));
-    }
-
-    @Test
-    void disconnectedPlayerCannotPlaceTotem() {
-        GameController controller = createStartedTotemPlacementController(3, List.of(
-                new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
-                new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
-                new OfferTile('C', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
-        ));
-
-        controller.onPlayerDisconnection("Charlie");
-
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Charlie", new PlaceTotemAction('A')));
-    }
-
-    @Test
-    void totemPlacementNotifiesListenerAndMovesForwardWhenAllConnectedPlayersPlaced() {
-        GameController controller = createStartedTotemPlacementController(2, defaultTwoPlayerTiles());
-        RecordingListener listener = new RecordingListener();
-        controller.addListener(listener);
-
-        controller.onMessageReceived("Alice", new PlaceTotemAction('A'));
-        controller.onMessageReceived("Bob", new PlaceTotemAction('B'));
-
-        assertTrue(listener.events.contains("placed:Alice:A"));
-        assertTrue(listener.events.contains("placed:Bob:B"));
-        assertEquals(2, controller.getGame().getCurrentRound().getNumber());
-    }
-
-    @Test
-    void inThreePlayerPlacementDisconnectedPlayerIsSkippedWhenRemainingPlayersPlaced() {
-        GameController controller = createStartedTotemPlacementController(3, List.of(
-                new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
-                new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
-                new OfferTile('C', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
-        ));
-
-        controller.onMessageReceived("Alice", new PlaceTotemAction('A'));
-        controller.onPlayerDisconnection("Charlie");
-        controller.onMessageReceived("Bob", new PlaceTotemAction('B'));
-
-        assertTrue(controller.isPlayerDisconnected("Charlie"));
-        assertEquals(2, controller.getGame().getCurrentRound().getNumber());
-    }
-
-    /** BUG-HUNTER: rules say an empty required row gives nothing and the turn should continue. */
-    @Test
-    void emptyRequiredRowsShouldNotLeaveControllerWaitingForImpossiblePick() {
-        GameController controller = createStartedTotemPlacementController(2, List.of(
-                new OfferTile('A', 1, List.of(new ActionSlot(new LowerRowSlot(), 1))),
-                new OfferTile('B', 1, List.of(new ActionSlot(new UpperRowSlot(), 1)))
-        ));
-
-        controller.onMessageReceived("Alice", new PlaceTotemAction('A'));
-        controller.onMessageReceived("Bob", new PlaceTotemAction('B'));
-
-        assertInstanceOf(TotemPlacementState.class, controller.getCurrentState());
-    }
-
-    // ---------------------------------------------------------------------
-    // ACTION RESOLUTION: TURN ORDER, PICKS, BUILDINGS, EXTRA PICKS
-    // ---------------------------------------------------------------------
-
-    @Test
-    void actionResolutionUsesOfferTileLetterOrderNotPlacementOrder() {
-        ActionScenario scenario = createScenarioWhereBobFoodTileResolvesBeforeAliceUpperPick();
-        GameController controller = scenario.controller;
-
-        // Bob had tile A, so his automatic food action should have already resolved.
-        assertTrue(scenario.bob.getFood() > 0);
-
-        // Alice on tile B should now be the current waiting player.
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Bob", new PickCardAction("101", true)));
-        assertDoesNotThrow(() -> controller.onMessageReceived("Alice", new PickCardAction("101", true)));
-    }
-
-    @Test
-    void currentPlayerCannotPickFromWrongRow() {
-        ActionScenario scenario = createScenarioWhereBobFoodTileResolvesBeforeAliceUpperPick();
-
-        assertThrows(IllegalStateException.class,
-                () -> scenario.controller.onMessageReceived("Alice", new PickCardAction("101", false)));
-    }
-
-    @Test
-    void currentPlayerCannotPickUnknownCardId() {
-        ActionScenario scenario = createScenarioWhereBobFoodTileResolvesBeforeAliceUpperPick();
-
-        assertThrows(IllegalArgumentException.class,
-                () -> scenario.controller.onMessageReceived("Alice", new PickCardAction("9999", true)));
-    }
-
-    @Test
-    void currentPlayerCannotUseTotemPlacementActionDuringActionResolution() {
-        ActionScenario scenario = createScenarioWhereBobFoodTileResolvesBeforeAliceUpperPick();
-
-        assertThrows(IllegalStateException.class,
-                () -> scenario.controller.onMessageReceived("Alice", new PlaceTotemAction('A')));
-    }
-
-    @Test
-    void validCharacterPickRemovesCardFromRowAndAddsItToTribe() {
-        ActionScenario scenario = createScenarioWhereBobFoodTileResolvesBeforeAliceUpperPick();
-
-        scenario.controller.onMessageReceived("Alice", new PickCardAction("101", true));
-
-        assertEquals(1, scenario.alice.getTribe().countCharacterCards());
-        assertTrue(scenario.round.getUpperRowTribute().stream().noneMatch(card -> card.getId() == 101));
-    }
-
-    @Test
-    void tileWithUpperAndLowerPicksAllowsPlayerToChooseOrderButNotEndEarly() {
-        Player alice = new Player("Alice", createTotem(TotemColor.RED));
-        Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
-        OfferTile aliceTile = new OfferTile('A', 1, List.of(
-                new ActionSlot(new UpperRowSlot(), 1),
-                new ActionSlot(new LowerRowSlot(), 1)
-        ));
-        OfferTile bobTile = new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 0)));
-        Round round = createRoundWithRows(
-                List.of(new HunterCard(201, Era.I, 1, false)),
-                List.of(new HunterCard(202, Era.I, 1, false)),
-                new ArrayList<>(),
-                new ArrayList<>()
-        );
-        GameController controller = createActionResolutionController(
-                List.of(alice, bob),
-                List.of(aliceTile, bobTile),
-                round,
-                Map.of(alice, aliceTile, bob, bobTile)
-        );
-
-        controller.onMessageReceived("Alice", new PickCardAction("201", false));
-
-        assertEquals(1, alice.getTribe().countCharacterCards());
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Bob", new PickCardAction("202", true)));
-
-        controller.onMessageReceived("Alice", new PickCardAction("202", true));
-        assertEquals(2, alice.getTribe().countCharacterCards());
-    }
-
-    @Test
-    void unaffordableBuildingIsRejectedAndRemainsOnBoard() {
-        Player alice = new Player("Alice", createTotem(TotemColor.RED));
-        Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
-        BuildingCard expensive = new BuildingCard(301, Era.I, 10, new EndPPEffect(), 0);
-        OfferTile aliceTile = new OfferTile('A', 1, List.of(new ActionSlot(new UpperRowSlot(), 1)));
-        OfferTile bobTile = new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 0)));
-        Round round = createRoundWithRows(new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), List.of(expensive));
-
-        GameController controller = createActionResolutionController(
-                List.of(alice, bob),
-                List.of(aliceTile, bobTile),
-                round,
-                Map.of(alice, aliceTile, bob, bobTile)
-        );
-
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Alice", new PickBuildingAction("301", true)));
-        assertTrue(round.getUpperRowBuildings().contains(expensive));
-        assertTrue(alice.getTribe().getBuildingCards().isEmpty());
-    }
-
-    @Test
-    void affordableBuildingIsTakenAndFoodIsSpent() {
-        Player alice = new Player("Alice", createTotem(TotemColor.RED));
-        Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
-
-        alice.addFood(5);
-
-        BuildingCard building = new BuildingCard(302, Era.I, 3, new EndPPEffect(), 0);
-
-        OfferTile aliceTile = new OfferTile('A', 1, List.of(new ActionSlot(new UpperRowSlot(), 1)));
-        OfferTile bobTile = new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 0)));
-
-        Round round = createRoundWithRows(
-                new ArrayList<>(),
-                new ArrayList<>(),
-                new ArrayList<>(),
-                List.of(building)
-        );
-
-        GameController controller = createActionResolutionController(
-                List.of(alice, bob),
-                List.of(aliceTile, bobTile),
-                round,
-                Map.of(alice, aliceTile, bob, bobTile)
-        );
-
-        controller.onMessageReceived("Alice", new PickBuildingAction("302", true));
-
-        // Alice starts with 5 food, pays 3 for the building, then receives +1 food
-        // when her totem returns to the first turn-order slot.
-        assertEquals(3, alice.getFood());
-
-        assertEquals(1, alice.getTribe().getBuildingCards().size());
-        assertFalse(controller.getGame().getCurrentRound().getUpperRowBuildings().contains(building));
-    }
-
-    @Test
-    void disconnectedCurrentPlayerIsSkippedInActionResolution() {
-        Player alice = new Player("Alice", createTotem(TotemColor.RED));
-        Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
-        OfferTile aliceTile = new OfferTile('A', 1, List.of(new ActionSlot(new UpperRowSlot(), 1)));
-        OfferTile bobTile = new OfferTile('B', 1, List.of(new ActionSlot(new UpperRowSlot(), 1)));
-        Round round = createRoundWithRows(new ArrayList<>(),
-                List.of(new HunterCard(401, Era.I, 1, false), new HunterCard(402, Era.I, 1, false)),
-                new ArrayList<>(), new ArrayList<>());
-
-        GameController controller = createBaseGameController(List.of(alice, bob), List.of(aliceTile, bobTile), round);
-        Round actualRound = controller.getGame().getCurrentRound();
-        OfferTile actualAliceTile = controller.getGame().getBoard().getOfferTiles().get(0);
-        OfferTile actualBobTile = controller.getGame().getBoard().getOfferTiles().get(1);
-        actualRound.placeTotemOffer(alice, actualAliceTile);
-        actualRound.placeTotemOffer(bob, actualBobTile);
-        controller.markPlayerDisconnected("Alice");
-        controller.changeState(new ActionResolutionState());
-
-        assertThrows(IllegalStateException.class,
-                () -> controller.onMessageReceived("Alice", new PickCardAction("401", true)));
-        assertDoesNotThrow(() -> controller.onMessageReceived("Bob", new PickCardAction("401", true)));
-    }
-
-    @Test
-    void extraPickPhaseRejectsLowerRowPick() {
-        ExtraPickScenario scenario = createExtraPickScenario();
-
-        assertTrue(scenario.listener.events.contains("extra:Alice:1"));
-        assertThrows(IllegalStateException.class,
-                () -> scenario.controller.onMessageReceived("Alice", new PickCardAction("501", false)));
-    }
-
-    @Test
-    void extraPickPhaseRejectsUnknownUpperCard() {
-        ExtraPickScenario scenario = createExtraPickScenario();
-
-        assertThrows(IllegalArgumentException.class,
-                () -> scenario.controller.onMessageReceived("Alice", new PickCardAction("999", true)));
-    }
-
-    @Test
-    void validExtraPickConsumesUpperCardAndContinuesRound() {
-        ExtraPickScenario scenario = createExtraPickScenario();
-
-        scenario.controller.onMessageReceived("Alice", new PickCardAction("501", true));
-
-        assertEquals(1, scenario.alice.getTribe().countCharacterCards());
-        assertTrue(scenario.round.getUpperRowTribute().stream().noneMatch(card -> card.getId() == 501));
-    }
-
-    @Test
-    void disconnectedExtraPickPlayerIsSkipped() {
-        Player alice = new Player("Alice", createTotem(TotemColor.RED));
-        Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
-        alice.addBuildingCard(new BuildingCard(601, Era.I, 0, new ExtraCardUpperRowEffect(), 0));
-        OfferTile aliceTile = new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 0)));
-        OfferTile bobTile = new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 0)));
-        Round round = createRoundWithRows(new ArrayList<>(),
-                List.of(new HunterCard(602, Era.I, 1, false)),
-                new ArrayList<>(), new ArrayList<>());
-        GameController controller = createBaseGameController(List.of(alice, bob), List.of(aliceTile, bobTile), round);
-        round.placeTotemOffer(alice, aliceTile);
-        round.placeTotemOffer(bob, bobTile);
-        controller.markPlayerDisconnected("Alice");
-
-        assertDoesNotThrow(() -> controller.changeState(new ActionResolutionState()));
-        assertFalse(controller.getCurrentState() instanceof ActionResolutionState);
-    }
-
-    // ---------------------------------------------------------------------
-    // HELPERS
+    // HELPERS — shared by all nested groups
     // ---------------------------------------------------------------------
 
     private GameController createReadyCheckController() {

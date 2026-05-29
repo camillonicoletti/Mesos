@@ -14,6 +14,11 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for Model aggregate.
+ *
+ * <p>Verifies: robustness of the model layer against illegal mutations and boundary inputs.
+ */
 class ModelRobustnessStrongTest {
 
     /**

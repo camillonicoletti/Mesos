@@ -7,6 +7,11 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for Tribe (model).
+ *
+ * <p>Verifies: character counting, type filtering, building discount and inventor-set logic.
+ */
 public class TribeTest {
 
     // -------------------------------------------------------
