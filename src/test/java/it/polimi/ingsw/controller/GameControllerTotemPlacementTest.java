@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * <p>Verifies: valid and invalid totem placements on offer tiles and turn-order tiles.
  */
-class GameControllerTotemPlacementStrongTest {
+class GameControllerTotemPlacementTest {
 
     /**
      * Verifies that a player who is not the current placement player cannot place a totem.

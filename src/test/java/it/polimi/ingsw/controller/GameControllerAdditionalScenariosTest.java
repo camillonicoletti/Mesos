@@ -57,7 +57,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * transition. Some tests are intentionally strict probes that pin down
  * design decisions discussed by the team.
  */
-public class GameControllerThirtyThreeDiscoveredCasesTest {
+public class GameControllerAdditionalScenariosTest {
 
     // ------------------------------------------------------------------
     // Nested groups

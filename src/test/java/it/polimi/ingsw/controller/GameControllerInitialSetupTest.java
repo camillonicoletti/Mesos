@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * <p>Verifies: game start-up: board, decks, players, totems and first round assembly.
  */
-class GameControllerInitialSetupStrongTest {
+class GameControllerInitialSetupTest {
 
     /**
      * Verifies that an invalid join action does not mutate the lobby.

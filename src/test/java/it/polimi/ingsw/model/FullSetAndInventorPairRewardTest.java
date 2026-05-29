@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *   <li>InventorPair counts floor(count/2) per icon group, rewards on new pairs only.</li>
  * </ul>
  */
-class FullSetAndInventorPairBugHunterTest {
+class FullSetAndInventorPairRewardTest {
 
     private Player playerWithOneFullSet() {
         Player p = new Player("Alice", new Totem(TotemColor.RED, "OFFER_TRACK"));

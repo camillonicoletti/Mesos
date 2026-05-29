@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * to the two-threshold rule, this test will start failing and must be
  * rewritten — the failure flags the regulation discrepancy explicitly.
  */
-class CavePaintingsThresholdBugHunterTest {
+class CavePaintingsThresholdTest {
 
     private static final int MIN_ARTISTS  = 3;
     private static final int PP_PENALTY   = 2;

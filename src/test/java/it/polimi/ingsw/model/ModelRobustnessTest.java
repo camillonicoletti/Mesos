@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * <p>Verifies: robustness of the model layer against illegal mutations and boundary inputs.
  */
-class ModelRobustnessStrongTest {
+class ModelRobustnessTest {
 
     /**
      * Verifies that adding a negative amount of food is rejected.

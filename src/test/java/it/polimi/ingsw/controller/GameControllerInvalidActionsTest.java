@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Strong controller tests for invalid actions and model immutability after rejected inputs.
  */
-public class GameControllerInvalidActionsStrongTest {
+public class GameControllerInvalidActionsTest {
 
     /** Unknown players must not be able to act or mutate the game during action resolution. */
     @Test

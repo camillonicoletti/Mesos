@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * list, since events live there — and attempts to pick by event id. The
  * controller is expected to reject the action.
  */
-class EventCardNotPickableBugHunterTest {
+class EventCardNotPickableTest {
 
     @SuppressWarnings("unchecked")
     private <T> List<T> roundList(Round round, String field) {

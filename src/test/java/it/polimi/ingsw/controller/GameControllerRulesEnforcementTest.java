@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Regression tests for rule-based controller/model behaviors discovered by the full legacy test suite.
  */
-public class GameControllerRulesRegressionStrongTest {
+public class GameControllerRulesEnforcementTest {
 
     /** Starting a game through the real lobby flow must create a valid board and enter totem placement. */
     @Test

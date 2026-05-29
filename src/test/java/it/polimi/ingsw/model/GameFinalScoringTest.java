@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * <p>Verifies: end-of-game scoring with mixed character compositions and building effects.
  */
-class GameFinalScoringStrongTest {
+class GameFinalScoringTest {
 
     /**
      * Verifies that final scoring includes the prestige points already earned during the game,

@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * <p>If the project intentionally wants to cap the doubling at "x2 even with
  * multiple copies", the third test will start failing and should be revisited.
  */
-class FinalScoringDoubleBuilderPPBugHunterTest {
+class FinalScoringDoubleBuilderPrestigeTest {
 
     private static final int BUILDER_PP = 5;
 

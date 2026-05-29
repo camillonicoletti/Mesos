@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * <p>Verifies: end-of-round refill, totem return and era-transition trigger.
  */
-class GameEndRoundStrongTest {
+class GameEndRoundTest {
 
     /**
      * Verifies that lower-row cleanup discards only characters and events.

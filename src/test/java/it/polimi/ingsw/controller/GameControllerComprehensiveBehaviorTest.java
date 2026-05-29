@@ -54,7 +54,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * intentionally strict probes: if they fail, they reveal a controller
  * validation or state-flow issue worth discussing with the team.
  */
-public class GameControllerMegaEdgeCaseTest {
+public class GameControllerComprehensiveBehaviorTest {
 
     // ---------------------------------------------------------------------
     // Nested groups

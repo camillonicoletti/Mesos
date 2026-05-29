@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *   <li>only unaffordable buildings left in upper ⇒ player cannot pick.</li>
  * </ul>
  */
-class ExtraPickMandatoryBugHunterTest {
+class ExtraPickOptionalityTest {
 
     /**
      * Bootstrap to extra-pick phase with upper-row content present when

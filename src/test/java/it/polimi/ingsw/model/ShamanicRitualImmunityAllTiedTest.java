@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * playersWithLeastStars when all are tied, so the immunity check fires unconditionally
  * and the immune player avoids a loss that the rulebook mandates.
  */
-public class ShamanicRitualImmunityAllTiedBugTest {
+public class ShamanicRitualImmunityAllTiedTest {
 
     private Game buildGame(List<Player> players) {
         return new Game(

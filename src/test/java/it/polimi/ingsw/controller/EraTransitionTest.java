@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
  * <p>Also verifies that on Era II→III the lower buildings are discarded and
  * the upper buildings are shifted, per rulebook.
  */
-class EraTransitionEdgeCaseBugHunterTest {
+class EraTransitionTest {
 
     @SuppressWarnings("unchecked")
     private <T> List<T> roundList(Round round, String field) {

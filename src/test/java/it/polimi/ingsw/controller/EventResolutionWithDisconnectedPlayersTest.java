@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * once per test; assertions read the model state after the daemon thread has
  * had ~300ms to run the event.
  */
-class EventResolutionDisconnectionBugHunterTest {
+class EventResolutionWithDisconnectedPlayersTest {
 
     @SuppressWarnings("unchecked")
     private <T> List<T> roundList(Round round, String field) {

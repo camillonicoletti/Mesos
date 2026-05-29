@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Each test cites the rulebook clause it verifies.  Tests fail if the
  * implementation drifts from the rules.
  */
-class MesosRulesEdgeCaseTest {
+class MesosRulebookTest {
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 

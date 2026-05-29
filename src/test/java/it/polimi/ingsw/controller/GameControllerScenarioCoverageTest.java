@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * <p>Verifies: edge cases across lobby, totem placement, action resolution and end-game.
  */
-public class GameControllerEdgeCaseTest {
+public class GameControllerScenarioCoverageTest {
 
     @Test
     void settingPlayerCountBeforeAnyPlayerJoinedIsRejected() {

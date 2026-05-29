@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * <p>Verifies: pick-card flow including upper/lower row, building picks and event-card rejection.
  */
-class GameControllerCardPickingStrongTest {
+class GameControllerCardPickingTest {
 
     /**
      * Verifies that a non-current player cannot pick cards during action resolution.

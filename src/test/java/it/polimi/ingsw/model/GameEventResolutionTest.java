@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * <p>Verifies: Hunting, Shamanic Ritual, Cave Paintings and Sustenance event resolution.
  */
-class GameEventResolutionStrongTest {
+class GameEventResolutionTest {
 
     /**
      * Verifies that the hunt event gives food and prestige points only according
