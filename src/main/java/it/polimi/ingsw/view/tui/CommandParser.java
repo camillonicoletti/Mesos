@@ -100,6 +100,10 @@ public class CommandParser {
                 ));
 
             case "skip":
+                if (parts.length != 1) {
+                    System.out.println("Usage: skip");
+                    return null;
+                }
                 return new GameActionMessage(new DebugSkipRoundAction());
 
             case "skipextra":
@@ -110,6 +114,10 @@ public class CommandParser {
                 return new GameActionMessage(new SkipExtraPickAction());
 
             case "endgame":
+                if (parts.length != 1) {
+                    System.out.println("Usage: endgame");
+                    return null;
+                }
                 return new GameActionMessage(new DebugSkipToEndAction());
 
             case "quit":

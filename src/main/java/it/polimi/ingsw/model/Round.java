@@ -281,6 +281,26 @@ public class Round implements Serializable {
         return ordered;
     }
 
+    /**
+     * Resolves the events visible in this round directly on the model, without
+     * emitting any client-facing notification. This is a legacy model-only entry
+     * point retained for pre-existing unit tests.
+     *
+     * <p><strong>Do not call from production code.</strong> The production event
+     * resolution flow goes through {@code EventResolutionState}, which captures
+     * per-player food/prestige snapshots before each event, invokes
+     * {@code event.resolve(game)} on the ordered event list, and emits
+     * client-facing updates with deltas and new totals.
+     *
+     * <p>Bypassing that state leaves clients unaware of the resulting food and
+     * prestige changes until a later synchronization message reaches them.
+     *
+     * @deprecated Production code should resolve events through the controller
+     *             state flow. This method should be removed after the remaining
+     *             model-only tests are migrated to call {@code event.resolve(game)}
+     *             over {@link #getOrderedEventsForResolution(boolean)}.
+     */
+    @Deprecated
     public void resolveEvent() {
         boolean includeUpperRow = game.isLastRound();
         List<EventCard> eventCards = getOrderedEventsForResolution(includeUpperRow);

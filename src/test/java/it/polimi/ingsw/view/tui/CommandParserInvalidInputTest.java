@@ -45,6 +45,8 @@ class CommandParserInvalidInputTest {
         assertNull(parser.parse("place A B"));
         assertNull(parser.parse("pick 101 upper extra"));
         assertNull(parser.parse("build 201 lower extra"));
+        assertNull(parser.parse("skip extra"));
+        assertNull(parser.parse("endgame now"));
     }
 }
 
