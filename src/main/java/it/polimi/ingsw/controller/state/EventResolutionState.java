@@ -91,6 +91,7 @@ public class EventResolutionState extends AbstractGameState {
         if (!ctx.containsGamePlayer(playerNickname)) {
             return;
         }
+        ctx.waitUntilNextRound(playerNickname);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

@@ -129,6 +129,12 @@
                                         <exclude>assets/**/*.pdf</exclude>
                                         <exclude>assets/**/*.webp</exclude>
                                         <exclude>assets/**/.DS_Store</exclude>
+                                        <exclude>gui/**/*.png</exclude>
+                                        <exclude>gui/**/*.jpg</exclude>
+                                        <exclude>gui/**/*.jpeg</exclude>
+                                        <exclude>gui/**/*.pdf</exclude>
+                                        <exclude>gui/**/*.webp</exclude>
+                                        <exclude>gui/**/.DS_Store</exclude>
                                     </excludes>
                                 </filter>
                             </filters>
@@ -158,6 +164,12 @@
                                         <exclude>assets/**/*.pdf</exclude>
                                         <exclude>assets/**/*.webp</exclude>
                                         <exclude>assets/**/.DS_Store</exclude>
+                                        <exclude>gui/**/*.png</exclude>
+                                        <exclude>gui/**/*.jpg</exclude>
+                                        <exclude>gui/**/*.jpeg</exclude>
+                                        <exclude>gui/**/*.pdf</exclude>
+                                        <exclude>gui/**/*.webp</exclude>
+                                        <exclude>gui/**/.DS_Store</exclude>
                                     </excludes>
                                 </filter>
                             </filters>

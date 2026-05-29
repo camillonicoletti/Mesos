@@ -21,6 +21,7 @@ db.properties
 
 # Professor-provided graphic assets must stay local.
 # Keep only lightweight manifests tracked.
+assets/*
 src/main/resources/assets/**/*.png
 src/main/resources/assets/**/*.jpg
 src/main/resources/assets/**/*.jpeg

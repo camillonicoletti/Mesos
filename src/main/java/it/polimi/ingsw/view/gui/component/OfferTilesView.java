@@ -60,8 +60,9 @@ final class OfferTilesView {
 
         for (char tile : activeTiles()) {
             String owner = model.getTotemOnTiles().get(tile);
-            Button button = offerTileButton(tile, owner);
-            button.setOnAction(event -> placeTotem(tile, owner));
+            String activeOwner = activeOwner(owner);
+            Button button = offerTileButton(tile, activeOwner);
+            button.setOnAction(event -> placeTotem(tile, activeOwner));
             GuiAnimations.addHoverScale(button);
             pane.getChildren().add(button);
         }
@@ -80,6 +81,7 @@ final class OfferTilesView {
         button.getStyleClass().add(owner == null ? "offer-tile" : "offer-tile-occupied");
         button.setGraphic(content);
         button.setPrefSize(TILE_WIDTH + 8, TILE_HEIGHT + 8);
+        button.setDisable(owner != null);
         return button;
     }
 
@@ -104,7 +106,7 @@ final class OfferTilesView {
     }
 
     private void addPlacedTotem(StackPane content, String owner) {
-        if (owner == null || model.isPlayerDisconnected(owner)) {
+        if (owner == null) {
             return;
         }
 
@@ -124,6 +126,13 @@ final class OfferTilesView {
         }
 
         controller.send(new GameActionMessage(new PlaceTotemAction(tile)));
+    }
+
+    private String activeOwner(String owner) {
+        if (owner != null && model.isPlayerDisconnected(owner)) {
+            return null;
+        }
+        return owner;
     }
 
     private List<Character> activeTiles() {
