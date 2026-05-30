@@ -142,6 +142,7 @@ final class TurnOrderView {
             }
 
             StackPane marker = totemMarkers.create(player.getTotemColor(), player.getNickname(), TOTEM_HEIGHT);
+            TotemMarkerFactory.tagBoardTotem(marker, nickname);
             marker.setTranslateY(offsets[slotIndex]);
             tile.getChildren().add(marker);
             StackPane.setAlignment(marker, Pos.CENTER);

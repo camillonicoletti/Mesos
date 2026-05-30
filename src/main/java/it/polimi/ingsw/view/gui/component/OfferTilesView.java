@@ -113,6 +113,7 @@ final class OfferTilesView {
         PlayerView player = model.getPlayers().get(owner);
         TotemColor color = player == null ? null : player.getTotemColor();
         StackPane badge = totemMarkers.create(color, owner, 42);
+        TotemMarkerFactory.tagBoardTotem(badge, owner);
         badge.setTranslateX(0);
         badge.setTranslateY(-40);
 

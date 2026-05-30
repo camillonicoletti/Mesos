@@ -49,9 +49,7 @@ final class CardMarketView {
         cards.setAlignment(Pos.CENTER);
 
         for (Integer id : ids) {
-            boolean isEvent = !building && model.isEventCard(id);
-            boolean canTake = !isEvent && model.isMyTurn() && model.canCurrentActionPlayerPickFromRow(upper);
-            Node card = cardNode(id, canTake, () -> pickCard(id, upper, building, canTake));
+            Node card = cardNode(id, upper, building);
             GuiAnimations.addHoverScale(card);
             cards.getChildren().add(card);
         }
@@ -60,20 +58,23 @@ final class CardMarketView {
         return box;
     }
 
-    private Node cardNode(int cardId, boolean canTake, Runnable action) {
+    private Node cardNode(int cardId, boolean upper, boolean building) {
         StackPane card = new StackPane();
         card.getStyleClass().add("card");
-        if (canTake) {
+        if (canTakeNow(cardId, upper, building)) {
             card.getStyleClass().add("card-pickable");
         }
         card.setPrefSize(CARD_WIDTH, CARD_HEIGHT);
-        card.setOnMouseClicked(event -> cardSelectionPresenter.showCard(cardId, canTake, action));
+        card.setOnMouseClicked(event -> {
+            boolean canTake = canTakeNow(cardId, upper, building);
+            cardSelectionPresenter.showCard(cardId, canTake, () -> pickCard(cardId, upper, building));
+        });
         card.getChildren().add(cardImages.create(cardId, CARD_WIDTH, CARD_HEIGHT));
         return card;
     }
 
-    private void pickCard(int cardId, boolean upper, boolean building, boolean canTake) {
-        if (!canTake) {
+    private void pickCard(int cardId, boolean upper, boolean building) {
+        if (!canTakeNow(cardId, upper, building)) {
             return;
         }
 
@@ -82,6 +83,14 @@ final class CardMarketView {
         } else {
             controller.send(new GameActionMessage(new PickCardAction(String.valueOf(cardId), upper)));
         }
+    }
+
+    private boolean canTakeNow(int cardId, boolean upper, boolean building) {
+        boolean isEvent = !building && model.isEventCard(cardId);
+        return !isEvent
+                && modelCards(upper, building).contains(cardId)
+                && model.isMyTurn()
+                && model.canCurrentActionPlayerPickFromRow(upper);
     }
 
     private List<Integer> modelCards(boolean upper, boolean building) {

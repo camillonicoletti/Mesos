@@ -211,6 +211,12 @@ public class ClientModel {
         if (!"ActionResolutionState".equals(gameState)) {
             extraPickAvailableForMe = false;
         }
+        if ("EventResolutionState".equals(gameState)) {
+            lastResolvedEventCardId = -1;
+            lastResolvedEventTitle = null;
+            lastResolvedEventDescription = null;
+            lastResolvedEventEffects = List.of();
+        }
         lastError = null;
         notifyChanged();
     }

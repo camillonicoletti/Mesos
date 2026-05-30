@@ -4,6 +4,7 @@ import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.client.ClientController;
 import it.polimi.ingsw.network.client.ClientModel;
 import it.polimi.ingsw.network.client.PlayerView;
+import it.polimi.ingsw.network.protocol.clientbound.EventResolvedMessage;
 import it.polimi.ingsw.view.gui.GuiApplication;
 import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
 import it.polimi.ingsw.view.gui.util.GuiAnimations;
@@ -13,6 +14,7 @@ import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
 import javafx.animation.ParallelTransition;
 import javafx.animation.PauseTransition;
+import javafx.animation.ScaleTransition;
 import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
 import javafx.geometry.Bounds;
@@ -20,6 +22,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -30,7 +33,10 @@ import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public final class GameBoardView {
@@ -38,6 +44,7 @@ public final class GameBoardView {
     private static final double DETAIL_CARD_HEIGHT = 466;
     private static final double MARKET_CARD_W = 96;
     private static final double MARKET_CARD_H = 135;
+    private static final double TOTEM_MOVE_MIN_DISTANCE = 10;
 
     private final ClientModel model;
     private final CardDescriptionService cardDescriptions;
@@ -65,6 +72,9 @@ public final class GameBoardView {
     private List<Integer> displayedLowerBuildIds = List.of();
     private String displayedActionPlayer = null;
     private String displayedGameState    = null;
+    private boolean displayedMyTurn;
+    private boolean displayedCanPickUpper;
+    private boolean displayedCanPickLower;
 
     public GameBoardView(ClientController controller, ClientModel model, GuiAssetCatalog assetCatalog) {
         this.model = model;
@@ -120,6 +130,7 @@ public final class GameBoardView {
             Label label = new Label("Loading game...");
             label.getStyleClass().add("muted");
             board.getChildren().add(label);
+            refreshEventResolutionOverlay();
             return;
         }
 
@@ -131,9 +142,15 @@ public final class GameBoardView {
             lastSeenRound = currentRound;
         }
 
+        Map<String, TotemAnchor> previousTotems = captureBoardTotems();
         refreshCenterTrack();
         playerDockSlot.getChildren().setAll(playerDockView.render());
+        updateBoardScale();
+        rootLayer.applyCss();
+        rootLayer.layout();
+        playTotemMoveAnimations(previousTotems);
         Platform.runLater(this::updateBoardScale);
+        refreshEventResolutionOverlay();
 
         if (roundTransitionPlaying) {
             return;
@@ -196,7 +213,10 @@ public final class GameBoardView {
             || !model.getLowerRowCharacterIds().equals(displayedLowerCharIds)
             || !model.getLowerRowBuildingIds().equals(displayedLowerBuildIds)
             || !Objects.equals(model.getCurrentActionPlayer(), displayedActionPlayer)
-            || !Objects.equals(model.getGameState(), displayedGameState);
+            || !Objects.equals(model.getGameState(), displayedGameState)
+            || model.isMyTurn() != displayedMyTurn
+            || model.canCurrentActionPlayerPickFromRow(true) != displayedCanPickUpper
+            || model.canCurrentActionPlayerPickFromRow(false) != displayedCanPickLower;
     }
 
     private void refreshMarketBandTracked(HBox band, boolean upper) {
@@ -210,8 +230,7 @@ public final class GameBoardView {
             displayedLowerCharIds  = new ArrayList<>(model.getLowerRowCharacterIds());
             displayedLowerBuildIds = new ArrayList<>(model.getLowerRowBuildingIds());
         }
-        displayedActionPlayer = model.getCurrentActionPlayer();
-        displayedGameState    = model.getGameState();
+        rememberMarketState();
     }
 
     private void refreshCharactersOnly(HBox band, boolean upper) {
@@ -227,8 +246,15 @@ public final class GameBoardView {
         } else {
             displayedLowerCharIds = new ArrayList<>(model.getLowerRowCharacterIds());
         }
+        rememberMarketState();
+    }
+
+    private void rememberMarketState() {
         displayedActionPlayer = model.getCurrentActionPlayer();
-        displayedGameState    = model.getGameState();
+        displayedGameState = model.getGameState();
+        displayedMyTurn = model.isMyTurn();
+        displayedCanPickUpper = model.canCurrentActionPlayerPickFromRow(true);
+        displayedCanPickLower = model.canCurrentActionPlayerPickFromRow(false);
     }
 
     private void playRoundEndAnimation(boolean includeBuildings, Runnable onRebuildBands) {
@@ -536,6 +562,96 @@ public final class GameBoardView {
         centerTrack.getChildren().setAll(trackNodes);
     }
 
+    private Map<String, TotemAnchor> captureBoardTotems() {
+        Map<String, TotemAnchor> anchors = new HashMap<>();
+        if (centerTrack == null || centerTrack.getScene() == null || rootLayer == null) {
+            return anchors;
+        }
+        collectBoardTotems(centerTrack, anchors);
+        return anchors;
+    }
+
+    private void collectBoardTotems(Node node, Map<String, TotemAnchor> anchors) {
+        String owner = TotemMarkerFactory.boardTotemOwner(node);
+        if (owner != null) {
+            TotemAnchor anchor = anchorFor(node);
+            if (anchor != null) {
+                anchors.put(owner, anchor);
+            }
+        }
+
+        if (node instanceof Parent parent) {
+            for (Node child : parent.getChildrenUnmodifiable()) {
+                collectBoardTotems(child, anchors);
+            }
+        }
+    }
+
+    private TotemAnchor anchorFor(Node node) {
+        if (node == null || node.getScene() == null || rootLayer == null) {
+            return null;
+        }
+        Bounds sceneBounds = node.localToScene(node.getBoundsInLocal());
+        Bounds localBounds = rootLayer.sceneToLocal(sceneBounds);
+        double width = localBounds.getWidth();
+        double height = localBounds.getHeight();
+        if (width <= 0 || height <= 0) {
+            return null;
+        }
+        Point2D center = new Point2D(
+                (localBounds.getMinX() + localBounds.getMaxX()) / 2.0,
+                (localBounds.getMinY() + localBounds.getMaxY()) / 2.0);
+        return new TotemAnchor(node, center, width, height);
+    }
+
+    private void playTotemMoveAnimations(Map<String, TotemAnchor> previousTotems) {
+        if (previousTotems.isEmpty() || rootLayer == null || rootLayer.getScene() == null) {
+            return;
+        }
+
+        rootLayer.applyCss();
+        rootLayer.layout();
+        Map<String, TotemAnchor> currentTotems = captureBoardTotems();
+        for (Map.Entry<String, TotemAnchor> entry : currentTotems.entrySet()) {
+            String nickname = entry.getKey();
+            TotemAnchor current = entry.getValue();
+            TotemAnchor previous = previousTotems.get(nickname);
+            if (previous != null && previous.center.distance(current.center) >= TOTEM_MOVE_MIN_DISTANCE) {
+                playTotemMoveAnimation(previous, current);
+            }
+        }
+    }
+
+    private void playTotemMoveAnimation(TotemAnchor from, TotemAnchor to) {
+        Node destination = to.node;
+        double boardScale = board == null || board.getScaleX() <= 0 ? 1.0 : board.getScaleX();
+        double baseTranslateX = destination.getTranslateX();
+        double baseTranslateY = destination.getTranslateY();
+        double baseScaleX = destination.getScaleX();
+        double baseScaleY = destination.getScaleY();
+        double startScale = to.height <= 0 ? 1.0 : from.height / to.height;
+
+        destination.setTranslateX(baseTranslateX + (from.center.getX() - to.center.getX()) / boardScale);
+        destination.setTranslateY(baseTranslateY + (from.center.getY() - to.center.getY()) / boardScale);
+        destination.setScaleX(baseScaleX * startScale);
+        destination.setScaleY(baseScaleY * startScale);
+
+        TranslateTransition move = new TranslateTransition(Duration.millis(520), destination);
+        move.setToX(baseTranslateX);
+        move.setToY(baseTranslateY);
+        move.setInterpolator(Interpolator.EASE_BOTH);
+
+        ScaleTransition scale = new ScaleTransition(Duration.millis(520), destination);
+        scale.setToX(baseScaleX);
+        scale.setToY(baseScaleY);
+        scale.setInterpolator(Interpolator.EASE_BOTH);
+
+        new ParallelTransition(move, scale).play();
+    }
+
+    private record TotemAnchor(Node node, Point2D center, double width, double height) {
+    }
+
     private Node disconnectedTotemsPanel() {
         List<PlayerView> disconnectedPlayers = model.getPlayers().values().stream()
                 .filter(player -> model.isPlayerDisconnected(player.getNickname()))
@@ -568,12 +684,54 @@ public final class GameBoardView {
     }
 
     private void showCardPanel(int cardId, boolean canTake, Runnable takeAction) {
-        VBox panel = inlinePanel(canTake ? "Confirm card" : "Card details");
+        HBox panel = new HBox(28);
         panel.getStyleClass().add("card-focus-panel");
+        panel.setAlignment(Pos.CENTER);
+
+        // Left column: large card image inside a golden frame
+        StackPane cardFrame = new StackPane();
+        cardFrame.getStyleClass().add("card-focus-frame");
+        cardFrame.getChildren().add(cardImages.create(cardId, DETAIL_CARD_WIDTH, DETAIL_CARD_HEIGHT));
+        VBox leftCol = new VBox(cardFrame);
+        leftCol.setAlignment(Pos.CENTER);
+
+        // Right column: header, description lines, action buttons
+        VBox rightCol = new VBox(14);
+        rightCol.getStyleClass().add("card-focus-right");
+        rightCol.setAlignment(Pos.TOP_LEFT);
+        HBox.setHgrow(rightCol, Priority.ALWAYS);
+        rightCol.setMaxWidth(420);
+        rightCol.setPrefWidth(420);
+
+        Label eyebrow = new Label(canTake ? "CONFIRM CARD" : "CARD DETAILS");
+        eyebrow.getStyleClass().add("card-focus-eyebrow");
+
+        List<String> lines = cardDescriptions.describeCard(
+                cardId,
+                model.getLastResolvedEventCardId(),
+                model.getLastResolvedEventDescription());
+        String headline = lines.isEmpty() ? "" : lines.get(0);
+        Label title = new Label(headline.toUpperCase());
+        title.getStyleClass().add("card-focus-title");
+        title.setWrapText(true);
+
+        Region divider = new Region();
+        divider.getStyleClass().add("card-focus-divider");
+
+        VBox body = new VBox(8);
+        body.getStyleClass().add("card-focus-body");
+        for (int i = 1; i < lines.size(); i++) {
+            Label label = new Label(lines.get(i));
+            label.setWrapText(true);
+            label.getStyleClass().add("card-focus-line");
+            body.getChildren().add(label);
+        }
+
         Label prompt = new Label(canTake
                 ? "Do you want to take this card?"
                 : "Card selected");
-        prompt.getStyleClass().add("inline-panel-subtitle");
+        prompt.getStyleClass().add("card-focus-prompt");
+        prompt.setWrapText(true);
 
         HBox actions = new HBox(10);
         actions.setAlignment(Pos.CENTER_RIGHT);
@@ -591,30 +749,13 @@ public final class GameBoardView {
             actions.getChildren().add(take);
         }
 
-        panel.getChildren().addAll(prompt, cardDetailContent(cardId), actions);
+        Region spacer = new Region();
+        VBox.setVgrow(spacer, Priority.ALWAYS);
+
+        rightCol.getChildren().addAll(eyebrow, title, divider, body, prompt, spacer, actions);
+        panel.getChildren().addAll(leftCol, rightCol);
+
         showInlinePanel(panel, Pos.CENTER);
-    }
-
-    private Node cardDetailContent(int cardId) {
-        VBox content = new VBox(12);
-        content.setAlignment(Pos.CENTER);
-        content.getStyleClass().add("card-detail-content");
-
-        Node image = cardImages.create(cardId, DETAIL_CARD_WIDTH, DETAIL_CARD_HEIGHT);
-        VBox details = new VBox(8);
-        details.getStyleClass().add("card-detail-lines");
-        for (String line : cardDescriptions.describeCard(
-                cardId,
-                model.getLastResolvedEventCardId(),
-                model.getLastResolvedEventDescription())) {
-            Label label = new Label(line);
-            label.setWrapText(true);
-            label.getStyleClass().add("card-detail-line");
-            details.getChildren().add(label);
-        }
-
-        content.getChildren().addAll(image, details);
-        return content;
     }
 
     private VBox inlinePanel(String titleText) {
@@ -669,6 +810,215 @@ public final class GameBoardView {
         rootLayer.getChildren().removeIf(node -> node.getStyleClass().contains("inline-overlay"));
     }
 
+    private void refreshEventResolutionOverlay() {
+        if (rootLayer == null) {
+            return;
+        }
+        hideEventResolutionOverlay();
+
+        if (!"EventResolutionState".equals(model.getGameState())) {
+            return;
+        }
+
+        StackPane overlay = new StackPane(eventResolutionPanel());
+        overlay.getStyleClass().add("event-resolution-overlay");
+        overlay.setMouseTransparent(true);
+        overlay.setPadding(new Insets(40));
+        StackPane.setAlignment(overlay.getChildren().get(0), Pos.CENTER);
+        rootLayer.getChildren().add(overlay);
+    }
+
+    private void hideEventResolutionOverlay() {
+        rootLayer.getChildren().removeIf(node -> node.getStyleClass().contains("event-resolution-overlay"));
+    }
+
+    private Node eventResolutionPanel() {
+        HBox panel = new HBox(28);
+        panel.getStyleClass().add("event-resolution-panel");
+        panel.setAlignment(Pos.CENTER);
+        panel.setMaxWidth(Region.USE_PREF_SIZE);
+        panel.setMaxHeight(Region.USE_PREF_SIZE);
+        panel.prefWidthProperty().bind(rootLayer.widthProperty().subtract(120));
+        panel.prefHeightProperty().bind(rootLayer.heightProperty().subtract(120));
+
+        VBox leftColumn = new VBox(10);
+        leftColumn.getStyleClass().add("event-resolution-left");
+        leftColumn.setAlignment(Pos.CENTER);
+        leftColumn.getChildren().add(eventCardPreviewLarge());
+        HBox.setHgrow(leftColumn, Priority.SOMETIMES);
+
+        VBox rightColumn = new VBox(14);
+        rightColumn.getStyleClass().add("event-resolution-right");
+        rightColumn.setAlignment(Pos.TOP_LEFT);
+        HBox.setHgrow(rightColumn, Priority.ALWAYS);
+
+        Label eyebrow = new Label("RESOLUTION EVENT");
+        eyebrow.getStyleClass().add("event-resolution-eyebrow");
+
+        Label title = new Label(nullSafe(model.getLastResolvedEventTitle()).toUpperCase());
+        title.getStyleClass().add("event-resolution-title");
+        title.setWrapText(true);
+
+        Region divider = new Region();
+        divider.getStyleClass().add("event-resolution-divider");
+
+        Label description = new Label(model.getLastResolvedEventDescription() == null
+                ? "Resolving the next event..."
+                : model.getLastResolvedEventDescription());
+        description.getStyleClass().add("event-resolution-description");
+        description.setWrapText(true);
+
+        rightColumn.getChildren().addAll(eyebrow, title, divider, description, eventEffectsTable());
+        panel.getChildren().addAll(leftColumn, rightColumn);
+        return panel;
+    }
+
+    private Node eventCardPreviewLarge() {
+        StackPane frame = new StackPane();
+        frame.getStyleClass().add("event-resolution-card-frame");
+        frame.setMinSize(320, 450);
+        int cardId = model.getLastResolvedEventCardId();
+        if (cardId > 0) {
+            Node image = cardImages.create(cardId, 320, 450);
+            frame.getChildren().add(image);
+        } else {
+            Label placeholder = new Label("Event card");
+            placeholder.getStyleClass().add("event-resolution-card-placeholder");
+            placeholder.setAlignment(Pos.CENTER);
+            setFixedSize(placeholder, 320, 450);
+            frame.getChildren().add(placeholder);
+        }
+        return frame;
+    }
+
+    private Node eventEffectsTable() {
+        VBox table = new VBox(8);
+        table.getStyleClass().add("event-resolution-table");
+
+        HBox header = new HBox(
+                eventHeaderCell("PLAYER", 240),
+                eventHeaderCell("PP", 120),
+                eventHeaderCell("FOOD", 120)
+        );
+        header.getStyleClass().add("event-resolution-table-header");
+        table.getChildren().add(header);
+
+        List<EventResolvedMessage.PlayerEffect> effects =
+                new ArrayList<>(model.getLastResolvedEventEffects());
+        effects.sort(Comparator
+                .comparingInt(EventResolvedMessage.PlayerEffect::getPointsDelta).reversed()
+                .thenComparing(Comparator.comparingInt(EventResolvedMessage.PlayerEffect::getFoodDelta).reversed())
+                .thenComparing(EventResolvedMessage.PlayerEffect::getNickname));
+
+        if (effects.isEmpty()) {
+            Label waiting = new Label("Waiting for event results");
+            waiting.getStyleClass().add("event-resolution-empty");
+            table.getChildren().add(waiting);
+            return table;
+        }
+
+        int rank = 1;
+        for (EventResolvedMessage.PlayerEffect effect : effects) {
+            table.getChildren().add(eventEffectRow(rank, effect));
+            rank++;
+        }
+        return table;
+    }
+
+    private Label eventHeaderCell(String text, double width) {
+        Label label = new Label(text);
+        label.getStyleClass().add("event-resolution-header-cell");
+        label.setMinWidth(width);
+        label.setPrefWidth(width);
+        if (!"PLAYER".equals(text)) {
+            label.setAlignment(Pos.CENTER);
+        }
+        return label;
+    }
+
+    private Node eventEffectRow(int rank, EventResolvedMessage.PlayerEffect effect) {
+        HBox row = new HBox(10);
+        row.getStyleClass().add("event-resolution-row");
+        row.setAlignment(Pos.CENTER_LEFT);
+
+        HBox playerCell = new HBox(10);
+        playerCell.setAlignment(Pos.CENTER_LEFT);
+        playerCell.setMinWidth(232);
+        playerCell.setPrefWidth(232);
+
+        Label rankLabel = new Label("#" + rank);
+        rankLabel.getStyleClass().add("event-resolution-rank");
+
+        TotemColor color = totemOf(effect.getNickname());
+        StackPane totem = totemMarkers.create(color, effect.getNickname(), 28);
+
+        Label name = new Label(effect.getNickname().toUpperCase());
+        name.getStyleClass().add("event-resolution-player");
+        name.setStyle("-fx-text-fill: " + totemColorHex(color) + ";");
+
+        playerCell.getChildren().addAll(rankLabel, totem, name);
+
+        row.getChildren().addAll(
+                playerCell,
+                deltaCell(effect.getPointsDelta(), effect.getNewPoints()),
+                deltaCell(effect.getFoodDelta(), effect.getNewFood())
+        );
+        return row;
+    }
+
+    private Node deltaCell(int delta, int total) {
+        VBox cell = new VBox(2);
+        cell.getStyleClass().add("event-resolution-delta-cell");
+        cell.setMinWidth(120);
+        cell.setPrefWidth(120);
+        cell.setAlignment(Pos.CENTER);
+
+        Label deltaLabel = new Label(formatDelta(delta));
+        deltaLabel.getStyleClass().add("event-resolution-delta");
+        if (delta > 0) {
+            deltaLabel.getStyleClass().add("event-resolution-delta-positive");
+        } else if (delta < 0) {
+            deltaLabel.getStyleClass().add("event-resolution-delta-negative");
+        } else {
+            deltaLabel.getStyleClass().add("event-resolution-delta-neutral");
+        }
+
+        Label totalLabel = new Label("tot " + total);
+        totalLabel.getStyleClass().add("event-resolution-total");
+        cell.getChildren().addAll(deltaLabel, totalLabel);
+        return cell;
+    }
+
+    private Node eventCardPreview() {
+        VBox preview = new VBox(6);
+        preview.getStyleClass().add("event-resolution-card-preview");
+        preview.setAlignment(Pos.CENTER);
+
+        Label label = new Label("EVENT CARD");
+        label.getStyleClass().add("event-resolution-card-label");
+        preview.getChildren().add(label);
+
+        int cardId = model.getLastResolvedEventCardId();
+        if (cardId > 0) {
+            preview.getChildren().add(cardImages.create(cardId, 118, 166));
+        } else {
+            Label placeholder = new Label("Card will appear here");
+            placeholder.getStyleClass().add("event-resolution-card-placeholder");
+            placeholder.setAlignment(Pos.CENTER);
+            placeholder.setWrapText(true);
+            setFixedSize(placeholder, 118, 166);
+            preview.getChildren().add(placeholder);
+        }
+        return preview;
+    }
+
+    private String formatDelta(int delta) {
+        if (delta > 0) {
+            return "+" + delta;
+        }
+        return String.valueOf(delta);
+    }
+
     private StackPane totemMarker(TotemColor color, String owner, double fitHeight) {
         return totemMarkers.create(color, owner, fitHeight);
     }
@@ -687,6 +1037,27 @@ public final class GameBoardView {
 
     private String nullSafe(Object value) {
         return value == null ? "-" : String.valueOf(value);
+    }
+
+    private String totemColorHex(TotemColor color) {
+        return switch (color == null ? TotemColor.WHITE : color) {
+            case RED    -> "#e05a46";
+            case BLUE   -> "#5b9fd4";
+            case PURPLE -> "#a070cc";
+            case YELLOW -> "#e8be5a";
+            case WHITE  -> "#f3ebdc";
+        };
+    }
+
+    private TotemColor totemOf(String nickname) {
+        PlayerView player = model.getPlayers().get(nickname);
+        return player == null ? null : player.getTotemColor();
+    }
+
+    private void setFixedSize(Region region, double width, double height) {
+        region.setMinSize(width, height);
+        region.setPrefSize(width, height);
+        region.setMaxSize(width, height);
     }
 
     private String actionInstruction() {

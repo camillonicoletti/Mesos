@@ -32,6 +32,7 @@ final class MesosLogo {
         }
 
         Label fallback = new Label("MESOS");
+        fallback.getStyleClass().add("mesos-title-fallback");
         fallback.getStyleClass().add(styleClass);
         return fallback;
     }

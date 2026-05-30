@@ -76,12 +76,21 @@
                 dropshadow(three-pass-box, rgba(31, 12, 15, .70), 8, 0, 0, 2);
 }
 
+.mesos-title-fallback {
+    -fx-font-family: "Noteworthy", "Avenir Next Condensed", "Copperplate", sans-serif;
+    -fx-font-weight: normal;
+    -fx-text-fill: #fff2cf;
+    -fx-effect: dropshadow(three-pass-box, rgba(255, 242, 190, .25), 18, .20, 0, 0),
+                dropshadow(three-pass-box, rgba(31, 12, 15, .82), 10, 0, 0, 3);
+}
+
 .login-title-logo {
     -fx-opacity: .96;
 }
 
 .lobby-title-logo {
     -fx-opacity: .97;
+    -fx-font-size: 88px;
 }
 
 .game-title-logo {
@@ -315,19 +324,19 @@
 
 .lobby-subtitle {
     -fx-text-fill: #f0ce64;
-    -fx-font-size: 18px;
+    -fx-font-size: 22px;
     -fx-font-weight: 900;
     -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .82), 7, 0, 0, 1);
 }
 
 .lobby-players {
-    -fx-padding: 8px 0 0 0;
+    -fx-padding: 2px 0 0 0;
 }
 
 .lobby-player-card {
     -fx-background-color: transparent;
-    -fx-padding: 14px 22px;
-    -fx-min-width: 190px;
+    -fx-padding: 8px 16px;
+    -fx-min-width: 172px;
 }
 
 .lobby-player-name {
@@ -338,10 +347,10 @@
 }
 
 .lobby-color-dot {
-    -fx-min-width: 20px;
-    -fx-min-height: 20px;
-    -fx-max-width: 20px;
-    -fx-max-height: 20px;
+    -fx-min-width: 18px;
+    -fx-min-height: 18px;
+    -fx-max-width: 18px;
+    -fx-max-height: 18px;
     -fx-background-radius: 99px;
     -fx-border-color: rgba(255, 242, 207, .62);
     -fx-border-radius: 99px;
@@ -356,18 +365,23 @@
 }
 
 .lobby-ready-status {
-    -fx-padding: 1px 0 0 0;
+    -fx-padding: 0;
 }
 
 .lobby-ready-dot {
-    -fx-min-width: 11px;
-    -fx-min-height: 11px;
-    -fx-max-width: 11px;
-    -fx-max-height: 11px;
+    -fx-min-width: 10px;
+    -fx-min-height: 10px;
+    -fx-max-width: 10px;
+    -fx-max-height: 10px;
     -fx-background-radius: 99px;
     -fx-border-radius: 99px;
     -fx-border-width: 1px;
     -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .62), 3, 0, 0, 1);
+}
+
+.lobby-ready-status .label {
+    -fx-font-size: 16px;
+    -fx-font-weight: 800;
 }
 
 .lobby-ready-off {
@@ -1421,7 +1435,7 @@
 /* ── Inline detail panels ─────────────────────────────────────────────────── */
 
 .inline-overlay {
-    -fx-background-color: rgba(20, 8, 12, .18);
+    -fx-background-color: rgba(8, 4, 6, .72);
 }
 
 .inline-panel {
@@ -1443,11 +1457,69 @@
 }
 
 .card-focus-panel {
-    -fx-background-color: transparent;
-    -fx-border-color: transparent;
-    -fx-padding: 10px 18px;
-    -fx-max-width: 960px;
-    -fx-effect: dropshadow(three-pass-box, rgba(18, 8, 12, .56), 22, 0, 0, 7);
+    -fx-background-color: linear-gradient(to bottom right, rgba(58, 28, 36, .96), rgba(28, 12, 18, .96));
+    -fx-background-radius: 14px;
+    -fx-border-color: rgba(255, 207, 110, .55);
+    -fx-border-radius: 14px;
+    -fx-border-width: 2px;
+    -fx-padding: 28px 36px;
+    -fx-max-width: 880px;
+    -fx-effect: dropshadow(three-pass-box, rgba(8, 4, 6, .85), 42, 0, 0, 12);
+}
+
+.card-focus-frame {
+    -fx-background-color: linear-gradient(to bottom, rgba(255, 207, 110, .28), rgba(255, 130, 70, .15));
+    -fx-background-radius: 14px;
+    -fx-border-color: rgba(255, 207, 110, .85);
+    -fx-border-radius: 14px;
+    -fx-border-width: 3px;
+    -fx-padding: 10px;
+    -fx-effect: dropshadow(three-pass-box, rgba(255, 180, 90, .35), 28, 0.2, 0, 0);
+}
+
+.card-focus-right {
+    -fx-padding: 4px 0 0 0;
+}
+
+.card-focus-eyebrow {
+    -fx-font-family: "Noteworthy", "Avenir Next Condensed", "Copperplate", sans-serif;
+    -fx-text-fill: #f0ce64;
+    -fx-font-size: 20px;
+    -fx-font-weight: normal;
+    -fx-padding: 0 0 2px 0;
+}
+
+.card-focus-title {
+    -fx-font-family: "Noteworthy", "Avenir Next Condensed", "Copperplate", sans-serif;
+    -fx-text-fill: #fff2cf;
+    -fx-font-size: 42px;
+    -fx-font-weight: normal;
+    -fx-effect: dropshadow(three-pass-box, rgba(20, 8, 12, .85), 8, 0, 0, 3);
+}
+
+.card-focus-divider {
+    -fx-background-color: linear-gradient(to right, rgba(255, 207, 110, .85), rgba(255, 207, 110, 0));
+    -fx-pref-height: 2px;
+    -fx-max-height: 2px;
+    -fx-min-height: 2px;
+}
+
+.card-focus-body {
+    -fx-padding: 4px 0;
+}
+
+.card-focus-line {
+    -fx-text-fill: rgba(255, 242, 207, .88);
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-line-spacing: 2px;
+}
+
+.card-focus-prompt {
+    -fx-text-fill: rgba(255, 226, 168, .82);
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-font-style: italic;
 }
 
 .inline-panel-title {
@@ -1513,6 +1585,156 @@
     -fx-font-size: 14px;
     -fx-font-weight: 700;
     -fx-effect: dropshadow(three-pass-box, rgba(20, 8, 12, .92), 5, 0, 0, 1);
+}
+
+/* ── Event resolution overlay ─────────────────────────────────────────────── */
+
+.event-resolution-overlay {
+    -fx-background-color: transparent;
+}
+
+.event-resolution-panel {
+    -fx-background-color: linear-gradient(to bottom right, rgba(58, 28, 36, .96), rgba(28, 12, 18, .96));
+    -fx-background-radius: 14px;
+    -fx-border-color: rgba(255, 207, 110, .55);
+    -fx-border-radius: 14px;
+    -fx-border-width: 2px;
+    -fx-padding: 32px 40px;
+    -fx-effect: dropshadow(three-pass-box, rgba(8, 4, 6, .85), 48, 0, 0, 14);
+}
+
+.event-resolution-left {
+    -fx-padding: 0;
+}
+
+.event-resolution-right {
+    -fx-padding: 6px 0 0 0;
+}
+
+.event-resolution-card-frame {
+    -fx-background-color: linear-gradient(to bottom, rgba(255, 207, 110, .28), rgba(255, 130, 70, .15));
+    -fx-background-radius: 14px;
+    -fx-border-color: rgba(255, 207, 110, .85);
+    -fx-border-radius: 14px;
+    -fx-border-width: 3px;
+    -fx-padding: 10px;
+    -fx-effect: dropshadow(three-pass-box, rgba(255, 180, 90, .35), 28, 0.2, 0, 0);
+}
+
+.event-resolution-eyebrow {
+    -fx-font-family: "Noteworthy", "Avenir Next Condensed", "Copperplate", sans-serif;
+    -fx-text-fill: #f0ce64;
+    -fx-font-size: 22px;
+    -fx-font-weight: normal;
+    -fx-padding: 0 0 2px 0;
+}
+
+.event-resolution-title {
+    -fx-font-family: "Noteworthy", "Avenir Next Condensed", "Copperplate", sans-serif;
+    -fx-text-fill: #fff2cf;
+    -fx-font-size: 56px;
+    -fx-font-weight: normal;
+    -fx-effect: dropshadow(three-pass-box, rgba(20, 8, 12, .85), 8, 0, 0, 3);
+}
+
+.event-resolution-divider {
+    -fx-background-color: linear-gradient(to right, rgba(255, 207, 110, .85), rgba(255, 207, 110, 0));
+    -fx-pref-height: 2px;
+    -fx-max-height: 2px;
+    -fx-min-height: 2px;
+}
+
+.event-resolution-description {
+    -fx-text-fill: rgba(255, 242, 207, .85);
+    -fx-font-size: 15px;
+    -fx-font-weight: 600;
+    -fx-line-spacing: 2px;
+}
+
+.event-resolution-table {
+    -fx-background-color: rgba(20, 8, 12, .42);
+    -fx-background-radius: 10px;
+    -fx-border-color: rgba(255, 226, 168, .22);
+    -fx-border-radius: 10px;
+    -fx-border-width: 1px;
+    -fx-padding: 14px 16px;
+}
+
+.event-resolution-table-header {
+    -fx-padding: 0 6px 8px 6px;
+    -fx-border-color: transparent transparent rgba(255, 226, 168, .26) transparent;
+    -fx-border-width: 0 0 1px 0;
+}
+
+.event-resolution-header-cell {
+    -fx-text-fill: rgba(255, 226, 168, .72);
+    -fx-font-size: 12px;
+    -fx-font-weight: 900;
+}
+
+.event-resolution-row {
+    -fx-background-color: rgba(255, 242, 207, .08);
+    -fx-background-radius: 8px;
+    -fx-padding: 10px 12px;
+}
+
+.event-resolution-rank {
+    -fx-text-fill: rgba(255, 207, 110, .85);
+    -fx-font-size: 14px;
+    -fx-font-weight: 900;
+    -fx-min-width: 30px;
+}
+
+.event-resolution-player {
+    -fx-font-size: 16px;
+    -fx-font-weight: 900;
+    -fx-effect: dropshadow(three-pass-box, rgba(20, 8, 12, .80), 4, 0, 0, 1);
+}
+
+.event-resolution-delta-cell {
+    -fx-alignment: center;
+}
+
+.event-resolution-delta {
+    -fx-font-size: 22px;
+    -fx-font-weight: 900;
+}
+
+.event-resolution-delta-positive {
+    -fx-text-fill: #82e89a;
+    -fx-effect: dropshadow(three-pass-box, rgba(60, 180, 90, .35), 8, 0, 0, 0);
+}
+
+.event-resolution-delta-negative {
+    -fx-text-fill: #ff806f;
+    -fx-effect: dropshadow(three-pass-box, rgba(220, 80, 70, .35), 8, 0, 0, 0);
+}
+
+.event-resolution-delta-neutral {
+    -fx-text-fill: rgba(255, 242, 207, .64);
+}
+
+.event-resolution-total {
+    -fx-text-fill: rgba(255, 242, 207, .55);
+    -fx-font-size: 11px;
+    -fx-font-weight: 800;
+}
+
+.event-resolution-empty {
+    -fx-text-fill: rgba(255, 242, 207, .62);
+    -fx-font-size: 13px;
+    -fx-font-weight: 800;
+    -fx-padding: 10px;
+}
+
+.event-resolution-card-placeholder {
+    -fx-background-color: rgba(255, 242, 207, .08);
+    -fx-background-radius: 8px;
+    -fx-border-color: rgba(255, 226, 168, .22);
+    -fx-border-radius: 8px;
+    -fx-text-fill: rgba(255, 242, 207, .58);
+    -fx-font-size: 14px;
+    -fx-font-weight: 800;
 }
 
 .tribe-panel-content {

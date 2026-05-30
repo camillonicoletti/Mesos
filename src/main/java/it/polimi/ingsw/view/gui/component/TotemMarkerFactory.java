@@ -2,6 +2,7 @@ package it.polimi.ingsw.view.gui.component;
 
 import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
+import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Region;
@@ -10,6 +11,8 @@ import javafx.scene.layout.StackPane;
 import java.io.InputStream;
 
 final class TotemMarkerFactory {
+    private static final String BOARD_TOTEM_PREFIX = "board-totem:";
+
     private final GuiAssetCatalog assetCatalog;
 
     TotemMarkerFactory(GuiAssetCatalog assetCatalog) {
@@ -60,6 +63,21 @@ final class TotemMarkerFactory {
             case YELLOW -> "#d7a93d";
             case WHITE -> "#f3ebdc";
         };
+    }
+
+    static void tagBoardTotem(Node node, String owner) {
+        if (node != null && owner != null) {
+            node.setUserData(BOARD_TOTEM_PREFIX + owner);
+        }
+    }
+
+    static String boardTotemOwner(Node node) {
+        if (node == null || !(node.getUserData() instanceof String tag)) {
+            return null;
+        }
+        return tag.startsWith(BOARD_TOTEM_PREFIX)
+                ? tag.substring(BOARD_TOTEM_PREFIX.length())
+                : null;
     }
 
     private StackPane baseMarker(String styleClass, String owner, double width, double height) {

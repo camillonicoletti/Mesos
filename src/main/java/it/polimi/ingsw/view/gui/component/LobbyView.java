@@ -11,10 +11,13 @@ import it.polimi.ingsw.view.gui.util.GuiIcons;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
@@ -27,7 +30,12 @@ import org.kordamp.ikonli.materialdesign2.MaterialDesignB;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignC;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignL;
 
+import java.io.InputStream;
+
 public final class LobbyView {
+    private static final String LOBBY_LOGO_PATH = "assets/icons/icon_mesos.png";
+    private static final Rectangle2D LOBBY_LOGO_VIEWPORT = new Rectangle2D(100, 230, 1240, 450);
+
     private final ClientController controller;
     private final ClientModel model;
     private final TotemMarkerFactory totemMarkers;
@@ -51,16 +59,17 @@ public final class LobbyView {
         layout = new BorderPane();
         layout.getStyleClass().add("lobby-root");
 
-        VBox center = new VBox(22);
-        center.setPadding(new Insets(40, 36, 20, 36));
+        VBox center = new VBox(4);
+        center.setPadding(new Insets(24, 36, 20, 36));
         center.setAlignment(Pos.CENTER);
         center.getStyleClass().add("lobby-stage");
 
-        Node title = MesosLogo.create(360, "lobby-title-logo");
+        Node title = lobbyLogo();
+        VBox.setMargin(title, new Insets(0, 0, 8, 0));
         subtitle = new Label();
         subtitle.getStyleClass().add("lobby-subtitle");
 
-        players = new FlowPane(18, 18);
+        players = new FlowPane(10, 6);
         players.setAlignment(Pos.CENTER);
         players.getStyleClass().add("lobby-players");
 
@@ -82,7 +91,7 @@ public final class LobbyView {
             return;
         }
 
-        subtitle.setText("Lobby  " + model.getLobbyPlayers().size() + "/" + model.getExpectedPlayers());
+        subtitle.setText("Lobby  " + model.getLobbyPlayers().size() + "/" + expectedPlayersText());
 
         players.getChildren().clear();
         for (String nickname : model.getLobbyPlayers()) {
@@ -159,7 +168,7 @@ public final class LobbyView {
         box.setAlignment(Pos.CENTER);
         box.getStyleClass().add("lobby-status");
         box.getChildren().add(infoRow(MaterialDesignA.ACCOUNT_CIRCLE, nullSafe(model.getMyNickname())));
-        box.getChildren().add(infoRow(MaterialDesignA.ACCOUNT_MULTIPLE, model.getExpectedPlayers() + " players"));
+        box.getChildren().add(infoRow(MaterialDesignA.ACCOUNT_MULTIPLE, expectedPlayersText() + " players"));
 
         Label connection = new Label(model.isConnected() ? "Connected" : "Disconnected");
         connection.setGraphic(GuiIcons.icon(model.isConnected() ? MaterialDesignC.CONNECTION : MaterialDesignC.CLOSE_NETWORK, 15));
@@ -179,7 +188,7 @@ public final class LobbyView {
     }
 
     private Node playerLobbyCard(String nickname) {
-        VBox card = new VBox(8);
+        VBox card = new VBox(5);
         card.getStyleClass().add("lobby-player-card");
         boolean leader = model.getLobbyPlayers().indexOf(nickname) == 0;
         boolean readyPlayer = model.getReadyPlayers().contains(nickname);
@@ -192,12 +201,12 @@ public final class LobbyView {
         Label name = new Label(nickname);
         name.getStyleClass().add("lobby-player-name");
         if (leader) {
-            name.setGraphic(GuiIcons.icon(MaterialDesignC.CROWN, 16, "#d7a93d"));
+            name.setGraphic(GuiIcons.icon(MaterialDesignC.CROWN, 13, "#d7a93d"));
             name.setContentDisplay(ContentDisplay.LEFT);
         }
         head.getChildren().add(name);
 
-        HBox readyStatus = new HBox(7);
+        HBox readyStatus = new HBox(6);
         readyStatus.setAlignment(Pos.CENTER);
         readyStatus.getStyleClass().add("lobby-ready-status");
         readyStatus.getChildren().add(readyDot(readyPlayer));
@@ -259,5 +268,29 @@ public final class LobbyView {
 
     private String nullSafe(Object value) {
         return value == null ? "-" : String.valueOf(value);
+    }
+
+    private String expectedPlayersText() {
+        int expected = model.getExpectedPlayers();
+        return expected < 2 ? "?" : String.valueOf(expected);
+    }
+
+    private Node lobbyLogo() {
+        try (InputStream stream = Thread.currentThread().getContextClassLoader()
+                .getResourceAsStream(LOBBY_LOGO_PATH)) {
+            if (stream != null) {
+                ImageView logo = new ImageView(new Image(stream));
+                logo.setViewport(LOBBY_LOGO_VIEWPORT);
+                logo.setPreserveRatio(true);
+                logo.setSmooth(true);
+                logo.setFitWidth(430);
+                logo.getStyleClass().add("lobby-title-logo");
+                return logo;
+            }
+        } catch (Exception ignored) {
+            // Fall back to the generated title below.
+        }
+
+        return MesosLogo.create(430, "lobby-title-logo");
     }
 }
