@@ -55,7 +55,7 @@ class LeaderboardServicesTest {
                 UUID.randomUUID(),
                 Instant.now(),
                 3,
-                Map.of("alice", 12, "bob", 7));
+                Map.of("alessandro", 12, "benedetto", 7));
         assertNotNull(out);
         assertTrue(out.isEmpty());
     }
@@ -119,23 +119,23 @@ class LeaderboardServicesTest {
     @Test
     void leaderboardEntryExposesFields() {
         Instant t = Instant.parse("2026-05-30T10:15:30Z");
-        LeaderboardEntry e = new LeaderboardEntry(2, "alice", 42, t, 3);
+        LeaderboardEntry e = new LeaderboardEntry(2, "alessandro", 42, t, 3);
         assertEquals(2, e.rank());
-        assertEquals("alice", e.nickname());
+        assertEquals("alessandro", e.nickname());
         assertEquals(42, e.finalScore());
         assertEquals(t, e.playedAt());
         assertEquals(3, e.playersCount());
-        assertEquals(e, new LeaderboardEntry(2, "alice", 42, t, 3));
-        assertEquals(e.hashCode(), new LeaderboardEntry(2, "alice", 42, t, 3).hashCode());
+        assertEquals(e, new LeaderboardEntry(2, "alessandro", 42, t, 3));
+        assertEquals(e.hashCode(), new LeaderboardEntry(2, "alessandro", 42, t, 3).hashCode());
     }
 
     @Test
     void matchResultExposesFields() {
         UUID id = UUID.randomUUID();
         Instant t = Instant.parse("2026-05-30T10:15:30Z");
-        MatchResult m = new MatchResult(id, "bob", 17, t, 4);
+        MatchResult m = new MatchResult(id, "benedetto", 17, t, 4);
         assertEquals(id, m.matchId());
-        assertEquals("bob", m.nickname());
+        assertEquals("benedetto", m.nickname());
         assertEquals(17, m.finalScore());
         assertEquals(t, m.playedAt());
         assertEquals(4, m.playersCount());
@@ -154,9 +154,9 @@ class LeaderboardServicesTest {
 
     @Test
     void leaderboardRankMessageRoundTripsViaSerialization() throws Exception {
-        LeaderboardRankMessage msg = new LeaderboardRankMessage("alice", 1, 3);
+        LeaderboardRankMessage msg = new LeaderboardRankMessage("alessandro", 1, 3);
         LeaderboardRankMessage back = roundTrip(msg);
-        assertEquals("alice", back.nickname());
+        assertEquals("alessandro", back.nickname());
         assertEquals(1, back.rank());
         assertEquals(3, back.playersCount());
         assertEquals(msg, back);
@@ -166,8 +166,8 @@ class LeaderboardServicesTest {
     void leaderboardMessageRoundTripsViaSerialization() throws Exception {
         Instant t = Instant.parse("2026-05-30T10:15:30Z");
         List<LeaderboardEntry> entries = List.of(
-                new LeaderboardEntry(1, "alice", 50, t, 3),
-                new LeaderboardEntry(2, "bob",   40, t, 3));
+                new LeaderboardEntry(1, "alessandro", 50, t, 3),
+                new LeaderboardEntry(2, "benedetto",   40, t, 3));
         LeaderboardMessage msg = new LeaderboardMessage(3, entries);
         LeaderboardMessage back = roundTrip(msg);
         assertEquals(3, back.playersCount());

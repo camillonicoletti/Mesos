@@ -96,8 +96,8 @@ class RMIServerConnectionTest {
         RMIServerConnection conn = new RMIServerConnection(new CollectingClient());
         try {
             assertNull(conn.getNickname());
-            conn.setNickname("alice");
-            assertEquals("alice", conn.getNickname());
+            conn.setNickname("alessandro");
+            assertEquals("alessandro", conn.getNickname());
         } finally {
             conn.close();
         }
