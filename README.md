@@ -223,6 +223,23 @@ Run a single test class:
 mvn test -Dtest=GameControllerTotemPlacementStrongTest
 ```
 
+## Test and coverage
+
+Coverage is measured with JaCoCo. To run the full test suite and produce the
+HTML report in a single command:
+
+```bash
+mvn clean verify
+```
+
+The report is written to:
+
+```text
+target/site/jacoco/index.html
+```
+
+Open it in a browser to inspect per-package and per-class coverage.
+
 ## Project structure
 
 ```

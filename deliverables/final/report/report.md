@@ -103,4 +103,62 @@ that the model remains consistent under contention.
 
 ## Tests
 
-Unit and integration tests cover the controller, game states, disconnections, client synchronization, cards, events and edge cases. The final coverage percentage is to be filled in after the last run of the chosen coverage tool.
+Unit and integration tests cover the controller, game states, disconnections,
+client synchronization, cards, events and edge cases.
+
+### Coverage methodology
+
+JaCoCo is used as the objective measure of test coverage. The global
+percentage reported by the tool is not meaningful on its own, because the
+codebase intentionally includes large blocks of code that are not exercised
+by unit tests:
+
+- the JavaFX GUI (`view.gui` and `view.gui.component`), which is validated
+  through manual integration sessions rather than headless unit tests;
+- the TUI rendering layer (`view.tui.Renderer`, `view.tui.Tui`), which
+  produces ANSI output and is also exercised manually;
+- launcher and `main` entry points (`ServerLauncher`, `ClientLauncher`,
+  `RMIServerMain`, `App`), which are covered end-to-end by running the
+  application;
+- the JDBC code path of the leaderboard (`JdbcLeaderboardService`), which
+  requires a live external MySQL instance and is therefore excluded from
+  unit tests by design.
+
+The core game logic is covered well by the suite: model (game, round, tribe,
+player, board, cards), controller and its state machine, command actions,
+card effects, and the protocol DTOs all reach high instruction coverage.
+
+### Audit and targeted additions
+
+After an explicit coverage audit, two areas of the code base were identified
+as under-tested relative to their importance:
+
+- `controller.leaderboard`, where most of the package was not reached at
+  all because the only existing tests focused on gameplay;
+- the server-side RMI adapters (`RMIServer`, `RMIServerConnection`), which
+  were not directly exercised by the existing RMI smoke test.
+
+33 targeted unit tests were added to address these gaps. No changes were
+made to `src/main/java` and no new dependencies were introduced; the new
+tests rely only on JUnit Jupiter and on temporary files for the
+configuration fixtures.
+
+Results of the targeted additions:
+
+- **Leaderboard package**: instruction coverage went from 1.1% to 26.2%.
+  `NoOpLeaderboardService`, `LeaderboardEntry`, `MatchResult` and the
+  fallback paths of `LeaderboardFactory` are now fully covered.
+  `JdbcLeaderboardService` remains outside the unit-test scope because it
+  requires a real external database; integration with MySQL is validated
+  manually against a running instance.
+- **RMI package**: instruction coverage went from 26.1% to 69.1%.
+  `RMIServerConnection` and `RMIServer` are now covered by deterministic
+  local tests that do not bind a real RMI registry; remote callbacks are
+  exercised through in-process stubs of `RemoteClient`.
+
+The remaining uncovered code in these two packages is concentrated in
+`JdbcLeaderboardService` (database-dependent), `RMIServerMain` (process
+entry point) and the time-driven branches of the RMI heartbeat scheduler.
+These paths are validated by manual integration runs of the server and
+client, consistently with the approach used for the GUI and launcher
+classes.
