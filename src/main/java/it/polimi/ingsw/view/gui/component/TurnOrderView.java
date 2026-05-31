@@ -27,7 +27,7 @@ final class TurnOrderView {
     private static final double TILE_HEIGHT = 164;
     private static final double DETAIL_TILE_WIDTH = 180;
     private static final double DETAIL_TILE_HEIGHT = 290;
-    private static final double TOTEM_HEIGHT = 34;
+    private static final double TOTEM_HEIGHT = 42;
 
     private final ClientModel model;
     private final GuiAssetCatalog assetCatalog;
@@ -159,10 +159,10 @@ final class TurnOrderView {
 
     private double[] totemOffsets(int players) {
         return switch (players) {
-            case 2 -> new double[]{-34, 0};
-            case 3 -> new double[]{-47, -11, 18};
-            case 4 -> new double[]{-45, -15, 14, 42};
-            default -> new double[]{-57, -28, 1, 29, 58};
+            case 2 -> new double[]{-39, -13};
+            case 3 -> new double[]{-46, -20, 6};
+            case 4 -> new double[]{-52, -26, 0, 25};
+            default -> new double[]{-62, -36, -10, 15, 41};
         };
     }
 
