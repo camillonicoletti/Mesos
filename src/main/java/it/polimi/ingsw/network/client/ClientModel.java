@@ -28,6 +28,7 @@ public class ClientModel {
     private String lastResolvedEventTitle;
     private String lastResolvedEventDescription;
     private List<EventResolvedMessage.PlayerEffect> lastResolvedEventEffects = List.of();
+    private final List<EventResolvedMessage> resolvedEvents = new ArrayList<>();
 
     private boolean gameSuspended;
     private long suspensionDeadlineMillis = -1L;
@@ -156,6 +157,7 @@ public class ClientModel {
 
 
     public void applyGameStarted(GameStartedMessage m) {
+        resolvedEvents.clear();
         applySnapshot(m.getSnapshot());
     }
 
@@ -252,6 +254,7 @@ public class ClientModel {
         lastResolvedEventTitle        = m.getTitle();
         lastResolvedEventDescription  = m.getDescription();
         lastResolvedEventEffects     = m.getEffects() != null ? m.getEffects() : List.of();
+        resolvedEvents.add(m);
         for (EventResolvedMessage.PlayerEffect effect : lastResolvedEventEffects) {
             replacePlayer(effect.getNickname(), old -> new PlayerView(
                     old.getNickname(), old.getTotemColor(),
@@ -534,6 +537,10 @@ public class ClientModel {
 
     public List<EventResolvedMessage.PlayerEffect> getLastResolvedEventEffects() {
         return Collections.unmodifiableList(lastResolvedEventEffects);
+    }
+
+    public List<EventResolvedMessage> getResolvedEvents() {
+        return Collections.unmodifiableList(resolvedEvents);
     }
 
     public int getLastFinishedRound() { return lastFinishedRound; }

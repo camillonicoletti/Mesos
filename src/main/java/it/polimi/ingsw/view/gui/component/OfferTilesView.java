@@ -25,6 +25,8 @@ import java.util.stream.Collectors;
 final class OfferTilesView {
     private static final double TILE_WIDTH = 100;
     private static final double TILE_HEIGHT = 164;
+    private static final double TOTEM_HEIGHT = 42;
+    private static final double TOTEM_SLOT_Y = -47;
     private static final List<Character> TILE_ORDER = List.of('A', 'B', 'C', 'D', 'E', 'F', 'G');
     private static final Map<Character, Integer> TILE_MIN_PLAYERS = Map.of(
             'A', 5,
@@ -112,10 +114,10 @@ final class OfferTilesView {
 
         PlayerView player = model.getPlayers().get(owner);
         TotemColor color = player == null ? null : player.getTotemColor();
-        StackPane badge = totemMarkers.create(color, owner, 42);
+        StackPane badge = totemMarkers.create(color, owner, TOTEM_HEIGHT);
         TotemMarkerFactory.tagBoardTotem(badge, owner);
         badge.setTranslateX(0);
-        badge.setTranslateY(-40);
+        badge.setTranslateY(TOTEM_SLOT_Y);
 
         content.getChildren().add(badge);
         StackPane.setAlignment(badge, Pos.CENTER);

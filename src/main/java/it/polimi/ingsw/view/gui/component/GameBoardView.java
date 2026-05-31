@@ -686,17 +686,17 @@ public final class GameBoardView {
     private void showCardPanel(int cardId, boolean canTake, Runnable takeAction) {
         HBox panel = new HBox(28);
         panel.getStyleClass().add("card-focus-panel");
-        panel.setAlignment(Pos.CENTER);
+        panel.setAlignment(Pos.TOP_CENTER);
 
         // Left column: large card image inside a golden frame
         StackPane cardFrame = new StackPane();
         cardFrame.getStyleClass().add("card-focus-frame");
         cardFrame.getChildren().add(cardImages.create(cardId, DETAIL_CARD_WIDTH, DETAIL_CARD_HEIGHT));
         VBox leftCol = new VBox(cardFrame);
-        leftCol.setAlignment(Pos.CENTER);
+        leftCol.setAlignment(Pos.TOP_CENTER);
 
         // Right column: header, description lines, action buttons
-        VBox rightCol = new VBox(14);
+        VBox rightCol = new VBox(16);
         rightCol.getStyleClass().add("card-focus-right");
         rightCol.setAlignment(Pos.TOP_LEFT);
         HBox.setHgrow(rightCol, Priority.ALWAYS);
@@ -734,12 +734,17 @@ public final class GameBoardView {
         prompt.setWrapText(true);
 
         HBox actions = new HBox(10);
-        actions.setAlignment(Pos.CENTER_RIGHT);
+        actions.getStyleClass().add("card-focus-actions");
+        actions.setAlignment(Pos.CENTER_LEFT);
         Button close = inlineButton("Close", false);
+        close.getStyleClass().add("card-focus-action-button");
+        close.setMinSize(120, 48);
         close.setOnAction(event -> hideInlinePanel());
         actions.getChildren().add(close);
         if (canTake) {
             Button take = inlineButton("Take", true);
+            take.getStyleClass().add("card-focus-action-button");
+            take.setMinSize(120, 48);
             take.setOnAction(event -> {
                 hideInlinePanel();
                 if (takeAction != null) {
@@ -749,10 +754,7 @@ public final class GameBoardView {
             actions.getChildren().add(take);
         }
 
-        Region spacer = new Region();
-        VBox.setVgrow(spacer, Priority.ALWAYS);
-
-        rightCol.getChildren().addAll(eyebrow, title, divider, body, prompt, spacer, actions);
+        rightCol.getChildren().addAll(eyebrow, title, divider, body, prompt, actions);
         panel.getChildren().addAll(leftCol, rightCol);
 
         showInlinePanel(panel, Pos.CENTER);
