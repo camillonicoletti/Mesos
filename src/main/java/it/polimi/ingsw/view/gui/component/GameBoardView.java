@@ -8,6 +8,7 @@ import it.polimi.ingsw.network.protocol.clientbound.EventResolvedMessage;
 import it.polimi.ingsw.view.gui.GuiApplication;
 import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
 import it.polimi.ingsw.view.gui.util.GuiAnimations;
+import it.polimi.ingsw.view.gui.util.GuiAudio;
 import it.polimi.ingsw.view.gui.util.GuiIcons;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignB;
 import javafx.animation.FadeTransition;
@@ -35,9 +36,11 @@ import javafx.util.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public final class GameBoardView {
     private static final double DETAIL_CARD_WIDTH = 330;
@@ -75,6 +78,7 @@ public final class GameBoardView {
     private boolean displayedMyTurn;
     private boolean displayedCanPickUpper;
     private boolean displayedCanPickLower;
+    private Map<String, TotemLocation> displayedTotemLocations = Map.of();
 
     public GameBoardView(ClientController controller, ClientModel model, GuiAssetCatalog assetCatalog) {
         this.model = model;
@@ -143,12 +147,17 @@ public final class GameBoardView {
         }
 
         Map<String, TotemAnchor> previousTotems = captureBoardTotems();
+        Map<String, TotemLocation> previousLocations = displayedTotemLocations;
+        Map<String, TotemLocation> currentLocations = modelTotemLocations();
+        Set<String> logicalTotemMoves = logicalTotemMoves(previousLocations, currentLocations);
+        playTotemMoveSoundIfNeeded(previousTotems, logicalTotemMoves);
         refreshCenterTrack();
         playerDockSlot.getChildren().setAll(playerDockView.render());
         updateBoardScale();
         rootLayer.applyCss();
         rootLayer.layout();
-        playTotemMoveAnimations(previousTotems);
+        playTotemMoveAnimations(previousTotems, logicalTotemMoves);
+        displayedTotemLocations = currentLocations;
         Platform.runLater(this::updateBoardScale);
         refreshEventResolutionOverlay();
 
@@ -604,21 +613,84 @@ public final class GameBoardView {
         return new TotemAnchor(node, center, width, height);
     }
 
-    private void playTotemMoveAnimations(Map<String, TotemAnchor> previousTotems) {
-        if (previousTotems.isEmpty() || rootLayer == null || rootLayer.getScene() == null) {
+    private Map<String, TotemLocation> modelTotemLocations() {
+        Map<String, TotemLocation> locations = new HashMap<>();
+        for (String nickname : model.getTurnOrder()) {
+            if (!model.isPlayerDisconnected(nickname)) {
+                locations.put(nickname, TotemLocation.TURN_ORDER);
+            }
+        }
+        for (String nickname : model.getTotemOnTiles().values()) {
+            if (nickname != null && !model.isPlayerDisconnected(nickname)) {
+                locations.put(nickname, TotemLocation.OFFER_TILE);
+            }
+        }
+        return Map.copyOf(locations);
+    }
+
+    private Set<String> logicalTotemMoves(Map<String, TotemLocation> previous,
+                                          Map<String, TotemLocation> current) {
+        if (previous.isEmpty()) {
+            return Set.of();
+        }
+
+        Set<String> moves = new HashSet<>();
+        for (String nickname : model.getPlayers().keySet()) {
+            TotemLocation from = previous.get(nickname);
+            TotemLocation to = current.get(nickname);
+            if (isOrderOfferMove(from, to)) {
+                moves.add(nickname);
+            }
+        }
+        return moves;
+    }
+
+    private boolean isOrderOfferMove(TotemLocation from, TotemLocation to) {
+        return from == TotemLocation.TURN_ORDER && to == TotemLocation.OFFER_TILE
+                || from == TotemLocation.OFFER_TILE && to == TotemLocation.TURN_ORDER;
+    }
+
+    private void playTotemMoveSoundIfNeeded(Map<String, TotemAnchor> previousTotems,
+                                            Set<String> logicalTotemMoves) {
+        if (!logicalTotemMoves.isEmpty()
+                && !previousTotems.isEmpty()
+                && rootLayer != null
+                && rootLayer.getScene() != null) {
+            GuiAudio.playActionClick();
+        }
+    }
+
+    private void playTotemMoveAnimations(Map<String, TotemAnchor> previousTotems,
+                                         Set<String> logicalTotemMoves) {
+        if (logicalTotemMoves.isEmpty()
+                || previousTotems.isEmpty()
+                || rootLayer == null
+                || rootLayer.getScene() == null) {
             return;
         }
 
         rootLayer.applyCss();
         rootLayer.layout();
         Map<String, TotemAnchor> currentTotems = captureBoardTotems();
+        List<TotemMove> moves = new ArrayList<>();
         for (Map.Entry<String, TotemAnchor> entry : currentTotems.entrySet()) {
             String nickname = entry.getKey();
+            if (!logicalTotemMoves.contains(nickname)) {
+                continue;
+            }
             TotemAnchor current = entry.getValue();
             TotemAnchor previous = previousTotems.get(nickname);
             if (previous != null && previous.center.distance(current.center) >= TOTEM_MOVE_MIN_DISTANCE) {
-                playTotemMoveAnimation(previous, current);
+                moves.add(new TotemMove(previous, current));
             }
+        }
+
+        if (moves.isEmpty()) {
+            return;
+        }
+
+        for (TotemMove move : moves) {
+            playTotemMoveAnimation(move.from(), move.to());
         }
     }
 
@@ -650,6 +722,14 @@ public final class GameBoardView {
     }
 
     private record TotemAnchor(Node node, Point2D center, double width, double height) {
+    }
+
+    private record TotemMove(TotemAnchor from, TotemAnchor to) {
+    }
+
+    private enum TotemLocation {
+        TURN_ORDER,
+        OFFER_TILE
     }
 
     private Node disconnectedTotemsPanel() {
@@ -684,24 +764,26 @@ public final class GameBoardView {
     }
 
     private void showCardPanel(int cardId, boolean canTake, Runnable takeAction) {
-        HBox panel = new HBox(28);
+        HBox panel = new HBox(36);
         panel.getStyleClass().add("card-focus-panel");
-        panel.setAlignment(Pos.TOP_CENTER);
+        panel.setAlignment(Pos.CENTER);
+        panel.setMaxHeight(Region.USE_PREF_SIZE);
 
         // Left column: large card image inside a golden frame
         StackPane cardFrame = new StackPane();
         cardFrame.getStyleClass().add("card-focus-frame");
         cardFrame.getChildren().add(cardImages.create(cardId, DETAIL_CARD_WIDTH, DETAIL_CARD_HEIGHT));
         VBox leftCol = new VBox(cardFrame);
-        leftCol.setAlignment(Pos.TOP_CENTER);
+        leftCol.getStyleClass().add("card-focus-left");
+        leftCol.setAlignment(Pos.CENTER);
 
         // Right column: header, description lines, action buttons
-        VBox rightCol = new VBox(16);
+        VBox rightCol = new VBox(18);
         rightCol.getStyleClass().add("card-focus-right");
-        rightCol.setAlignment(Pos.TOP_LEFT);
+        rightCol.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(rightCol, Priority.ALWAYS);
-        rightCol.setMaxWidth(420);
-        rightCol.setPrefWidth(420);
+        rightCol.setMaxWidth(460);
+        rightCol.setPrefWidth(460);
 
         Label eyebrow = new Label(canTake ? "CONFIRM CARD" : "CARD DETAILS");
         eyebrow.getStyleClass().add("card-focus-eyebrow");
@@ -735,16 +817,16 @@ public final class GameBoardView {
 
         HBox actions = new HBox(10);
         actions.getStyleClass().add("card-focus-actions");
-        actions.setAlignment(Pos.CENTER_LEFT);
+        actions.setAlignment(Pos.CENTER);
         Button close = inlineButton("Close", false);
-        close.getStyleClass().add("card-focus-action-button");
-        close.setMinSize(120, 48);
+        close.getStyleClass().addAll("card-focus-action-button", "card-focus-close-button");
+        close.setMinSize(156, 52);
         close.setOnAction(event -> hideInlinePanel());
         actions.getChildren().add(close);
         if (canTake) {
             Button take = inlineButton("Take", true);
-            take.getStyleClass().add("card-focus-action-button");
-            take.setMinSize(120, 48);
+            take.getStyleClass().addAll("card-focus-action-button", "card-focus-take-button");
+            take.setMinSize(156, 52);
             take.setOnAction(event -> {
                 hideInlinePanel();
                 if (takeAction != null) {

@@ -1245,6 +1245,31 @@
     -fx-background-color: rgba(200, 65, 55, .72);
 }
 
+.dock-audio-button {
+    -fx-min-width: 32px;
+    -fx-pref-width: 32px;
+    -fx-min-height: 32px;
+    -fx-pref-height: 32px;
+    -fx-background-color: rgba(62, 22, 34, .56);
+    -fx-background-radius: 99px;
+    -fx-border-color: rgba(255, 226, 168, .38);
+    -fx-border-radius: 99px;
+    -fx-border-width: 1px;
+    -fx-padding: 0;
+}
+
+.dock-audio-button .font-icon {
+    -fx-icon-color: #fff2cf;
+}
+
+.dock-audio-button:hover {
+    -fx-background-color: rgba(255, 226, 168, .92);
+}
+
+.dock-audio-button:hover .font-icon {
+    -fx-icon-color: #3c1827;
+}
+
 /* ── Status labels ────────────────────────────────────────────────────────── */
 
 .player-row {
@@ -1462,9 +1487,13 @@
     -fx-border-color: rgba(255, 207, 110, .55);
     -fx-border-radius: 14px;
     -fx-border-width: 2px;
-    -fx-padding: 28px 36px;
-    -fx-max-width: 880px;
+    -fx-padding: 36px 44px;
+    -fx-max-width: 960px;
     -fx-effect: dropshadow(three-pass-box, rgba(8, 4, 6, .85), 42, 0, 0, 12);
+}
+
+.card-focus-left {
+    -fx-padding: 6px 0;
 }
 
 .card-focus-frame {
@@ -1478,7 +1507,7 @@
 }
 
 .card-focus-right {
-    -fx-padding: 0;
+    -fx-padding: 8px 0 8px 0;
 }
 
 .card-focus-eyebrow {
@@ -1492,7 +1521,7 @@
 .card-focus-title {
     -fx-font-family: "Noteworthy", "Avenir Next Condensed", "Copperplate", sans-serif;
     -fx-text-fill: #fff2cf;
-    -fx-font-size: 42px;
+    -fx-font-size: 46px;
     -fx-font-weight: normal;
     -fx-effect: dropshadow(three-pass-box, rgba(20, 8, 12, .85), 8, 0, 0, 3);
 }
@@ -1523,12 +1552,37 @@
 }
 
 .card-focus-actions {
-    -fx-padding: 14px 0 0 0;
+    -fx-padding: 18px 0 0 0;
+    -fx-spacing: 16px;
 }
 
 .card-focus-action-button {
-    -fx-font-size: 16px;
-    -fx-padding: 12px 26px;
+    -fx-font-size: 17px;
+    -fx-padding: 13px 34px;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+    -fx-border-width: 2px;
+    -fx-effect: dropshadow(three-pass-box, rgba(8, 4, 6, .42), 12, 0, 0, 4);
+}
+
+.card-focus-close-button {
+    -fx-background-color: rgba(255, 242, 207, .16);
+    -fx-border-color: rgba(255, 226, 168, .38);
+    -fx-text-fill: #fff2cf;
+}
+
+.card-focus-close-button:hover {
+    -fx-background-color: rgba(255, 226, 168, .30);
+}
+
+.card-focus-take-button {
+    -fx-background-color: #2f8f84;
+    -fx-border-color: rgba(143, 224, 216, .70);
+    -fx-text-fill: #fff7e8;
+}
+
+.card-focus-take-button:hover {
+    -fx-background-color: #3fb3a5;
 }
 
 .inline-panel-title {

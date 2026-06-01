@@ -10,6 +10,7 @@ import it.polimi.ingsw.network.protocol.clientbound.EventResolvedMessage;
 import it.polimi.ingsw.view.EndGameHelper;
 import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
 import it.polimi.ingsw.view.gui.util.GuiAnimations;
+import it.polimi.ingsw.view.gui.util.GuiAudio;
 import it.polimi.ingsw.view.gui.util.GuiIcons;
 import javafx.animation.FadeTransition;
 import javafx.animation.ParallelTransition;
@@ -29,6 +30,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignL;
+import org.kordamp.ikonli.materialdesign2.MaterialDesignV;
 import javafx.util.Duration;
 
 import java.util.ArrayList;
@@ -86,7 +88,7 @@ public final class EndGameView {
         winnerBox.getStyleClass().add("endgame-winner-box");
         winnerBox.setAlignment(Pos.CENTER);
 
-        content.getChildren().addAll(titleLabel(), standings, winnerBox, disconnectButton());
+        content.getChildren().addAll(titleHeader(), standings, winnerBox, disconnectButton());
         breakdownLayer = new StackPane();
         breakdownLayer.getStyleClass().add("endgame-breakdown-layer");
         breakdownLayer.setVisible(false);
@@ -137,6 +139,21 @@ public final class EndGameView {
         Label label = new Label("MESOS");
         label.getStyleClass().add("endgame-title");
         return label;
+    }
+
+    private Node titleHeader() {
+        StackPane header = new StackPane();
+        header.setMaxWidth(Double.MAX_VALUE);
+
+        Label title = titleLabel();
+        Button audio = audioToggleButton();
+        audio.getStyleClass().add("endgame-audio-button");
+
+        header.getChildren().addAll(title, audio);
+        StackPane.setAlignment(title, Pos.CENTER);
+        StackPane.setAlignment(audio, Pos.CENTER_RIGHT);
+        StackPane.setMargin(audio, new Insets(0, 10, 0, 0));
+        return header;
     }
 
     private Label winnerSectionLabel(boolean tie) {
@@ -670,6 +687,26 @@ public final class EndGameView {
             Platform.exit();
         });
         return quit;
+    }
+
+    private Button audioToggleButton() {
+        Button button = new Button("Audio");
+        button.getStyleClass().addAll("secondary-button", "game-rules-button");
+        button.setAccessibleText("Toggle audio");
+        GuiIcons.decorateButton(button, audioIcon());
+        GuiAnimations.addHoverScale(button);
+        button.setOnAction(event -> {
+            boolean enabled = GuiAudio.toggleEnabled();
+            if (enabled) {
+                GuiAudio.playMenuMusic();
+            }
+            GuiIcons.decorateButton(button, audioIcon());
+        });
+        return button;
+    }
+
+    private MaterialDesignV audioIcon() {
+        return GuiAudio.isEnabled() ? MaterialDesignV.VOLUME_HIGH : MaterialDesignV.VOLUME_OFF;
     }
 
     private int foodOf(String nickname) {

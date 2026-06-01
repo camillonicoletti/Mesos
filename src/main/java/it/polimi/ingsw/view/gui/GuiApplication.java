@@ -8,6 +8,7 @@ import it.polimi.ingsw.view.gui.component.EndGameView;
 import it.polimi.ingsw.view.gui.component.GameBoardView;
 import it.polimi.ingsw.view.gui.component.LoginView;
 import it.polimi.ingsw.view.gui.component.LobbyView;
+import it.polimi.ingsw.view.gui.util.GuiAudio;
 import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.ParallelTransition;
@@ -240,6 +241,7 @@ public final class GuiApplication extends Application {
         model = launchContext.model();
         controller.setDispatcher(Platform::runLater);
         assetCatalog = GuiAssetCatalog.loadDefault();
+        GuiAudio.preloadActionClick();
         root = new BorderPane();
         root.getStyleClass().add("app");
         suspensionOverlay = createSuspensionOverlay();
@@ -275,6 +277,7 @@ public final class GuiApplication extends Application {
         if (timer != null) {
             timer.stop();
         }
+        GuiAudio.shutdown();
     }
 
     private void render() {
@@ -312,6 +315,7 @@ public final class GuiApplication extends Application {
         root.setRight(null);
         root.setBottom(null);
         timerLabel = null;
+        syncAudioFor(screen);
 
         switch (screen) {
             case LOGIN -> {
@@ -357,6 +361,13 @@ public final class GuiApplication extends Application {
                 }
                 root.setCenter(endGameStack);
             }
+        }
+    }
+
+    private void syncAudioFor(Screen screen) {
+        switch (screen) {
+            case LOBBY, END_GAME -> GuiAudio.playMenuMusic();
+            case LOGIN, GAME -> GuiAudio.stopMenuMusic();
         }
     }
 

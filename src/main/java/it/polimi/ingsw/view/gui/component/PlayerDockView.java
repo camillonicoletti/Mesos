@@ -6,11 +6,14 @@ import it.polimi.ingsw.network.client.PlayerView;
 import it.polimi.ingsw.view.gui.asset.CardAsset;
 import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
 import it.polimi.ingsw.view.gui.util.GuiAnimations;
+import it.polimi.ingsw.view.gui.util.GuiAudio;
+import it.polimi.ingsw.view.gui.util.GuiIcons;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
@@ -32,6 +35,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.IntConsumer;
 import java.util.stream.Collectors;
+
+import org.kordamp.ikonli.materialdesign2.MaterialDesignV;
 
 final class PlayerDockView {
     private static final int MAX_VISIBLE_SUMMARIES = 3;
@@ -110,7 +115,7 @@ final class PlayerDockView {
         debugEnd.setOnAction(event -> controller.send(
                 new it.polimi.ingsw.network.protocol.serverbound.ForceEndGameMessage()));
 
-HBox statusRow = new HBox(14, status, spacer());
+        HBox statusRow = new HBox(14, status, spacer());
         if (model.isExtraPickAvailableForMe()) {
             Button skipExtra = new Button("Skip extra pick");
             skipExtra.getStyleClass().add("dock-exit");
@@ -119,12 +124,34 @@ HBox statusRow = new HBox(14, status, spacer());
                             new it.polimi.ingsw.controller.action.SkipExtraPickAction())));
             statusRow.getChildren().add(skipExtra);
         }
-        statusRow.getChildren().addAll(debugEnd, exit);
+        statusRow.getChildren().addAll(audioToggleButton(), debugEnd, exit);
         statusRow.getStyleClass().add("player-dock-status-row");
         statusRow.setAlignment(Pos.CENTER);
 
         dock.getChildren().addAll(statusRow, playerSummaryRows());
         return dock;
+    }
+
+    private Button audioToggleButton() {
+        Button button = new Button();
+        button.getStyleClass().add("dock-audio-button");
+        button.setAccessibleText("Toggle audio");
+        button.setTooltip(new Tooltip("Toggle audio"));
+        refreshAudioToggleIcon(button);
+        GuiAnimations.addHoverScale(button);
+        button.setOnAction(event -> {
+            GuiAudio.toggleEnabled();
+            refreshAudioToggleIcon(button);
+        });
+        return button;
+    }
+
+    private void refreshAudioToggleIcon(Button button) {
+        button.setGraphic(GuiIcons.icon(audioIcon(), 16));
+    }
+
+    private MaterialDesignV audioIcon() {
+        return GuiAudio.isEnabled() ? MaterialDesignV.VOLUME_HIGH : MaterialDesignV.VOLUME_OFF;
     }
 
     private VBox playerSummaryRows() {

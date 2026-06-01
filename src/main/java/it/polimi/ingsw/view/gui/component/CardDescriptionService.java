@@ -30,10 +30,7 @@ final class CardDescriptionService {
         Optional<JsonObject> details = assetCatalog.findCardDetails(cardId);
 
         asset.ifPresent(card -> {
-            StringBuilder header = new StringBuilder(labelForKind(card.getKind()));
-            card.getType().ifPresent(type -> header.append(" - ").append(labelForType(type)));
-            card.getEra().ifPresent(era -> header.append(" | Era ").append(era));
-            lines.add(header.toString());
+            lines.add(detailTitleFor(card, details.orElse(null)));
         });
 
         if (asset.isPresent() && details.isPresent()) {
@@ -193,6 +190,27 @@ final class CardDescriptionService {
         });
 
         return lines;
+    }
+
+    private String detailTitleFor(CardAsset card, JsonObject details) {
+        return switch (card.getKind()) {
+            case "character" -> card.getType()
+                    .map(this::characterTypeSingular)
+                    .orElse("Character");
+            case "event" -> card.getType()
+                    .map(this::labelForType)
+                    .orElse("Event");
+            case "building" -> {
+                if (details == null) {
+                    yield "Building";
+                }
+                yield Optional.ofNullable(details.get("effect"))
+                        .map(this::effectName)
+                        .map(this::labelForType)
+                        .orElse("Building");
+            }
+            default -> labelForKind(card.getKind());
+        };
     }
 
     private String stringDetail(JsonObject object, String key) {
