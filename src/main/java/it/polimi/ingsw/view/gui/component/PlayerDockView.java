@@ -25,11 +25,11 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Rectangle;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -538,17 +538,14 @@ final class PlayerDockView {
     }
 
     private Node statIcon(String path, double size) {
-        try (InputStream stream = assetCatalog.openResource(path).orElse(null)) {
-            if (stream != null) {
-                ImageView image = new ImageView(new Image(stream));
-                image.setFitWidth(size);
-                image.setFitHeight(size);
-                image.setPreserveRatio(true);
-                image.getStyleClass().add("tribe-stat-icon");
-                return image;
-            }
-        } catch (Exception ignored) {
-            // Fallback dot below.
+        Optional<Image> cached = assetCatalog.image(path);
+        if (cached.isPresent()) {
+            ImageView image = new ImageView(cached.get());
+            image.setFitWidth(size);
+            image.setFitHeight(size);
+            image.setPreserveRatio(true);
+            image.getStyleClass().add("tribe-stat-icon");
+            return image;
         }
 
         Region fallback = new Region();

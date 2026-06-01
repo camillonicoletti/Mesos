@@ -17,9 +17,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
-import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 final class OfferTilesView {
@@ -89,17 +89,14 @@ final class OfferTilesView {
 
     private void addTileImage(StackPane content, char tile) {
         String path = "assets/board/offer_" + tile + ".png";
-        try (InputStream stream = assetCatalog.openResource(path).orElse(null)) {
-            if (stream != null) {
-                ImageView view = new ImageView(new Image(stream));
-                view.setPreserveRatio(true);
-                view.setFitWidth(TILE_WIDTH);
-                view.setFitHeight(TILE_HEIGHT);
-                content.getChildren().add(view);
-                return;
-            }
-        } catch (Exception ignored) {
-            // Fallback letter is added below.
+        Optional<Image> cached = assetCatalog.image(path);
+        if (cached.isPresent()) {
+            ImageView view = new ImageView(cached.get());
+            view.setPreserveRatio(true);
+            view.setFitWidth(TILE_WIDTH);
+            view.setFitHeight(TILE_HEIGHT);
+            content.getChildren().add(view);
+            return;
         }
 
         Label letter = new Label(String.valueOf(tile));

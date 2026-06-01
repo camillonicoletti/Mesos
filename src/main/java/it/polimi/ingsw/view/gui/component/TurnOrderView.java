@@ -14,10 +14,10 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -103,17 +103,14 @@ final class TurnOrderView {
 
     private void addTileImage(StackPane target, int players, double width, double height, String fallbackText) {
         String path = "assets/board/turn_order_" + players + ".png";
-        try (InputStream stream = assetCatalog.openResource(path).orElse(null)) {
-            if (stream != null) {
-                ImageView image = new ImageView(new Image(stream));
-                image.setPreserveRatio(true);
-                image.setFitWidth(width);
-                image.setFitHeight(height);
-                target.getChildren().add(image);
-                return;
-            }
-        } catch (Exception ignored) {
-            // Fallback text is added below.
+        Optional<Image> cached = assetCatalog.image(path);
+        if (cached.isPresent()) {
+            ImageView image = new ImageView(cached.get());
+            image.setPreserveRatio(true);
+            image.setFitWidth(width);
+            image.setFitHeight(height);
+            target.getChildren().add(image);
+            return;
         }
 
         Label fallback = new Label(fallbackText);

@@ -212,6 +212,7 @@ public final class GuiApplication extends Application {
     private Label endGameSubtitleLabel;
     private String pendingNickname;
     private Timeline timer;
+    private boolean renderScheduled;
     private long shownConnectionEventVersion;
     private long shownErrorVersion;
     private Screen currentScreen;
@@ -254,7 +255,7 @@ public final class GuiApplication extends Application {
         StackPane.setMargin(toastHost, new Insets(0, 22, 22, 0));
         Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
 
-        model.addListener(this::render);
+        model.addListener(this::scheduleRender);
 
         Scene scene = new Scene(sceneRoot, 1280, 820);
         scene.getStylesheets().add(cssResource());
@@ -278,6 +279,24 @@ public final class GuiApplication extends Application {
             timer.stop();
         }
         GuiAudio.shutdown();
+    }
+
+    /**
+     * Coalesces model-change notifications into a single render per JavaFX
+     * pulse. A burst of {@code notifyChanged()} calls (e.g. the many messages
+     * that land at game start or a round transition) would otherwise trigger
+     * one full board refresh each; here they collapse into one. The dispatcher
+     * runs every model write on the FX thread, so this flag is single-threaded.
+     */
+    private void scheduleRender() {
+        if (renderScheduled) {
+            return;
+        }
+        renderScheduled = true;
+        Platform.runLater(() -> {
+            renderScheduled = false;
+            render();
+        });
     }
 
     private void render() {
