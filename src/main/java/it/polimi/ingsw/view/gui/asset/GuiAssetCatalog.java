@@ -4,11 +4,13 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import javafx.scene.image.Image;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -20,6 +22,8 @@ public final class GuiAssetCatalog {
     private final Map<Integer, CardAsset> cards;
     private final Map<Integer, JsonObject> cardDetails;
     private final JsonObject components;
+    /** Decoded images cached by resource path; JavaFX Image is immutable and shareable across ImageViews. */
+    private final Map<String, Image> imageCache = new HashMap<>();
 
     private GuiAssetCatalog(Map<Integer, CardAsset> cards, Map<Integer, JsonObject> cardDetails, JsonObject components) {
         this.cards = Collections.unmodifiableMap(new LinkedHashMap<>(cards));
@@ -91,6 +95,32 @@ public final class GuiAssetCatalog {
 
     public Optional<InputStream> openResource(String resourcePath) {
         return Optional.ofNullable(classLoader().getResourceAsStream(resourcePath));
+    }
+
+    /**
+     * Returns the decoded image for the given resource path, loading it from
+     * disk at most once and caching it thereafter. Returns empty if the
+     * resource is missing or cannot be decoded. Must be called on the JavaFX
+     * thread (the only thread that builds the views).
+     */
+    public Optional<Image> image(String resourcePath) {
+        if (resourcePath == null) {
+            return Optional.empty();
+        }
+        Image cached = imageCache.get(resourcePath);
+        if (cached != null) {
+            return Optional.of(cached);
+        }
+        try (InputStream stream = classLoader().getResourceAsStream(resourcePath)) {
+            if (stream == null) {
+                return Optional.empty();
+            }
+            Image image = new Image(stream);
+            imageCache.put(resourcePath, image);
+            return Optional.of(image);
+        } catch (Exception exception) {
+            return Optional.empty();
+        }
     }
 
     public String placeholderLabelFor(CardAsset card) {

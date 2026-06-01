@@ -10,7 +10,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
-import java.io.InputStream;
+import java.util.Optional;
 
 final class DeckView {
     private static final double CARD_WIDTH = 96;
@@ -50,17 +50,14 @@ final class DeckView {
 
     private void addDeckBack(StackPane cardBack) {
         String backPath = "assets/cards/backs/" + eraBackKey(model.getCurrentEra()) + ".png";
-        try (InputStream stream = assetCatalog.openResource(backPath).orElse(null)) {
-            if (stream != null) {
-                ImageView img = new ImageView(new Image(stream));
-                img.setFitWidth(CARD_WIDTH);
-                img.setFitHeight(CARD_HEIGHT);
-                img.setPreserveRatio(true);
-                cardBack.getChildren().add(img);
-                return;
-            }
-        } catch (Exception ignored) {
-            // Fallback label is added below.
+        Optional<Image> cached = assetCatalog.image(backPath);
+        if (cached.isPresent()) {
+            ImageView img = new ImageView(cached.get());
+            img.setFitWidth(CARD_WIDTH);
+            img.setFitHeight(CARD_HEIGHT);
+            img.setPreserveRatio(true);
+            cardBack.getChildren().add(img);
+            return;
         }
 
         Label placeholder = new Label(model.getCurrentEra() == null ? "TRIBE" : "ERA " + model.getCurrentEra().name());

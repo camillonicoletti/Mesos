@@ -8,7 +8,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 
-import java.io.InputStream;
+import java.util.Optional;
 
 final class TotemMarkerFactory {
     private static final String BOARD_TOTEM_PREFIX = "board-totem:";
@@ -89,18 +89,14 @@ final class TotemMarkerFactory {
     }
 
     private boolean addTotemImage(StackPane marker, TotemColor color, double fitHeight) {
-        try (InputStream stream = assetCatalog.openResource(assetPath(color)).orElse(null)) {
-            if (stream != null) {
-                ImageView image = new ImageView(new Image(stream));
-                image.setPreserveRatio(true);
-                image.setFitHeight(fitHeight);
-                marker.getChildren().add(image);
-                return true;
-            }
-        } catch (Exception ignored) {
-            // Fallback marker is added by the caller.
+        Optional<Image> cached = assetCatalog.image(assetPath(color));
+        if (cached.isPresent()) {
+            ImageView image = new ImageView(cached.get());
+            image.setPreserveRatio(true);
+            image.setFitHeight(fitHeight);
+            marker.getChildren().add(image);
+            return true;
         }
-
         return false;
     }
 

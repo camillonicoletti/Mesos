@@ -9,7 +9,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 
-import java.io.InputStream;
 import java.util.Optional;
 
 final class CardImageFactory implements PlayerDockView.CardImageProvider {
@@ -26,17 +25,14 @@ final class CardImageFactory implements PlayerDockView.CardImageProvider {
         card.setPrefSize(width, height);
 
         if (asset.isPresent() && asset.get().isFrontAvailable()) {
-            try (InputStream stream = assetCatalog.openResource(asset.get().getFrontPath()).orElse(null)) {
-                if (stream != null) {
-                    ImageView image = new ImageView(new Image(stream));
-                    image.setFitWidth(width);
-                    image.setFitHeight(height);
-                    image.setPreserveRatio(true);
-                    card.getChildren().add(image);
-                    return card;
-                }
-            } catch (Exception ignored) {
-                // Fall through to a placeholder if the optional local image is unreadable.
+            Optional<Image> cached = assetCatalog.image(asset.get().getFrontPath());
+            if (cached.isPresent()) {
+                ImageView image = new ImageView(cached.get());
+                image.setFitWidth(width);
+                image.setFitHeight(height);
+                image.setPreserveRatio(true);
+                card.getChildren().add(image);
+                return card;
             }
         }
 

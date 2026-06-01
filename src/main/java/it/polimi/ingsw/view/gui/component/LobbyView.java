@@ -7,6 +7,7 @@ import it.polimi.ingsw.network.protocol.serverbound.ReadyMessage;
 import it.polimi.ingsw.network.protocol.serverbound.SetPlayersCountMessage;
 import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
 import it.polimi.ingsw.view.gui.util.GuiAnimations;
+import it.polimi.ingsw.view.gui.util.GuiAudio;
 import it.polimi.ingsw.view.gui.util.GuiIcons;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -29,6 +30,7 @@ import org.kordamp.ikonli.materialdesign2.MaterialDesignA;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignB;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignC;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignL;
+import org.kordamp.ikonli.materialdesign2.MaterialDesignV;
 
 import java.io.InputStream;
 
@@ -121,6 +123,8 @@ public final class LobbyView {
         GuiAnimations.addHoverScale(rulesBtn);
         rulesBtn.setOnAction(event -> GuiApplication.openRulesPdf());
         box.getChildren().add(rulesBtn);
+
+        box.getChildren().add(audioToggleButton());
 
         if (model.isLobbyLeader()) {
             box.getChildren().add(playerCountSelector());
@@ -257,6 +261,25 @@ public final class LobbyView {
         button.getStyleClass().add("secondary-button");
         GuiIcons.decorateButton(button, ikon);
         return button;
+    }
+
+    private Button audioToggleButton() {
+        Button button = secondaryButton("Audio", audioIcon());
+        button.getStyleClass().addAll("game-rules-button", "lobby-action-button");
+        button.setAccessibleText("Toggle audio");
+        GuiAnimations.addHoverScale(button);
+        button.setOnAction(event -> {
+            boolean enabled = GuiAudio.toggleEnabled();
+            if (enabled) {
+                GuiAudio.playMenuMusic();
+            }
+            GuiIcons.decorateButton(button, audioIcon());
+        });
+        return button;
+    }
+
+    private MaterialDesignV audioIcon() {
+        return GuiAudio.isEnabled() ? MaterialDesignV.VOLUME_HIGH : MaterialDesignV.VOLUME_OFF;
     }
 
     private Label errorLabel() {
