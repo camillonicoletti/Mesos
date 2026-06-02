@@ -207,6 +207,9 @@ public final class GuiApplication extends Application {
     private Label suspensionTimerLabel;
     private Label suspensionConnectedLabel;
     private Label suspensionDisconnectedLabel;
+    // Shown when the model reports an involuntary server drop. Reuses the suspension overlay's
+    // CSS classes for visual consistency; carries only title, message and a quit button.
+    private StackPane serverDisconnectedOverlay;
     private VBox toastHost;
     private Label timerLabel;
     private Label endGameSubtitleLabel;
@@ -246,11 +249,13 @@ public final class GuiApplication extends Application {
         root = new BorderPane();
         root.getStyleClass().add("app");
         suspensionOverlay = createSuspensionOverlay();
+        serverDisconnectedOverlay = createServerDisconnectedOverlay();
         toastHost = new VBox(10);
         toastHost.getStyleClass().add("toast-host");
         toastHost.setPickOnBounds(false);
-        sceneRoot = new StackPane(root, suspensionOverlay, toastHost);
+        sceneRoot = new StackPane(root, suspensionOverlay, serverDisconnectedOverlay, toastHost);
         StackPane.setAlignment(suspensionOverlay, Pos.CENTER);
+        StackPane.setAlignment(serverDisconnectedOverlay, Pos.CENTER);
         StackPane.setAlignment(toastHost, Pos.BOTTOM_RIGHT);
         StackPane.setMargin(toastHost, new Insets(0, 22, 22, 0));
         Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
@@ -422,6 +427,7 @@ public final class GuiApplication extends Application {
 
     private void refreshTimer() {
         refreshSuspensionOverlay();
+        refreshServerDisconnectedOverlay();
         if (timerLabel == null) {
             return;
         }
@@ -596,6 +602,78 @@ public final class GuiApplication extends Application {
             suspensionDisconnectedLabel.setVisible(true);
             suspensionDisconnectedLabel.setManaged(true);
         }
+    }
+
+    /**
+     * Builds the full-screen overlay shown when the client detects an involuntary
+     * loss of the server connection (heartbeat timeout, socket failure, remote
+     * exception). Distinct from the suspension overlay, which assumes the server
+     * is alive and the match is merely paused.
+     *
+     * <p>Reuses the suspension overlay's CSS classes (background, card, title,
+     * message, quit button) so no new stylesheet is required. The overlay only
+     * exposes a quit action — there is no client-side reconnect.</p>
+     */
+    private StackPane createServerDisconnectedOverlay() {
+        StackPane overlay = new StackPane();
+        overlay.getStyleClass().add("suspension-overlay-root");
+        overlay.setVisible(false);
+        overlay.setManaged(false);
+        overlay.setPickOnBounds(true);
+
+        Image bg = loadSuspensionBackground();
+        if (bg != null) {
+            overlay.setStyle("-fx-background-image: url('"
+                    + getClass().getResource("/assets/suspension/suspended_match_bg.png").toExternalForm()
+                    + "'); -fx-background-size: cover; -fx-background-position: center;");
+        } else {
+            overlay.getStyleClass().add("suspension-overlay-fallback");
+        }
+
+        Region dim = new Region();
+        dim.getStyleClass().add("suspension-dim");
+
+        VBox card = new VBox(14);
+        card.getStyleClass().add("suspension-card");
+        card.setAlignment(Pos.CENTER);
+        card.setMaxWidth(560);
+        card.setMaxHeight(Region.USE_PREF_SIZE);
+
+        Label title = new Label("SERVER DISCONNECTED");
+        title.getStyleClass().add("suspension-title");
+
+        Label message = new Label("Connection to the server was lost. Restart the server and reconnect with the same nickname to resume the match.");
+        message.getStyleClass().add("suspension-message");
+        message.setWrapText(true);
+        message.setMaxWidth(500);
+        message.setAlignment(Pos.CENTER);
+
+        // Quit from a dead-connection state: don't try to round-trip a QuitMessage
+        // (the socket is already gone). Just close the window — the server has
+        // already lost us and will purge our slot via its own timeout.
+        Button quitButton = new Button("QUIT");
+        quitButton.getStyleClass().add("suspension-quit");
+        quitButton.setOnAction(event -> Platform.exit());
+
+        card.getChildren().addAll(title, message, quitButton);
+        overlay.getChildren().addAll(dim, card);
+        StackPane.setAlignment(card, Pos.CENTER);
+        return overlay;
+    }
+
+    /**
+     * Shows the server-disconnected overlay only when the drop was involuntary
+     * (flag set by {@link ClientModel#applyServerDisconnected(String)}) and the
+     * game has not already concluded — the {@code EndGameView} remains the
+     * authoritative end screen and must not be hidden by this overlay.
+     */
+    private void refreshServerDisconnectedOverlay() {
+        if (serverDisconnectedOverlay == null) {
+            return;
+        }
+        boolean show = model.isServerDisconnected() && !model.isGameEnded();
+        serverDisconnectedOverlay.setVisible(show);
+        serverDisconnectedOverlay.setManaged(show);
     }
 
     private void showPendingToasts() {

@@ -42,7 +42,10 @@ public class ClientController {
         try {
             connection.send(message);
         } catch (RuntimeException exception) {
-            model.applyConnectionLost("Connection to the server lost");
+            // Involuntary drop on the application send path: route through
+            // applyServerDisconnected so the GUI distinguishes this from a
+            // user-initiated quit/disconnect.
+            model.applyServerDisconnected("Connection to the server lost");
             throw exception;
         }
     }
@@ -134,6 +137,9 @@ public class ClientController {
     }
 
     private void onDisconnect() {
-        dispatcher.accept(() -> model.applyConnectionLost("Connection to server lost"));
+        // Callback from the transport layer (heartbeat timeout, reader I/O failure,
+        // RMI remote exception). Always involuntary by construction: voluntary
+        // quit/disconnect close the connection without going through this path.
+        dispatcher.accept(() -> model.applyServerDisconnected("Connection to server lost"));
     }
 }

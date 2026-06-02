@@ -33,6 +33,9 @@ public class ClientModel {
     private boolean gameSuspended;
     private long suspensionDeadlineMillis = -1L;
     private boolean connected = true;
+    // Set only by applyServerDisconnected (involuntary drop). Stays false on voluntary quit/disconnect
+    // so the GUI can show a dedicated "server disconnected" overlay only when appropriate. Terminal.
+    private boolean serverDisconnected = false;
     private String lastDisconnectedPlayer;
     private String lastConnectionEvent;
     private long lastConnectionEventExpiresAtMillis = -1L;
@@ -389,6 +392,33 @@ public class ClientModel {
         lastError = reason;
         lastErrorVersion++;
         notifyChanged();
+    }
+
+    /**
+     * Marks the connection to the server as lost due to an involuntary drop
+     * (socket failure, heartbeat timeout, remote exception). Distinct from
+     * {@link #applyConnectionLost(String)}, which is also reused for voluntary
+     * exits ({@code quit}/{@code disconnect}); the flag set here lets the view
+     * tell the two cases apart and show a dedicated "server disconnected"
+     * overlay only when the user did not choose to leave.
+     *
+     * <p>The flag is terminal: there is no client-side reconnect, so it is
+     * never reset for the lifetime of this {@code ClientModel}.</p>
+     *
+     * @param reason short human-readable cause, surfaced as the last error
+     */
+    public void applyServerDisconnected(String reason) {
+        serverDisconnected = true;
+        applyConnectionLost(reason);
+    }
+
+    /**
+     * @return {@code true} only after an involuntary server drop was applied
+     *         via {@link #applyServerDisconnected(String)}. Voluntary
+     *         {@code quit}/{@code disconnect} leave this flag {@code false}.
+     */
+    public boolean isServerDisconnected() {
+        return serverDisconnected;
     }
     public void applyLeaderboard(LeaderboardMessage m) {
         int pc = m.playersCount();
