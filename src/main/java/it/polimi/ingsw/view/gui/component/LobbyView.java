@@ -172,10 +172,10 @@ public final class LobbyView {
         box.getChildren().add(infoRow(MaterialDesignA.ACCOUNT_CIRCLE, nullSafe(model.getMyNickname())));
         box.getChildren().add(infoRow(MaterialDesignA.ACCOUNT_MULTIPLE, expectedPlayersText() + " players"));
 
-        Label connection = new Label(model.isConnected() ? "Connected" : "Disconnected");
+        Label connection = new Label(connectionText());
         connection.setGraphic(GuiIcons.icon(model.isConnected() ? MaterialDesignC.CONNECTION : MaterialDesignC.CLOSE_NETWORK, 15));
         connection.setContentDisplay(ContentDisplay.LEFT);
-        connection.getStyleClass().add(model.isConnected() ? "ok" : "error");
+        connection.getStyleClass().add(model.isConnected() ? "ok" : model.isReconnecting() ? "notice" : "error");
         box.getChildren().add(connection);
 
         if (model.getLastConnectionEvent() != null) {
@@ -285,6 +285,13 @@ public final class LobbyView {
         label.getStyleClass().add("error");
         label.setWrapText(true);
         return label;
+    }
+
+    private String connectionText() {
+        if (model.isConnected()) {
+            return "Connected";
+        }
+        return model.isReconnecting() ? "Reconnecting..." : "Disconnected";
     }
 
     private String nullSafe(Object value) {

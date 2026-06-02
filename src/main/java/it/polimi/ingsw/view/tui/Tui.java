@@ -79,12 +79,12 @@ public class Tui implements View {
     public void run() {
         renderer.render(model);
         loginLoop();
-        if (!model.isConnected()) {
+        if (!isClientActive()) {
             return;
         }
 
         waitForInitialStateSync();
-        if (!model.isConnected()) {
+        if (!isClientActive()) {
             return;
         }
 
@@ -165,7 +165,11 @@ public class Tui implements View {
     // ── Main input loop ──────────────────────────────────────────────────────
 
     private void interactiveInputLoop() {
-        while (model.isConnected() && !model.isGameEnded()) {
+        while (isClientActive() && !model.isGameEnded()) {
+            if (model.isReconnecting()) {
+                try { Thread.sleep(500); } catch (InterruptedException e) { return; }
+                continue;
+            }
             if (model.isGameSuspended()
                     || model.getLastConnectionEvent() != null
                     || model.getLastTurnEvent() != null) {
@@ -230,7 +234,7 @@ public class Tui implements View {
     }
 
     private void suspensionTimerRenderLoop() {
-        while (model.isConnected() && !model.isGameEnded()) {
+        while (isClientActive() && !model.isGameEnded()) {
             if (model.isGameSuspended()) {
                 renderer.render(model);
                 if (activePrompt != null) {
@@ -297,7 +301,7 @@ public class Tui implements View {
     // ── End ──────────────────────────────────────────────────────────────────
 
     private void endGame() {
-        if (!model.isConnected()) {
+        if (!isClientActive()) {
             System.out.println("\nConnection lost.");
             return;
         }
@@ -339,7 +343,7 @@ public class Tui implements View {
 
     private void waitForGameEnd() {
         synchronized (modelLock) {
-            while (model.isConnected() && !model.isGameEnded()) {
+            while (isClientActive() && !model.isGameEnded()) {
                 try { modelLock.wait(1_000); }
                 catch (InterruptedException e) { Thread.currentThread().interrupt(); return; }
             }
@@ -348,13 +352,17 @@ public class Tui implements View {
 
     private void waitForInitialStateSync() {
         synchronized (modelLock) {
-            while (model.isConnected()
+            while (isClientActive()
                     && model.getGameState() == null
                     && model.getLobbyPlayers().isEmpty()) {
                 try { modelLock.wait(1_000); }
                 catch (InterruptedException e) { Thread.currentThread().interrupt(); return; }
             }
         }
+    }
+
+    private boolean isClientActive() {
+        return model.isConnected() || model.isReconnecting();
     }
 
     private String readLineWithPrompt(String prompt) {

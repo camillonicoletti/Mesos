@@ -214,6 +214,7 @@ public final class GameBoardView {
     private Node disconnectedTotemsPanel() {
         List<PlayerView> disconnectedPlayers = model.getPlayers().values().stream()
                 .filter(player -> model.isPlayerDisconnected(player.getNickname()))
+                .filter(player -> !model.getTotemOnTiles().containsValue(player.getNickname()))
                 .toList();
         if (disconnectedPlayers.isEmpty()) {
             return null;

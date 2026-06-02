@@ -32,17 +32,26 @@ public class ClientController {
     private static final int LEADERBOARD_FETCH_LIMIT = 10;
 
     private final ClientModel model;
-    private final ClientSideConnection connection;
+    private ClientSideConnection connection;
+    private final ClientConnectionSupervisor connectionSupervisor;
     private final Map<Class<? extends ServerMessage>, Consumer<ServerMessage>> messageHandlers;
     private Consumer<Runnable> dispatcher = Runnable::run;
     private View view;
+    private volatile boolean voluntaryClose;
 
     public ClientController(ClientModel model, ClientSideConnection connection) {
+        this(model, connection, null);
+    }
+
+    public ClientController(ClientModel model, ClientSideConnection connection,
+                            ClientConnectionFactory connectionFactory) {
         this.model = model;
         this.connection = connection;
+        this.connectionSupervisor = connectionFactory == null
+                ? null
+                : new ClientConnectionSupervisor(connectionFactory, this::installRecoveredConnection);
         this.messageHandlers = createMessageHandlers();
-        connection.setOnMessage(this::onMessage);
-        connection.setOnDisconnect(this::onDisconnect);
+        installConnection(connection);
     }
 
     /**
@@ -66,17 +75,14 @@ public class ClientController {
 
 
     public void send(ClientMessage message) {
+        if (!model.isConnected()) {
+            handleRecoverableConnectionLoss("Server unavailable. Reconnecting...");
+            return;
+        }
         try {
             connection.send(message);
         } catch (RuntimeException exception) {
-            // Involuntary drop on the application send path: flag a server
-            // disconnection (distinct from a user-initiated quit/disconnect) so the
-            // GUI can show the dedicated overlay, then notify the view.
-            model.applyServerDisconnected("Connection to the server lost");
-            if (view != null) {
-                view.onConnectionLost();
-            }
-            throw exception;
+            handleRecoverableConnectionLoss("Connection to server lost. Reconnecting...");
         }
     }
 
@@ -151,6 +157,8 @@ public class ClientController {
     }
 
     public void disconnect() {
+        voluntaryClose = true;
+        stopReconnectSupervisor();
         try {
             connection.send(new DisconnectMessage());
         } catch (RuntimeException ignored) {
@@ -166,6 +174,8 @@ public class ClientController {
      * (irreversible, terminates the game) rather than a recoverable network drop.
      */
     public void quit() {
+        voluntaryClose = true;
+        stopReconnectSupervisor();
         try {
             connection.send(new QuitMessage());
         } catch (RuntimeException ignored) {
@@ -271,14 +281,44 @@ public class ClientController {
     }
 
     private void onDisconnect() {
-        // Callback from the transport layer (heartbeat timeout, reader I/O failure,
-        // RMI remote exception). Always involuntary by construction: voluntary
-        // quit/disconnect close the connection without going through this path.
-        dispatcher.accept(() -> {
-            model.applyServerDisconnected("Connection to server lost");
-            if (view != null) {
-                view.onConnectionLost();
-            }
-        });
+        if (voluntaryClose) {
+            return;
+        }
+        dispatcher.accept(() -> handleRecoverableConnectionLoss("Connection to server lost. Reconnecting..."));
+    }
+
+    private synchronized void installConnection(ClientSideConnection connection) {
+        connection.setOnMessage(this::onMessage);
+        connection.setOnDisconnect(this::onDisconnect);
+    }
+
+    private synchronized void installRecoveredConnection(ClientSideConnection recoveredConnection) {
+        this.connection = recoveredConnection;
+        installConnection(recoveredConnection);
+    }
+
+    private void handleRecoverableConnectionLoss(String reason) {
+        model.applyServerDisconnected(reason);
+        if (view != null) {
+            view.onConnectionLost();
+        }
+        startReconnectIfPossible();
+    }
+
+    private void startReconnectIfPossible() {
+        if (connectionSupervisor == null) {
+            return;
+        }
+        String nickname = model.getMyNickname();
+        if (nickname == null || nickname.isBlank() || !model.isLoginSuccess()) {
+            return;
+        }
+        connectionSupervisor.start(nickname);
+    }
+
+    private void stopReconnectSupervisor() {
+        if (connectionSupervisor != null) {
+            connectionSupervisor.stop();
+        }
     }
 }

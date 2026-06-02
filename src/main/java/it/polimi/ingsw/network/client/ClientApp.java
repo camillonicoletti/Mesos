@@ -1,10 +1,6 @@
 package it.polimi.ingsw.network.client;
 
 import it.polimi.ingsw.network.transport.ClientSideConnection;
-import it.polimi.ingsw.network.transport.SocketClientConnection;
-
-import java.io.IOException;
-import java.net.Socket;
 
 public class ClientApp {
 
@@ -19,16 +15,18 @@ public class ClientApp {
             return;
         }
 
-        ClientSideConnection connection = createConnection(options.host(), options.socketPort());
-        ClientRuntime.run(connection);
+        SocketClientConnectionFactory factory = new SocketClientConnectionFactory(
+                options.host(), options.socketPort());
+        ClientSideConnection connection = createConnection(factory, factory.endpointDescription());
+        ClientRuntime.run(connection, factory);
     }
 
-    private static ClientSideConnection createConnection(String host, int port) {
+    private static ClientSideConnection createConnection(ClientConnectionFactory factory,
+                                                        String endpointDescription) {
         try {
-            Socket socket = new Socket(host, port);
-            return new SocketClientConnection(socket);
-        } catch (IOException e) {
-            System.err.println("Unable to connect to " + host + ":" + port + " — " + e.getMessage());
+            return factory.create();
+        } catch (Exception e) {
+            System.err.println("Unable to connect to " + endpointDescription + " — " + e.getMessage());
             System.exit(1);
             return null;
         }

@@ -82,13 +82,7 @@ public class TotemPlacementState extends AbstractGameState {
         }
 
         boolean wasCurrentPlayer = playerNickname.equals(getCurrentPlayerNickname(ctx));
-        Player disconnectedPlayer = findPlayer(ctx, playerNickname);
         ctx.markPlayerDisconnected(playerNickname);
-        if (disconnectedPlayer != null
-                && ctx.getGame().getCurrentRound().clearOfferChoiceForPlayer(disconnectedPlayer)) {
-            turnQueue.unmarkPlaced(playerNickname);
-            ctx.notifyListeners(l -> l.onGameSnapshotChanged());
-        }
         if (wasCurrentPlayer && ctx.canContinueAfterDisconnection()) {
             skipCurrentPlayer(ctx);
         }
@@ -102,8 +96,14 @@ public class TotemPlacementState extends AbstractGameState {
         if (!ctx.containsGamePlayer(playerNickname)) {
             return;
         }
-        ctx.waitUntilNextRound(playerNickname);
+        if (!turnQueue.hasPlaced(playerNickname)) {
+            ctx.waitUntilNextRound(playerNickname);
+        }
         turnQueue.advanceToNextAvailablePlayer(ctx);
+        if (ctx.canContinueAfterDisconnection() && haveAllConnectedPlayersPlaced(ctx)) {
+            ctx.changeState(new ActionResolutionState());
+            return;
+        }
         notifyCurrentPlayer(ctx);
     }
 

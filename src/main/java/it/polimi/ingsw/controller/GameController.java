@@ -159,9 +159,13 @@ public class GameController implements Serializable {
         currentState.onPlayerReconnected(this, normalizedNickname);
         notifyListeners(l -> l.onPlayerReconnected(normalizedNickname));
         updateSuspensionStatus();
-        // If reconnection brings the connected count back above threshold, resume.
+        // If reconnection brings the connected count back above threshold,
+        // resume only if we are still wrapping the interrupted state. The
+        // wrapped state may already have advanced during onPlayerReconnected().
         if (wasSuspended && !isSuspended()) {
-            resumeSuspendedState();
+            if (currentState instanceof SuspendedState) {
+                resumeSuspendedState();
+            }
             notifyListeners(GameListener::onGameResumed);
         }
     }

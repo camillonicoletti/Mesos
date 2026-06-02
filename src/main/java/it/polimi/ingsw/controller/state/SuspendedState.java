@@ -40,7 +40,7 @@ public class SuspendedState extends AbstractGameState {
             return;
         }
 
-        ctx.markPlayerDisconnected(playerNickname);
+        suspendedState.onPlayerDisconnected(ctx, playerNickname);
     }
 
     @Override
@@ -48,5 +48,7 @@ public class SuspendedState extends AbstractGameState {
         if (!ctx.containsGamePlayer(playerNickname)) {
             return;
         }
+
+        suspendedState.onPlayerReconnected(ctx, playerNickname);
     }
 }

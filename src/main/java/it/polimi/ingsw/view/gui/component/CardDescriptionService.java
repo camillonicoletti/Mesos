@@ -193,35 +193,28 @@ final class CardDescriptionService {
     }
 
     private String detailTitleFor(CardAsset card, JsonObject details) {
-        return switch (card.getKind()) {
-            case "character" -> {
-                // Rich header for characters: "<Kind> - <TypePlural> | Era <era>"
-                // (e.g. "Character - Hunters | Era I"). The era comes from the card
-                // detail JSON; type and era are appended only when available.
-                StringBuilder title = new StringBuilder(labelForKind(card.getKind()));
-                card.getType()
-                        .map(this::labelForType)
-                        .ifPresent(type -> title.append(" - ").append(type));
-                String era = details != null ? stringDetail(details, "era") : "";
-                if (!era.isEmpty()) {
-                    title.append(" | Era ").append(era);
-                }
-                yield title.toString();
-            }
-            case "event" -> card.getType()
+        String title = switch (card.getKind()) {
+            case "character" -> "Character - " + card.getType()
+                    .map(this::labelForType)
+                    .orElse("Character");
+            case "event" -> "Event - " + card.getType()
                     .map(this::labelForType)
                     .orElse("Event");
-            case "building" -> {
-                if (details == null) {
-                    yield "Building";
-                }
-                yield Optional.ofNullable(details.get("effect"))
-                        .map(this::effectName)
-                        .map(this::labelForType)
-                        .orElse("Building");
-            }
+            case "building" -> "Building - " + Optional.ofNullable(details)
+                    .map(data -> data.get("effect"))
+                    .map(this::effectName)
+                    .map(this::labelForType)
+                    .orElse("Building");
             default -> labelForKind(card.getKind());
         };
+
+        String era = details != null ? stringDetail(details, "era") : "";
+        if (!era.isEmpty()) {
+            return title + " | Era " + era;
+        }
+        return card.getEra()
+                .map(value -> title + " | Era " + value)
+                .orElse(title);
     }
 
     private String stringDetail(JsonObject object, String key) {

@@ -70,6 +70,18 @@ final class ActionTurnQueue implements Serializable {
         return player != null && player.getNickname().equals(nickname);
     }
 
+    boolean hasPendingPlayer(String nickname) {
+        if (nickname == null) {
+            return false;
+        }
+        for (int i = currentIndex; i < orderedPlayers.size(); i++) {
+            if (nickname.equals(orderedPlayers.get(i).player.getNickname())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     void advance() {
         if (hasCurrentPlayer()) {
             currentIndex++;

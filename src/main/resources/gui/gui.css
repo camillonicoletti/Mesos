@@ -908,6 +908,11 @@
     -fx-effect: dropshadow(three-pass-box, rgba(20, 8, 5, .60), 6, 0, 0, 2);
 }
 
+.tile-totem-disconnected {
+    -fx-opacity: .38;
+    -fx-effect: dropshadow(three-pass-box, rgba(15, 10, 12, .78), 8, 0, 0, 2);
+}
+
 .tile-totem-body {
     -fx-min-width: 34px;
     -fx-min-height: 34px;

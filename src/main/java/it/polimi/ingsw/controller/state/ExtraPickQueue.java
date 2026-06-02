@@ -96,4 +96,16 @@ final class ExtraPickQueue implements Serializable {
         Player player = currentPlayer();
         return player != null && player.getNickname().equals(nickname);
     }
+
+    boolean hasPendingPlayer(String nickname) {
+        if (nickname == null) {
+            return false;
+        }
+        for (int i = currentIndex; i < entries.size(); i++) {
+            if (nickname.equals(entries.get(i).player.getNickname())) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

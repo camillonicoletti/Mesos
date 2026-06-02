@@ -575,15 +575,23 @@ public class GameControllerComprehensiveBehaviorTest {
 
         @Test
         void suspensionResumeKeepsTotemPlacementProgress() {
-            GameController controller = createStartedTotemPlacementController(2, List.of(
-                    new OfferTile('A', 1, List.of(new ActionSlot(new FoodSlot(), 1))),
-                    new OfferTile('B', 1, List.of(new ActionSlot(new FoodSlot(), 1)))
-            ));
+            Round round = createRoundWithRows(
+                    List.of(new HunterCard(200, Era.I, 1, false)),
+                    new ArrayList<>(),
+                    new ArrayList<>(),
+                    new ArrayList<>()
+            );
+            GameController controller = createBaseGameController(createPlayers(2), List.of(
+                    new OfferTile('A', 1, List.of(new ActionSlot(new LowerRowSlot(), 1))),
+                    new OfferTile('B', 1, List.of(new ActionSlot(new LowerRowSlot(), 1)))
+            ), round, new TotemPlacementState());
 
             controller.onMessageReceived("Alice", new PlaceTotemAction('A'));
             controller.onPlayerDisconnection("Bob");
             controller.onPlayerReconnection("Bob");
 
+            assertInstanceOf(ActionResolutionState.class, controller.getCurrentState());
+            assertEquals(1, controller.getGame().getCurrentRound().getPlayerChoices().size());
             assertThrows(IllegalStateException.class,
                     () -> controller.onMessageReceived("Alice", new PlaceTotemAction('B')));
         }

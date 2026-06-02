@@ -9,13 +9,23 @@ final class ClientRuntime {
     }
 
     static void run(ClientSideConnection connection) {
-        run(connection, () -> {
+        run(connection, null, () -> {
         });
     }
 
     static void run(ClientSideConnection connection, StartupStep beforeViewRun) {
+        run(connection, null, beforeViewRun);
+    }
+
+    static void run(ClientSideConnection connection, ClientConnectionFactory connectionFactory) {
+        run(connection, connectionFactory, () -> {
+        });
+    }
+
+    static void run(ClientSideConnection connection, ClientConnectionFactory connectionFactory,
+                    StartupStep beforeViewRun) {
         ClientModel model = new ClientModel();
-        ClientController controller = new ClientController(model, connection);
+        ClientController controller = new ClientController(model, connection, connectionFactory);
         View view = ClientViewSelector.select(controller, model);
         controller.setView(view);
 

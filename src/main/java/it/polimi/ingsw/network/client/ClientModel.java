@@ -28,6 +28,7 @@ public class ClientModel {
     private boolean gameSuspended;
     private long suspensionDeadlineMillis = -1L;
     private boolean connected = true;
+    private boolean reconnecting;
     // Set only by applyServerDisconnected (involuntary drop). Stays false on voluntary quit/disconnect
     // so the GUI can show a dedicated "server disconnected" overlay only when appropriate. Terminal.
     private boolean serverDisconnected = false;
@@ -85,7 +86,11 @@ public class ClientModel {
     // ── apply ────────────────────────────────────────────────────────────────
 
     public void applyLoginAck(LoginAckMessage m) {
-        connected = true;
+        connected = m.isSuccess();
+        reconnecting = false;
+        if (m.isSuccess()) {
+            serverDisconnected = false;
+        }
         loginSuccess = m.isSuccess();
         lastError = m.isSuccess() ? null : m.getErrorReason();
         if (lastError != null) {
@@ -343,8 +348,18 @@ public class ClientModel {
 
     public void applyConnectionLost(String reason) {
         connected = false;
+        reconnecting = false;
         lastError = reason;
         lastErrorVersion++;
+    }
+
+    public void applyReconnecting(String reason) {
+        connected = false;
+        reconnecting = true;
+        if (!Objects.equals(lastError, reason)) {
+            lastError = reason;
+            lastErrorVersion++;
+        }
     }
 
     /**
@@ -355,14 +370,14 @@ public class ClientModel {
      * tell the two cases apart and show a dedicated "server disconnected"
      * overlay only when the user did not choose to leave.
      *
-     * <p>The flag is terminal: there is no client-side reconnect, so it is
-     * never reset for the lifetime of this {@code ClientModel}.</p>
+     * <p>The client keeps trying to reconnect; a later successful
+     * {@link LoginAckMessage} clears this flag.</p>
      *
      * @param reason short human-readable cause, surfaced as the last error
      */
     public void applyServerDisconnected(String reason) {
         serverDisconnected = true;
-        applyConnectionLost(reason);
+        applyReconnecting(reason);
     }
 
     /**
@@ -384,6 +399,7 @@ public class ClientModel {
 
     public boolean isLoginSuccess()                { return loginSuccess; }
     public boolean isConnected()                   { return connected; }
+    public boolean isReconnecting()                { return reconnecting; }
     public String getLastError()                   { return lastError; }
     public long getLastErrorVersion()              { return lastErrorVersion; }
     public String getLastConnectionEvent() {

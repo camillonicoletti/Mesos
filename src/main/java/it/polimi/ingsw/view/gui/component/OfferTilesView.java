@@ -60,9 +60,8 @@ final class OfferTilesView {
 
         for (char tile : activeTiles()) {
             String owner = model.getTotemOnTiles().get(tile);
-            String activeOwner = activeOwner(owner);
-            Button button = offerTileButton(tile, activeOwner);
-            button.setOnAction(event -> placeTotem(tile, activeOwner));
+            Button button = offerTileButton(tile, owner);
+            button.setOnAction(event -> placeTotem(tile, owner));
             GuiAnimations.addHoverScale(button);
             pane.getChildren().add(button);
         }
@@ -111,6 +110,9 @@ final class OfferTilesView {
         TotemColor color = player == null ? null : player.getTotemColor();
         StackPane badge = totemMarkers.create(color, owner, TOTEM_HEIGHT);
         TotemMarkerFactory.tagBoardTotem(badge, owner);
+        if (model.isPlayerDisconnected(owner)) {
+            badge.getStyleClass().add("tile-totem-disconnected");
+        }
         badge.setTranslateX(0);
         badge.setTranslateY(TOTEM_SLOT_Y);
 
@@ -124,13 +126,6 @@ final class OfferTilesView {
         }
 
         controller.placeTotem(tile);
-    }
-
-    private String activeOwner(String owner) {
-        if (owner != null && model.isPlayerDisconnected(owner)) {
-            return null;
-        }
-        return owner;
     }
 
     private List<Character> activeTiles() {

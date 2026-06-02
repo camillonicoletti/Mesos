@@ -11,7 +11,6 @@ import java.util.function.Consumer;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -60,9 +59,9 @@ class ServerDisconnectedRoutingTest {
     }
 
     /**
-     * The flag is terminal: there is no client-side reconnect, so a later
-     * {@code applyConnectionLost} (e.g. the user clicking quit from the
-     * server-disconnected overlay) must not clear it.
+     * The flag stays set until a successful login/reconnect acknowledgement
+     * arrives. A later voluntary close must not hide that the connection was
+     * originally lost because the server went away.
      */
     @Test
     void serverDisconnectedFlagIsTerminal() {
@@ -77,8 +76,8 @@ class ServerDisconnectedRoutingTest {
 
     /**
      * On the application send path, a transport-level RuntimeException must
-     * route through {@code applyServerDisconnected} and rethrow so existing
-     * callers' error handling stays unchanged.
+     * route through {@code applyServerDisconnected}. The controller keeps the
+     * client alive and starts reconnect instead of crashing the view.
      */
     @Test
     void controllerSendFailureRoutesThroughServerDisconnected() {
@@ -86,11 +85,13 @@ class ServerDisconnectedRoutingTest {
         ThrowingConnection connection = new ThrowingConnection();
         ClientController controller = new ClientController(model, connection);
 
-        assertThrows(RuntimeException.class, () -> controller.send(new PongMessage()));
+        controller.send(new PongMessage());
 
         assertTrue(model.isServerDisconnected(),
                 "send() failure must mark the model as involuntarily server-disconnected");
         assertFalse(model.isConnected());
+        assertTrue(model.isReconnecting(),
+                "send() failure must leave the client waiting for the server to come back");
     }
 
     /**
@@ -109,6 +110,7 @@ class ServerDisconnectedRoutingTest {
 
         assertTrue(model.isServerDisconnected());
         assertFalse(model.isConnected());
+        assertTrue(model.isReconnecting());
     }
 
     /**

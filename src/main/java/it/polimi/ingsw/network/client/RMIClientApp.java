@@ -1,11 +1,7 @@
 package it.polimi.ingsw.network.client;
 
 import it.polimi.ingsw.network.rmi.RMIClientConnection;
-import it.polimi.ingsw.network.rmi.RemoteServer;
 import it.polimi.ingsw.network.transport.ClientSideConnection;
-
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
 
 /**
  * Client bootstrap for the RMI transport.
@@ -23,25 +19,24 @@ public class RMIClientApp {
             return;
         }
 
-        ClientSideConnection connection = createConnection(
+        RmiClientConnectionFactory factory = new RmiClientConnectionFactory(
                 options.host(),
                 options.registryPort(),
                 options.rmiBindingName());
-        ClientRuntime.run(connection, () -> registerWithServer(connection));
+        ClientSideConnection connection = createConnection(factory, factory.endpointDescription());
+        ClientRuntime.run(connection, factory, () -> registerWithServer(connection));
     }
 
     private static void registerWithServer(ClientSideConnection connection) throws java.rmi.RemoteException {
         ((RMIClientConnection) connection).register();
     }
 
-    private static ClientSideConnection createConnection(String host, int registryPort, String bindingName) {
+    private static ClientSideConnection createConnection(ClientConnectionFactory factory,
+                                                        String endpointDescription) {
         try {
-            Registry registry = LocateRegistry.getRegistry(host, registryPort);
-            RemoteServer remoteServer = (RemoteServer) registry.lookup(bindingName);
-            return new RMIClientConnection(remoteServer);
+            return factory.create();
         } catch (Exception exception) {
-            System.err.println("Unable to connect to the RMI registry at "
-                    + host + ":" + registryPort + " — " + exception.getMessage());
+            System.err.println("Unable to connect to " + endpointDescription + " — " + exception.getMessage());
             System.exit(1);
             return null;
         }

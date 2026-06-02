@@ -272,7 +272,27 @@ public class ActionResolutionState extends AbstractGameState {
         if (!ctx.containsGamePlayer(playerNickname)) {
             return;
         }
-        ctx.waitUntilNextRound(playerNickname);
+
+        if (isInExtraPickPhase()) {
+            ExtraPickQueue queue = getExtraPickQueue();
+            if (!queue.hasPendingPlayer(playerNickname)) {
+                ctx.waitUntilNextRound(playerNickname);
+                return;
+            }
+            if (queue.isCurrentPlayer(playerNickname)) {
+                ctx.notifyListeners(l -> l.onCurrentPlayerChanged(playerNickname));
+            }
+            return;
+        }
+
+        ActionTurnQueue queue = getActionTurnQueue();
+        if (!queue.hasPendingPlayer(playerNickname)) {
+            ctx.waitUntilNextRound(playerNickname);
+            return;
+        }
+        if (queue.isCurrentPlayer(playerNickname)) {
+            ctx.notifyListeners(l -> l.onCurrentPlayerChanged(playerNickname));
+        }
     }
 
     @Override

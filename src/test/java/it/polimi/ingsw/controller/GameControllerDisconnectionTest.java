@@ -3,13 +3,16 @@ import it.polimi.ingsw.model.Round;
 import it.polimi.ingsw.model.board.ActionSlot;
 import it.polimi.ingsw.model.board.Board;
 import it.polimi.ingsw.model.board.FoodSlot;
+import it.polimi.ingsw.model.board.LowerRowSlot;
 import it.polimi.ingsw.model.board.OfferTile;
 import it.polimi.ingsw.model.board.TurnOrderTile;
 import it.polimi.ingsw.controller.action.JoinGameAction;
+import it.polimi.ingsw.controller.action.PickCardAction;
 import it.polimi.ingsw.controller.action.PlaceTotemAction;
 import it.polimi.ingsw.controller.action.ReadyAction;
 import it.polimi.ingsw.controller.action.SetPlayerCountAction;
 import it.polimi.ingsw.controller.listener.GameListener;
+import it.polimi.ingsw.controller.state.ActionResolutionState;
 import it.polimi.ingsw.controller.state.LobbyState;
 import it.polimi.ingsw.controller.state.ReadyCheckState;
 import it.polimi.ingsw.controller.state.StartGameState;
@@ -18,6 +21,7 @@ import it.polimi.ingsw.controller.state.TotemPlacementState;
 import it.polimi.ingsw.model.Game;
 import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.Totem;
+import it.polimi.ingsw.model.card.HunterCard;
 import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.TotemColor;
 import org.junit.jupiter.api.Test;
@@ -167,6 +171,48 @@ public class GameControllerDisconnectionTest {
     }
 
     @Test
+    void reconnectAfterPlacedTotemKeepsOfferTileAndPlayerActsNormally() {
+        GameController controller = createStartedGameControllerWithLowerPickTiles();
+
+        controller.onMessageReceived("Alice", new PlaceTotemAction('B'));
+        controller.onPlayerDisconnection("Alice");
+
+        assertTrue(controller.isSuspended());
+        assertEquals("Alice", controller.getGame().getCurrentRound().getPlayerChoices().entrySet().stream()
+                .filter(entry -> entry.getValue().getLetter() == 'B')
+                .map(entry -> entry.getKey().getNickname())
+                .findFirst()
+                .orElseThrow());
+
+        controller.onPlayerReconnection("Alice");
+
+        assertFalse(controller.isSuspended());
+        assertFalse(controller.isPlayerWaitingNextRound("Alice"));
+        assertInstanceOf(TotemPlacementState.class, controller.getCurrentState());
+
+        assertThrows(IllegalStateException.class, () ->
+                controller.onMessageReceived("Bob", new PlaceTotemAction('B'))
+        );
+
+        controller.onMessageReceived("Bob", new PlaceTotemAction('C'));
+
+        assertInstanceOf(ActionResolutionState.class, controller.getCurrentState());
+        assertEquals("Alice", controller.getCurrentTurnPlayerNickname());
+
+        assertDoesNotThrow(() ->
+                controller.onMessageReceived("Alice", new PickCardAction("100", false))
+        );
+
+        Player alice = controller.getGame().getPlayers().stream()
+                .filter(player -> player.getNickname().equals("Alice"))
+                .findFirst()
+                .orElseThrow();
+        assertEquals(List.of(100), alice.getTribe().getCharacterCards().stream()
+                .map(card -> card.getId())
+                .toList());
+    }
+
+    @Test
     void repeatedDisconnectionIsIgnored() {
         GameController controller = createStartedGameController();
         RecordingListener listener = new RecordingListener();
@@ -257,6 +303,62 @@ public class GameControllerDisconnectionTest {
 
         for (Player player : players) {
             player.setGame(game);
+        }
+
+        controller.setGame(game);
+        controller.changeState(new TotemPlacementState());
+
+        return controller;
+    }
+
+    private GameController createStartedGameControllerWithLowerPickTiles() {
+        GameController controller = new GameController();
+
+        Player alice = new Player("Alice", createTotem(TotemColor.RED));
+        Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
+        List<Player> players = new ArrayList<>(List.of(alice, bob));
+
+        Board board = new Board(
+                new ArrayList<>(List.of(
+                        new OfferTile('B', 1, List.of(new ActionSlot(new LowerRowSlot(), 1))),
+                        new OfferTile('C', 1, List.of(new ActionSlot(new LowerRowSlot(), 1)))
+                )),
+                TurnOrderTile.createForPlayers(players.size())
+        );
+
+        Game game = new Game(
+                players,
+                1,
+                null,
+                Era.I,
+                null,
+                board,
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>()
+        );
+
+        Round round = new Round(
+                1,
+                game,
+                Era.I,
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>(List.of(
+                        new HunterCard(100, Era.I, 1, false),
+                        new HunterCard(101, Era.I, 1, false)
+                )),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>()
+        );
+
+        game.setCurrentRound(round);
+
+        for (Player player : players) {
+            player.setGame(game);
+            controller.addLobbyPlayer(player);
         }
 
         controller.setGame(game);

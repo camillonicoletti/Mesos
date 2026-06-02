@@ -1,14 +1,6 @@
 package it.polimi.ingsw.network.client;
 
-import it.polimi.ingsw.network.rmi.RMIClientConnection;
-import it.polimi.ingsw.network.rmi.RemoteServer;
 import it.polimi.ingsw.network.transport.ClientSideConnection;
-import it.polimi.ingsw.network.transport.SocketClientConnection;
-
-import java.io.IOException;
-import java.net.Socket;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
 import java.util.Arrays;
 
 public final class ClientLauncher {
@@ -42,8 +34,10 @@ public final class ClientLauncher {
             return;
         }
 
-        ClientSideConnection connection = createSocketConnection(options.host(), options.socketPort());
-        ClientRuntime.run(connection);
+        SocketClientConnectionFactory factory = new SocketClientConnectionFactory(
+                options.host(), options.socketPort());
+        ClientSideConnection connection = createConnectionOrExit(factory, factory.endpointDescription());
+        ClientRuntime.run(connection, factory);
     }
 
     private static void runRmiClient(String[] args) {
@@ -56,32 +50,21 @@ public final class ClientLauncher {
             return;
         }
 
-        ClientSideConnection connection = createRmiConnection(
+        RmiClientConnectionFactory factory = new RmiClientConnectionFactory(
                 options.host(),
                 options.registryPort(),
                 options.rmiBindingName());
-        ClientRuntime.run(connection, () -> ((RMIClientConnection) connection).register());
+        ClientSideConnection connection = createConnectionOrExit(factory, factory.endpointDescription());
+        ClientRuntime.run(connection, factory,
+                () -> ((it.polimi.ingsw.network.rmi.RMIClientConnection) connection).register());
     }
 
-    private static ClientSideConnection createSocketConnection(String host, int port) {
+    private static ClientSideConnection createConnectionOrExit(ClientConnectionFactory factory,
+                                                              String endpointDescription) {
         try {
-            Socket socket = new Socket(host, port);
-            return new SocketClientConnection(socket);
-        } catch (IOException exception) {
-            System.err.println("Unable to connect to " + host + ":" + port + " - " + exception.getMessage());
-            System.exit(1);
-            return null;
-        }
-    }
-
-    private static ClientSideConnection createRmiConnection(String host, int registryPort, String bindingName) {
-        try {
-            Registry registry = LocateRegistry.getRegistry(host, registryPort);
-            RemoteServer remoteServer = (RemoteServer) registry.lookup(bindingName);
-            return new RMIClientConnection(remoteServer);
+            return factory.create();
         } catch (Exception exception) {
-            System.err.println("Unable to connect to the RMI registry at "
-                    + host + ":" + registryPort + " - " + exception.getMessage());
+            System.err.println("Unable to connect to " + endpointDescription + " - " + exception.getMessage());
             System.exit(1);
             return null;
         }

@@ -196,9 +196,9 @@ public class GameControllerAdditionalScenariosTest {
                     () -> controller.onMessageReceived("Alice", new PlaceTotemAction('A')));
         }
 
-        /** A tile occupied by a player who disconnects during placement becomes available again. */
+        /** A tile occupied before disconnection remains reserved for that disconnected player. */
         @Test
-        void occupiedTileBecomesAvailableAfterItsPlayerDisconnectsDuringPlacement() {
+        void occupiedTileStaysReservedAfterItsPlayerDisconnectsDuringPlacement() {
             Player alice = new Player("Alice", createTotem(TotemColor.RED));
             Player bob = new Player("Bob", createTotem(TotemColor.BLUE));
             Player carol = new Player("Carol", createTotem(TotemColor.PURPLE));
@@ -210,10 +210,11 @@ public class GameControllerAdditionalScenariosTest {
 
             controller.onMessageReceived("Alice", new PlaceTotemAction('A'));
             controller.onPlayerDisconnection("Alice");
-            controller.onMessageReceived("Bob", new PlaceTotemAction('A'));
 
+            assertThrows(IllegalStateException.class,
+                    () -> controller.onMessageReceived("Bob", new PlaceTotemAction('A')));
             assertTrue(controller.getGame().getBoard().getOfferTiles().get(0).isOccupied());
-            assertSame(bob.getTotem(),
+            assertSame(alice.getTotem(),
                     controller.getGame().getBoard().getOfferTiles().get(0).getTotemSlot());
         }
 
