@@ -219,9 +219,6 @@ public class LobbyManager {
         if (currentTurnPlayer != null) {
             connection.send(new CurrentPlayerChangedMessage(currentTurnPlayer));
         }
-        if (gameController.isSuspended()) {
-            connection.send(new GameSuspendedMessage(gameController.getSuspensionRemainingMillis()));
-        }
 
         // 2. Now register the connection + VirtualView so future events flow.
         registerConnection(nickname, connection);
@@ -231,6 +228,17 @@ public class LobbyManager {
         //    arrive at the client AFTER the snapshot above.
         try {
             gameController.onPlayerReconnection(nickname);
+            // 4. Send the suspension state ONLY now, after onPlayerReconnection has
+            //    updated the connected count. On a restore the count goes 0 → 1 here,
+            //    so updateSuspensionStatus just freshly anchored the forced-win
+            //    countdown: sending earlier (while still at 0 connected) would ship a
+            //    stale remaining of -1 and leave the client stuck on "waiting for the
+            //    server". If the count climbed back to ≥2 the match resumed and
+            //    onPlayerReconnection already emitted onGameResumed through the
+            //    VirtualView registered above, so there is nothing to send here.
+            if (gameController.isSuspended()) {
+                connection.send(new GameSuspendedMessage(gameController.getSuspensionRemainingMillis()));
+            }
         } catch (Exception exception) {
             unregisterConnection(nickname);
             connection.send(new ErrorMessage(exception.getMessage()));

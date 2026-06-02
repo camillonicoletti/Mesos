@@ -48,14 +48,22 @@ public class SuspensionManager implements Serializable {
         }
 
         // Suspend when ≤1 player is connected: the game cannot continue with fewer than 2 active players.
-        boolean shouldSuspend = connectedPlayersCount <= 1;
-        if (!suspended && shouldSuspend) {
+        suspended = connectedPlayersCount <= 1;
+
+        // The forced-win countdown is decoupled from the suspended flag on purpose:
+        // it only makes sense with EXACTLY one connected player. With zero connected
+        // (e.g. right after a restore from persistence, before anyone has reconnected)
+        // nobody can win the timeout, so the clock must not run yet. Anchor the deadline
+        // the moment the count first reaches one, and clear it whenever it isn't one —
+        // this also invalidates any stale absolute timestamp restored from disk (the
+        // secondary case where the savestate was written while already suspended).
+        boolean countdownShouldRun = connectedPlayersCount == 1;
+        boolean countdownRunning = suspensionStartedAtMillis >= 0L;
+        if (countdownShouldRun && !countdownRunning) {
             suspensionStartedAtMillis = nowMillis;
-        } else if (suspended && !shouldSuspend) {
+        } else if (!countdownShouldRun) {
             suspensionStartedAtMillis = -1L;
         }
-
-        suspended = shouldSuspend;
     }
 
     public long getSuspensionTimeoutMillis() {
