@@ -194,9 +194,20 @@ final class CardDescriptionService {
 
     private String detailTitleFor(CardAsset card, JsonObject details) {
         return switch (card.getKind()) {
-            case "character" -> card.getType()
-                    .map(this::characterTypeSingular)
-                    .orElse("Character");
+            case "character" -> {
+                // Rich header for characters: "<Kind> - <TypePlural> | Era <era>"
+                // (e.g. "Character - Hunters | Era I"). The era comes from the card
+                // detail JSON; type and era are appended only when available.
+                StringBuilder title = new StringBuilder(labelForKind(card.getKind()));
+                card.getType()
+                        .map(this::labelForType)
+                        .ifPresent(type -> title.append(" - ").append(type));
+                String era = details != null ? stringDetail(details, "era") : "";
+                if (!era.isEmpty()) {
+                    title.append(" | Era ").append(era);
+                }
+                yield title.toString();
+            }
             case "event" -> card.getType()
                     .map(this::labelForType)
                     .orElse("Event");
