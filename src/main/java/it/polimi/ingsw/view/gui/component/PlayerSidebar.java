@@ -2,6 +2,7 @@ package it.polimi.ingsw.view.gui.component;
 
 import it.polimi.ingsw.network.client.ClientController;
 import it.polimi.ingsw.network.client.ClientModel;
+import it.polimi.ingsw.network.client.GamePhase;
 import it.polimi.ingsw.network.client.PlayerView;
 import it.polimi.ingsw.view.gui.util.GuiIcons;
 import javafx.application.Platform;
@@ -126,10 +127,11 @@ public final class PlayerSidebar {
     }
 
     private String currentTurnNickname() {
-        if ("TotemPlacementState".equals(model.getGameState())) {
+        GamePhase phase = GamePhase.fromStateName(model.getGameState());
+        if (phase.isTotemPlacement()) {
             return model.getCurrentTotemPlacementPlayer();
         }
-        if ("ActionResolutionState".equals(model.getGameState())) {
+        if (phase.isActionResolution()) {
             return model.getCurrentActionResolutionPlayer();
         }
         return null;

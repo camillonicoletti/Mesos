@@ -1,8 +1,10 @@
 package it.polimi.ingsw.view.gui;
 
 import atlantafx.base.theme.PrimerDark;
+import it.polimi.ingsw.controller.leaderboard.LeaderboardEntry;
 import it.polimi.ingsw.network.client.ClientController;
 import it.polimi.ingsw.network.client.ClientModel;
+import it.polimi.ingsw.network.client.GamePhase;
 import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
 import it.polimi.ingsw.view.gui.component.EndGameView;
 import it.polimi.ingsw.view.gui.component.GameBoardView;
@@ -36,6 +38,9 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public final class GuiApplication extends Application {
     private static final Duration TOAST_VISIBLE_DURATION = Duration.seconds(10);
@@ -128,7 +133,7 @@ public final class GuiApplication extends Application {
         header.setAlignment(Pos.CENTER_LEFT);
         header.setMaxWidth(Double.MAX_VALUE);
         
-        Label title = new Label("REGOLAMENTO DI MESOS");
+        Label title = new Label("MESOS RULES");
         title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #d7a93d;");
         
         Region headerSpacer = new Region();
@@ -136,7 +141,21 @@ public final class GuiApplication extends Application {
         
         Button closeBtn = new Button();
         closeBtn.getStyleClass().add("secondary-button");
-        closeBtn.setGraphic(org.kordamp.ikonli.javafx.FontIcon.of(MaterialDesignC.CLOSE, 16));
+        closeBtn.setStyle(
+                "-fx-background-color: #d94e33;" +
+                "-fx-background-radius: 999px;" +
+                "-fx-border-color: #fff2cf;" +
+                "-fx-border-radius: 999px;" +
+                "-fx-border-width: 1px;" +
+                "-fx-min-width: 34px;" +
+                "-fx-min-height: 34px;" +
+                "-fx-pref-width: 34px;" +
+                "-fx-pref-height: 34px;" +
+                "-fx-padding: 0;"
+        );
+        var closeIcon = org.kordamp.ikonli.javafx.FontIcon.of(MaterialDesignC.CLOSE, 16);
+        closeIcon.setIconColor(javafx.scene.paint.Color.web("#fff2cf"));
+        closeBtn.setGraphic(closeIcon);
         closeBtn.setOnAction(event -> hideRulesModal());
         
         header.getChildren().addAll(title, headerSpacer, closeBtn);
@@ -225,6 +244,11 @@ public final class GuiApplication extends Application {
     private BorderPane gameShell;
     private BorderPane endGameShell;
     private StackPane endGameStack;
+    private Integer leaderboardRank;
+    private int leaderboardRankPlayersCount;
+    private int leaderboardEntriesPlayersCount;
+    private int requestedLeaderboardPlayersCount;
+    private List<LeaderboardEntry> leaderboardEntries;
 
     static void launchWith(ClientController controller, ClientModel model) {
         launchContext = new LaunchContext(controller, model);
@@ -255,7 +279,8 @@ public final class GuiApplication extends Application {
         StackPane.setMargin(toastHost, new Insets(0, 22, 22, 0));
         Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
 
-        model.addListener(this::scheduleRender);
+        // The controller drives this view through the View callbacks (see Gui),
+        // so we no longer observe the model directly.
 
         Scene scene = new Scene(sceneRoot, 1280, 820);
         scene.getStylesheets().add(cssResource());
@@ -301,8 +326,9 @@ public final class GuiApplication extends Application {
 
     private void render() {
         if (model.isLoginSuccess() && model.getMyNickname() == null && pendingNickname != null) {
+            // The controller no longer re-notifies us on this write, so don't bail
+            // out here: set the nickname and keep rendering this same pass.
             model.setMyNickname(pendingNickname);
-            return;
         }
 
         Screen nextScreen = resolveScreen();
@@ -372,6 +398,8 @@ public final class GuiApplication extends Application {
                     endGameView = new EndGameView(controller, model, assetCatalog);
                     endGameShell = endGameShell();
                     endGameShell.setCenter(endGameView.render());
+                    syncLeaderboardToEndGame();
+                    ensureEndGameLeaderboardRequested();
                     Region overlay = new Region();
                     overlay.getStyleClass().add("endgame-overlay");
                     overlay.setMouseTransparent(true);
@@ -403,6 +431,7 @@ public final class GuiApplication extends Application {
                 endGameSubtitleLabel.setText(winNick != null
                         ? "Winner: " + winNick
                         : "Shared victory");
+                ensureEndGameLeaderboardRequested();
                 endGameView.refresh();
             }
         }
@@ -412,6 +441,76 @@ public final class GuiApplication extends Application {
         BorderPane layout = new BorderPane();
         endGameSubtitleLabel = new Label();
         return layout;
+    }
+
+    private void showMyLeaderboardRank(int rank, int playersCount) {
+        leaderboardRank = rank;
+        leaderboardRankPlayersCount = playersCount;
+        // Remember the bucket so ensureEndGameLeaderboardRequested() doesn't fetch
+        // it again: the controller already auto-requests the full leaderboard
+        // right after delivering this rank.
+        requestedLeaderboardPlayersCount = playersCount;
+        syncLeaderboardToEndGame();
+    }
+
+    // ── View callbacks (forwarded by Gui, driven by ClientController) ─────────
+
+    /** The live application, or {@code null} before {@link #start} has run. */
+    static GuiApplication current() {
+        return instance;
+    }
+
+    /** Login/reconnect was answered: adopt the chosen nickname and re-render. */
+    void onLoginResult() {
+        if (model.isLoginSuccess() && model.getMyNickname() == null && pendingNickname != null) {
+            model.setMyNickname(pendingNickname);
+        }
+        scheduleRender();
+    }
+
+    /** Any board/lobby/lifecycle state changed: coalesced full re-render. */
+    void onBoardEvent() {
+        scheduleRender();
+    }
+
+    /** A leaderboard response arrived (delegates to the existing painter). */
+    void onLeaderboard(int playersCount, List<LeaderboardEntry> entries) {
+        showLeaderboard(playersCount, entries);
+    }
+
+    /** This client's final rank arrived (delegates to the existing painter). */
+    void onMyRank(int rank, int playersCount) {
+        showMyLeaderboardRank(rank, playersCount);
+    }
+
+    private void showLeaderboard(int playersCount, List<LeaderboardEntry> entries) {
+        leaderboardEntriesPlayersCount = playersCount;
+        leaderboardEntries = entries == null ? List.of() : new ArrayList<>(entries);
+        syncLeaderboardToEndGame();
+    }
+
+    private void ensureEndGameLeaderboardRequested() {
+        if (endGameView == null || model.getFinalScores().isEmpty()) {
+            return;
+        }
+        int playersCount = model.getFinalScores().size();
+        endGameView.setLeaderboardPlayersCount(playersCount);
+        if (leaderboardEntries == null && requestedLeaderboardPlayersCount != playersCount) {
+            requestedLeaderboardPlayersCount = playersCount;
+            controller.requestLeaderboard(playersCount, 10);
+        }
+    }
+
+    private void syncLeaderboardToEndGame() {
+        if (endGameView == null) {
+            return;
+        }
+        if (leaderboardRank != null) {
+            endGameView.setLeaderboardRank(leaderboardRank, leaderboardRankPlayersCount);
+        }
+        if (leaderboardEntries != null) {
+            endGameView.setLeaderboardEntries(leaderboardEntriesPlayersCount, leaderboardEntries);
+        }
     }
 
     private StackPane centeredShell(Node node) {
@@ -650,14 +749,7 @@ public final class GuiApplication extends Application {
     }
 
     private String stateLabel() {
-        String state = model.getGameState();
-        if ("TotemPlacementState".equals(state)) {
-            return "Totem placement";
-        }
-        if ("ActionResolutionState".equals(state)) {
-            return "Action resolution";
-        }
-        return state == null ? "Synchronizing" : state;
+        return GamePhase.titleLabelFor(model.getGameState(), "Synchronizing");
     }
 
     private Label title(String text) {

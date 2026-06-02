@@ -1,13 +1,9 @@
 package it.polimi.ingsw.view.tui;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import it.polimi.ingsw.view.card.CardDataCatalog;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -79,9 +75,10 @@ public final class CardCatalog {
     private static final Map<Integer, CardInfo> CARDS = new HashMap<>();
 
     static {
-        loadCharacters();
-        loadBuildings();
-        loadEvents();
+        CardDataCatalog catalog = CardDataCatalog.loadDefault();
+        loadCharacters(catalog.characters());
+        loadBuildings(catalog.buildings());
+        loadEvents(catalog.events());
     }
 
     public static CardInfo get(int id) {
@@ -96,9 +93,8 @@ public final class CardCatalog {
 
     // ── loading ──────────────────────────────────────────────────────────────
 
-    private static void loadCharacters() {
-        for (JsonElement el : safeRead("characters.json")) {
-            JsonObject o = el.getAsJsonObject();
+    private static void loadCharacters(Iterable<JsonObject> cards) {
+        for (JsonObject o : cards) {
             int id = o.get("id").getAsInt();
             String type = o.get("type").getAsString();
             String era = o.get("era").getAsString();
@@ -131,9 +127,8 @@ public final class CardCatalog {
         }
     }
 
-    private static void loadBuildings() {
-        for (JsonElement el : safeRead("buildings.json")) {
-            JsonObject o = el.getAsJsonObject();
+    private static void loadBuildings(Iterable<JsonObject> cards) {
+        for (JsonObject o : cards) {
             int id = o.get("id").getAsInt();
             String era = o.get("era").getAsString();
             int cost = o.get("foodCost").getAsInt();
@@ -159,9 +154,8 @@ public final class CardCatalog {
         }
     }
 
-    private static void loadEvents() {
-        for (JsonElement el : safeRead("events.json")) {
-            JsonObject o = el.getAsJsonObject();
+    private static void loadEvents(Iterable<JsonObject> cards) {
+        for (JsonObject o : cards) {
             int id = o.get("id").getAsInt();
             String era = o.get("era").getAsString();
             String type = o.get("type").getAsString();
@@ -215,17 +209,6 @@ public final class CardCatalog {
             case "cavePaintings"  -> "Cave";
             default -> t;
         };
-    }
-
-    private static JsonArray safeRead(String name) {
-        try (InputStream is = CardCatalog.class.getClassLoader().getResourceAsStream(name)) {
-            if (is == null) return new JsonArray();
-            try (InputStreamReader r = new InputStreamReader(is, StandardCharsets.UTF_8)) {
-                return JsonParser.parseReader(r).getAsJsonArray();
-            }
-        } catch (Exception e) {
-            return new JsonArray();
-        }
     }
 
     private CardCatalog() {}

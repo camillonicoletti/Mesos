@@ -2,6 +2,7 @@ package it.polimi.ingsw.view.gui.component;
 
 import it.polimi.ingsw.network.client.ClientController;
 import it.polimi.ingsw.network.client.ClientModel;
+import it.polimi.ingsw.network.client.GamePhase;
 import it.polimi.ingsw.network.client.PlayerView;
 import it.polimi.ingsw.view.gui.asset.CardAsset;
 import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
@@ -112,16 +113,13 @@ final class PlayerDockView {
 
         Button debugEnd = new Button("⚑ End game [DEBUG]");
         debugEnd.getStyleClass().add("dock-exit");
-        debugEnd.setOnAction(event -> controller.send(
-                new it.polimi.ingsw.network.protocol.serverbound.ForceEndGameMessage()));
+        debugEnd.setOnAction(event -> controller.forceEndGame());
 
         HBox statusRow = new HBox(14, status, spacer());
         if (model.isExtraPickAvailableForMe()) {
             Button skipExtra = new Button("Skip extra pick");
             skipExtra.getStyleClass().add("dock-exit");
-            skipExtra.setOnAction(event -> controller.send(
-                    new it.polimi.ingsw.network.protocol.serverbound.GameActionMessage(
-                            new it.polimi.ingsw.controller.action.SkipExtraPickAction())));
+            skipExtra.setOnAction(event -> controller.skipExtraPick());
             statusRow.getChildren().add(skipExtra);
         }
         statusRow.getChildren().addAll(audioToggleButton(), debugEnd, exit);
@@ -594,11 +592,12 @@ final class PlayerDockView {
     }
 
     private String currentTurnNickname() {
-        if ("TotemPlacementState".equals(model.getGameState())) {
+        GamePhase phase = GamePhase.fromStateName(model.getGameState());
+        if (phase.isTotemPlacement()) {
             return model.getCurrentTotemPlacementPlayer();
         }
 
-        if ("ActionResolutionState".equals(model.getGameState())) {
+        if (phase.isActionResolution()) {
             return model.getCurrentActionResolutionPlayer();
         }
 

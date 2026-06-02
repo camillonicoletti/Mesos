@@ -13,16 +13,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.BiConsumer;
-import it.polimi.ingsw.controller.leaderboard.LeaderboardEntry;
 
 public class ClientModel {
 
     private static final long CONNECTION_EVENT_VISIBLE_MILLIS = 10_000L;
 
-    public interface Listener {
-        void onModelChanged();
-    }
     private int lastFinishedRound = 0;
     private int    lastResolvedEventCardId = -1;
     private String lastResolvedEventTitle;
@@ -79,35 +74,10 @@ public class ClientModel {
     private int remainingTribeDeckCards = -1;
 
     private Map<String, PlayerView> players = new LinkedHashMap<>();
-    private final List<BiConsumer<Integer, List<LeaderboardEntry>>> leaderboardListeners = new ArrayList<>();
-    private final List<BiConsumer<Integer, Integer>> myRankListeners = new ArrayList<>();
 
     private String winnerNickname;
     private Map<String, Integer> finalScores = new HashMap<>();
     private Map<String, Integer> finalFood = new HashMap<>();
-
-    private final List<Listener> listeners = new ArrayList<>();
-
-    public void addListener(Listener l) { listeners.add(l); }
-    /**
-     * Subscribes to leaderboard responses. The listener is invoked with
-     * {@code (playersCount, entries)} every time a LeaderboardMessage arrives.
-     */
-    public void addLeaderboardListener(BiConsumer<Integer, List<LeaderboardEntry>> l) {
-        leaderboardListeners.add(l);
-    }
-
-    /**
-     * Subscribes to "my rank" notifications. The listener is invoked with
-     * {@code (rank, playersCount)} every time a LeaderboardRankMessage arrives
-     * (typically once per match, at end-game).
-     */
-    public void addMyRankListener(BiConsumer<Integer, Integer> l) {
-        myRankListeners.add(l);
-    }
-    private void notifyChanged() {
-        for (Listener l : listeners) l.onModelChanged();
-    }
 
     // ── apply ────────────────────────────────────────────────────────────────
 
@@ -118,7 +88,6 @@ public class ClientModel {
         if (lastError != null) {
             lastErrorVersion++;
         }
-        notifyChanged();
     }
 
     public void applyLobbyUpdate(LobbyUpdateMessage m) {
@@ -152,7 +121,6 @@ public class ClientModel {
             promotedToLobbyLeader = false;
         }
 
-        notifyChanged();
     }
 
 
@@ -181,7 +149,7 @@ public class ClientModel {
         ensureTurnOrderPositions();
         disconnectedPlayers  = new HashSet<>(snap.getDisconnectedPlayers());
         // On snapshot, treat all players as already resolved to avoid showing stale pending indicators.
-        if ("ActionResolutionState".equals(gameState)) {
+        if (gamePhase().isActionResolution()) {
             actionResolvedPlayers = new ArrayList<>(turnOrder);
         }
         upperRowCharacterIds = new ArrayList<>(snap.getUpperRowCharacterAndEventIds());
@@ -193,34 +161,32 @@ public class ClientModel {
         eventCardIds.addAll(snap.getLowerRowEventIds());
         remainingTribeDeckCards = snap.getRemainingTribeDeckCards();
         clearCurrentActionPlayerIfDisconnected();
-        notifyChanged();
     }
 
     public void applyStateChanged(StateChangedMessage m) {
         gameState = m.getStateName();
+        GamePhase phase = gamePhase();
         // Clear the current player when the new state does not actively manage turns.
-        if (!"ActionResolutionState".equals(gameState)
-                && !"TotemPlacementState".equals(gameState)) {
+        if (!phase.managesCurrentTurn()) {
             currentActionPlayer = null;
             clearPickBudget();
         }
         // Reset phase-specific progress when entering a new action or placement phase.
-        if ("ActionResolutionState".equals(gameState) || "TotemPlacementState".equals(gameState)) {
+        if (phase.managesCurrentTurn()) {
             actionResolvedPlayers = new ArrayList<>();
             clearPickBudget();
         }
         // The extra-pick prompt is only valid inside ActionResolutionState.
-        if (!"ActionResolutionState".equals(gameState)) {
+        if (!phase.isActionResolution()) {
             extraPickAvailableForMe = false;
         }
-        if ("EventResolutionState".equals(gameState)) {
+        if (phase.isEventResolution()) {
             lastResolvedEventCardId = -1;
             lastResolvedEventTitle = null;
             lastResolvedEventDescription = null;
             lastResolvedEventEffects = List.of();
         }
         lastError = null;
-        notifyChanged();
     }
 
     public void applyCurrentPlayerChanged(CurrentPlayerChangedMessage m) {
@@ -230,7 +196,7 @@ public class ClientModel {
         // server emits ExtraCardPickAvailableMessage right after onCurrentPlayerChanged
         // when the next player has an extra pick, so we'd be re-set then.
         extraPickAvailableForMe = false;
-        if ("ActionResolutionState".equals(gameState)
+        if (gamePhase().isActionResolution()
                 && (!Objects.equals(previousPlayer, currentActionPlayer)
                 || !Objects.equals(pickBudgetPlayer, currentActionPlayer))) {
             initializeRegularPickBudget(currentActionPlayer);
@@ -238,14 +204,12 @@ public class ClientModel {
         if (currentActionPlayer != null && !currentActionPlayer.equals(previousPlayer)) {
             setTurnEvent("Turn passed to " + currentActionPlayer);
         }
-        notifyChanged();
     }
 
     public void applyTotemPlaced(TotemPlacedMessage m) {
         lastError = null;
         turnOrder.remove(m.getNickname());
         totemOnTiles.put(m.getTileId(), m.getNickname());
-        notifyChanged();
     }
 
     public void applyEventResolved(EventResolvedMessage m) {
@@ -261,12 +225,10 @@ public class ClientModel {
                     effect.getNewFood(), effect.getNewPoints(),
                     old.getCharacterCardIds(), old.getBuildingCardIds()));
         }
-        notifyChanged();
     }
 
     public void applyEraChanged(EraChangedMessage m) {
         currentEra = m.getNewEra();
-        notifyChanged();
     }
 
     public void applyFoodChanged(FoodChangedMessage m) {
@@ -314,24 +276,21 @@ public class ClientModel {
     public void applyRoundEnded(RoundEndedMessage m) {
         lastFinishedRound = m.getRoundNumber();
         roundNumber = Math.max(roundNumber, m.getRoundNumber());
-        notifyChanged();
     }
 
     public void applyGameEnded(GameEndedMessage m) {
         winnerNickname = m.getWinnerNickname();
         finalScores    = new HashMap<>(m.getFinalScores());
-        gameState      = "EndGameState";
+        gameState      = GamePhase.END_GAME.stateName();
         gameEndedReceived = true;
         if (m.getFinalFood() != null) {
             finalFood = new HashMap<>(m.getFinalFood());
         }
-        notifyChanged();
     }
 
     public void applyError(ErrorMessage m) {
         lastError = m.getReason();
         lastErrorVersion++;
-        notifyChanged();
     }
 
     public void applyGameSuspended(GameSuspendedMessage m) {
@@ -339,13 +298,11 @@ public class ClientModel {
         suspensionDeadlineMillis = m.getRemainingMillis() >= 0L
                 ? System.currentTimeMillis() + m.getRemainingMillis()
                 : -1L;
-        notifyChanged();
     }
 
     public void applyGameResumed(GameResumedMessage m) {
         gameSuspended = false;
         suspensionDeadlineMillis = -1L;
-        notifyChanged();
     }
 
     public void applyPlayerDisconnected(PlayerDisconnectedMessage m) {
@@ -353,14 +310,12 @@ public class ClientModel {
         disconnectedPlayers.add(m.getNickname());
         clearCurrentActionPlayerIfActor(m.getNickname());
         setConnectionEvent(m.getNickname() + " disconnected");
-        notifyChanged();
     }
 
     public void applyPlayerReconnected(PlayerReconnectedMessage m) {
         lastDisconnectedPlayer = null;
         disconnectedPlayers.remove(m.getNickname());
         setConnectionEvent(m.getNickname() + " reconnected");
-        notifyChanged();
     }
 
     public void applyExtraCardPickAvailable(ExtraCardPickAvailableMessage m) {
@@ -372,7 +327,6 @@ public class ClientModel {
         extraPickAvailableForMe = myNickname != null
                 && myNickname.equals(m.getNickname())
                 && remainingUpperPicks > 0;
-        notifyChanged();
     }
 
     /**
@@ -388,28 +342,12 @@ public class ClientModel {
         connected = false;
         lastError = reason;
         lastErrorVersion++;
-        notifyChanged();
-    }
-    public void applyLeaderboard(LeaderboardMessage m) {
-        int pc = m.playersCount();
-        List<LeaderboardEntry> entries = m.entries();
-        for (BiConsumer<Integer, List<LeaderboardEntry>> l : leaderboardListeners) {
-            l.accept(pc, entries);
-        }
     }
 
-    public void applyMyLeaderboardRank(LeaderboardRankMessage m) {
-        int rank = m.rank();
-        int pc = m.playersCount();
-        for (BiConsumer<Integer, Integer> l : myRankListeners) {
-            l.accept(rank, pc);
-        }
-    }
     // ── setters ──────────────────────────────────────────────────────────────
 
     public void setMyNickname(String nickname) {
         this.myNickname = nickname;
-        notifyChanged();
     }
 
     // ── getters ──────────────────────────────────────────────────────────────
@@ -479,6 +417,30 @@ public class ClientModel {
         return Collections.unmodifiableMap(lobbyPlayerColors);
     }
 
+    public List<TotemColor> getAvailableTotemColors() {
+        Set<TotemColor> taken = new HashSet<>(lobbyPlayerColors.values());
+        List<TotemColor> available = new ArrayList<>();
+        for (TotemColor color : TotemColor.values()) {
+            if (!taken.contains(color)) {
+                available.add(color);
+            }
+        }
+        return Collections.unmodifiableList(available);
+    }
+
+    public boolean isTotemColorAvailable(TotemColor color) {
+        return color != null && getAvailableTotemColors().contains(color);
+    }
+
+    public boolean areAllTotemColorsTaken() {
+        return getAvailableTotemColors().isEmpty();
+    }
+
+    public TotemColor firstAvailableTotemColorOr(TotemColor fallback) {
+        List<TotemColor> available = getAvailableTotemColors();
+        return available.isEmpty() ? fallback : available.get(0);
+    }
+
 
     public boolean isMyTurn() {
         return myNickname != null
@@ -501,7 +463,7 @@ public class ClientModel {
     }
 
     public String getCurrentActionResolutionPlayer() {
-        if (!"ActionResolutionState".equals(gameState)) {
+        if (!gamePhase().isActionResolution()) {
             return null;
         }
         if (currentActionPlayer != null && !disconnectedPlayers.contains(currentActionPlayer)) {
@@ -516,15 +478,11 @@ public class ClientModel {
     }
 
     public boolean isGameStarted() {
-        return gameState != null
-                && !"LobbyState".equals(gameState)
-                && !"ReadyCheckState".equals(gameState);
+        return GamePhase.hasGameStarted(gameState);
     }
 
     public boolean isInPreGame() {
-        return gameState == null
-                || "LobbyState".equals(gameState)
-                || "ReadyCheckState".equals(gameState);
+        return GamePhase.isPreGameState(gameState);
     }
 
     public boolean isGameEnded() {
@@ -546,7 +504,7 @@ public class ClientModel {
     public int getLastFinishedRound() { return lastFinishedRound; }
 
     public String getCurrentTotemPlacementPlayer() {
-        if (!"TotemPlacementState".equals(gameState)) {
+        if (!gamePhase().isTotemPlacement()) {
             return null;
         }
         if (currentActionPlayer != null && !disconnectedPlayers.contains(currentActionPlayer)) {
@@ -576,7 +534,10 @@ public class ClientModel {
     private void replacePlayer(String nickname, java.util.function.UnaryOperator<PlayerView> updater) {
         PlayerView old = players.get(nickname);
         if (old != null) players.put(nickname, updater.apply(old));
-        notifyChanged();
+    }
+
+    private GamePhase gamePhase() {
+        return GamePhase.fromStateName(gameState);
     }
 
     private void setConnectionEvent(String message) {

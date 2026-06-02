@@ -1,11 +1,9 @@
 package it.polimi.ingsw.view.gui.component;
 
-import it.polimi.ingsw.controller.action.PlaceTotemAction;
 import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.client.ClientController;
 import it.polimi.ingsw.network.client.ClientModel;
 import it.polimi.ingsw.network.client.PlayerView;
-import it.polimi.ingsw.network.protocol.serverbound.GameActionMessage;
 import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
 import it.polimi.ingsw.view.gui.util.GuiAnimations;
 import javafx.geometry.Pos;
@@ -125,7 +123,7 @@ final class OfferTilesView {
             return;
         }
 
-        controller.send(new GameActionMessage(new PlaceTotemAction(tile)));
+        controller.placeTotem(tile);
     }
 
     private String activeOwner(String owner) {

@@ -3,8 +3,6 @@ package it.polimi.ingsw.view.gui.component;
 import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.client.ClientController;
 import it.polimi.ingsw.network.client.ClientModel;
-import it.polimi.ingsw.network.protocol.serverbound.LoginMessage;
-import it.polimi.ingsw.network.protocol.serverbound.ReconnectMessage;
 import it.polimi.ingsw.view.gui.util.GuiIcons;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -22,11 +20,9 @@ import javafx.scene.layout.VBox;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignL;
 
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.EnumMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Consumer;
 
 public final class LoginView {
@@ -95,7 +91,7 @@ public final class LoginView {
     }
 
     public void refresh() {
-        boolean fullLobby = areAllTotemsTaken();
+        boolean fullLobby = model.areAllTotemColorsTaken();
         boolean reconnecting = fullLobby || reconnectCheckBox != null && reconnectCheckBox.isSelected();
 
         if (totemGroup != null) {
@@ -118,18 +114,14 @@ public final class LoginView {
         if (error != null) {
             error.setText(model.getLastError() == null ? "" : model.getLastError());
         }
-        Set<TotemColor> taken = new HashSet<>(model.getLobbyPlayerColors().values());
+        List<TotemColor> available = model.getAvailableTotemColors();
         totemButtons.forEach((color, button) -> {
-            boolean isTaken = taken.contains(color);
-            button.setVisible(!isTaken);
-            button.setManaged(!isTaken);
+            boolean isAvailable = available.contains(color);
+            button.setVisible(isAvailable);
+            button.setManaged(isAvailable);
         });
-        if (taken.contains(selectedTotem)) {
-            TotemColor fallback = Arrays.stream(TotemColor.values())
-                    .filter(c -> !taken.contains(c))
-                    .findFirst()
-                    .orElse(selectedTotem);
-            selectedTotem = fallback;
+        if (!model.isTotemColorAvailable(selectedTotem)) {
+            selectedTotem = model.firstAvailableTotemColorOr(selectedTotem);
             refreshTotemSelection();
         }
     }
@@ -140,10 +132,10 @@ public final class LoginView {
             return;
         }
         onNicknameSubmitted.accept(name);
-        if (reconnect.isSelected() || areAllTotemsTaken()) {
-            controller.send(new ReconnectMessage(name));
+        if (reconnect.isSelected() || model.areAllTotemColorsTaken()) {
+            controller.reconnect(name);
         } else {
-            controller.send(new LoginMessage(name, selectedTotem));
+            controller.login(name, selectedTotem);
         }
     }
 
@@ -166,11 +158,6 @@ public final class LoginView {
         label.getStyleClass().add("login-full-message");
         label.setWrapText(true);
         return label;
-    }
-
-    private boolean areAllTotemsTaken() {
-        Set<TotemColor> taken = new HashSet<>(model.getLobbyPlayerColors().values());
-        return taken.size() >= TotemColor.values().length;
     }
 
     private Label fieldLabel(String text) {

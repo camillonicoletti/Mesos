@@ -2,6 +2,7 @@ package it.polimi.ingsw.view.gui.component;
 
 import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.client.ClientModel;
+import it.polimi.ingsw.network.client.GamePhase;
 import it.polimi.ingsw.network.client.PlayerView;
 import it.polimi.ingsw.network.protocol.clientbound.EventResolvedMessage;
 import javafx.geometry.Insets;
@@ -43,7 +44,7 @@ final class EventResolutionOverlay {
         }
         hide(rootLayer);
 
-        if (!"EventResolutionState".equals(model.getGameState())) {
+        if (!GamePhase.fromStateName(model.getGameState()).isEventResolution()) {
             return;
         }
 

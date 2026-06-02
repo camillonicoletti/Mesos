@@ -1,25 +1,16 @@
 package it.polimi.ingsw.view.tui;
 
+import it.polimi.ingsw.controller.leaderboard.LeaderboardEntry;
+import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.client.ClientController;
 import it.polimi.ingsw.network.client.ClientModel;
+import it.polimi.ingsw.network.client.GamePhase;
 import it.polimi.ingsw.view.View;
-import it.polimi.ingsw.model.enums.TotemColor;
-import it.polimi.ingsw.network.protocol.serverbound.*;
 
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Scanner;
-import it.polimi.ingsw.controller.leaderboard.LeaderboardEntry;
-
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import it.polimi.ingsw.controller.leaderboard.LeaderboardEntry;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import it.polimi.ingsw.controller.leaderboard.LeaderboardEntry;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 public class Tui implements View {
 
@@ -47,23 +38,42 @@ public class Tui implements View {
     public Tui(ClientController controller, ClientModel model) {
         this.controller = controller;
         this.model      = model;
-        this.parser     = new CommandParser();
+        this.parser     = new CommandParser(controller);
         this.scanner    = new Scanner(System.in);
         this.renderer   = new Renderer(model);
-
-        model.addListener(() -> {
-            renderer.render(model);
-            paintEndGameLeaderboardArtifacts();
-            if (activePrompt != null) {
-                System.out.print(activePrompt);
-            }
-            synchronized (modelLock) {
-                modelLock.notifyAll();
-            }
-        });
-        model.addLeaderboardListener(this::showLeaderboard);
-        model.addMyRankListener(this::showMyRank);
     }
+
+    /**
+     * Single rendering path, invoked by the {@link View} callbacks the
+     * controller fires after each server message. Re-renders the board,
+     * repaints the end-game artifacts, restores the active prompt and wakes any
+     * thread blocked in one of the wait-loops below.
+     */
+    private void refresh() {
+        renderer.render(model);
+        paintEndGameLeaderboardArtifacts();
+        if (activePrompt != null) {
+            System.out.print(activePrompt);
+        }
+        synchronized (modelLock) {
+            modelLock.notifyAll();
+        }
+    }
+
+    // ── View output callbacks (driven by ClientController) ───────────────────
+
+    @Override public void onLoginResult()            { refresh(); }
+    @Override public void onLobbyChanged()           { refresh(); }
+    @Override public void onGameStarted()            { refresh(); }
+    @Override public void onGameStateChanged()       { refresh(); }
+    @Override public void onBoardChanged()           { refresh(); }
+    @Override public void onEventResolved()          { refresh(); }
+    @Override public void onGameEnded()              { refresh(); }
+    @Override public void onError()                  { refresh(); }
+    @Override public void onConnectionLost()         { refresh(); }
+    @Override public void onGameSuspended()          { refresh(); }
+    @Override public void onGameResumed()            { refresh(); }
+    @Override public void onPlayerConnectionChanged(){ refresh(); }
 
     @Override
     public void run() {
@@ -99,11 +109,11 @@ public class Tui implements View {
             String previousError = model.getLastError();
 
             if (askReconnect()) {
-                controller.send(new ReconnectMessage(nickname));
+                controller.reconnect(nickname);
             } else {
                 TotemColor color = askTotemColor();
                 if (color == null) continue;
-                controller.send(new LoginMessage(nickname, color));
+                controller.login(nickname, color);
             }
             waitForLoginOutcome(previousError);
 
@@ -127,12 +137,7 @@ public class Tui implements View {
 
     private TotemColor askTotemColor() {
         while (true) {
-            java.util.Set<TotemColor> taken =
-                    new java.util.HashSet<>(model.getLobbyPlayerColors().values());
-            java.util.List<TotemColor> available = new java.util.ArrayList<>();
-            for (TotemColor c : TotemColor.values()) {
-                if (!taken.contains(c)) available.add(c);
-            }
+            java.util.List<TotemColor> available = model.getAvailableTotemColors();
 
             if (available.isEmpty()) {
                 System.out.println("[ERROR] No totem color is available right now.");
@@ -156,16 +161,6 @@ public class Tui implements View {
             }
             return parsed;
         }
-    }
-    /** Returns totem colors not yet picked in the current lobby snapshot. */
-    private java.util.List<TotemColor> availableColors() {
-        java.util.Set<TotemColor> taken =
-                new java.util.HashSet<>(model.getLobbyPlayerColors().values());
-        java.util.List<TotemColor> available = new java.util.ArrayList<>();
-        for (TotemColor c : TotemColor.values()) {
-            if (!taken.contains(c)) available.add(c);
-        }
-        return available;
     }
     // ── Main input loop ──────────────────────────────────────────────────────
 
@@ -203,12 +198,13 @@ public class Tui implements View {
                 continue;
             }
 
-            if (state == null || "LobbyState".equals(state) || "ReadyCheckState".equals(state)) {
+            GamePhase phase = GamePhase.fromStateName(state);
+            if (GamePhase.isPreGameState(state)) {
                 handlePreGameCommand(line);
                 continue;
             }
 
-            if ("TotemPlacementState".equals(state)
+            if (phase.isTotemPlacement()
                     && line.toLowerCase().startsWith("place")
                     && !model.isMyTotemPlacementTurn()) {
                 String currentPlayer = model.getCurrentTotemPlacementPlayer();
@@ -225,12 +221,11 @@ public class Tui implements View {
                 continue;
             }
 
-            ClientMessage msg = parser.parse(line);
-            if (msg instanceof DisconnectMessage) {
+            CommandParser.Result result = parser.parse(line);
+            if (result == CommandParser.Result.QUIT) {
                 controller.disconnect();
                 return;
             }
-            if (msg != null) controller.send(msg);
         }
     }
 
@@ -264,8 +259,7 @@ public class Tui implements View {
         if (model.isLobbyLeader()
                 && model.getExpectedPlayers() < CommandParser.MIN_PLAYERS
                 && line.matches("\\d+")) {
-            ClientMessage shortcut = parser.parse("players " + line);
-            if (shortcut != null) controller.send(shortcut);
+            parser.parse("players " + line);
             return;
         }
 
@@ -275,18 +269,15 @@ public class Tui implements View {
             return;
         }
 
-        ClientMessage msg = parser.parse(line);
-        if (msg instanceof DisconnectMessage) {
+        CommandParser.Result result = parser.parse(line);
+        if (result == CommandParser.Result.QUIT) {
             controller.disconnect();
             return;
         }
-        if (msg != null) {
-            controller.send(msg);
-            return;
+        if (result == CommandParser.Result.UNKNOWN) {
+            // Parser already printed an "Unknown command" hint; show context-aware help
+            printPreGameHelp();
         }
-
-        // Parser already printed an "Unknown command" hint; show context-aware help
-        printPreGameHelp();
     }
 
     private void printPreGameHelp() {
@@ -419,10 +410,7 @@ public class Tui implements View {
     }
 
     private boolean isBoardVisibleState(String state) {
-        return "StartGameState".equals(state)
-                || "TotemPlacementState".equals(state)
-                || "ActionResolutionState".equals(state)
-                || "SuspendedState".equals(state);
+        return GamePhase.fromStateName(state).hasBoardVisible();
     }
 
     private int parseSeeEffectId(String line) {
@@ -461,15 +449,16 @@ public class Tui implements View {
     }
 
     private void handleShowTribeCommand(String line, String state) {
-        if (state == null || "LobbyState".equals(state) || "ReadyCheckState".equals(state)) {
+        GamePhase phase = GamePhase.fromStateName(state);
+        if (GamePhase.isPreGameState(state)) {
             System.out.println("[ERROR] show tribe is available only during the match.");
             return;
         }
-        if ("EventResolutionState".equals(state)) {
+        if (phase.isEventResolution()) {
             System.out.println("[ERROR] show tribe is not available during event resolution.");
             return;
         }
-        if ("EndGameState".equals(state)) {
+        if (phase.isEndGame()) {
             System.out.println("[ERROR] The game is already over.");
             return;
         }
@@ -577,8 +566,8 @@ public class Tui implements View {
         if (activePrompt != null) {
             System.out.print(activePrompt);
         }
-        // Auto-fetch the full leaderboard so it shows up right below the rank banner.
-        controller.requestLeaderboard(playersCount, 10);
+        // The controller auto-fetches the full leaderboard right after this call,
+        // which arrives via showLeaderboard() and is painted below the rank banner.
     }
 
     @Override

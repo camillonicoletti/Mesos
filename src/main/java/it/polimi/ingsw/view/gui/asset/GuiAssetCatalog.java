@@ -1,9 +1,9 @@
 package it.polimi.ingsw.view.gui.asset;
 
 import com.google.gson.JsonElement;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import it.polimi.ingsw.view.card.CardDataCatalog;
 import javafx.scene.image.Image;
 
 import java.io.InputStream;
@@ -54,10 +54,7 @@ public final class GuiAssetCatalog {
             ));
         }
 
-        Map<Integer, JsonObject> cardDetails = new LinkedHashMap<>();
-        cardDetails.putAll(loadDetailMap("characters.json"));
-        cardDetails.putAll(loadDetailMap("events.json"));
-        cardDetails.putAll(loadDetailMap("buildings.json"));
+        Map<Integer, JsonObject> cardDetails = CardDataCatalog.loadDefault().allDetails();
 
         return new GuiAssetCatalog(cards, cardDetails, componentsManifest);
     }
@@ -140,27 +137,6 @@ public final class GuiAssetCatalog {
             return JsonParser.parseReader(reader).getAsJsonObject();
         } catch (Exception exception) {
             throw new IllegalStateException("Cannot read GUI asset manifest: " + resourcePath, exception);
-        }
-    }
-
-    private static Map<Integer, JsonObject> loadDetailMap(String resourcePath) {
-        InputStream stream = classLoader().getResourceAsStream(resourcePath);
-        if (stream == null) {
-            return Map.of();
-        }
-        try (InputStreamReader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
-            JsonArray array = JsonParser.parseReader(reader).getAsJsonArray();
-            Map<Integer, JsonObject> result = new LinkedHashMap<>();
-            for (JsonElement element : array) {
-                JsonObject object = element.getAsJsonObject();
-                JsonElement id = object.get("id");
-                if (id != null && !id.isJsonNull()) {
-                    result.put(id.getAsInt(), object.deepCopy());
-                }
-            }
-            return result;
-        } catch (Exception exception) {
-            throw new IllegalStateException("Cannot read card detail resource: " + resourcePath, exception);
         }
     }
 

@@ -1,10 +1,7 @@
 package it.polimi.ingsw.view.gui.component;
 
-import it.polimi.ingsw.controller.action.PickBuildingAction;
-import it.polimi.ingsw.controller.action.PickCardAction;
 import it.polimi.ingsw.network.client.ClientController;
 import it.polimi.ingsw.network.client.ClientModel;
-import it.polimi.ingsw.network.protocol.serverbound.GameActionMessage;
 import it.polimi.ingsw.view.gui.util.GuiAnimations;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -79,9 +76,9 @@ final class CardMarketView {
         }
 
         if (building) {
-            controller.send(new GameActionMessage(new PickBuildingAction(String.valueOf(cardId), upper)));
+            controller.pickBuildingCard(String.valueOf(cardId), upper);
         } else {
-            controller.send(new GameActionMessage(new PickCardAction(String.valueOf(cardId), upper)));
+            controller.pickCharacterCard(String.valueOf(cardId), upper);
         }
     }
 
