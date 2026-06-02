@@ -106,7 +106,7 @@ public class BuildingEffectsTest {
         Board board = new Board(new ArrayList<>(), new TurnOrderTile(2, slots));
         Game game = buildGameWithBoard(List.of(player), board);
 
-        Round round = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
+        Round round = new Round(1, game, Era.I,
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>()
@@ -131,7 +131,7 @@ public class BuildingEffectsTest {
         Board board = new Board(new ArrayList<>(), new TurnOrderTile(2, slots));
         Game game = buildGameWithBoard(List.of(player), board);
 
-        Round round = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
+        Round round = new Round(1, game, Era.I,
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>()
@@ -154,7 +154,7 @@ public class BuildingEffectsTest {
         Board board = new Board(new ArrayList<>(), new TurnOrderTile(2, slots));
         Game game = buildGameWithBoard(List.of(player), board);
 
-        Round round = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
+        Round round = new Round(1, game, Era.I,
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>()

@@ -29,7 +29,6 @@ import it.polimi.ingsw.model.card.HunterCard;
 import it.polimi.ingsw.model.card.effect.EndPPEffect;
 import it.polimi.ingsw.model.card.effect.ExtraCardUpperRowEffect;
 import it.polimi.ingsw.model.enums.Era;
-import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.enums.TotemColor;
 import org.junit.jupiter.api.Test;
 
@@ -236,7 +235,6 @@ public class GameControllerRulesEnforcementTest {
         Round round = new Round(
                 1,
                 game,
-                RoundPhase.ACTION_RESOLUTION,
                 Era.I,
                 new ArrayList<>(lowerEvents),
                 new ArrayList<>(upperEvents),

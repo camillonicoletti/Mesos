@@ -3,6 +3,7 @@ package it.polimi.ingsw.view.gui.component;
 import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.client.ClientController;
 import it.polimi.ingsw.network.client.ClientModel;
+import it.polimi.ingsw.network.client.GamePhase;
 import it.polimi.ingsw.network.client.PlayerView;
 import it.polimi.ingsw.view.gui.GuiApplication;
 import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
@@ -160,7 +161,7 @@ public final class GameBoardView {
 
         Node title = MesosLogo.create(190, "game-title-logo");
 
-        Button rulesBtn = new Button("Regolamento");
+        Button rulesBtn = new Button("Rules");
         rulesBtn.getStyleClass().addAll("secondary-button", "game-rules-button");
         rulesBtn.setPrefHeight(34);
         GuiIcons.decorateButton(rulesBtn, MaterialDesignB.BOOK_OPEN);
@@ -246,11 +247,12 @@ public final class GameBoardView {
     }
 
     private String currentTurnNickname() {
-        if ("TotemPlacementState".equals(model.getGameState())) {
+        GamePhase phase = GamePhase.fromStateName(model.getGameState());
+        if (phase.isTotemPlacement()) {
             return model.getCurrentTotemPlacementPlayer();
         }
 
-        if ("ActionResolutionState".equals(model.getGameState())) {
+        if (phase.isActionResolution()) {
             return model.getCurrentActionResolutionPlayer();
         }
 
@@ -260,8 +262,9 @@ public final class GameBoardView {
     private String actionInstruction() {
         String current = currentTurnNickname();
         boolean myTurn = current != null && current.equals(model.getMyNickname());
+        GamePhase phase = GamePhase.fromStateName(model.getGameState());
 
-        if ("TotemPlacementState".equals(model.getGameState())) {
+        if (phase.isTotemPlacement()) {
             if (myTurn) {
                 return "Choose an Offer Tile to place your totem on";
             }
@@ -271,7 +274,7 @@ public final class GameBoardView {
                     : "Waiting for " + current + " to place their totem";
         }
 
-        if ("ActionResolutionState".equals(model.getGameState())) {
+        if (phase.isActionResolution()) {
             if (myTurn) {
                 return "Choose a card from the row indicated by your tile";
             }

@@ -6,7 +6,6 @@ import it.polimi.ingsw.model.card.effect.Effect;
 import it.polimi.ingsw.model.card.effect.EffectVisitor;
 import it.polimi.ingsw.model.card.effect.TotemSlotFoodBonusEffect;
 import it.polimi.ingsw.model.enums.Era;
-import it.polimi.ingsw.model.enums.RoundPhase;
 import java.util.Collections;
 
 import java.io.Serializable;
@@ -15,7 +14,7 @@ import java.util.*;
 
 /**
  * Per-round state of a Mesos match: the lower/upper rows of tribute, event and
- * building cards, the round number and phase, and the per-player offer-tile
+ * building cards, the round number, and the per-player offer-tile
  * choices made during totem placement. Provides the operations that mutate
  * these rows (setup, refill, era transition, discard) and the deterministic
  * event-resolution ordering consumed by {@link Game}.
@@ -24,7 +23,6 @@ public class Round implements Serializable {
     private static final long serialVersionUID = 1L;
     private final int number;
     private final Game game;
-    private RoundPhase phase;
     private final Era era;
     private List<EventCard> lowerRowEventCards;
     private List<EventCard> upperRowEventCards;
@@ -35,13 +33,12 @@ public class Round implements Serializable {
     private Map<Player, OfferTile> playerChoices = new LinkedHashMap<>();
 
 
-    public Round(int number, Game game, RoundPhase phase, Era era,
+    public Round(int number, Game game, Era era,
                  List<EventCard> lowerRowEventCards, List<EventCard> upperRowEventCards,
                  List<CharacterCard> lowerRowTribute, List<CharacterCard> upperRowTribute,
                  List<BuildingCard> lowerRowBuildings, List<BuildingCard> upperRowBuildings) {
         this.number = number;
         this.game = game;
-        this.phase = phase;
         this.era = era;
         this.lowerRowEventCards = (lowerRowEventCards != null) ? lowerRowEventCards : new ArrayList<>();
         this.upperRowEventCards = (upperRowEventCards != null) ? upperRowEventCards : new ArrayList<>();
@@ -57,10 +54,6 @@ public class Round implements Serializable {
 
     public Game getGame() {
         return game;
-    }
-
-    public RoundPhase getPhase() {
-        return phase;
     }
 
     public Era getEra() {
@@ -118,7 +111,6 @@ public class Round implements Serializable {
         return new Round(
                 nextRoundNumber,
                 game,
-                RoundPhase.TOTEM_PLACEMENT,
                 game.getCurrentEra(),
                 new ArrayList<>(lowerRowEventCards),
                 new ArrayList<>(upperRowEventCards),

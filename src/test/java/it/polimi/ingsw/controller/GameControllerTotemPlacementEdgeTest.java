@@ -16,7 +16,6 @@ import it.polimi.ingsw.model.board.OfferTile;
 import it.polimi.ingsw.model.board.TurnOrderTile;
 import it.polimi.ingsw.model.board.UpperRowSlot;
 import it.polimi.ingsw.model.enums.Era;
-import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.enums.TotemColor;
 import org.junit.jupiter.api.Test;
 
@@ -161,7 +160,7 @@ public class GameControllerTotemPlacementEdgeTest {
 
         Game game = new Game(players, 1, null, Era.I, null, board,
                 new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
-        Round round = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
+        Round round = new Round(1, game, Era.I,
                 new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>());
         game.setCurrentRound(round);
@@ -191,7 +190,7 @@ public class GameControllerTotemPlacementEdgeTest {
 
         Game game = new Game(players, 1, null, Era.I, null, board,
                 new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
-        Round round = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
+        Round round = new Round(1, game, Era.I,
                 new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>());
         game.setCurrentRound(round);
@@ -221,7 +220,7 @@ public class GameControllerTotemPlacementEdgeTest {
 
         Game game = new Game(players, 1, null, Era.I, null, board,
                 new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
-        Round round = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
+        Round round = new Round(1, game, Era.I,
                 new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>());
         game.setCurrentRound(round);

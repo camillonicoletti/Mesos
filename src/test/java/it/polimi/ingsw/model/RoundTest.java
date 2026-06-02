@@ -54,7 +54,7 @@ public class RoundTest {
                 new ArrayList<>(), new ArrayList<>(), new ArrayList<>()
         );
 
-        round = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
+        round = new Round(1, game, Era.I,
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(List.of(
                         new HunterCard(7,  Era.I, 2, false),
@@ -154,7 +154,7 @@ public class RoundTest {
         game.nextEra();
         game.nextEra();
 
-        Round eraIIIRound = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.III,
+        Round eraIIIRound = new Round(1, game, Era.III,
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>()
@@ -282,7 +282,7 @@ public class RoundTest {
         player1.addCharacterCard(new HunterCard(50, Era.I, 2, false));
         player1.addCharacterCard(new HunterCard(51, Era.I, 2, false));
 
-        Round eventRound = new Round(1, game, RoundPhase.EVENT_RESOLUTION, Era.I,
+        Round eventRound = new Round(1, game, Era.I,
                 new ArrayList<>(List.of(new HuntEventCard(1, Era.I, false, 2, 3))),
                 new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>(),
@@ -298,7 +298,7 @@ public class RoundTest {
 
     @Test
     void testResolveEventDoesNothingWhenNoEventCards() {
-        Round emptyEventRound = new Round(1, game, RoundPhase.EVENT_RESOLUTION, Era.I,
+        Round emptyEventRound = new Round(1, game, Era.I,
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>()

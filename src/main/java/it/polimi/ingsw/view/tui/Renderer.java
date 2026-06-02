@@ -2,6 +2,7 @@ package it.polimi.ingsw.view.tui;
 
 import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.client.ClientModel;
+import it.polimi.ingsw.network.client.GamePhase;
 import it.polimi.ingsw.network.client.PlayerView;
 import it.polimi.ingsw.network.protocol.clientbound.EventResolvedMessage;
 import it.polimi.ingsw.view.EndGameHelper;
@@ -54,8 +55,9 @@ public class Renderer {
             loginScreen(model);
             return;
         }
+        GamePhase phase = GamePhase.fromStateName(state);
 
-        if ("EndGameState".equals(state)) {
+        if (phase.isEndGame()) {
             endGameScreen(model);
             System.out.flush();
             return;
@@ -74,7 +76,7 @@ public class Renderer {
             row("  " + RED + "!  " + model.getLastError() + RST);
         }
 
-        if (!"EndRoundState".equals(state) && !"EventResolutionState".equals(state)) {
+        if (!phase.isEndRound() && !phase.isEventResolution()) {
             blank();
             footer(model);
         }
@@ -83,20 +85,20 @@ public class Renderer {
 
 
     private void body(String state, ClientModel model) {
+        GamePhase phase = GamePhase.fromStateName(state);
         if (state == null) {
             loginScreen(model);
-        } else switch (state) {
-            case "LobbyState"            -> lobbyScreen(model);
-            case "ReadyCheckState"       -> renderReadyCheck(model);
-            case "StartGameState"        -> gameScreen(model, true);
-            case "TotemPlacementState"   -> gameScreen(model, true);
-            case "ActionResolutionState" -> gameScreen(model, false);
-
-            case "EventResolutionState"  -> eventResolutionScreen(model);
-            case "EndRoundState"         -> endOfRoundScreen(model);
-            case "SuspendedState"        -> suspendedScreen(model);
-            case "EndGameState"          -> endGameScreen(model);
-            default                      -> gameScreen(model, false);
+        } else switch (phase) {
+            case LOBBY             -> lobbyScreen(model);
+            case READY_CHECK       -> renderReadyCheck(model);
+            case START_GAME        -> gameScreen(model, true);
+            case TOTEM_PLACEMENT   -> gameScreen(model, true);
+            case ACTION_RESOLUTION -> gameScreen(model, false);
+            case EVENT_RESOLUTION  -> eventResolutionScreen(model);
+            case END_ROUND         -> endOfRoundScreen(model);
+            case SUSPENDED         -> suspendedScreen(model);
+            case END_GAME          -> endGameScreen(model);
+            default                -> gameScreen(model, false);
         }
     }
 
@@ -130,7 +132,7 @@ public class Renderer {
             blank();
         }
 
-        if (isLastRound(model) && !"EndGameState".equals(state)) {
+        if (isLastRound(model) && !GamePhase.fromStateName(state).isEndGame()) {
             row(center(YLW + BOLD + BLINK + "!!!  LAST ROUND  !!!" + RST, W));
         }
 
@@ -1085,7 +1087,7 @@ public class Renderer {
     }
 
     private String[] drawOrderBox(ClientModel model) {
-        boolean actionResolution = "ActionResolutionState".equals(model.getGameState());
+        boolean actionResolution = GamePhase.fromStateName(model.getGameState()).isActionResolution();
         List<String> order = actionResolution ? actionResolutionOrder(model) : model.getTurnOrder();
         java.util.Set<String> placedPlayers = new java.util.HashSet<>(model.getTotemOnTiles().values());
 
@@ -1428,17 +1430,7 @@ public class Renderer {
 
 
     private String stateLabel(String state) {
-        return switch (state) {
-            case "LobbyState"            -> "LOBBY";
-            case "ReadyCheckState"       -> "READY CHECK";
-            case "TotemPlacementState"   -> "TOTEM PLACEMENT";
-            case "ActionResolutionState" -> "ACTION RESOLUTION";
-            case "EventResolutionState"  -> "EVENT RESOLUTION";
-            case "EndRoundState"         -> "END OF ROUND";
-            case "SuspendedState"        -> "PAUSED";
-            case "EndGameState"          -> "GAME OVER";
-            default                      -> state;
-        };
+        return GamePhase.displayLabelFor(state);
     }
 
     private boolean isLastRound(ClientModel model) {
@@ -1450,7 +1442,9 @@ public class Renderer {
                 && !model.getLobbyPlayers().isEmpty()
                 && model.getMyNickname().equals(model.getLobbyPlayers().get(0));
 
-        if ("LobbyState".equals(model.getGameState()) && model.getExpectedPlayers() < 2 && iAmFirst) {
+        if (GamePhase.fromStateName(model.getGameState()) == GamePhase.LOBBY
+                && model.getExpectedPlayers() < 2
+                && iAmFirst) {
             return "  Number of players (2-5) > ";
         }
         return "  > ";
@@ -1532,6 +1526,7 @@ public class Renderer {
 
     private List<String[]> commandsForState(ClientModel model) {
         String state = model.getGameState();
+        GamePhase phase = GamePhase.fromStateName(state);
 
         if (state == null) {
             return List.of(
@@ -1540,8 +1535,8 @@ public class Renderer {
             );
         }
 
-        return switch (state) {
-            case "LobbyState" -> {
+        return switch (phase) {
+            case LOBBY -> {
                 int exp = model.getExpectedPlayers();
                 boolean playersCountChosen = exp >= 2;
 
@@ -1585,7 +1580,7 @@ public class Renderer {
                 );
             }
 
-            case "ReadyCheckState" -> {
+            case READY_CHECK -> {
                 boolean iAmFirst = model.getMyNickname() != null
                         && !model.getLobbyPlayers().isEmpty()
                         && model.getMyNickname().equals(model.getLobbyPlayers().get(0));
@@ -1606,7 +1601,7 @@ public class Renderer {
                 );
             }
 
-            case "StartGameState", "TotemPlacementState" -> {
+            case START_GAME, TOTEM_PLACEMENT -> {
                 List<String[]> cmds = new java.util.ArrayList<>(List.of(
                         new String[]{"place <tile>", "place your totem on a tile, e.g. place B"},
                         new String[]{"see effect <id>", "show a building effect locally"},
@@ -1621,7 +1616,7 @@ public class Renderer {
                 yield cmds;
             }
 
-            case "ActionResolutionState" -> {
+            case ACTION_RESOLUTION -> {
                 List<String[]> cmds = new java.util.ArrayList<>(List.of(
                         new String[]{"pick <id> upper", "take a character/event card from the upper row"},
                         new String[]{"pick <id> lower", "take a character/event card from the lower row"},
@@ -1640,25 +1635,25 @@ public class Renderer {
                 yield cmds;
             }
 
-            case "EventResolutionState" -> List.of(
+            case EVENT_RESOLUTION -> List.of(
                     new String[]{"wait", "the server is resolving events"},
                     new String[]{"quit", "leave the match"}
             );
 
-            case "EndRoundState" -> List.of(
+            case END_ROUND -> List.of(
                     new String[]{"wait", "preparing the next round"},
                     new String[]{"show tribe <n>", "show one other tribe locally"},
                     new String[]{"quit", "leave the match"}
             );
 
-            case "SuspendedState" -> List.of(
+            case SUSPENDED -> List.of(
                     new String[]{"wait", "timer active: the only connected player wins when it expires"},
                     new String[]{"see effect <id>", "show a building effect locally"},
                     new String[]{"show tribe <n>", "show one other tribe locally"},
                     new String[]{"quit", "leave the match"}
             );
 
-            case "EndGameState" -> List.of(
+            case END_GAME -> List.of(
                     new String[]{"enter", "close the TUI"},
                     new String[]{"quit", "exit"}
             );
@@ -1696,13 +1691,9 @@ public class Renderer {
     }
 
     private String availableColorLabels(ClientModel model) {
-        List<TotemColor> taken = new ArrayList<>(model.getLobbyPlayerColors().values());
-
         List<String> labels = new ArrayList<>();
-        for (TotemColor color : TotemColor.values()) {
-            if (!taken.contains(color)) {
-                labels.add(colorLabel(color));
-            }
+        for (TotemColor color : model.getAvailableTotemColors()) {
+            labels.add(colorLabel(color));
         }
 
         return String.join("   ", labels);

@@ -3,14 +3,22 @@ package it.polimi.ingsw.view.tui;
 import it.polimi.ingsw.controller.action.PickBuildingAction;
 import it.polimi.ingsw.controller.action.PickCardAction;
 import it.polimi.ingsw.controller.action.PlaceTotemAction;
+import it.polimi.ingsw.network.client.ClientController;
+import it.polimi.ingsw.network.client.ClientModel;
 import it.polimi.ingsw.network.protocol.serverbound.ClientMessage;
 import it.polimi.ingsw.network.protocol.serverbound.GameActionMessage;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Deep bug-hunter tests for the TUI {@link CommandParser}.
+ *
+ * <p>The parser now executes commands through the {@link ClientController}
+ * façade rather than returning a message, so these tests capture what was
+ * dispatched (via {@link CapturingClientConnection}) and inspect it. A rejected
+ * command must dispatch nothing.
  *
  * Focus on subtle parsing behaviours:
  *   - whitespace handling
@@ -21,16 +29,34 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class CommandParserAdditionalCasesTest {
 
-    private final CommandParser parser = new CommandParser();
+    private CapturingClientConnection connection;
+    private CommandParser parser;
+
+    @BeforeEach
+    void setUp() {
+        connection = new CapturingClientConnection();
+        ClientController controller = new ClientController(new ClientModel(), connection);
+        parser = new CommandParser(controller);
+    }
+
+    /** Parses {@code input} and returns the single message it dispatched, or null. */
+    private ClientMessage dispatched(String input) {
+        connection.sent.clear();
+        parser.parse(input);
+        return connection.sent.isEmpty()
+                ? null
+                : connection.sent.get(connection.sent.size() - 1);
+    }
 
     // ── Empty / whitespace inputs ────────────────────────────────────────────
 
     @Test
-    void blankInputReturnsNull() {
-        assertNull(parser.parse(""));
-        assertNull(parser.parse("   "));
-        assertNull(parser.parse("\t"));
-        assertNull(parser.parse(null));
+    void blankInputDispatchesNothing() {
+        assertNull(dispatched(""));
+        assertNull(dispatched("   "));
+        assertNull(dispatched("\t"));
+        assertNull(dispatched(null));
+        assertEquals(CommandParser.Result.UNKNOWN, parser.parse(""));
     }
 
     // ── Place command edge cases ─────────────────────────────────────────────
@@ -42,8 +68,8 @@ class CommandParserAdditionalCasesTest {
      */
     @Test
     void placeAcceptsLowercaseAndUppercaseLetters() {
-        ClientMessage upper = parser.parse("place A");
-        ClientMessage lower = parser.parse("place a");
+        ClientMessage upper = dispatched("place A");
+        ClientMessage lower = dispatched("place a");
 
         assertInstanceOf(GameActionMessage.class, upper);
         assertInstanceOf(GameActionMessage.class, lower);
@@ -61,28 +87,25 @@ class CommandParserAdditionalCasesTest {
      */
     @Test
     void placeWithNonLetterArgumentIsAcceptedByParser() {
-        // Ground truth check: the parser DOES build an action even for digits.
-        // This documents existing behaviour and surfaces a possible UX bug —
-        // the server will reject "place 8" with an error, which is noisier
-        // than rejecting it locally.
-        ClientMessage msg = parser.parse("place 8");
+        // Ground truth check: the parser DOES dispatch an action even for digits.
+        ClientMessage msg = dispatched("place 8");
         assertInstanceOf(GameActionMessage.class, msg,
                 "Currently the parser accepts digits for 'place' — consider tightening it");
     }
 
     @Test
     void placeWithMultipleCharacterTileIsRejected() {
-        assertNull(parser.parse("place AB"));
-        assertNull(parser.parse("place AAA"));
+        assertNull(dispatched("place AB"));
+        assertNull(dispatched("place AAA"));
     }
 
     // ── Pick / build with edge cases ─────────────────────────────────────────
 
     @Test
     void pickAcceptsMixedCaseRow() {
-        ClientMessage upper = parser.parse("pick 101 UPPER");
-        ClientMessage upperMixed = parser.parse("pick 101 Upper");
-        ClientMessage lower = parser.parse("pick 101 LOWER");
+        ClientMessage upper = dispatched("pick 101 UPPER");
+        ClientMessage upperMixed = dispatched("pick 101 Upper");
+        ClientMessage lower = dispatched("pick 101 LOWER");
 
         assertInstanceOf(GameActionMessage.class, upper);
         assertInstanceOf(GameActionMessage.class, upperMixed);
@@ -96,7 +119,7 @@ class CommandParserAdditionalCasesTest {
 
     @Test
     void buildAcceptsMixedCaseRow() {
-        ClientMessage msg = parser.parse("build 201 UpPeR");
+        ClientMessage msg = dispatched("build 201 UpPeR");
         assertInstanceOf(GameActionMessage.class, msg);
         PickBuildingAction act = (PickBuildingAction) ((GameActionMessage) msg).getAction();
         assertTrue(act.isFromUpperRow());
@@ -105,7 +128,7 @@ class CommandParserAdditionalCasesTest {
 
     @Test
     void pickPreservesIdAsString() {
-        ClientMessage msg = parser.parse("pick   42   upper");
+        ClientMessage msg = dispatched("pick   42   upper");
         assertInstanceOf(GameActionMessage.class, msg);
         PickCardAction act = (PickCardAction) ((GameActionMessage) msg).getAction();
         assertEquals("42", act.getCardId(),
@@ -120,62 +143,60 @@ class CommandParserAdditionalCasesTest {
      */
     @Test
     void pickWithNonNumericIdIsAcceptedByParser() {
-        ClientMessage msg = parser.parse("pick foo upper");
+        ClientMessage msg = dispatched("pick foo upper");
         assertInstanceOf(GameActionMessage.class, msg,
                 "Currently parser accepts non-numeric ids — server will reject them");
     }
 
     @Test
     void pickWithoutAnyArgumentsIsRejected() {
-        assertNull(parser.parse("pick"));
-        assertNull(parser.parse("build"));
+        assertNull(dispatched("pick"));
+        assertNull(dispatched("build"));
     }
 
     @Test
     void pickWithOnlyIdIsRejected() {
-        assertNull(parser.parse("pick 101"));
-        assertNull(parser.parse("build 201"));
+        assertNull(dispatched("pick 101"));
+        assertNull(dispatched("build 201"));
     }
 
     // ── Players command edge cases ───────────────────────────────────────────
 
     @Test
     void playersZeroOrNegativeRejected() {
-        assertNull(parser.parse("players 0"));
-        assertNull(parser.parse("players 1"));
-        assertNull(parser.parse("players -1"));
-        assertNull(parser.parse("players 6"));
-        assertNull(parser.parse("players 100"));
+        assertNull(dispatched("players 0"));
+        assertNull(dispatched("players 1"));
+        assertNull(dispatched("players -1"));
+        assertNull(dispatched("players 6"));
+        assertNull(dispatched("players 100"));
     }
 
     @Test
     void playersWithLetterRejected() {
-        assertNull(parser.parse("players two"));
-        assertNull(parser.parse("players abc"));
-        assertNull(parser.parse("players 2a"));
+        assertNull(dispatched("players two"));
+        assertNull(dispatched("players abc"));
+        assertNull(dispatched("players 2a"));
     }
 
     @Test
     void playersBoundariesAccepted() {
-        assertNotNull(parser.parse("players 2"));
-        assertNotNull(parser.parse("players 5"));
+        assertNotNull(dispatched("players 2"));
+        assertNotNull(dispatched("players 5"));
     }
 
     // ── Whitespace / multi-space tolerance ───────────────────────────────────
 
     @Test
     void leadingAndTrailingWhitespaceIsIgnored() {
-        // Trailing whitespace
-        assertNotNull(parser.parse("ready   "));
-        assertNotNull(parser.parse("  ready"));
-        assertNotNull(parser.parse("  ready  "));
+        assertNotNull(dispatched("ready   "));
+        assertNotNull(dispatched("  ready"));
+        assertNotNull(dispatched("  ready  "));
     }
 
     @Test
     void multipleSpacesBetweenTokensAreCollapsed() {
-        ClientMessage a = parser.parse("place A");
-        ClientMessage b = parser.parse("place    A");
-        // both should produce equivalent actions
+        ClientMessage a = dispatched("place A");
+        ClientMessage b = dispatched("place    A");
         assertInstanceOf(GameActionMessage.class, a);
         assertInstanceOf(GameActionMessage.class, b);
     }
@@ -183,22 +204,23 @@ class CommandParserAdditionalCasesTest {
     // ── Fully unknown commands ───────────────────────────────────────────────
 
     @Test
-    void completelyUnknownCommandReturnsNull() {
-        assertNull(parser.parse("foobar"));
-        assertNull(parser.parse("attack 101"));
-        assertNull(parser.parse("steal 5"));
-        assertNull(parser.parse("12345"));
+    void completelyUnknownCommandDispatchesNothing() {
+        assertNull(dispatched("foobar"));
+        assertNull(dispatched("attack 101"));
+        assertNull(dispatched("steal 5"));
+        assertNull(dispatched("12345"));
+        assertEquals(CommandParser.Result.UNKNOWN, parser.parse("foobar"));
     }
 
     // ── Help is NOT a known parser command (must be handled by Tui) ──────────
 
     /**
      * The parser must NOT treat 'help' as a known command — Tui handles it
-     * before delegating to the parser.  If the parser silently accepted
-     * 'help', it would emit a null result with a misleading warning.
+     * before delegating to the parser.
      */
     @Test
-    void helpIsNotConvertedToAClientMessage() {
-        assertNull(parser.parse("help"));
+    void helpIsNotAKnownParserCommand() {
+        assertNull(dispatched("help"));
+        assertEquals(CommandParser.Result.UNKNOWN, parser.parse("help"));
     }
 }

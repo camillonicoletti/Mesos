@@ -6,7 +6,6 @@ import it.polimi.ingsw.model.card.BuildingCard;
 import it.polimi.ingsw.model.card.Card;
 import it.polimi.ingsw.model.card.HunterCard;
 import it.polimi.ingsw.model.enums.Era;
-import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.enums.TotemColor;
 import org.junit.jupiter.api.Test;
 
@@ -78,7 +77,7 @@ class GameAndClientMutabilityTest {
      */
     @Test
     void roundCardListGettersAreUnmodifiable() {
-        Round round = new Round(1, minimalGame(), RoundPhase.TOTEM_PLACEMENT, Era.I,
+        Round round = new Round(1, minimalGame(), Era.I,
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>());

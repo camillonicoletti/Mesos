@@ -2,6 +2,7 @@ package it.polimi.ingsw.view.gui.component;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import it.polimi.ingsw.controller.leaderboard.LeaderboardEntry;
 import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.client.ClientController;
 import it.polimi.ingsw.network.client.ClientModel;
@@ -41,8 +42,8 @@ import java.util.Map;
 import java.util.Set;
 
 public final class EndGameView {
-    private static final String PRESTIGE_BADGE_PATH = "gui/endgame_prestige_badge.png";
-    private static final String FOOD_BADGE_PATH = "gui/endgame_food_badge.png";
+    private static final String PRESTIGE_BADGE_PATH = "assets/icons/endgame_prestige_badge.png";
+    private static final String FOOD_BADGE_PATH = "assets/icons/engame_food_badge_prova.png";
     private static final String ICON_HUNTER = "assets/icons/summary/hunter.png";
     private static final String ICON_BUILDER = "assets/icons/summary/builder.png";
     private static final String ICON_GATHERER = "assets/icons/summary/gatherer.png";
@@ -57,6 +58,7 @@ public final class EndGameView {
     private final ClientModel model;
     private final GuiAssetCatalog assetCatalog;
     private final TotemMarkerFactory totemMarkers;
+    private final LeaderboardView leaderboardView;
     private StackPane root;
     private StackPane breakdownLayer;
     private VBox content;
@@ -69,6 +71,7 @@ public final class EndGameView {
         this.model = model;
         this.assetCatalog = assetCatalog;
         this.totemMarkers = new TotemMarkerFactory(assetCatalog);
+        this.leaderboardView = new LeaderboardView();
     }
 
     public Node render() {
@@ -88,18 +91,32 @@ public final class EndGameView {
         winnerBox.getStyleClass().add("endgame-winner-box");
         winnerBox.setAlignment(Pos.CENTER);
 
-        content.getChildren().addAll(titleHeader(), standings, winnerBox, disconnectButton());
         breakdownLayer = new StackPane();
         breakdownLayer.getStyleClass().add("endgame-breakdown-layer");
         breakdownLayer.setVisible(false);
         breakdownLayer.setManaged(false);
         breakdownLayer.setPickOnBounds(false);
 
+        content.getChildren().addAll(titleHeader(), standings,
+                leaderboardView.render(breakdownLayer), winnerBox, disconnectButton());
+
         root = new StackPane(content, breakdownLayer);
         StackPane.setAlignment(content, Pos.TOP_CENTER);
         StackPane.setAlignment(breakdownLayer, Pos.CENTER);
         refresh();
         return root;
+    }
+
+    public void setLeaderboardRank(int rank, int playersCount) {
+        leaderboardView.setMyRank(rank, playersCount);
+    }
+
+    public void setLeaderboardPlayersCount(int playersCount) {
+        leaderboardView.setPlayersCount(playersCount);
+    }
+
+    public void setLeaderboardEntries(int playersCount, List<LeaderboardEntry> entries) {
+        leaderboardView.setEntries(playersCount, entries);
     }
 
     public void refresh() {

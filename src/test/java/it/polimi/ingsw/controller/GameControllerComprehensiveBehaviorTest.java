@@ -30,7 +30,6 @@ import it.polimi.ingsw.model.card.HunterCard;
 import it.polimi.ingsw.model.card.effect.EndPPEffect;
 import it.polimi.ingsw.model.card.effect.ExtraCardUpperRowEffect;
 import it.polimi.ingsw.model.enums.Era;
-import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.enums.TotemColor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -1076,7 +1075,7 @@ public class GameControllerComprehensiveBehaviorTest {
         game.setCurrentRound(round);
 
         // The Round constructor receives a Game, so rebuild it if the passed round belongs to a temporary game.
-        Round actualRound = new Round(round.getNumber(), game, round.getPhase(), round.getEra(),
+        Round actualRound = new Round(round.getNumber(), game, round.getEra(),
                 new ArrayList<>(round.getLowerRowEvents()),
                 new ArrayList<>(round.getUpperRowEvents()),
                 new ArrayList<>(round.getLowerRowTribute()),
@@ -1157,7 +1156,7 @@ public class GameControllerComprehensiveBehaviorTest {
         Game placeholderGame = new Game(new ArrayList<>(), 1, null, Era.I, null,
                 new Board(new ArrayList<>(), TurnOrderTile.createForPlayers(2)),
                 new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
-        return new Round(1, placeholderGame, RoundPhase.TOTEM_PLACEMENT, Era.I,
+        return new Round(1, placeholderGame, Era.I,
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(lowerTribute), new ArrayList<>(upperTribute),
                 new ArrayList<>(lowerBuildings), new ArrayList<>(upperBuildings));

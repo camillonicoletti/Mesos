@@ -48,22 +48,28 @@ public class SuspensionManager implements Serializable {
         }
 
         // Suspend when ≤1 player is connected: the game cannot continue with fewer than 2 active players.
-        suspended = connectedPlayersCount <= 1;
-
-        // The forced-win countdown is decoupled from the suspended flag on purpose:
-        // it only makes sense with EXACTLY one connected player. With zero connected
-        // (e.g. right after a restore from persistence, before anyone has reconnected)
-        // nobody can win the timeout, so the clock must not run yet. Anchor the deadline
-        // the moment the count first reaches one, and clear it whenever it isn't one —
-        // this also invalidates any stale absolute timestamp restored from disk (the
-        // secondary case where the savestate was written while already suspended).
-        boolean countdownShouldRun = connectedPlayersCount == 1;
-        boolean countdownRunning = suspensionStartedAtMillis >= 0L;
-        if (countdownShouldRun && !countdownRunning) {
-            suspensionStartedAtMillis = nowMillis;
-        } else if (!countdownShouldRun) {
+        boolean shouldSuspend = connectedPlayersCount <= 1;
+        if (shouldSuspend) {
+            if (connectedPlayersCount == 1) {
+                // Exactly one player connected: (re)start the lone-player countdown only
+                // if it is not already running. This also covers the post-restore case,
+                // where the timer is paused at zero connected and must begin fresh from
+                // the moment the first player reconnects — never from a stale pre-crash
+                // timestamp that would expire the match the instant someone reconnects.
+                if (suspensionStartedAtMillis < 0L) {
+                    suspensionStartedAtMillis = nowMillis;
+                }
+            } else {
+                // Zero players connected (only reachable right after restoring a saved
+                // game): nobody can be awarded the timeout win, so pause the countdown
+                // until someone reconnects.
+                suspensionStartedAtMillis = -1L;
+            }
+        } else {
             suspensionStartedAtMillis = -1L;
         }
+
+        suspended = shouldSuspend;
     }
 
     public long getSuspensionTimeoutMillis() {

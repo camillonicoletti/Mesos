@@ -2102,6 +2102,155 @@
     -fx-padding: 8px 18px;
 }
 
+.endgame-leaderboard-compact {
+    -fx-background-color: rgba(255, 242, 207, .07);
+    -fx-background-radius: 7px;
+    -fx-border-color: rgba(255, 226, 168, .20);
+    -fx-border-radius: 7px;
+    -fx-border-width: 1px;
+    -fx-padding: 12px 16px;
+}
+
+.endgame-leaderboard-rank {
+    -fx-text-fill: #fff2cf;
+    -fx-font-size: 14px;
+    -fx-font-weight: 900;
+}
+
+.endgame-leaderboard-status {
+    -fx-text-fill: rgba(255, 242, 207, .58);
+    -fx-font-size: 11px;
+    -fx-font-weight: 800;
+}
+
+.endgame-leaderboard-button {
+    -fx-text-fill: #fff2cf;
+    -fx-background-color: rgba(255, 242, 207, .10);
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(255, 226, 168, .36);
+    -fx-border-radius: 999px;
+    -fx-border-width: 1px;
+    -fx-padding: 8px 14px;
+    -fx-font-size: 11px;
+    -fx-font-weight: 900;
+}
+
+.endgame-leaderboard-button:hover {
+    -fx-text-fill: #24170f;
+    -fx-background-color: rgba(255, 226, 168, .88);
+}
+
+.endgame-leaderboard-button:hover .ikonli-font-icon {
+    -fx-icon-color: #24170f;
+}
+
+.endgame-leaderboard-panel {
+    -fx-background-color: rgba(36, 15, 23, .94);
+    -fx-background-radius: 8px;
+    -fx-border-color: rgba(255, 226, 168, .26);
+    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, .62), 18, 0, 0, 8);
+    -fx-padding: 22px 26px 20px 26px;
+}
+
+.endgame-leaderboard-title {
+    -fx-font-family: "Noteworthy", "Avenir Next Condensed", "Copperplate", sans-serif;
+    -fx-font-size: 30px;
+    -fx-font-weight: normal;
+    -fx-text-fill: #fff2cf;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, .65), 5, 0, 0, 2);
+}
+
+.endgame-leaderboard-subtitle {
+    -fx-text-fill: rgba(255, 242, 207, .60);
+    -fx-font-size: 13px;
+    -fx-font-weight: 900;
+}
+
+.endgame-leaderboard-close {
+    -fx-min-width: 34px;
+    -fx-min-height: 34px;
+    -fx-pref-width: 34px;
+    -fx-pref-height: 34px;
+    -fx-background-color: rgba(255, 242, 207, .10);
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(255, 226, 168, .36);
+    -fx-border-radius: 999px;
+    -fx-border-width: 1px;
+}
+
+.endgame-leaderboard-scroll {
+    -fx-background: transparent;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.endgame-leaderboard-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.endgame-leaderboard-table {
+    -fx-background-color: rgba(255, 242, 207, .04);
+    -fx-background-radius: 6px;
+    -fx-border-color: rgba(255, 226, 168, .14);
+    -fx-border-radius: 6px;
+    -fx-border-width: 1px;
+}
+
+.endgame-leaderboard-header-row {
+    -fx-padding: 8px 14px;
+    -fx-border-color: transparent transparent rgba(255, 226, 168, .22) transparent;
+    -fx-border-width: 0 0 1px 0;
+}
+
+.endgame-leaderboard-row {
+    -fx-padding: 9px 14px;
+    -fx-border-color: transparent transparent rgba(255, 226, 168, .12) transparent;
+    -fx-border-width: 0 0 1px 0;
+}
+
+.endgame-leaderboard-row-first {
+    -fx-background-color: rgba(255, 220, 100, .10);
+}
+
+.endgame-leaderboard-header-cell {
+    -fx-text-fill: rgba(255, 226, 168, .65);
+    -fx-font-size: 11px;
+    -fx-font-weight: 900;
+}
+
+.endgame-leaderboard-rank-cell,
+.endgame-leaderboard-name-cell,
+.endgame-leaderboard-score-cell,
+.endgame-leaderboard-date-cell {
+    -fx-font-size: 13px;
+    -fx-font-weight: 900;
+}
+
+.endgame-leaderboard-rank-cell {
+    -fx-text-fill: #ffcf66;
+}
+
+.endgame-leaderboard-name-cell {
+    -fx-text-fill: #fff2cf;
+}
+
+.endgame-leaderboard-score-cell {
+    -fx-text-fill: #f0b55e;
+}
+
+.endgame-leaderboard-date-cell {
+    -fx-text-fill: rgba(255, 242, 207, .58);
+}
+
+.endgame-leaderboard-empty {
+    -fx-padding: 18px 14px;
+    -fx-text-fill: rgba(255, 242, 207, .62);
+    -fx-font-size: 13px;
+    -fx-font-weight: 800;
+}
+
 .endgame-quit-button {
     -fx-text-fill: #fff2cf;
     -fx-background-color: rgba(255, 242, 207, .12);

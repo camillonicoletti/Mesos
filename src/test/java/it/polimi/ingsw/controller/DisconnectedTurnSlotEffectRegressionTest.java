@@ -12,7 +12,6 @@ import it.polimi.ingsw.model.board.BoardFactory;
 import it.polimi.ingsw.model.card.CharacterCard;
 import it.polimi.ingsw.model.card.HunterCard;
 import it.polimi.ingsw.model.enums.Era;
-import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.enums.TotemColor;
 import org.junit.jupiter.api.Test;
 
@@ -53,7 +52,7 @@ class DisconnectedTurnSlotEffectRegressionTest {
         // One character card in lower for Carol's tile.
         List<CharacterCard> lower = new ArrayList<>();
         lower.add(new HunterCard(558, Era.I, 0, false));
-        Round round = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
+        Round round = new Round(1, game, Era.I,
                 new ArrayList<>(), new ArrayList<>(),
                 lower, upper,
                 new ArrayList<>(), new ArrayList<>());
@@ -127,7 +126,7 @@ class DisconnectedTurnSlotEffectRegressionTest {
                 BoardFactory.createBoard(3),
                 new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
-        Round round = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
+        Round round = new Round(1, game, Era.I,
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(List.of(new HunterCard(558, Era.I, 0, false))),
                 new ArrayList<>(List.of(new HunterCard(556, Era.I, 0, false),

@@ -6,7 +6,15 @@ import it.polimi.ingsw.network.client.ClientModel;
 import it.polimi.ingsw.view.View;
 
 import java.util.List;
+import java.util.function.Consumer;
 
+/**
+ * Thin {@link View} for the JavaFX client. It launches the JavaFX application
+ * and forwards the controller-driven View callbacks to the live
+ * {@link GuiApplication} instance. The controller's dispatcher runs these on the
+ * JavaFX thread, so forwarding is a direct call; before the application has
+ * started the instance is {@code null} and events are harmlessly ignored.
+ */
 public final class Gui implements View {
     private final ClientController controller;
     private final ClientModel model;
@@ -21,15 +29,33 @@ public final class Gui implements View {
         GuiApplication.launchWith(controller, model);
     }
 
+    @Override public void onLoginResult()             { forward(GuiApplication::onLoginResult); }
+    @Override public void onLobbyChanged()            { forward(GuiApplication::onBoardEvent); }
+    @Override public void onGameStarted()             { forward(GuiApplication::onBoardEvent); }
+    @Override public void onGameStateChanged()        { forward(GuiApplication::onBoardEvent); }
+    @Override public void onBoardChanged()            { forward(GuiApplication::onBoardEvent); }
+    @Override public void onEventResolved()           { forward(GuiApplication::onBoardEvent); }
+    @Override public void onGameEnded()               { forward(GuiApplication::onBoardEvent); }
+    @Override public void onError()                   { forward(GuiApplication::onBoardEvent); }
+    @Override public void onConnectionLost()          { forward(GuiApplication::onBoardEvent); }
+    @Override public void onGameSuspended()           { forward(GuiApplication::onBoardEvent); }
+    @Override public void onGameResumed()             { forward(GuiApplication::onBoardEvent); }
+    @Override public void onPlayerConnectionChanged() { forward(GuiApplication::onBoardEvent); }
+
     @Override
     public void showLeaderboard(int playersCount, List<LeaderboardEntry> entries) {
-        // TODO: forward to a LeaderboardView JavaFX component once it exists.
-        //   Platform.runLater(() -> ...);
+        forward(app -> app.onLeaderboard(playersCount, entries));
     }
 
     @Override
     public void showMyRank(int rank, int playersCount) {
-        // TODO: forward to EndGameView.setMyRank(rank, playersCount).
-        //   Platform.runLater(() -> ...);
+        forward(app -> app.onMyRank(rank, playersCount));
+    }
+
+    private void forward(Consumer<GuiApplication> action) {
+        GuiApplication app = GuiApplication.current();
+        if (app != null) {
+            action.accept(app);
+        }
     }
 }

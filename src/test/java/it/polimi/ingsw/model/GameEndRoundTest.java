@@ -9,7 +9,6 @@ import it.polimi.ingsw.model.card.HuntEventCard;
 import it.polimi.ingsw.model.card.HunterCard;
 import it.polimi.ingsw.model.card.effect.EndPPEffect;
 import it.polimi.ingsw.model.enums.Era;
-import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.enums.TotemColor;
 import org.junit.jupiter.api.Test;
 
@@ -251,7 +250,6 @@ class GameEndRoundTest {
         Round nextRound = round.createNextRound(2);
 
         assertEquals(2, nextRound.getNumber());
-        assertEquals(RoundPhase.TOTEM_PLACEMENT, nextRound.getPhase());
         assertEquals(List.of(lowerCharacter), nextRound.getLowerRowTribute());
         assertEquals(List.of(lowerEvent), nextRound.getLowerRowEvents());
         assertEquals(List.of(lowerBuilding), nextRound.getLowerRowBuildings());
@@ -303,7 +301,6 @@ class GameEndRoundTest {
         Round round = new Round(
                 1,
                 game,
-                RoundPhase.ROUND_CLEANUP,
                 game.getCurrentEra(),
                 new ArrayList<>(lowerEvents),
                 new ArrayList<>(upperEvents),

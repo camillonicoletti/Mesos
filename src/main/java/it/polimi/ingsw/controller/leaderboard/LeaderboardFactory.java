@@ -65,7 +65,7 @@ public final class LeaderboardFactory {
 
     private static void initSchema(Connection conn) throws SQLException, IOException {
         try (InputStream in = LeaderboardFactory.class
-                .getResourceAsStream("/deliverables/final/dump/schema.sql")) {
+                .getResourceAsStream("/db/schema.sql")) {
             if (in == null) {
                 throw new IOException("schema.sql not found on classpath");
             }

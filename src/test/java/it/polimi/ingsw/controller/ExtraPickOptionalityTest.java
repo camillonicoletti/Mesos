@@ -17,7 +17,6 @@ import it.polimi.ingsw.model.card.HuntEventCard;
 import it.polimi.ingsw.model.card.HunterCard;
 import it.polimi.ingsw.model.card.effect.ExtraCardUpperRowEffect;
 import it.polimi.ingsw.model.enums.Era;
-import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.enums.TotemColor;
 import org.junit.jupiter.api.Test;
 
@@ -65,7 +64,7 @@ class ExtraPickOptionalityTest {
                 new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
 
-        Round round = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
+        Round round = new Round(1, game, Era.I,
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>(upperContent),
                 new ArrayList<>(), new ArrayList<>(upperBuildings));
@@ -223,7 +222,7 @@ class ExtraPickOptionalityTest {
                 new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
         Round round = new Round(1, game,
-                it.polimi.ingsw.model.enums.RoundPhase.TOTEM_PLACEMENT, Era.I,
+                Era.I,
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>(java.util.List.of(
                         new HunterCard(701, Era.I, 0, false),

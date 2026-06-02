@@ -17,7 +17,7 @@ final class ClientRuntime {
         ClientModel model = new ClientModel();
         ClientController controller = new ClientController(model, connection);
         View view = ClientViewSelector.select(controller, model);
-
+        controller.setView(view);
 
         try {
             beforeViewRun.execute();

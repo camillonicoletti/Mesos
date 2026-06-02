@@ -3,8 +3,6 @@ package it.polimi.ingsw.view.gui.component;
 import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.client.ClientController;
 import it.polimi.ingsw.network.client.ClientModel;
-import it.polimi.ingsw.network.protocol.serverbound.ReadyMessage;
-import it.polimi.ingsw.network.protocol.serverbound.SetPlayersCountMessage;
 import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
 import it.polimi.ingsw.view.gui.util.GuiAnimations;
 import it.polimi.ingsw.view.gui.util.GuiAudio;
@@ -115,10 +113,10 @@ public final class LobbyView {
                 : primaryButton("Ready", MaterialDesignC.CHECK_CIRCLE);
         readyToggle.getStyleClass().addAll("lobby-action-button", ready ? "ready-toggle-on" : "ready-toggle-off");
         GuiAnimations.addHoverScale(readyToggle);
-        readyToggle.setOnAction(event -> controller.send(new ReadyMessage(!ready)));
+        readyToggle.setOnAction(event -> controller.setReady(!ready));
         box.getChildren().add(readyToggle);
 
-        Button rulesBtn = secondaryButton("Regolamento", MaterialDesignB.BOOK_OPEN);
+        Button rulesBtn = secondaryButton("Rules", MaterialDesignB.BOOK_OPEN);
         rulesBtn.getStyleClass().addAll("game-rules-button", "lobby-action-button");
         GuiAnimations.addHoverScale(rulesBtn);
         rulesBtn.setOnAction(event -> GuiApplication.openRulesPdf());
@@ -159,7 +157,7 @@ public final class LobbyView {
             }
             int chosen = count;
             GuiAnimations.addHoverScale(choice);
-            choice.setOnAction(event -> controller.send(new SetPlayersCountMessage(chosen)));
+            choice.setOnAction(event -> controller.setPlayersCount(chosen));
             choices.getChildren().add(choice);
         }
 

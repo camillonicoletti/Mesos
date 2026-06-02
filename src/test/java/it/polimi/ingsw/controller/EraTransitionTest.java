@@ -9,7 +9,6 @@ import it.polimi.ingsw.model.card.BuildingCard;
 import it.polimi.ingsw.model.card.CharacterCard;
 import it.polimi.ingsw.model.card.HunterCard;
 import it.polimi.ingsw.model.enums.Era;
-import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.enums.TotemColor;
 import org.junit.jupiter.api.Test;
 
@@ -50,7 +49,7 @@ class EraTransitionTest {
                 new ArrayList<>(),
                 era1, era2, era3
         );
-        Round round = new Round(1, g, RoundPhase.TOTEM_PLACEMENT, Era.I,
+        Round round = new Round(1, g, Era.I,
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>());

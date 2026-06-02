@@ -15,7 +15,6 @@ import it.polimi.ingsw.model.card.CharacterCard;
 import it.polimi.ingsw.model.card.HunterCard;
 import it.polimi.ingsw.model.card.effect.Effect;
 import it.polimi.ingsw.model.enums.Era;
-import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.enums.TotemColor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -94,7 +93,6 @@ public class GameTest {
         round = new Round(
                 1,
                 game,
-                RoundPhase.TOTEM_PLACEMENT,
                 Era.I,
                 new ArrayList<>(),
                 new ArrayList<>(),
@@ -160,7 +158,6 @@ public class GameTest {
         Round newRound = new Round(
                 2,
                 game,
-                RoundPhase.TOTEM_PLACEMENT,
                 Era.I,
                 new ArrayList<>(),
                 new ArrayList<>(),
@@ -242,7 +239,6 @@ public class GameTest {
         Round maxRound = new Round(
                 10,
                 maxRoundGame,
-                RoundPhase.TOTEM_PLACEMENT,
                 Era.I,
                 new ArrayList<>(),
                 new ArrayList<>(),
@@ -323,7 +319,6 @@ public class GameTest {
         Round eraIIRound = new Round(
                 1,
                 game,
-                RoundPhase.TOTEM_PLACEMENT,
                 Era.II,
                 new ArrayList<>(),
                 new ArrayList<>(),
@@ -380,7 +375,6 @@ public class GameTest {
         Round maxRound = new Round(
                 10,
                 maxGame,
-                RoundPhase.TOTEM_PLACEMENT,
                 Era.I,
                 new ArrayList<>(),
                 new ArrayList<>(),
