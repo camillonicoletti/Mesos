@@ -8,7 +8,6 @@ import it.polimi.ingsw.model.card.effect.Effect;
 import it.polimi.ingsw.model.card.effect.EffectVisitor;
 import it.polimi.ingsw.model.card.effect.EndGameEffect;
 import it.polimi.ingsw.model.enums.Era;
-import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.board.Board;
 import it.polimi.ingsw.model.card.BuilderCard;
 import it.polimi.ingsw.model.card.ArtistCard;
@@ -128,7 +127,7 @@ public class Game implements Serializable {
         board.getTurnOrderTile().assignRandomTurnOrder(totems);
 
         if (currentRound == null) {
-            currentRound = new Round(currentRoundNumber, this, RoundPhase.TOTEM_PLACEMENT, Era.I, null, null, null, null, null, null);
+            currentRound = new Round(currentRoundNumber, this, Era.I, null, null, null, null, null, null);
         }
 
         currentRound.setupInitialRows();

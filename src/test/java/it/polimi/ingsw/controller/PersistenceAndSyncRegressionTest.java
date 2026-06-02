@@ -18,7 +18,6 @@ import it.polimi.ingsw.model.card.Card;
 import it.polimi.ingsw.model.card.HunterCard;
 import it.polimi.ingsw.model.card.effect.EndPPEffect;
 import it.polimi.ingsw.model.enums.Era;
-import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.client.ClientModel;
 import it.polimi.ingsw.network.client.PlayerView;
@@ -79,7 +78,7 @@ class PersistenceAndSyncRegressionTest {
                 BoardFactory.createBoard(2),
                 new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
         for (Player p : players) p.setGame(game);
-        Round round = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
+        Round round = new Round(1, game, Era.I,
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>());

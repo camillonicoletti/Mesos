@@ -13,7 +13,6 @@ import it.polimi.ingsw.model.card.EventCard;
 import it.polimi.ingsw.model.card.HuntEventCard;
 import it.polimi.ingsw.model.card.HunterCard;
 import it.polimi.ingsw.model.enums.Era;
-import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.enums.TotemColor;
 import org.junit.jupiter.api.Test;
 
@@ -68,7 +67,7 @@ class EventCardNotPickableTest {
                 new ArrayList<>(), new ArrayList<>(), new ArrayList<>()
         );
         // Round ctor order: lowerEvents, upperEvents, lowerTribute, upperTribute, lowerBuild, upperBuild
-        Round round = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
+        Round round = new Round(1, game, Era.I,
                 new ArrayList<>(), new ArrayList<>(upperEvents),
                 new ArrayList<>(), new ArrayList<>(upperCharacters),
                 new ArrayList<>(), new ArrayList<>());

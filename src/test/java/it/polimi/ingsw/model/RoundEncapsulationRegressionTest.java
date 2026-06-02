@@ -6,7 +6,6 @@ import it.polimi.ingsw.model.card.EventCard;
 import it.polimi.ingsw.model.card.HunterCard;
 import it.polimi.ingsw.model.card.HuntEventCard;
 import it.polimi.ingsw.model.enums.Era;
-import it.polimi.ingsw.model.enums.RoundPhase;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -164,7 +163,6 @@ class RoundEncapsulationRegressionTest {
         return new Round(
                 1,
                 null,
-                RoundPhase.TOTEM_PLACEMENT,
                 Era.I,
                 new ArrayList<>(lowerEvents),
                 new ArrayList<>(upperEvents),

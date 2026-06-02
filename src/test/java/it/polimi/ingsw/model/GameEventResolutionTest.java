@@ -11,7 +11,6 @@ import it.polimi.ingsw.model.card.SustenanceEventCard;
 import it.polimi.ingsw.model.card.CavePaintingsEventCard;
 import it.polimi.ingsw.model.board.Board;
 import it.polimi.ingsw.model.enums.Era;
-import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.enums.TotemColor;
 import org.junit.jupiter.api.Test;
 
@@ -185,7 +184,6 @@ class GameEventResolutionTest {
         Round round = new Round(
                 1,
                 game,
-                RoundPhase.EVENT_RESOLUTION,
                 Era.I,
                 new ArrayList<>(List.of(huntEraIII, sustenanceEraI, ritualEraII, huntEraI)),
                 new ArrayList<>(),

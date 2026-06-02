@@ -36,7 +36,6 @@ import it.polimi.ingsw.model.card.SustenanceEventCard;
 import it.polimi.ingsw.model.card.effect.EndPPEffect;
 import it.polimi.ingsw.model.card.effect.ExtraCardUpperRowEffect;
 import it.polimi.ingsw.model.enums.Era;
-import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.enums.TotemColor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -672,7 +671,7 @@ public class GameControllerAdditionalScenariosTest {
                                                     int currentRoundNumber) {
         GameController controller = new GameController();
         Game game = createPlainGame(players, currentRoundNumber, offerTiles);
-        Round actualRound = new Round(round.getNumber(), game, round.getPhase(), round.getEra(),
+        Round actualRound = new Round(round.getNumber(), game, round.getEra(),
                 new ArrayList<>(round.getLowerRowEvents()),
                 new ArrayList<>(round.getUpperRowEvents()),
                 new ArrayList<>(round.getLowerRowTribute()),
@@ -795,7 +794,7 @@ public class GameControllerAdditionalScenariosTest {
                                         List<BuildingCard> lowerBuildings,
                                         List<BuildingCard> upperBuildings) {
         Game placeholderGame = createPlainGame(createPlayers(2), 1);
-        return new Round(1, placeholderGame, RoundPhase.TOTEM_PLACEMENT, Era.I,
+        return new Round(1, placeholderGame, Era.I,
                 new ArrayList<>(lowerEvents), new ArrayList<>(upperEvents),
                 new ArrayList<>(lowerTribute), new ArrayList<>(upperTribute),
                 new ArrayList<>(lowerBuildings), new ArrayList<>(upperBuildings));

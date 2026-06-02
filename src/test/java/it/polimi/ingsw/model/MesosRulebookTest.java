@@ -28,7 +28,6 @@ import it.polimi.ingsw.model.card.effect.EndPPEffect;
 import it.polimi.ingsw.model.card.effect.ShamanicRitualImmunityEffect;
 import it.polimi.ingsw.model.card.effect.TotemSlotFoodBonusEffect;
 import it.polimi.ingsw.model.enums.Era;
-import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.enums.TotemColor;
 import org.junit.jupiter.api.Test;
 
@@ -87,7 +86,7 @@ class MesosRulebookTest {
                 new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
         for (Player p : players) p.setGame(game);
-        Round round = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
+        Round round = new Round(1, game, Era.I,
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>());

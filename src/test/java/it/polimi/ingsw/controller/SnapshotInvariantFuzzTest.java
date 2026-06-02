@@ -21,7 +21,6 @@ import it.polimi.ingsw.model.card.GathererCard;
 import it.polimi.ingsw.model.card.ShamanCard;
 import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.InventorIcons;
-import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.protocol.clientbound.GameSnapshot;
 import it.polimi.ingsw.network.protocol.clientbound.PlayerSnapshot;
@@ -238,7 +237,7 @@ class SnapshotInvariantFuzzTest {
         List<BuildingCard> upperB = new ArrayList<>(List.of(
                 new BuildingCard(3001, Era.I, 0, null, 1)
         ));
-        Round round = new Round(1, game, RoundPhase.TOTEM_PLACEMENT, Era.I,
+        Round round = new Round(1, game, Era.I,
                 new ArrayList<>(), new ArrayList<>(),
                 lower, upper,
                 new ArrayList<>(), upperB);

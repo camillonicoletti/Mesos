@@ -5,7 +5,6 @@ import it.polimi.ingsw.model.board.Board;
 import it.polimi.ingsw.model.board.FoodSlot;
 import it.polimi.ingsw.model.board.OfferTile;
 import it.polimi.ingsw.model.board.TurnOrderTile;
-import it.polimi.ingsw.model.enums.RoundPhase;
 import it.polimi.ingsw.controller.action.JoinGameAction;
 import it.polimi.ingsw.controller.action.PlaceTotemAction;
 import it.polimi.ingsw.controller.action.ReadyAction;
@@ -245,7 +244,6 @@ public class GameControllerDisconnectionTest {
         Round round = new Round(
                 1,
                 game,
-                RoundPhase.TOTEM_PLACEMENT,
                 Era.I,
                 new ArrayList<>(),
                 new ArrayList<>(),
