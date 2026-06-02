@@ -49,9 +49,23 @@ public class SuspensionManager implements Serializable {
 
         // Suspend when ≤1 player is connected: the game cannot continue with fewer than 2 active players.
         boolean shouldSuspend = connectedPlayersCount <= 1;
-        if (!suspended && shouldSuspend) {
-            suspensionStartedAtMillis = nowMillis;
-        } else if (suspended && !shouldSuspend) {
+        if (shouldSuspend) {
+            if (connectedPlayersCount == 1) {
+                // Exactly one player connected: (re)start the lone-player countdown only
+                // if it is not already running. This also covers the post-restore case,
+                // where the timer is paused at zero connected and must begin fresh from
+                // the moment the first player reconnects — never from a stale pre-crash
+                // timestamp that would expire the match the instant someone reconnects.
+                if (suspensionStartedAtMillis < 0L) {
+                    suspensionStartedAtMillis = nowMillis;
+                }
+            } else {
+                // Zero players connected (only reachable right after restoring a saved
+                // game): nobody can be awarded the timeout win, so pause the countdown
+                // until someone reconnects.
+                suspensionStartedAtMillis = -1L;
+            }
+        } else {
             suspensionStartedAtMillis = -1L;
         }
 

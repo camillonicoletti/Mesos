@@ -31,6 +31,8 @@ public class MessageDispatcher {
             } else if (msg instanceof DisconnectMessage) {
                 lobby.handleDisconnect(conn.getNickname());
             } else if (msg instanceof QuitMessage) {
+                // A quit is handled as a recoverable disconnection: the match is
+                // suspended (not terminated) and the saved state is preserved.
                 lobby.handleQuit(conn.getNickname());
             } else if (msg instanceof ForceEndGameMessage) {
                 lobby.handleForceEndGame();
