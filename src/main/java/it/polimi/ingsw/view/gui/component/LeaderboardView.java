@@ -150,6 +150,7 @@ public final class LeaderboardView {
         VBox panel = new VBox(14);
         panel.getStyleClass().add("endgame-leaderboard-panel");
         panel.setMaxWidth(760);
+        panel.maxHeightProperty().bind(overlayLayer.heightProperty().subtract(64));
         panel.setAlignment(Pos.TOP_CENTER);
 
         HBox header = new HBox(10);
@@ -176,6 +177,7 @@ public final class LeaderboardView {
         scroll.setFitToWidth(true);
         scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scroll.setPannable(true);
         VBox.setVgrow(scroll, Priority.ALWAYS);
 
         panel.getChildren().addAll(header, scroll);

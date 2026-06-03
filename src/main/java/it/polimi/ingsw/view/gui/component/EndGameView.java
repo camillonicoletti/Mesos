@@ -23,6 +23,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -336,6 +337,7 @@ public final class EndGameView {
         VBox panel = new VBox(12);
         panel.getStyleClass().add("endgame-breakdown-panel");
         panel.setMaxWidth(760);
+        panel.maxHeightProperty().bind(breakdownLayer.heightProperty().subtract(64));
         panel.setAlignment(Pos.TOP_CENTER);
 
         Label title = new Label("Ripartizione punti");
@@ -354,12 +356,20 @@ public final class EndGameView {
         rows.getChildren().add(breakdownRow(new ScoreBreakdownRow("Punteggio totale", finalScore, "Finale",
                 PRESTIGE_BADGE_PATH, -1), true));
 
+        ScrollPane scroll = new ScrollPane(rows);
+        scroll.getStyleClass().add("endgame-breakdown-scroll");
+        scroll.setFitToWidth(true);
+        scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scroll.setPannable(true);
+        VBox.setVgrow(scroll, Priority.ALWAYS);
+
         Button close = new Button("Chiudi");
         close.getStyleClass().addAll("secondary-button", "endgame-breakdown-close");
         GuiAnimations.addHoverScale(close);
         close.setOnAction(event -> hideBreakdown());
 
-        panel.getChildren().addAll(title, subtitle, rows, close);
+        panel.getChildren().addAll(title, subtitle, scroll, close);
         panel.setOpacity(0);
         panel.setScaleX(0.97);
         panel.setScaleY(0.97);

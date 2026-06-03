@@ -38,6 +38,16 @@ final class CardMarketView {
         return cardRow(modelCards(upper, true), upper, true);
     }
 
+    Node animationCard(int cardId, double width, double height) {
+        StackPane card = new StackPane();
+        card.getStyleClass().addAll("card", "card-flight");
+        card.setMinSize(width, height);
+        card.setPrefSize(width, height);
+        card.setMaxSize(width, height);
+        card.getChildren().add(cardImages.create(cardId, width, height));
+        return card;
+    }
+
     private VBox cardRow(List<Integer> ids, boolean upper, boolean building) {
         VBox box = new VBox(4);
         box.getStyleClass().add("card-row");
@@ -61,6 +71,7 @@ final class CardMarketView {
         if (canTakeNow(cardId, upper, building)) {
             card.getStyleClass().add("card-pickable");
         }
+        card.setUserData(new MarketCardRef(cardId, upper, building));
         card.setPrefSize(CARD_WIDTH, CARD_HEIGHT);
         card.setOnMouseClicked(event -> {
             boolean canTake = canTakeNow(cardId, upper, building);
@@ -101,4 +112,6 @@ final class CardMarketView {
     interface CardSelectionPresenter {
         void showCard(int cardId, boolean canTake, Runnable takeAction);
     }
+
+    record MarketCardRef(int cardId, boolean upper, boolean building) {}
 }

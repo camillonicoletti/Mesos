@@ -527,6 +527,9 @@ public final class GuiApplication extends Application {
     private void refreshTimer() {
         refreshSuspensionOverlay();
         refreshServerDisconnectedOverlay();
+        if (currentScreen == Screen.GAME && gameBoardView != null) {
+            gameBoardView.refreshElapsedTimer();
+        }
         if (timerLabel == null) {
             return;
         }

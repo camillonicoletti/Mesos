@@ -296,6 +296,20 @@
     -fx-background-position: center center;
 }
 
+.game-elapsed-timer {
+    -fx-background-color: rgba(62, 22, 34, .66);
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(255, 226, 168, .52);
+    -fx-border-radius: 999px;
+    -fx-border-width: 1px;
+    -fx-padding: 7px 14px;
+    -fx-text-fill: #fff2cf;
+    -fx-font-size: 12px;
+    -fx-font-weight: 900;
+    -fx-font-family: "Monospaced";
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, .42), 8, 0, 0, 2);
+}
+
 .lobby-root {
     -fx-background-color: #29161f;
     -fx-background-image: url("../assets/ui/game_background.jpeg");
@@ -757,6 +771,14 @@
     -fx-effect: dropshadow(three-pass-box, rgba(240, 206, 100, .45), 14, 0, 0, 3);
 }
 
+.card-take-flight-layer {
+    -fx-background-color: transparent;
+}
+
+.card-take-flight {
+    -fx-effect: dropshadow(three-pass-box, rgba(255, 226, 168, .72), 24, 0, 0, 8);
+}
+
 .card:disabled {
     -fx-opacity: .54;
 }
@@ -1196,10 +1218,18 @@
 }
 
 .player-summary-name {
-    -fx-font-size: 12px;
+    -fx-font-size: 17px;
     -fx-text-fill: #fff2cf;
     -fx-font-weight: 900;
     -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .75), 4, 0, 0, 1);
+}
+
+.player-summary-totem {
+    -fx-effect: dropshadow(three-pass-box, rgba(20, 8, 5, .52), 5, 0, 0, 1);
+}
+
+.player-summary-top {
+    -fx-alignment: center-left;
 }
 
 .player-summary-stat {
@@ -1207,6 +1237,51 @@
     -fx-font-size: 11px;
     -fx-font-weight: 700;
     -fx-effect: dropshadow(three-pass-box, rgba(31, 12, 15, .65), 3, 0, 0, 1);
+}
+
+.player-resource-badges {
+    -fx-alignment: center-right;
+    -fx-padding: 0;
+}
+
+.player-resource-badge {
+    -fx-alignment: center;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, .46), 5, 0, 0, 2);
+}
+
+.player-resource-badge-fallback {
+    -fx-background-color: rgba(255, 242, 207, .22);
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(255, 226, 168, .40);
+    -fx-border-radius: 999px;
+    -fx-border-width: 1px;
+}
+
+.player-resource-food-value {
+    -fx-text-fill: #fff6de;
+    -fx-font-size: 18px;
+    -fx-font-weight: 900;
+    -fx-translate-y: 9px;
+    -fx-effect: dropshadow(three-pass-box, rgba(33, 19, 10, .95), 3, 0, 0, 2);
+}
+
+.player-resource-prestige-value {
+    -fx-text-fill: #532618;
+    -fx-font-size: 18px;
+    -fx-font-weight: 900;
+    -fx-effect: dropshadow(three-pass-box, rgba(255, 241, 160, .50), 2, 0, 0, 1);
+}
+
+.player-resource-value-large {
+    -fx-font-size: 14px;
+}
+
+.player-resource-value-negative {
+    -fx-font-size: 15px;
+}
+
+.player-resource-value-negative.player-resource-value-large {
+    -fx-font-size: 13px;
 }
 
 .player-summary-cards {
@@ -2039,6 +2114,16 @@
     -fx-border-color: rgba(255, 226, 168, .14);
     -fx-border-radius: 6px;
     -fx-border-width: 1px;
+}
+
+.endgame-breakdown-scroll {
+    -fx-background: transparent;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.endgame-breakdown-scroll > .viewport {
+    -fx-background-color: transparent;
 }
 
 .endgame-breakdown-row,

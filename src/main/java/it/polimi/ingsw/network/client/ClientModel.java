@@ -78,6 +78,8 @@ public class ClientModel {
     private int remainingTribeDeckCards = -1;
 
     private Map<String, PlayerView> players = new LinkedHashMap<>();
+    private long takenCardEventSequence = 0L;
+    private TakenCardEvent lastTakenCardEvent;
 
     private String winnerNickname;
     private Map<String, Integer> finalScores = new HashMap<>();
@@ -255,6 +257,7 @@ public class ClientModel {
 
     public void applyCharacterCardTaken(CharacterCardTakenMessage m) {
         lastError = null;
+        rememberTakenCard(m.getNickname(), m.getCardId(), m.isFromUpperRow(), false);
         if (m.isFromUpperRow()) upperRowCharacterIds.remove(Integer.valueOf(m.getCardId()));
         else                    lowerRowCharacterIds.remove(Integer.valueOf(m.getCardId()));
         decrementPickBudget(m.getNickname(), m.isFromUpperRow());
@@ -269,6 +272,7 @@ public class ClientModel {
 
     public void applyBuildingCardTaken(BuildingCardTakenMessage m) {
         lastError = null;
+        rememberTakenCard(m.getNickname(), m.getCardId(), m.isFromUpperRow(), true);
         if (m.isFromUpperRow()) upperRowBuildingIds.remove(Integer.valueOf(m.getCardId()));
         else                    lowerRowBuildingIds.remove(Integer.valueOf(m.getCardId()));
         decrementPickBudget(m.getNickname(), m.isFromUpperRow());
@@ -445,6 +449,7 @@ public class ClientModel {
     public List<Integer> getLowerRowBuildingIds()  { return Collections.unmodifiableList(lowerRowBuildingIds); }
     public boolean isEventCard(int id)             { return eventCardIds.contains(id); }
     public int getRemainingTribeDeckCards()        { return remainingTribeDeckCards; }
+    public TakenCardEvent getLastTakenCardEvent()  { return lastTakenCardEvent; }
     public String getWinnerNickname()              { return winnerNickname; }
     public Map<String, Integer> getFinalScores()   { return Collections.unmodifiableMap(finalScores); }
     public Map<String, Integer> getFinalFood()     { return Collections.unmodifiableMap(finalFood); }
@@ -650,6 +655,10 @@ public class ClientModel {
         remainingLowerPicks = -1;
     }
 
+    private void rememberTakenCard(String nickname, int cardId, boolean fromUpperRow, boolean building) {
+        lastTakenCardEvent = new TakenCardEvent(++takenCardEventSequence, nickname, cardId, fromUpperRow, building);
+    }
+
     private char offerTileForPlayer(String nickname) {
         if (nickname == null) {
             return 0;
@@ -685,4 +694,6 @@ public class ClientModel {
             default -> 0;
         };
     }
+
+    public record TakenCardEvent(long sequence, String nickname, int cardId, boolean fromUpperRow, boolean building) {}
 }

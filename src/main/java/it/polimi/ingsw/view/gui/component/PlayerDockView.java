@@ -27,6 +27,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.shape.Rectangle;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +42,9 @@ import org.kordamp.ikonli.materialdesign2.MaterialDesignV;
 
 final class PlayerDockView {
     private static final int MAX_VISIBLE_SUMMARIES = 3;
+    private static final String PRESTIGE_BADGE_PATH = "assets/icons/endgame_prestige_badge.png";
+    private static final String FOOD_BADGE_PATH = "assets/icons/engame_food_badge_prova.png";
+    private static final double PLAYER_RESOURCE_BADGE_SIZE = 50;
 
     private static final String ICON_HUNTER = "assets/icons/summary/hunter.png";
     private static final String ICON_BUILDER = "assets/icons/summary/builder.png";
@@ -64,6 +68,8 @@ final class PlayerDockView {
     private final BiFunction<String, Boolean, Button> buttonFactory;
     private final BiConsumer<Node, Pos> showInlinePanel;
     private final Runnable hideInlinePanel;
+    private final Map<String, Node> summaryTargets = new HashMap<>();
+    private final Map<String, Node> deckCardTargets = new HashMap<>();
     private int summaryStartIndex;
 
     PlayerDockView(ClientController controller,
@@ -153,6 +159,9 @@ final class PlayerDockView {
     }
 
     private VBox playerSummaryRows() {
+        summaryTargets.clear();
+        deckCardTargets.clear();
+
         VBox rows = new VBox(7);
         rows.getStyleClass().add("player-summary-rows");
         rows.setAlignment(Pos.CENTER);
@@ -248,6 +257,7 @@ final class PlayerDockView {
         if (disconnected) {
             card.getStyleClass().add("player-summary-disconnected");
         }
+        summaryTargets.put(player.getNickname(), card);
 
         card.setOnMouseClicked(event -> showTribePanel(player));
         GuiAnimations.addHoverScale(card);
@@ -257,13 +267,13 @@ final class PlayerDockView {
 
         Label name = new Label((me ? "You · " : "") + player.getNickname());
         name.getStyleClass().add("player-summary-name");
-        head.getChildren().addAll(totemDot(player), name);
+        head.getChildren().addAll(playerSummaryTotem(player), name);
 
-        Label resources = new Label("Food " + player.getFood() + "   PP " + player.getPrestigePoints()
-                + "   Buildings " + player.getBuildingCardIds().size());
-        resources.getStyleClass().add("player-summary-stat");
+        HBox top = new HBox(8, head, spacer(), playerResourceBadges(player));
+        top.getStyleClass().add("player-summary-top");
+        top.setAlignment(Pos.CENTER_LEFT);
 
-        card.getChildren().addAll(head, resources, tribeStatsGrid(player, true));
+        card.getChildren().addAll(top, tribeStatsGrid(player, true));
         Node buildings = buildingSummaryStrip(player);
         if (buildings != null) {
             card.getChildren().add(buildings);
@@ -282,15 +292,13 @@ final class PlayerDockView {
         strip.getStyleClass().add("player-building-strip");
         strip.setAlignment(Pos.CENTER_LEFT);
 
-        Label title = new Label("Buildings");
-        title.getStyleClass().add("player-building-title");
-        strip.getChildren().add(title);
-
         int visibleCount = Math.min(5, buildingIds.size());
         int hiddenCount = buildingIds.size() - visibleCount;
         List<Integer> visibleBuildings = buildingIds.subList(buildingIds.size() - visibleCount, buildingIds.size());
         for (Integer buildingId : visibleBuildings) {
-            strip.getChildren().add(stackedMiniCardNode(buildingId, 30, 42));
+            Node card = stackedMiniCardNode(buildingId, 30, 42);
+            rememberDeckCardTarget(player, buildingId, card);
+            strip.getChildren().add(card);
         }
 
         if (hiddenCount > 0) {
@@ -338,6 +346,61 @@ final class PlayerDockView {
         resources.getStyleClass().add("tribe-resources");
         header.getChildren().addAll(totemDot(player), name, resources);
         return header;
+    }
+
+    private Node playerResourceBadges(PlayerView player) {
+        HBox badges = new HBox(7);
+        badges.getStyleClass().add("player-resource-badges");
+        badges.setAlignment(Pos.CENTER_LEFT);
+        badges.getChildren().addAll(
+                playerResourceBadge(FOOD_BADGE_PATH, player.getFood(), "player-resource-food-value"),
+                playerResourceBadge(PRESTIGE_BADGE_PATH, player.getPrestigePoints(), "player-resource-prestige-value")
+        );
+        return badges;
+    }
+
+    private Node playerResourceBadge(String iconPath, int value, String valueStyleClass) {
+        StackPane badge = new StackPane();
+        badge.getStyleClass().add("player-resource-badge");
+        badge.setMinSize(PLAYER_RESOURCE_BADGE_SIZE, PLAYER_RESOURCE_BADGE_SIZE);
+        badge.setPrefSize(PLAYER_RESOURCE_BADGE_SIZE, PLAYER_RESOURCE_BADGE_SIZE);
+        badge.setMaxSize(PLAYER_RESOURCE_BADGE_SIZE, PLAYER_RESOURCE_BADGE_SIZE);
+
+        Node image = resourceBadgeImage(iconPath);
+        if (image != null) {
+            badge.getChildren().add(image);
+        } else {
+            badge.getStyleClass().add("player-resource-badge-fallback");
+        }
+
+        Label label = new Label(String.valueOf(value));
+        label.getStyleClass().add(valueStyleClass);
+        if (value < 0) {
+            label.getStyleClass().add("player-resource-value-negative");
+        }
+        if (Math.abs(value) >= 100 || value <= -10) {
+            label.getStyleClass().add("player-resource-value-large");
+        }
+        badge.getChildren().add(label);
+        return badge;
+    }
+
+    private Node resourceBadgeImage(String iconPath) {
+        Optional<Image> cached = assetCatalog.image(iconPath);
+        if (cached.isEmpty()) {
+            return null;
+        }
+        ImageView image = new ImageView(cached.get());
+        image.setFitWidth(PLAYER_RESOURCE_BADGE_SIZE);
+        image.setFitHeight(PLAYER_RESOURCE_BADGE_SIZE);
+        image.setPreserveRatio(true);
+        return image;
+    }
+
+    private Node playerSummaryTotem(PlayerView player) {
+        StackPane marker = totemMarkers.create(player.getTotemColor(), player.getNickname(), 34);
+        marker.getStyleClass().add("player-summary-totem");
+        return marker;
     }
 
     private FlowPane tribeCards(PlayerView player, double width, double height) {
@@ -507,10 +570,12 @@ final class PlayerDockView {
         double startY = Math.max(0, availableStackHeight - stackHeight);
 
         for (int index = 0; index < visibleCards.size(); index++) {
-            Node card = stackedMiniCardNode(visibleCards.get(index), cardWidth, cardHeight);
+            Integer cardId = visibleCards.get(index);
+            Node card = stackedMiniCardNode(cardId, cardWidth, cardHeight);
             card.setLayoutX(startX);
             card.setLayoutY(startY + index * step);
             card.setViewOrder(visibleCards.size() - index);
+            rememberDeckCardTarget(player, cardId, card);
             cards.getChildren().add(card);
         }
 
@@ -533,6 +598,24 @@ final class PlayerDockView {
         card.getChildren().add(cardImages.create(cardId, width, height));
         card.setOnMouseClicked(event -> showCardDetails.accept(cardId));
         return card;
+    }
+
+    Node deckTargetFor(String nickname, int cardId) {
+        Node cardTarget = deckCardTargets.get(deckTargetKey(nickname, cardId));
+        if (cardTarget != null) {
+            return cardTarget;
+        }
+        return summaryTargets.get(nickname);
+    }
+
+    private void rememberDeckCardTarget(PlayerView player, int cardId, Node target) {
+        if (player != null && target != null) {
+            deckCardTargets.put(deckTargetKey(player.getNickname(), cardId), target);
+        }
+    }
+
+    private String deckTargetKey(String nickname, int cardId) {
+        return nickname + ":" + cardId;
     }
 
     private Node statIcon(String path, double size) {

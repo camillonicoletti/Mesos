@@ -5,16 +5,21 @@ import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
 import javafx.animation.ParallelTransition;
 import javafx.animation.PauseTransition;
+import javafx.animation.RotateTransition;
+import javafx.animation.ScaleTransition;
+import javafx.animation.SequentialTransition;
 import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.transform.Rotate;
 import javafx.util.Duration;
 
 import java.util.ArrayList;
@@ -41,6 +46,8 @@ final class RowController {
     private final ClientModel model;
     private final CardMarketView cardMarketView;
     private final DeckView deckView;
+    private final PlayerDockView playerDockView;
+    private final Runnable onAnimationsFinished;
 
     private StackPane rootLayer;
     private Region board;
@@ -59,11 +66,19 @@ final class RowController {
     private boolean displayedMyTurn;
     private boolean displayedCanPickUpper;
     private boolean displayedCanPickLower;
+    private boolean cardTakeAnimationPlaying;
+    private long lastHandledTakenCardSequence;
 
-    RowController(ClientModel model, CardMarketView cardMarketView, DeckView deckView) {
+    RowController(ClientModel model,
+                  CardMarketView cardMarketView,
+                  DeckView deckView,
+                  PlayerDockView playerDockView,
+                  Runnable onAnimationsFinished) {
         this.model = model;
         this.cardMarketView = cardMarketView;
         this.deckView = deckView;
+        this.playerDockView = playerDockView;
+        this.onAnimationsFinished = onAnimationsFinished;
     }
 
     void attach(StackPane rootLayer, Region board, HBox upperMarketBand, HBox lowerMarketBand, BoardScaler boardScaler) {
@@ -80,7 +95,11 @@ final class RowController {
             lastSeenRound = currentRound;
         }
 
-        if (roundTransitionPlaying) {
+        if (roundTransitionPlaying || cardTakeAnimationPlaying) {
+            return;
+        }
+
+        if (playPendingCardTakeAnimation()) {
             return;
         }
 
@@ -113,6 +132,149 @@ final class RowController {
             refreshMarketBandTracked(upperMarketBand, true);
             refreshMarketBandTracked(lowerMarketBand, false);
         }
+    }
+
+    boolean isAnimating() {
+        return roundTransitionPlaying || cardTakeAnimationPlaying;
+    }
+
+    private boolean playPendingCardTakeAnimation() {
+        ClientModel.TakenCardEvent taken = model.getLastTakenCardEvent();
+        if (taken == null || taken.sequence() <= lastHandledTakenCardSequence) {
+            return false;
+        }
+
+        lastHandledTakenCardSequence = taken.sequence();
+        Node source = findMarketCardNode(taken.cardId(), taken.fromUpperRow(), taken.building());
+        if (source == null || source.getScene() == null || rootLayer == null || rootLayer.getScene() == null) {
+            return false;
+        }
+
+        Node target = playerDockView.deckTargetFor(taken.nickname(), taken.cardId());
+        playCardTakeAnimation(source, target, taken.cardId());
+        return true;
+    }
+
+    private void playCardTakeAnimation(Node source, Node target, int cardId) {
+        cardTakeAnimationPlaying = true;
+        source.setOpacity(0);
+
+        Bounds sourceBounds = rootLayer.sceneToLocal(source.localToScene(source.getBoundsInLocal()));
+        double cardWidth = Math.max(72, sourceBounds.getWidth());
+        double cardHeight = Math.max(101, sourceBounds.getHeight());
+        Node flyingCard = cardMarketView.animationCard(cardId, cardWidth, cardHeight);
+        flyingCard.getStyleClass().add("card-take-flight");
+        flyingCard.setMouseTransparent(true);
+        flyingCard.setRotationAxis(Rotate.Y_AXIS);
+
+        Pane flightLayer = new Pane(flyingCard);
+        flightLayer.getStyleClass().add("card-take-flight-layer");
+        flightLayer.setMouseTransparent(true);
+        flightLayer.setPickOnBounds(false);
+        flightLayer.prefWidthProperty().bind(rootLayer.widthProperty());
+        flightLayer.prefHeightProperty().bind(rootLayer.heightProperty());
+        rootLayer.getChildren().add(flightLayer);
+
+        double startX = centerX(sourceBounds) - cardWidth / 2.0;
+        double startY = centerY(sourceBounds) - cardHeight / 2.0;
+        Point2D center = new Point2D(rootLayer.getWidth() / 2.0 - cardWidth / 2.0,
+                rootLayer.getHeight() / 2.0 - cardHeight / 2.0);
+        Point2D targetPoint = targetPoint(target, cardWidth, cardHeight);
+
+        flyingCard.setLayoutX(startX);
+        flyingCard.setLayoutY(startY);
+
+        Duration liftDuration = Duration.millis(520);
+        TranslateTransition liftMove = new TranslateTransition(liftDuration, flyingCard);
+        liftMove.setToX(center.getX() - startX);
+        liftMove.setToY(center.getY() - startY);
+        liftMove.setInterpolator(Interpolator.EASE_BOTH);
+
+        ScaleTransition liftScale = new ScaleTransition(liftDuration, flyingCard);
+        liftScale.setToX(1.72);
+        liftScale.setToY(1.72);
+        liftScale.setInterpolator(Interpolator.EASE_BOTH);
+
+        RotateTransition liftRotate = new RotateTransition(liftDuration, flyingCard);
+        liftRotate.setFromAngle(0);
+        liftRotate.setToAngle(360);
+        liftRotate.setInterpolator(Interpolator.EASE_BOTH);
+
+        Duration landDuration = Duration.millis(540);
+        TranslateTransition landMove = new TranslateTransition(landDuration, flyingCard);
+        landMove.setToX(targetPoint.getX() - startX);
+        landMove.setToY(targetPoint.getY() - startY);
+        landMove.setInterpolator(Interpolator.EASE_IN);
+
+        ScaleTransition landScale = new ScaleTransition(landDuration, flyingCard);
+        landScale.setToX(0.32);
+        landScale.setToY(0.32);
+        landScale.setInterpolator(Interpolator.EASE_IN);
+
+        RotateTransition landRotate = new RotateTransition(landDuration, flyingCard);
+        landRotate.setFromAngle(360);
+        landRotate.setToAngle(720);
+        landRotate.setInterpolator(Interpolator.EASE_IN);
+
+        FadeTransition landFade = new FadeTransition(landDuration, flyingCard);
+        landFade.setToValue(0.18);
+
+        SequentialTransition sequence = new SequentialTransition(
+                new ParallelTransition(liftMove, liftScale, liftRotate),
+                new PauseTransition(Duration.millis(90)),
+                new ParallelTransition(landMove, landScale, landRotate, landFade)
+        );
+        sequence.setOnFinished(event -> {
+            rootLayer.getChildren().remove(flightLayer);
+            source.setOpacity(1);
+            if (marketBandsOutOfDate()) {
+                refreshMarketBandTracked(upperMarketBand, true);
+                refreshMarketBandTracked(lowerMarketBand, false);
+            }
+            cardTakeAnimationPlaying = false;
+            Platform.runLater(() -> {
+                boardScaler.update();
+                update();
+                if (onAnimationsFinished != null) {
+                    onAnimationsFinished.run();
+                }
+            });
+        });
+        sequence.play();
+    }
+
+    private Point2D targetPoint(Node target, double cardWidth, double cardHeight) {
+        if (target != null && target.getScene() != null) {
+            Bounds targetBounds = rootLayer.sceneToLocal(target.localToScene(target.getBoundsInLocal()));
+            return new Point2D(centerX(targetBounds) - cardWidth / 2.0,
+                    centerY(targetBounds) - cardHeight / 2.0);
+        }
+
+        Bounds boardBounds = rootLayer.sceneToLocal(board.localToScene(board.getBoundsInLocal()));
+        return new Point2D(centerX(boardBounds) - cardWidth / 2.0,
+                boardBounds.getMaxY() - cardHeight);
+    }
+
+    private Node findMarketCardNode(int cardId, boolean upper, boolean building) {
+        HBox band = upper ? upperMarketBand : lowerMarketBand;
+        int sectionIndex = building ? 1 : 0;
+        for (Node node : collectCardNodesFromSection(band, sectionIndex)) {
+            if (node.getUserData() instanceof CardMarketView.MarketCardRef ref
+                    && ref.cardId() == cardId
+                    && ref.upper() == upper
+                    && ref.building() == building) {
+                return node;
+            }
+        }
+        return null;
+    }
+
+    private double centerX(Bounds bounds) {
+        return (bounds.getMinX() + bounds.getMaxX()) / 2.0;
+    }
+
+    private double centerY(Bounds bounds) {
+        return (bounds.getMinY() + bounds.getMaxY()) / 2.0;
     }
 
     private boolean newCardsAppeared() {
@@ -330,6 +492,9 @@ final class RowController {
             displayedGameState    = model.getGameState();
             roundTransitionPlaying = false;
             Platform.runLater(boardScaler::update);
+            if (onAnimationsFinished != null) {
+                onAnimationsFinished.run();
+            }
         });
         done.play();
     }

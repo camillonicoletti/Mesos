@@ -38,6 +38,7 @@ final class TotemMoveAnimator {
     private Region board;
     private Node centerTrack;
     private Map<String, TotemLocation> displayedTotemLocations = Map.of();
+    private boolean animating;
 
     TotemMoveAnimator(ClientModel model) {
         this.model = model;
@@ -63,9 +64,13 @@ final class TotemMoveAnimator {
     }
 
     /** Plays the move animations using the freshly laid-out positions. */
-    void finish(Pending pending) {
-        playTotemMoveAnimations(pending.previousTotems(), pending.logicalMoves());
+    void finish(Pending pending, Runnable onAnimationsFinished) {
+        playTotemMoveAnimations(pending.previousTotems(), pending.logicalMoves(), onAnimationsFinished);
         displayedTotemLocations = pending.currentLocations();
+    }
+
+    boolean isAnimating() {
+        return animating;
     }
 
     private Map<String, TotemAnchor> captureBoardTotems() {
@@ -157,13 +162,14 @@ final class TotemMoveAnimator {
         }
     }
 
-    private void playTotemMoveAnimations(Map<String, TotemAnchor> previousTotems,
-                                         Set<String> logicalMoves) {
+    private boolean playTotemMoveAnimations(Map<String, TotemAnchor> previousTotems,
+                                            Set<String> logicalMoves,
+                                            Runnable onAnimationsFinished) {
         if (logicalMoves.isEmpty()
                 || previousTotems.isEmpty()
                 || rootLayer == null
                 || rootLayer.getScene() == null) {
-            return;
+            return false;
         }
 
         rootLayer.applyCss();
@@ -183,15 +189,25 @@ final class TotemMoveAnimator {
         }
 
         if (moves.isEmpty()) {
-            return;
+            return false;
         }
 
+        animating = true;
+        ParallelTransition allMoves = new ParallelTransition();
         for (TotemMove move : moves) {
-            playTotemMoveAnimation(move.from(), move.to());
+            allMoves.getChildren().add(totemMoveAnimation(move.from(), move.to()));
         }
+        allMoves.setOnFinished(event -> {
+            animating = false;
+            if (onAnimationsFinished != null) {
+                onAnimationsFinished.run();
+            }
+        });
+        allMoves.play();
+        return true;
     }
 
-    private void playTotemMoveAnimation(TotemAnchor from, TotemAnchor to) {
+    private ParallelTransition totemMoveAnimation(TotemAnchor from, TotemAnchor to) {
         Node destination = to.node;
         double boardScale = board == null || board.getScaleX() <= 0 ? 1.0 : board.getScaleX();
         double baseTranslateX = destination.getTranslateX();
@@ -215,7 +231,7 @@ final class TotemMoveAnimator {
         scale.setToY(baseScaleY);
         scale.setInterpolator(Interpolator.EASE_BOTH);
 
-        new ParallelTransition(move, scale).play();
+        return new ParallelTransition(move, scale);
     }
 
     /** Opaque token carrying the pre-rebuild snapshot between begin and finish. */

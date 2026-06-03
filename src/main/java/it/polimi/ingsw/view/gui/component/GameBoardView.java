@@ -48,6 +48,8 @@ public final class GameBoardView {
     private HBox lowerMarketBand;
     private HBox playerDockSlot;
     private BoardScaler boardScaler;
+    private Label elapsedTimerLabel;
+    private long gameEnteredAtMillis = -1L;
 
     public GameBoardView(ClientController controller, ClientModel model, GuiAssetCatalog assetCatalog) {
         this.model = model;
@@ -73,7 +75,8 @@ public final class GameBoardView {
                 overlay::hideInlinePanel);
         this.eventResolutionOverlay = new EventResolutionOverlay(model, cardImages, totemMarkers);
         this.totemAnimator = new TotemMoveAnimator(model);
-        this.rowController = new RowController(model, cardMarketView, deckView);
+        this.rowController = new RowController(model, cardMarketView, deckView, playerDockView,
+                this::refreshEventResolutionOverlayWhenIdle);
     }
 
     public Node render() {
@@ -87,6 +90,7 @@ public final class GameBoardView {
         board.setPadding(new Insets(6, 10, 6, 10));
         board.setAlignment(Pos.CENTER);
         board.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+        ensureElapsedTimerStarted();
         rootLayer = new StackPane(board);
         rootLayer.getStyleClass().add("game-board-layer");
         rootLayer.setAlignment(Pos.CENTER);
@@ -110,7 +114,7 @@ public final class GameBoardView {
             Label label = new Label("Loading game...");
             label.getStyleClass().add("muted");
             board.getChildren().add(label);
-            eventResolutionOverlay.refresh(rootLayer);
+            refreshEventResolutionOverlayWhenIdle();
             return;
         }
 
@@ -123,11 +127,33 @@ public final class GameBoardView {
         boardScaler.update();
         rootLayer.applyCss();
         rootLayer.layout();
-        totemAnimator.finish(totemRefresh);
+        totemAnimator.finish(totemRefresh, this::refreshEventResolutionOverlayWhenIdle);
         Platform.runLater(boardScaler::update);
-        eventResolutionOverlay.refresh(rootLayer);
 
         rowController.update();
+        refreshEventResolutionOverlayWhenIdle();
+    }
+
+    private void refreshEventResolutionOverlayWhenIdle() {
+        if (rootLayer == null) {
+            return;
+        }
+        if ((rowController != null && rowController.isAnimating())
+                || (totemAnimator != null && totemAnimator.isAnimating())) {
+            eventResolutionOverlay.hide(rootLayer);
+            return;
+        }
+        eventResolutionOverlay.refresh(rootLayer);
+    }
+
+    public void refreshElapsedTimer() {
+        ensureElapsedTimerStarted();
+
+        if (elapsedTimerLabel == null) {
+            return;
+        }
+        long elapsedMillis = Math.max(0L, System.currentTimeMillis() - gameEnteredAtMillis);
+        elapsedTimerLabel.setText(formatElapsed(elapsedMillis));
     }
 
     private void ensureBoardShell() {
@@ -168,11 +194,19 @@ public final class GameBoardView {
         GuiAnimations.addHoverScale(rulesBtn);
         rulesBtn.setOnAction(event -> GuiApplication.openRulesPdf());
 
-        StackPane.setAlignment(title, Pos.CENTER);
-        StackPane.setAlignment(rulesBtn, Pos.CENTER_RIGHT);
-        StackPane.setMargin(rulesBtn, new Insets(0, 10, 0, 0));
+        if (elapsedTimerLabel == null) {
+            elapsedTimerLabel = elapsedTimerLabel();
+        }
+        refreshElapsedTimer();
 
-        headerStack.getChildren().addAll(title, rulesBtn);
+        HBox controls = new HBox(8, rulesBtn, elapsedTimerLabel);
+        controls.setAlignment(Pos.CENTER_RIGHT);
+
+        StackPane.setAlignment(title, Pos.CENTER);
+        StackPane.setAlignment(controls, Pos.CENTER_RIGHT);
+        StackPane.setMargin(controls, new Insets(0, 10, 0, 0));
+
+        headerStack.getChildren().addAll(title, controls);
         return headerStack;
     }
 
@@ -182,6 +216,23 @@ public final class GameBoardView {
         banner.setMaxWidth(Double.MAX_VALUE);
         banner.setAlignment(Pos.CENTER);
         return banner;
+    }
+
+    private Label elapsedTimerLabel() {
+        Label timer = new Label("00:00");
+        timer.getStyleClass().add("game-elapsed-timer");
+        timer.setAlignment(Pos.CENTER);
+        timer.setMinHeight(34);
+        timer.setPrefHeight(34);
+        timer.setMinWidth(82);
+        timer.setMouseTransparent(true);
+        return timer;
+    }
+
+    private void ensureElapsedTimerStarted() {
+        if (gameEnteredAtMillis < 0L) {
+            gameEnteredAtMillis = System.currentTimeMillis();
+        }
     }
 
     private HBox emptyMarketBand() {
@@ -286,6 +337,17 @@ public final class GameBoardView {
         }
 
         return "Game board";
+    }
+
+    private String formatElapsed(long millis) {
+        long totalSeconds = millis / 1000L;
+        long hours = totalSeconds / 3600L;
+        long minutes = (totalSeconds % 3600L) / 60L;
+        long seconds = totalSeconds % 60L;
+        if (hours > 0L) {
+            return String.format("%d:%02d:%02d", hours, minutes, seconds);
+        }
+        return String.format("%02d:%02d", minutes, seconds);
     }
 
 }
