@@ -194,19 +194,24 @@ final class CardDescriptionService {
 
     private String detailTitleFor(CardAsset card, JsonObject details) {
         String title = switch (card.getKind()) {
-            case "character" -> "Character - " + card.getType()
+            case "character" -> card.getType()
                     .map(this::labelForType)
                     .orElse("Character");
             case "event" -> "Event - " + card.getType()
                     .map(this::labelForType)
                     .orElse("Event");
-            case "building" -> "Building - " + Optional.ofNullable(details)
+            case "building" -> Optional.ofNullable(details)
                     .map(data -> data.get("effect"))
                     .map(this::effectName)
                     .map(this::labelForType)
                     .orElse("Building");
             default -> labelForKind(card.getKind());
         };
+        if ("character".equals(card.getKind())
+                || "event".equals(card.getKind())
+                || "building".equals(card.getKind())) {
+            return title;
+        }
 
         String era = details != null ? stringDetail(details, "era") : "";
         if (!era.isEmpty()) {

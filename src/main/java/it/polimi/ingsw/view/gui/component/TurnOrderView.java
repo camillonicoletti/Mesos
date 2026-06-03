@@ -11,6 +11,8 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
@@ -69,35 +71,56 @@ final class TurnOrderView {
 
     private void showDetails() {
         int players = playerCount();
-        VBox panel = panelFactory.apply("Turn Order Tile");
-        panel.getStyleClass().add("turn-order-focus-panel");
+        HBox panel = new HBox(36);
+        panel.getStyleClass().addAll("card-focus-panel", "turn-order-focus-panel");
+        panel.setAlignment(Pos.CENTER);
+        panel.setMaxHeight(Region.USE_PREF_SIZE);
 
-        HBox content = new HBox(16);
-        content.setAlignment(Pos.CENTER);
-        content.getStyleClass().add("turn-order-detail-content");
-
-        StackPane imageBox = new StackPane();
-        imageBox.getStyleClass().add("turn-order-detail-image");
-        addTileImage(imageBox, players, DETAIL_TILE_WIDTH, DETAIL_TILE_HEIGHT,
+        StackPane tileFrame = new StackPane();
+        tileFrame.getStyleClass().add("card-focus-frame");
+        addTileImage(tileFrame, players, DETAIL_TILE_WIDTH, DETAIL_TILE_HEIGHT,
                 "Order — " + players + " players");
 
+        VBox leftCol = new VBox(tileFrame);
+        leftCol.getStyleClass().add("card-focus-left");
+        leftCol.setAlignment(Pos.CENTER);
+
+        VBox rightCol = new VBox(18);
+        rightCol.getStyleClass().add("card-focus-right");
+        rightCol.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(rightCol, Priority.ALWAYS);
+        rightCol.setMaxWidth(560);
+        rightCol.setPrefWidth(560);
+
+        Label eyebrow = new Label("BOARD TILE");
+        eyebrow.getStyleClass().add("card-focus-eyebrow");
+
+        Label title = new Label("TURN ORDER TILE");
+        title.getStyleClass().add("card-focus-title");
+        title.setWrapText(true);
+
+        Region divider = new Region();
+        divider.getStyleClass().add("card-focus-divider");
+
         VBox details = new VBox(8);
-        details.getStyleClass().add("card-detail-lines");
+        details.getStyleClass().add("card-focus-body");
         for (String line : ruleLines(players)) {
             Label label = new Label(line);
             label.setWrapText(true);
-            label.getStyleClass().add("card-detail-line");
+            label.getStyleClass().add("card-focus-line");
             details.getChildren().add(label);
         }
 
-        content.getChildren().addAll(imageBox, details);
-
         Button close = buttonFactory.apply("Close", false);
+        close.getStyleClass().addAll("card-focus-action-button", "card-focus-close-button");
+        close.setMinSize(156, 52);
         close.setOnAction(event -> hideInlinePanel.run());
         HBox actions = new HBox(close);
-        actions.setAlignment(Pos.CENTER_RIGHT);
+        actions.getStyleClass().add("card-focus-actions");
+        actions.setAlignment(Pos.CENTER);
 
-        panel.getChildren().addAll(content, actions);
+        rightCol.getChildren().addAll(eyebrow, title, divider, details, actions);
+        panel.getChildren().addAll(leftCol, rightCol);
         showInlinePanel.accept(panel, Pos.CENTER);
     }
 

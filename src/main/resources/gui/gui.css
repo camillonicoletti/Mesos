@@ -1558,7 +1558,7 @@
 }
 
 .turn-order-focus-panel {
-    -fx-max-width: 760px;
+    -fx-max-width: 1000px;
 }
 
 .card-focus-panel {

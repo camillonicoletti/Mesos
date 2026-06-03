@@ -22,7 +22,7 @@ class CardDescriptionServiceTest {
     void describesCharacterWithoutDependingOnGameBoardView() {
         List<String> lines = descriptions.describeCard(1, -1, null);
 
-        assertTrue(lines.contains("Character - Hunters | Era I"));
+        assertTrue(lines.contains("Hunters"));
         assertTrue(lines.stream().anyMatch(line -> line.contains("immediately gain 1 food")));
     }
 
@@ -30,6 +30,7 @@ class CardDescriptionServiceTest {
     void describesBuildingEffectAndSummaryLabel() {
         List<String> lines = descriptions.describeCard(109, -1, null);
 
+        assertEquals("End PP full set", lines.get(0));
         assertEquals("End PP full set", descriptions.summaryLabelFor(109));
         assertTrue(lines.stream().anyMatch(line -> line.contains("gain 6 PP")));
     }
@@ -38,6 +39,7 @@ class CardDescriptionServiceTest {
     void appendsLastResolvedEventDetailsOnlyForMatchingCard() {
         List<String> lines = descriptions.describeCard(85, 85, "Alice guadagna 2 PP");
 
+        assertEquals("Event - Hunt", lines.get(0));
         assertTrue(lines.contains("Last resolved effect: Alice guadagna 2 PP"));
     }
 }
