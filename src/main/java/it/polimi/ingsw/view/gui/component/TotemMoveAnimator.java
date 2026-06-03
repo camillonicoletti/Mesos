@@ -27,7 +27,7 @@ import java.util.Set;
  * has moved, tweens its on-screen marker from the old position to the new one.
  *
  * <p>Usage spans a single refresh: call {@link #begin()} before the board is
- * rebuilt to snapshot the current positions, then {@link #finish(Pending)}
+ * rebuilt to snapshot the current positions, then
  * once the new layout is in place to play the animations.
  */
 final class TotemMoveAnimator {
@@ -53,7 +53,7 @@ final class TotemMoveAnimator {
     /**
      * Snapshots on-screen totem positions and which totems moved since the last
      * refresh, playing the move sound if any did. Call before the center track
-     * is rebuilt; hand the result to {@link #finish(Pending)} afterwards.
+     * is rebuilt; hand the result to  afterwards.
      */
     Pending begin() {
         Map<String, TotemAnchor> previousTotems = captureBoardTotems();
