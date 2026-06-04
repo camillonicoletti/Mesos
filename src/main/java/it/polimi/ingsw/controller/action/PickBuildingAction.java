@@ -8,6 +8,8 @@ import java.io.Serializable;
  */
 public class PickBuildingAction implements GameAction {
 
+    private static final long serialVersionUID = 1L;
+
     private final String cardId;
     private final boolean fromUpperRow;
 
