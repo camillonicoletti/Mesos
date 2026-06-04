@@ -6,7 +6,7 @@ import java.io.Serializable;
  * Command: the player buys the building identified by {@code cardId} from
  * either the upper or lower row, paying its discounted food cost.
  */
-public class PickBuildingAction implements GameAction, Serializable {
+public class PickBuildingAction implements GameAction {
 
     private final String cardId;
     private final boolean fromUpperRow;

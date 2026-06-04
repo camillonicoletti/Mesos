@@ -6,7 +6,7 @@ import java.io.Serializable;
  * Command: the player picks a character/tribute card identified by
  * {@code cardId} from either the upper or lower row of the current round.
  */
-public class PickCardAction implements GameAction, Serializable {
+public class PickCardAction implements GameAction{
 
     private final String cardId;
     private final boolean fromUpperRow;

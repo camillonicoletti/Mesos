@@ -11,6 +11,6 @@ import java.io.Serializable;
  * <p>Only meaningful during the extra-pick phase of
  * {@code ActionResolutionState}; rejected in any other state.
  */
-public class SkipExtraPickAction implements GameAction, Serializable {
+public class SkipExtraPickAction implements GameAction {
     private static final long serialVersionUID = 1L;
 }
