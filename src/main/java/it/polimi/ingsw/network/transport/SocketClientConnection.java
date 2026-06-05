@@ -17,8 +17,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
- * Socket-based implementation of a client-side connection.
- * It wraps the socket used by the client to communicate with the server.
+ * Socket implementation of the client connection.
+ *
+ * <p>This class owns the socket streams, a reader thread for incoming messages
+ * and a small heartbeat check to notice when the server is no longer reachable.</p>
  */
 public class SocketClientConnection implements ClientSideConnection {
 
@@ -34,9 +36,9 @@ public class SocketClientConnection implements ClientSideConnection {
     private volatile boolean alive;
     private volatile boolean disconnectNotified;
     private volatile long lastReceivedAtMillis;
-    // Guarded by handlerLock: messages received before the real handler is installed
-    // are stashed here and drained on the first setOnMessage call. Avoids dropping the
-    // initial LobbyUpdate that the server sends as soon as the socket is accepted.
+    // The server can send messages immediately after accepting the socket.
+    // If the controller has not installed its handler yet, we keep them here
+    // and deliver them as soon as setOnMessage is called.
     private final Object handlerLock = new Object();
     private final List<ServerMessage> pendingMessages = new ArrayList<>();
     private boolean handlerInstalled;
@@ -94,9 +96,7 @@ public class SocketClientConnection implements ClientSideConnection {
             out.flush();
             out.reset();
         } catch (IOException exception) {
-            alive = false;
-            heartbeatExecutor.shutdownNow();
-            notifyDisconnect();
+            handleConnectionLoss();
         }
     }
 
@@ -108,10 +108,7 @@ public class SocketClientConnection implements ClientSideConnection {
 
         alive = false;
         heartbeatExecutor.shutdownNow();
-        try {
-            socket.close();
-        } catch (IOException ignored) {
-        }
+        closeSocketQuietly();
     }
 
     @Override
@@ -119,8 +116,7 @@ public class SocketClientConnection implements ClientSideConnection {
         Consumer<ServerMessage> handler = onMessage != null ? onMessage : message -> { };
         List<ServerMessage> drain;
         synchronized (handlerLock) {
-            // Capture and clear the buffer under the lock; new arrivals will see handlerInstalled=true
-            // and be delivered directly to the real handler, preserving overall arrival order.
+            // After this point new messages go directly to the real handler.
             drain = new ArrayList<>(pendingMessages);
             pendingMessages.clear();
             this.onMessage = handler;
@@ -138,7 +134,7 @@ public class SocketClientConnection implements ClientSideConnection {
                 return;
             }
         }
-        // Lost the race against setOnMessage: deliver to the now-installed handler.
+        // setOnMessage won the race while we were taking the lock.
         onMessage.accept(message);
     }
 
@@ -164,9 +160,7 @@ public class SocketClientConnection implements ClientSideConnection {
                     return;
                 }
 
-                alive = false;
-                heartbeatExecutor.shutdownNow();
-                notifyDisconnect();
+                handleConnectionLoss();
                 return;
             }
         }
@@ -179,13 +173,25 @@ public class SocketClientConnection implements ClientSideConnection {
 
         long silenceMillis = System.currentTimeMillis() - lastReceivedAtMillis;
         if (silenceMillis >= HEARTBEAT_TIMEOUT_SECONDS * 1000L) {
-            alive = false;
-            heartbeatExecutor.shutdownNow();
-            try {
-                socket.close();
-            } catch (IOException ignored) {
-            }
-            notifyDisconnect();
+            handleConnectionLoss();
+        }
+    }
+
+    private void handleConnectionLoss() {
+        if (!alive) {
+            return;
+        }
+
+        alive = false;
+        heartbeatExecutor.shutdownNow();
+        closeSocketQuietly();
+        notifyDisconnect();
+    }
+
+    private void closeSocketQuietly() {
+        try {
+            socket.close();
+        } catch (IOException ignored) {
         }
     }
 

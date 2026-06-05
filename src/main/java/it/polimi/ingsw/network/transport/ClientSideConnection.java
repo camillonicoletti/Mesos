@@ -6,12 +6,16 @@ import it.polimi.ingsw.network.protocol.serverbound.ClientMessage;
 import java.util.function.Consumer;
 
 /**
- * Abstraction of a client-side connection towards the server.
+ * Common interface used by the client to talk with the server.
+ *
+ * <p>The client code does not need to know if the real transport is Socket or
+ * RMI: it only sends messages, receives server messages and reacts when the
+ * connection drops.</p>
  */
 public interface ClientSideConnection {
 
     /**
-     * Sends a message to the server.
+     * Sends one message to the server.
      *
      * @param message the message to send
      */
@@ -23,14 +27,14 @@ public interface ClientSideConnection {
     void close();
 
     /**
-     * Registers the callback to invoke when a server message arrives.
+     * Registers the callback used for messages coming from the server.
      *
      * @param onMessage the callback for inbound messages
      */
     void setOnMessage(Consumer<ServerMessage> onMessage);
 
     /**
-     * Registers the callback to invoke when the connection is lost.
+     * Registers the callback used when the connection is lost.
      *
      * @param onDisconnect the disconnect callback
      */

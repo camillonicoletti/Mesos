@@ -6,12 +6,15 @@ import it.polimi.ingsw.network.protocol.serverbound.ClientMessage;
 import java.util.function.Consumer;
 
 /**
- * Abstraction of a server-side connection towards a single client.
+ * Common interface used by the server to talk with one client.
+ *
+ * <p>LobbyManager and VirtualView use this interface without caring if the
+ * client is connected through Socket or RMI.</p>
  */
 public interface ServerSideConnection {
 
     /**
-     * Sends a message to the connected client.
+     * Sends one message to the connected client.
      *
      * @param message the message to send
      */
@@ -23,7 +26,7 @@ public interface ServerSideConnection {
     void close();
 
     /**
-     * Returns whether the underlying connection is still alive.
+     * Returns whether the underlying connection is still usable.
      *
      * @return true if the connection is open
      */
@@ -44,14 +47,14 @@ public interface ServerSideConnection {
     void setNickname(String nickname);
 
     /**
-     * Registers the callback to invoke when a client message arrives.
+     * Registers the callback used for messages coming from this client.
      *
      * @param onMessage the callback for inbound messages
      */
     void setOnMessage(Consumer<ClientMessage> onMessage);
 
     /**
-     * Registers the callback to invoke when the connection is lost.
+     * Registers the callback used when this client disconnects unexpectedly.
      *
      * @param onDisconnect the disconnect callback
      */

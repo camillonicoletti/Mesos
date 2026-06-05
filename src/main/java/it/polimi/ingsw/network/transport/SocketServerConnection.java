@@ -15,8 +15,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
- * Socket-based implementation of a server-side connection.
- * It wraps a single client socket accepted by the server.
+ * Socket implementation of the server connection for one client.
+ *
+ * <p>Each accepted socket gets its own reader thread. The heartbeat sends Ping
+ * messages and closes the connection if the client stops answering.</p>
  */
 public class SocketServerConnection implements ServerSideConnection {
 
@@ -87,9 +89,7 @@ public class SocketServerConnection implements ServerSideConnection {
             out.flush();
             out.reset();
         } catch (IOException exception) {
-            alive = false;
-            heartbeatExecutor.shutdownNow();
-            notifyDisconnect();
+            handleConnectionLoss();
         }
     }
 
@@ -101,10 +101,7 @@ public class SocketServerConnection implements ServerSideConnection {
 
         alive = false;
         heartbeatExecutor.shutdownNow();
-        try {
-            socket.close();
-        } catch (IOException ignored) {
-        }
+        closeSocketQuietly();
     }
 
     @Override
@@ -148,11 +145,27 @@ public class SocketServerConnection implements ServerSideConnection {
                     return;
                 }
 
-                alive = false;
-                heartbeatExecutor.shutdownNow();
-                notifyDisconnect();
+                handleConnectionLoss();
                 return;
             }
+        }
+    }
+
+    private void handleConnectionLoss() {
+        if (!alive) {
+            return;
+        }
+
+        alive = false;
+        heartbeatExecutor.shutdownNow();
+        closeSocketQuietly();
+        notifyDisconnect();
+    }
+
+    private void closeSocketQuietly() {
+        try {
+            socket.close();
+        } catch (IOException ignored) {
         }
     }
 
@@ -172,13 +185,7 @@ public class SocketServerConnection implements ServerSideConnection {
 
         long silenceMillis = System.currentTimeMillis() - lastReceivedAtMillis;
         if (silenceMillis >= HEARTBEAT_TIMEOUT_SECONDS * 1000L) {
-            alive = false;
-            heartbeatExecutor.shutdownNow();
-            try {
-                socket.close();
-            } catch (IOException ignored) {
-            }
-            notifyDisconnect();
+            handleConnectionLoss();
             return;
         }
 
