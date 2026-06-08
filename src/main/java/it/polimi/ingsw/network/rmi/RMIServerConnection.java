@@ -67,9 +67,7 @@ public class RMIServerConnection implements ServerSideConnection {
         try {
             remoteClient.onServerMessage(message);
         } catch (RemoteException exception) {
-            alive = false;
-            heartbeatExecutor.shutdownNow();
-            notifyDisconnect();
+            handleConnectionLoss();
             throw new IllegalStateException("Unable to reach the remote client", exception);
         }
     }
@@ -116,6 +114,16 @@ public class RMIServerConnection implements ServerSideConnection {
         onMessage.accept(message);
     }
 
+    private void handleConnectionLoss() {
+        if (!alive) {
+            return;
+        }
+
+        alive = false;
+        heartbeatExecutor.shutdownNow();
+        notifyDisconnect();
+    }
+
     private void notifyDisconnect() {
         if (disconnectNotified) {
             return;
@@ -132,9 +140,7 @@ public class RMIServerConnection implements ServerSideConnection {
 
         long silenceMillis = System.currentTimeMillis() - lastReceivedAtMillis;
         if (silenceMillis >= HEARTBEAT_TIMEOUT_SECONDS * 1000L) {
-            alive = false;
-            heartbeatExecutor.shutdownNow();
-            notifyDisconnect();
+            handleConnectionLoss();
             return;
         }
 

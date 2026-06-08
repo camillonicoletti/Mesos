@@ -134,12 +134,7 @@ public class SocketServerConnection implements ServerSideConnection {
             try {
                 Object inboundObject = in.readObject();
                 lastReceivedAtMillis = System.currentTimeMillis();
-                if (inboundObject instanceof PongMessage) {
-                    continue;
-                }
-                if (inboundObject instanceof ClientMessage clientMessage) {
-                    onMessage.accept(clientMessage);
-                }
+                handleInboundObject(inboundObject);
             } catch (IOException | ClassNotFoundException exception) {
                 if (!alive) {
                     return;
@@ -148,6 +143,16 @@ public class SocketServerConnection implements ServerSideConnection {
                 handleConnectionLoss();
                 return;
             }
+        }
+    }
+
+    private void handleInboundObject(Object inboundObject) {
+        if (inboundObject instanceof PongMessage) {
+            return;
+        }
+
+        if (inboundObject instanceof ClientMessage clientMessage) {
+            onMessage.accept(clientMessage);
         }
     }
 
