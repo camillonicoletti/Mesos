@@ -122,12 +122,10 @@ public class ClientModel {
         boolean iAmCurrentLeader = myNickname != null
                 && !lobbyPlayers.isEmpty()
                 && myNickname.equals(lobbyPlayers.get(0));
-        if (iAmCurrentLeader
-                && wasInLobby
-                && previousLeader != null
-                && !previousLeader.equals(myNickname)) {
+        if (wasInLobby && previousLeader != null && !previousLeader.equals(myNickname)) {
             promotedToLobbyLeader = true;
-        } else if (!iAmCurrentLeader) {
+        }
+        if (!iAmCurrentLeader) {
             promotedToLobbyLeader = false;
         }
 
@@ -642,17 +640,22 @@ public class ClientModel {
             return;
         }
 
-        if (upper && remainingUpperPicks > 0) {
-            remainingUpperPicks--;
-        } else if (!upper && remainingLowerPicks > 0) {
-            remainingLowerPicks--;
+        if (upper) {
+            remainingUpperPicks = decrementIfPositive(remainingUpperPicks);
+            return;
         }
+
+        remainingLowerPicks = decrementIfPositive(remainingLowerPicks);
     }
 
     private void clearPickBudget() {
         pickBudgetPlayer = null;
         remainingUpperPicks = -1;
         remainingLowerPicks = -1;
+    }
+
+    private int decrementIfPositive(int value) {
+        return value > 0 ? value - 1 : value;
     }
 
     private void rememberTakenCard(String nickname, int cardId, boolean fromUpperRow, boolean building) {

@@ -34,7 +34,9 @@ public class ClientController {
     private final ClientModel model;
     private ClientSideConnection connection;
     private final ClientConnectionSupervisor connectionSupervisor;
+    private final Map<Class<? extends ServerMessage>, Consumer<ServerMessage>> immediateMessageHandlers;
     private final Map<Class<? extends ServerMessage>, Consumer<ServerMessage>> messageHandlers;
+    private final Map<Class<? extends ServerMessage>, Consumer<ServerMessage>> viewNotifications;
     private Consumer<Runnable> dispatcher = Runnable::run;
     private View view;
     private volatile boolean voluntaryClose;
@@ -50,7 +52,9 @@ public class ClientController {
         this.connectionSupervisor = connectionFactory == null
                 ? null
                 : new ClientConnectionSupervisor(connectionFactory, this::installRecoveredConnection);
+        this.immediateMessageHandlers = createImmediateMessageHandlers();
         this.messageHandlers = createMessageHandlers();
+        this.viewNotifications = createViewNotifications();
         installConnection(connection);
     }
 
@@ -187,8 +191,9 @@ public class ClientController {
     }
 
     public void onMessage(ServerMessage message) {
-        if (message instanceof PingMessage) {
-            connection.send(new PongMessage());
+        Consumer<ServerMessage> immediateHandler = immediateMessageHandlers.get(message.getClass());
+        if (immediateHandler != null) {
+            immediateHandler.accept(message);
             return;
         }
         dispatcher.accept(() -> dispatch(message));
@@ -211,38 +216,14 @@ public class ClientController {
         if (view == null) {
             return;
         }
-        if (message instanceof LoginAckMessage) {
-            view.onLoginResult();
-        } else if (message instanceof LobbyUpdateMessage) {
-            view.onLobbyChanged();
-        } else if (message instanceof GameStartedMessage) {
-            view.onGameStarted();
-        } else if (message instanceof StateChangedMessage) {
-            view.onGameStateChanged();
-        } else if (message instanceof GameEndedMessage) {
-            view.onGameEnded();
-        } else if (message instanceof ErrorMessage) {
-            view.onError();
-        } else if (message instanceof EventResolvedMessage) {
-            view.onEventResolved();
-        } else if (message instanceof GameSuspendedMessage) {
-            view.onGameSuspended();
-        } else if (message instanceof GameResumedMessage) {
-            view.onGameResumed();
-        } else if (message instanceof PlayerDisconnectedMessage
-                || message instanceof PlayerReconnectedMessage) {
-            view.onPlayerConnectionChanged();
-        } else if (message instanceof LeaderboardMessage leaderboard) {
-            view.showLeaderboard(leaderboard.playersCount(), leaderboard.entries());
-        } else if (message instanceof LeaderboardRankMessage rank) {
-            view.showMyRank(rank.rank(), rank.playersCount());
-            // Auto-fetch the full leaderboard so it can be shown next to the rank.
-            requestLeaderboard(rank.playersCount(), LEADERBOARD_FETCH_LIMIT);
-        } else {
-            // Every remaining state message (sync, era, food, points, cards,
-            // current player, totem, round, extra pick) is a board update.
-            view.onBoardChanged();
-        }
+        viewNotifications.getOrDefault(message.getClass(), ignored -> view.onBoardChanged())
+                .accept(message);
+    }
+
+    private Map<Class<? extends ServerMessage>, Consumer<ServerMessage>> createImmediateMessageHandlers() {
+        Map<Class<? extends ServerMessage>, Consumer<ServerMessage>> handlers = new HashMap<>();
+        register(handlers, PingMessage.class, ignored -> connection.send(new PongMessage()));
+        return Map.copyOf(handlers);
     }
 
     private Map<Class<? extends ServerMessage>, Consumer<ServerMessage>> createMessageHandlers() {
@@ -271,6 +252,31 @@ public class ClientController {
         // LeaderboardMessage / LeaderboardRankMessage carry no model state; they
         // are forwarded straight to the view in notifyView().
         return Map.copyOf(handlers);
+    }
+
+    private Map<Class<? extends ServerMessage>, Consumer<ServerMessage>> createViewNotifications() {
+        Map<Class<? extends ServerMessage>, Consumer<ServerMessage>> notifications = new HashMap<>();
+        register(notifications, LoginAckMessage.class, ignored -> view.onLoginResult());
+        register(notifications, LobbyUpdateMessage.class, ignored -> view.onLobbyChanged());
+        register(notifications, GameStartedMessage.class, ignored -> view.onGameStarted());
+        register(notifications, StateChangedMessage.class, ignored -> view.onGameStateChanged());
+        register(notifications, GameEndedMessage.class, ignored -> view.onGameEnded());
+        register(notifications, ErrorMessage.class, ignored -> view.onError());
+        register(notifications, EventResolvedMessage.class, ignored -> view.onEventResolved());
+        register(notifications, GameSuspendedMessage.class, ignored -> view.onGameSuspended());
+        register(notifications, GameResumedMessage.class, ignored -> view.onGameResumed());
+        register(notifications, PlayerDisconnectedMessage.class, ignored -> view.onPlayerConnectionChanged());
+        register(notifications, PlayerReconnectedMessage.class, ignored -> view.onPlayerConnectionChanged());
+        register(notifications, LeaderboardMessage.class,
+                leaderboard -> view.showLeaderboard(leaderboard.playersCount(), leaderboard.entries()));
+        register(notifications, LeaderboardRankMessage.class, this::notifyLeaderboardRank);
+        return Map.copyOf(notifications);
+    }
+
+    private void notifyLeaderboardRank(LeaderboardRankMessage rank) {
+        view.showMyRank(rank.rank(), rank.playersCount());
+        // Auto-fetch the full leaderboard so it can be shown next to the rank.
+        requestLeaderboard(rank.playersCount(), LEADERBOARD_FETCH_LIMIT);
     }
 
     private <T extends ServerMessage> void register(

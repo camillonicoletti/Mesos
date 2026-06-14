@@ -46,7 +46,9 @@ public final class LobbyBootstrap {
         if (restored) {
             System.out.println("Previous state restored from disk - "
                     + "waiting for players to reconnect.");
-        } else if (freshStart) {
+            return;
+        }
+        if (freshStart) {
             System.out.println("Clean startup requested - no previous save will be restored.");
         }
     }

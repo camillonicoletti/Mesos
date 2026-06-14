@@ -2,6 +2,7 @@ package it.polimi.ingsw.network.client;
 
 import it.polimi.ingsw.controller.action.PickBuildingAction;
 import it.polimi.ingsw.controller.action.PickCardAction;
+import it.polimi.ingsw.controller.action.GameAction;
 import it.polimi.ingsw.controller.action.PlaceTotemAction;
 import it.polimi.ingsw.model.enums.Era;
 import it.polimi.ingsw.model.enums.TotemColor;
@@ -14,6 +15,8 @@ import java.util.function.Consumer;
 
 public class MockClientConnection implements ClientSideConnection {
 
+    private final Map<Class<? extends ClientMessage>, Consumer<ClientMessage>> messageHandlers;
+    private final Map<Class<? extends GameAction>, Consumer<GameAction>> actionHandlers;
     private Consumer<ServerMessage> handler;
     private String myNickname = "Player1";
 
@@ -21,6 +24,11 @@ public class MockClientConnection implements ClientSideConnection {
     private boolean botAdded = false;
     private int totemPlaced = 0;
     private int actionsDone = 0;
+
+    public MockClientConnection() {
+        this.messageHandlers = createMessageHandlers();
+        this.actionHandlers = createActionHandlers();
+    }
 
     @Override
     public void setOnMessage(Consumer<ServerMessage> handler) {
@@ -34,17 +42,8 @@ public class MockClientConnection implements ClientSideConnection {
     public void send(ClientMessage message) {
         if (handler == null) return;
 
-        if (message instanceof LoginMessage m) {
-            handleLogin(m);
-        } else if (message instanceof SetPlayersCountMessage m) {
-            handleSetPlayers(m);
-        } else if (message instanceof ReadyMessage m) {
-            handleReady(m);
-        } else if (message instanceof GameActionMessage m) {
-            handleAction(m);
-        } else if (message instanceof DisconnectMessage) {
-            System.out.println("[MOCK] disconnect requested");
-        }
+        Consumer<ClientMessage> messageHandler = messageHandlers.get(message.getClass());
+        if (messageHandler != null) messageHandler.accept(message);
     }
 
     @Override
@@ -84,27 +83,71 @@ public class MockClientConnection implements ClientSideConnection {
     }
 
     private void handleAction(GameActionMessage m) {
-        if (m.getAction() instanceof PlaceTotemAction a) {
-            respond(new TotemPlacedMessage(myNickname, a.getTileId()));
-            totemPlaced++;
-            if (totemPlaced >= 2) {
-                respond(new StateChangedMessage("ActionResolutionState"));
-            }
+        Consumer<GameAction> actionHandler = actionHandlers.get(m.getAction().getClass());
+        if (actionHandler != null) actionHandler.accept(m.getAction());
+    }
 
-        } else if (m.getAction() instanceof PickCardAction a) {
-            int id;
-            try { id = Integer.parseInt(a.getCardId()); } catch (NumberFormatException e) { id = 1; }
-            respond(new CharacterCardTakenMessage(myNickname, id, a.isFromUpperRow()));
-            actionsDone++;
-            checkRoundEnd();
-
-        } else if (m.getAction() instanceof PickBuildingAction a) {
-            int id;
-            try { id = Integer.parseInt(a.getCardId()); } catch (NumberFormatException e) { id = 10; }
-            respond(new BuildingCardTakenMessage(myNickname, id, a.isFromUpperRow()));
-            actionsDone++;
-            checkRoundEnd();
+    private void handlePlaceTotem(PlaceTotemAction action) {
+        respond(new TotemPlacedMessage(myNickname, action.getTileId()));
+        totemPlaced++;
+        if (totemPlaced >= 2) {
+            respond(new StateChangedMessage("ActionResolutionState"));
         }
+    }
+
+    private void handlePickCard(PickCardAction action) {
+        int id = parseCardIdOrDefault(action.getCardId(), 1);
+        respond(new CharacterCardTakenMessage(myNickname, id, action.isFromUpperRow()));
+        actionsDone++;
+        checkRoundEnd();
+    }
+
+    private void handlePickBuilding(PickBuildingAction action) {
+        int id = parseCardIdOrDefault(action.getCardId(), 10);
+        respond(new BuildingCardTakenMessage(myNickname, id, action.isFromUpperRow()));
+        actionsDone++;
+        checkRoundEnd();
+    }
+
+    private int parseCardIdOrDefault(String cardId, int fallback) {
+        try {
+            return Integer.parseInt(cardId);
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
+    }
+
+    private Map<Class<? extends ClientMessage>, Consumer<ClientMessage>> createMessageHandlers() {
+        Map<Class<? extends ClientMessage>, Consumer<ClientMessage>> handlers = new HashMap<>();
+        registerMessage(handlers, LoginMessage.class, this::handleLogin);
+        registerMessage(handlers, SetPlayersCountMessage.class, this::handleSetPlayers);
+        registerMessage(handlers, ReadyMessage.class, this::handleReady);
+        registerMessage(handlers, GameActionMessage.class, this::handleAction);
+        registerMessage(handlers, DisconnectMessage.class,
+                ignored -> System.out.println("[MOCK] disconnect requested"));
+        return Map.copyOf(handlers);
+    }
+
+    private Map<Class<? extends GameAction>, Consumer<GameAction>> createActionHandlers() {
+        Map<Class<? extends GameAction>, Consumer<GameAction>> handlers = new HashMap<>();
+        registerAction(handlers, PlaceTotemAction.class, this::handlePlaceTotem);
+        registerAction(handlers, PickCardAction.class, this::handlePickCard);
+        registerAction(handlers, PickBuildingAction.class, this::handlePickBuilding);
+        return Map.copyOf(handlers);
+    }
+
+    private <T extends ClientMessage> void registerMessage(
+            Map<Class<? extends ClientMessage>, Consumer<ClientMessage>> handlers,
+            Class<T> type,
+            Consumer<T> handler) {
+        handlers.put(type, message -> handler.accept(type.cast(message)));
+    }
+
+    private <T extends GameAction> void registerAction(
+            Map<Class<? extends GameAction>, Consumer<GameAction>> handlers,
+            Class<T> type,
+            Consumer<T> handler) {
+        handlers.put(type, action -> handler.accept(type.cast(action)));
     }
 
     private void checkRoundEnd() {

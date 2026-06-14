@@ -65,8 +65,7 @@ public final class ClientLauncher {
             return factory.create();
         } catch (Exception exception) {
             System.err.println("Unable to connect to " + endpointDescription + " - " + exception.getMessage());
-            System.exit(1);
-            return null;
+            return exitWithFailure();
         }
     }
 
@@ -75,5 +74,10 @@ public final class ClientLauncher {
         System.err.println("  java -jar mesos-client.jar socket <host> <socketPort>");
         System.err.println("  java -jar mesos-client.jar rmi <host> [registryPort] [bindingName]");
         System.exit(1);
+    }
+
+    private static ClientSideConnection exitWithFailure() {
+        System.exit(1);
+        throw new IllegalStateException("System.exit returned unexpectedly");
     }
 }

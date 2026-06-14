@@ -27,9 +27,13 @@ public class ClientApp {
             return factory.create();
         } catch (Exception e) {
             System.err.println("Unable to connect to " + endpointDescription + " — " + e.getMessage());
-            System.exit(1);
-            return null;
+            return exitWithFailure();
         }
+    }
+
+    private static ClientSideConnection exitWithFailure() {
+        System.exit(1);
+        throw new IllegalStateException("System.exit returned unexpectedly");
     }
 
 }

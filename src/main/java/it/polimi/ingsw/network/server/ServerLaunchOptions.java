@@ -3,6 +3,9 @@ package it.polimi.ingsw.network.server;
 import it.polimi.ingsw.network.rmi.RMIServerMain;
 
 import java.rmi.registry.Registry;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 public final class ServerLaunchOptions {
     public static final int DEFAULT_SOCKET_PORT = 1234;
@@ -20,72 +23,39 @@ public final class ServerLaunchOptions {
     }
 
     public static ServerLaunchOptions socketOnly(String[] args) {
-        boolean freshStart = false;
-        Integer socketPort = null;
+        PositionalArguments parsed = PositionalArguments.from(args);
+        Optional<Integer> socketPort = parsed.nextPort("socket port");
+        parsed.rejectRemaining("Too many arguments for socket server startup.");
 
-        for (String arg : args) {
-            if ("--fresh".equalsIgnoreCase(arg)) {
-                freshStart = true;
-            } else if (socketPort == null) {
-                socketPort = parsePort(arg, "socket port");
-            } else {
-                throw new IllegalArgumentException("Too many arguments for socket server startup.");
-            }
-        }
-
-        return new ServerLaunchOptions(freshStart,
-                defaultIfNull(socketPort, DEFAULT_SOCKET_PORT),
+        return new ServerLaunchOptions(parsed.freshStart(),
+                socketPort.orElse(DEFAULT_SOCKET_PORT),
                 Registry.REGISTRY_PORT,
                 RMIServerMain.DEFAULT_BINDING_NAME);
     }
 
     public static ServerLaunchOptions rmiOnly(String[] args) {
-        boolean freshStart = false;
-        Integer rmiPort = null;
-        String rmiBindingName = null;
+        PositionalArguments parsed = PositionalArguments.from(args);
+        Optional<Integer> rmiPort = parsed.nextPort("RMI registry port");
+        Optional<String> rmiBindingName = parsed.nextString();
+        parsed.rejectRemaining("Too many arguments for RMI server startup.");
 
-        for (String arg : args) {
-            if ("--fresh".equalsIgnoreCase(arg)) {
-                freshStart = true;
-            } else if (rmiPort == null) {
-                rmiPort = parsePort(arg, "RMI registry port");
-            } else if (rmiBindingName == null) {
-                rmiBindingName = arg;
-            } else {
-                throw new IllegalArgumentException("Too many arguments for RMI server startup.");
-            }
-        }
-
-        return new ServerLaunchOptions(freshStart,
+        return new ServerLaunchOptions(parsed.freshStart(),
                 DEFAULT_SOCKET_PORT,
-                defaultIfNull(rmiPort, Registry.REGISTRY_PORT),
-                defaultIfNull(rmiBindingName, RMIServerMain.DEFAULT_BINDING_NAME));
+                rmiPort.orElse(Registry.REGISTRY_PORT),
+                rmiBindingName.orElse(RMIServerMain.DEFAULT_BINDING_NAME));
     }
 
     public static ServerLaunchOptions unified(String[] args) {
-        boolean freshStart = false;
-        Integer socketPort = null;
-        Integer rmiPort = null;
-        String rmiBindingName = null;
+        PositionalArguments parsed = PositionalArguments.from(args);
+        Optional<Integer> socketPort = parsed.nextPort("socket port");
+        Optional<Integer> rmiPort = parsed.nextPort("RMI registry port");
+        Optional<String> rmiBindingName = parsed.nextString();
+        parsed.rejectRemaining("Too many arguments for unified server startup.");
 
-        for (String arg : args) {
-            if ("--fresh".equalsIgnoreCase(arg)) {
-                freshStart = true;
-            } else if (socketPort == null) {
-                socketPort = parsePort(arg, "socket port");
-            } else if (rmiPort == null) {
-                rmiPort = parsePort(arg, "RMI registry port");
-            } else if (rmiBindingName == null) {
-                rmiBindingName = arg;
-            } else {
-                throw new IllegalArgumentException("Too many arguments for unified server startup.");
-            }
-        }
-
-        return new ServerLaunchOptions(freshStart,
-                defaultIfNull(socketPort, DEFAULT_SOCKET_PORT),
-                defaultIfNull(rmiPort, Registry.REGISTRY_PORT),
-                defaultIfNull(rmiBindingName, RMIServerMain.DEFAULT_BINDING_NAME));
+        return new ServerLaunchOptions(parsed.freshStart(),
+                socketPort.orElse(DEFAULT_SOCKET_PORT),
+                rmiPort.orElse(Registry.REGISTRY_PORT),
+                rmiBindingName.orElse(RMIServerMain.DEFAULT_BINDING_NAME));
     }
 
     public boolean freshStart() {
@@ -112,11 +82,50 @@ public final class ServerLaunchOptions {
         }
     }
 
-    private static int defaultIfNull(Integer value, int defaultValue) {
-        return value == null ? defaultValue : value;
-    }
+    private static final class PositionalArguments {
+        private final boolean freshStart;
+        private final List<String> values;
+        private int cursor;
 
-    private static String defaultIfNull(String value, String defaultValue) {
-        return value == null ? defaultValue : value;
+        private PositionalArguments(boolean freshStart, List<String> values) {
+            this.freshStart = freshStart;
+            this.values = values;
+        }
+
+        static PositionalArguments from(String[] args) {
+            boolean freshStart = false;
+            List<String> values = new ArrayList<>();
+            for (String arg : args) {
+                if ("--fresh".equalsIgnoreCase(arg)) {
+                    freshStart = true;
+                    continue;
+                }
+                values.add(arg);
+            }
+            return new PositionalArguments(freshStart, values);
+        }
+
+        boolean freshStart() {
+            return freshStart;
+        }
+
+        Optional<Integer> nextPort(String label) {
+            return nextString().map(raw -> parsePort(raw, label));
+        }
+
+        Optional<String> nextString() {
+            if (cursor >= values.size()) {
+                return Optional.empty();
+            }
+            String value = values.get(cursor);
+            cursor++;
+            return Optional.of(value);
+        }
+
+        void rejectRemaining(String message) {
+            if (cursor < values.size()) {
+                throw new IllegalArgumentException(message);
+            }
+        }
     }
 }

@@ -37,8 +37,12 @@ public class RMIClientApp {
             return factory.create();
         } catch (Exception exception) {
             System.err.println("Unable to connect to " + endpointDescription + " — " + exception.getMessage());
-            System.exit(1);
-            return null;
+            return exitWithFailure();
         }
+    }
+
+    private static ClientSideConnection exitWithFailure() {
+        System.exit(1);
+        throw new IllegalStateException("System.exit returned unexpectedly");
     }
 }
