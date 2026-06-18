@@ -5,6 +5,7 @@ import it.polimi.ingsw.network.client.ClientModel;
 import it.polimi.ingsw.network.client.GamePhase;
 import it.polimi.ingsw.network.client.PlayerView;
 import it.polimi.ingsw.network.protocol.clientbound.EventResolvedMessage;
+import it.polimi.ingsw.view.gui.util.TotemPalette;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -86,7 +87,7 @@ final class EventResolutionOverlay {
         Label eyebrow = new Label("RESOLUTION EVENT");
         eyebrow.getStyleClass().add("event-resolution-eyebrow");
 
-        Label title = new Label(nullSafe(model.getLastResolvedEventTitle()).toUpperCase());
+        Label title = new Label(GuiViews.nullSafe(model.getLastResolvedEventTitle()).toUpperCase());
         title.getStyleClass().add("event-resolution-title");
         title.setWrapText(true);
 
@@ -116,7 +117,7 @@ final class EventResolutionOverlay {
             Label placeholder = new Label("Event card");
             placeholder.getStyleClass().add("event-resolution-card-placeholder");
             placeholder.setAlignment(Pos.CENTER);
-            setFixedSize(placeholder, 320, 450);
+            GuiViews.setFixedSize(placeholder, 320, 450);
             frame.getChildren().add(placeholder);
         }
         return frame;
@@ -185,7 +186,7 @@ final class EventResolutionOverlay {
 
         Label name = new Label(effect.getNickname().toUpperCase());
         name.getStyleClass().add("event-resolution-player");
-        name.setStyle("-fx-text-fill: " + totemColorHex(color) + ";");
+        name.setStyle("-fx-text-fill: " + TotemPalette.textHex(color) + ";");
 
         playerCell.getChildren().addAll(rankLabel, totem, name);
 
@@ -232,23 +233,4 @@ final class EventResolutionOverlay {
         return player == null ? null : player.getTotemColor();
     }
 
-    private String totemColorHex(TotemColor color) {
-        return switch (color == null ? TotemColor.WHITE : color) {
-            case RED    -> "#e05a46";
-            case BLUE   -> "#5b9fd4";
-            case PURPLE -> "#a070cc";
-            case YELLOW -> "#e8be5a";
-            case WHITE  -> "#f3ebdc";
-        };
-    }
-
-    private void setFixedSize(Region region, double width, double height) {
-        region.setMinSize(width, height);
-        region.setPrefSize(width, height);
-        region.setMaxSize(width, height);
-    }
-
-    private String nullSafe(Object value) {
-        return value == null ? "-" : String.valueOf(value);
-    }
 }

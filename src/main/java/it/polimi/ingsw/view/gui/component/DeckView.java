@@ -10,6 +10,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
+import java.util.Locale;
 import java.util.Optional;
 
 final class DeckView {
@@ -29,7 +30,7 @@ final class DeckView {
         VBox panel = new VBox(4);
         panel.getStyleClass().add("deck-view");
         panel.setAlignment(Pos.CENTER);
-        panel.getChildren().add(sectionTitle("Tribe Deck"));
+        panel.getChildren().add(GuiViews.sectionTitle("Tribe Deck"));
 
         StackPane cardBack = new StackPane();
         cardBack.getStyleClass().add("deck-placeholder");
@@ -72,19 +73,7 @@ final class DeckView {
     }
 
     private String eraBackKey(Era era) {
-        if (era == null) {
-            return "back_character_era_i";
-        }
-        return switch (era) {
-            case I -> "back_character_era_i";
-            case II -> "back_character_era_ii";
-            case III -> "back_character_era_iii";
-        };
-    }
-
-    private Label sectionTitle(String text) {
-        Label label = new Label(text);
-        label.getStyleClass().add("section-title");
-        return label;
+        String suffix = era == null ? "i" : era.name().toLowerCase(Locale.ROOT);
+        return "back_character_era_" + suffix;
     }
 }

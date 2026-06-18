@@ -2,7 +2,6 @@ package it.polimi.ingsw.view.gui.component;
 
 import it.polimi.ingsw.network.client.ClientController;
 import it.polimi.ingsw.network.client.ClientModel;
-import it.polimi.ingsw.network.client.GamePhase;
 import it.polimi.ingsw.network.client.PlayerView;
 import it.polimi.ingsw.view.gui.asset.CardAsset;
 import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
@@ -38,7 +37,6 @@ import java.util.function.Function;
 import java.util.function.IntConsumer;
 import java.util.stream.Collectors;
 
-import org.kordamp.ikonli.materialdesign2.MaterialDesignV;
 
 final class PlayerDockView {
     private static final int MAX_VISIBLE_SUMMARIES = 3;
@@ -105,9 +103,9 @@ final class PlayerDockView {
         HBox status = new HBox(12);
         status.getStyleClass().add("table-status");
         status.getChildren().addAll(
-                smallStatus("Era", nullSafe(model.getCurrentEra())),
+                smallStatus("Era", GuiViews.nullSafe(model.getCurrentEra())),
                 smallStatus("Round", String.valueOf(model.getRoundNumber())),
-                smallStatus("Turn", nullSafe(currentTurnNickname()))
+                smallStatus("Turn", GuiViews.nullSafe(GuiViews.currentTurnNickname(model)))
         );
 
         Button exit = new Button("Quit");
@@ -121,7 +119,7 @@ final class PlayerDockView {
         debugEnd.getStyleClass().add("dock-exit");
         debugEnd.setOnAction(event -> controller.forceEndGame());
 
-        HBox statusRow = new HBox(14, status, spacer());
+        HBox statusRow = new HBox(14, status, GuiViews.spacer());
         if (model.isExtraPickAvailableForMe()) {
             Button skipExtra = new Button("Skip extra pick");
             skipExtra.getStyleClass().add("dock-exit");
@@ -151,11 +149,7 @@ final class PlayerDockView {
     }
 
     private void refreshAudioToggleIcon(Button button) {
-        button.setGraphic(GuiIcons.icon(audioIcon(), 16));
-    }
-
-    private MaterialDesignV audioIcon() {
-        return GuiAudio.isEnabled() ? MaterialDesignV.VOLUME_HIGH : MaterialDesignV.VOLUME_OFF;
+        button.setGraphic(GuiIcons.icon(GuiViews.audioIcon(), 16));
     }
 
     private VBox playerSummaryRows() {
@@ -241,7 +235,7 @@ final class PlayerDockView {
 
     private Node playerSummary(PlayerView player, int playerCount) {
         boolean disconnected = model.isPlayerDisconnected(player.getNickname());
-        boolean current = player.getNickname().equals(currentTurnNickname());
+        boolean current = player.getNickname().equals(GuiViews.currentTurnNickname(model));
         boolean me = player.getNickname().equals(model.getMyNickname());
 
         VBox card = new VBox(3);
@@ -269,7 +263,7 @@ final class PlayerDockView {
         name.getStyleClass().add("player-summary-name");
         head.getChildren().addAll(playerSummaryTotem(player), name);
 
-        HBox top = new HBox(8, head, spacer(), playerResourceBadges(player));
+        HBox top = new HBox(8, head, GuiViews.spacer(), playerResourceBadges(player));
         top.getStyleClass().add("player-summary-top");
         top.setAlignment(Pos.CENTER_LEFT);
 
@@ -661,34 +655,11 @@ final class PlayerDockView {
         return row;
     }
 
-    private Region spacer() {
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-        return spacer;
-    }
-
     private Region totemDot(PlayerView player) {
         Region dot = new Region();
         dot.getStyleClass().add("totem-dot");
         dot.setStyle("-fx-background-color: " + totemMarkers.colorHex(player.getTotemColor()) + ";");
         return dot;
-    }
-
-    private String currentTurnNickname() {
-        GamePhase phase = GamePhase.fromStateName(model.getGameState());
-        if (phase.isTotemPlacement()) {
-            return model.getCurrentTotemPlacementPlayer();
-        }
-
-        if (phase.isActionResolution()) {
-            return model.getCurrentActionResolutionPlayer();
-        }
-
-        return null;
-    }
-
-    private String nullSafe(Object value) {
-        return value == null ? "-" : String.valueOf(value);
     }
 
     @FunctionalInterface

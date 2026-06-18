@@ -5,7 +5,6 @@ import it.polimi.ingsw.network.client.ClientController;
 import it.polimi.ingsw.network.client.ClientModel;
 import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
 import it.polimi.ingsw.view.gui.util.GuiAnimations;
-import it.polimi.ingsw.view.gui.util.GuiAudio;
 import it.polimi.ingsw.view.gui.util.GuiIcons;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -28,7 +27,6 @@ import org.kordamp.ikonli.materialdesign2.MaterialDesignA;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignB;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignC;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignL;
-import org.kordamp.ikonli.materialdesign2.MaterialDesignV;
 
 import java.io.InputStream;
 
@@ -122,7 +120,7 @@ public final class LobbyView {
         rulesBtn.setOnAction(event -> GuiApplication.openRulesPdf());
         box.getChildren().add(rulesBtn);
 
-        box.getChildren().add(audioToggleButton());
+        box.getChildren().add(GuiViews.menuAudioToggleButton("lobby-action-button"));
 
         if (model.isLobbyLeader()) {
             box.getChildren().add(playerCountSelector());
@@ -169,7 +167,7 @@ public final class LobbyView {
         HBox box = new HBox(12);
         box.setAlignment(Pos.CENTER);
         box.getStyleClass().add("lobby-status");
-        box.getChildren().add(infoRow(MaterialDesignA.ACCOUNT_CIRCLE, nullSafe(model.getMyNickname())));
+        box.getChildren().add(infoRow(MaterialDesignA.ACCOUNT_CIRCLE, GuiViews.nullSafe(model.getMyNickname())));
         box.getChildren().add(infoRow(MaterialDesignA.ACCOUNT_MULTIPLE, expectedPlayersText() + " players"));
 
         Label connection = new Label(connectionText());
@@ -261,25 +259,6 @@ public final class LobbyView {
         return button;
     }
 
-    private Button audioToggleButton() {
-        Button button = secondaryButton("Audio", audioIcon());
-        button.getStyleClass().addAll("game-rules-button", "lobby-action-button");
-        button.setAccessibleText("Toggle audio");
-        GuiAnimations.addHoverScale(button);
-        button.setOnAction(event -> {
-            boolean enabled = GuiAudio.toggleEnabled();
-            if (enabled) {
-                GuiAudio.playMenuMusic();
-            }
-            GuiIcons.decorateButton(button, audioIcon());
-        });
-        return button;
-    }
-
-    private MaterialDesignV audioIcon() {
-        return GuiAudio.isEnabled() ? MaterialDesignV.VOLUME_HIGH : MaterialDesignV.VOLUME_OFF;
-    }
-
     private Label errorLabel() {
         Label label = new Label(model.getLastError() == null ? "" : model.getLastError());
         label.getStyleClass().add("error");
@@ -292,10 +271,6 @@ public final class LobbyView {
             return "Connected";
         }
         return model.isReconnecting() ? "Reconnecting..." : "Disconnected";
-    }
-
-    private String nullSafe(Object value) {
-        return value == null ? "-" : String.valueOf(value);
     }
 
     private String expectedPlayersText() {

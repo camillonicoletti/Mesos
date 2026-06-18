@@ -275,7 +275,7 @@ public final class GameBoardView {
         panel.getStyleClass().add("disconnected-totems-panel");
         panel.setAlignment(Pos.CENTER);
 
-        Label title = new Label("Fuori");
+        Label title = new Label("Out");
         title.getStyleClass().add("disconnected-totems-title");
         panel.getChildren().add(title);
 
@@ -298,21 +298,8 @@ public final class GameBoardView {
         return totemMarkers.create(color, owner, fitHeight);
     }
 
-    private String currentTurnNickname() {
-        GamePhase phase = GamePhase.fromStateName(model.getGameState());
-        if (phase.isTotemPlacement()) {
-            return model.getCurrentTotemPlacementPlayer();
-        }
-
-        if (phase.isActionResolution()) {
-            return model.getCurrentActionResolutionPlayer();
-        }
-
-        return null;
-    }
-
     private String actionInstruction() {
-        String current = currentTurnNickname();
+        String current = GuiViews.currentTurnNickname(model);
         boolean myTurn = current != null && current.equals(model.getMyNickname());
         GamePhase phase = GamePhase.fromStateName(model.getGameState());
 

@@ -2,6 +2,7 @@ package it.polimi.ingsw.view.gui.component;
 
 import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
+import it.polimi.ingsw.view.gui.util.TotemPalette;
 import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -11,7 +12,7 @@ import javafx.scene.layout.StackPane;
 import java.util.Optional;
 
 final class TotemMarkerFactory {
-    private static final String BOARD_TOTEM_PREFIX = "board-totem:";
+    private static final Object BOARD_TOTEM_OWNER_KEY = new Object();
 
     private final GuiAssetCatalog assetCatalog;
 
@@ -52,32 +53,21 @@ final class TotemMarkerFactory {
     }
 
     String colorHex(TotemColor color) {
-        if (color == null) {
-            return "#b8ad98";
-        }
-
-        return switch (color) {
-            case RED -> "#b94a3a";
-            case BLUE -> "#3c6f9e";
-            case PURPLE -> "#77529a";
-            case YELLOW -> "#d7a93d";
-            case WHITE -> "#f3ebdc";
-        };
+        return TotemPalette.fillHex(color);
     }
 
     static void tagBoardTotem(Node node, String owner) {
         if (node != null && owner != null) {
-            node.setUserData(BOARD_TOTEM_PREFIX + owner);
+            node.getProperties().put(BOARD_TOTEM_OWNER_KEY, owner);
         }
     }
 
     static String boardTotemOwner(Node node) {
-        if (node == null || !(node.getUserData() instanceof String tag)) {
+        if (node == null) {
             return null;
         }
-        return tag.startsWith(BOARD_TOTEM_PREFIX)
-                ? tag.substring(BOARD_TOTEM_PREFIX.length())
-                : null;
+        Object owner = node.getProperties().get(BOARD_TOTEM_OWNER_KEY);
+        return owner == null ? null : owner.toString();
     }
 
     private StackPane baseMarker(String styleClass, String owner, double width, double height) {
@@ -101,18 +91,10 @@ final class TotemMarkerFactory {
     }
 
     private String assetPath(TotemColor color) {
-        return switch (color == null ? TotemColor.WHITE : color) {
-            case RED -> "assets/tokens/totem_red.png";
-            case YELLOW -> "assets/tokens/totem_yellow.png";
-            case BLUE -> "assets/tokens/totem_blue.png";
-            case PURPLE -> "assets/tokens/totem_purple.png";
-            case WHITE -> "assets/tokens/totem_white.png";
-        };
+        return TotemPalette.assetPath(color);
     }
 
     private void setFixedSize(Region region, double width, double height) {
-        region.setMinSize(width, height);
-        region.setPrefSize(width, height);
-        region.setMaxSize(width, height);
+        GuiViews.setFixedSize(region, width, height);
     }
 }

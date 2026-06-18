@@ -5,13 +5,11 @@ import it.polimi.ingsw.network.client.ClientModel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Bug hunter tests for malformed TUI commands. The parser now executes valid
- * commands through the {@link ClientController} façade and returns a
- * {@link CommandParser.Result}; a rejected command must send nothing.
+ * Bug hunter tests for malformed TUI commands: a rejected command must send
+ * nothing to the server.
  */
 class CommandParserInvalidInputTest {
 
@@ -28,7 +26,7 @@ class CommandParserInvalidInputTest {
     /** Parses {@code input} and asserts that nothing was dispatched to the server. */
     private void assertNothingSent(String input) {
         connection.sent.clear();
-        parser.parse(input);
+        parser.parse(input, () -> { });
         assertTrue(connection.sent.isEmpty(),
                 "Command '" + input + "' should not dispatch any message");
     }
@@ -69,13 +67,13 @@ class CommandParserInvalidInputTest {
     }
 
     /**
-     * A bare 'quit' is reported as QUIT (and dispatches nothing itself: the
-     * caller performs the disconnect).
+     * A bare 'quit' returns true (and dispatches nothing itself: the caller
+     * performs the disconnect).
      */
     @Test
     void quitIsReportedAndSendsNothing() {
         connection.sent.clear();
-        assertEquals(CommandParser.Result.QUIT, parser.parse("quit"));
+        assertTrue(parser.parse("quit", () -> { }));
         assertTrue(connection.sent.isEmpty());
     }
 }

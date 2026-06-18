@@ -17,23 +17,19 @@ import java.util.Optional;
 
 public final class GuiAssetCatalog {
     private static final String CARDS_MANIFEST = "assets/manifest/cards.json";
-    private static final String COMPONENTS_MANIFEST = "assets/manifest/components.json";
 
     private final Map<Integer, CardAsset> cards;
     private final Map<Integer, JsonObject> cardDetails;
-    private final JsonObject components;
     /** Decoded images cached by resource path; JavaFX Image is immutable and shareable across ImageViews. */
     private final Map<String, Image> imageCache = new HashMap<>();
 
-    private GuiAssetCatalog(Map<Integer, CardAsset> cards, Map<Integer, JsonObject> cardDetails, JsonObject components) {
+    private GuiAssetCatalog(Map<Integer, CardAsset> cards, Map<Integer, JsonObject> cardDetails) {
         this.cards = Collections.unmodifiableMap(new LinkedHashMap<>(cards));
         this.cardDetails = Collections.unmodifiableMap(new LinkedHashMap<>(cardDetails));
-        this.components = components.deepCopy();
     }
 
     public static GuiAssetCatalog loadDefault() {
         JsonObject cardsManifest = loadJson(CARDS_MANIFEST);
-        JsonObject componentsManifest = loadJson(COMPONENTS_MANIFEST);
 
         Map<Integer, CardAsset> cards = new LinkedHashMap<>();
         JsonObject cardsObject = cardsManifest.getAsJsonObject("cards");
@@ -56,7 +52,7 @@ public final class GuiAssetCatalog {
 
         Map<Integer, JsonObject> cardDetails = CardDataCatalog.loadDefault().allDetails();
 
-        return new GuiAssetCatalog(cards, cardDetails, componentsManifest);
+        return new GuiAssetCatalog(cards, cardDetails);
     }
 
     public Optional<CardAsset> findCard(int cardId) {
@@ -78,16 +74,6 @@ public final class GuiAssetCatalog {
     public Optional<JsonObject> findCardDetails(int cardId) {
         JsonObject details = cardDetails.get(cardId);
         return details == null ? Optional.empty() : Optional.of(details.deepCopy());
-    }
-
-    public JsonObject getComponents() {
-        return components.deepCopy();
-    }
-
-    public boolean hasCardImage(int cardId) {
-        return findCard(cardId)
-                .map(CardAsset::hasCompleteImages)
-                .orElse(false);
     }
 
     public Optional<InputStream> openResource(String resourcePath) {

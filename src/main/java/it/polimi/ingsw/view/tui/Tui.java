@@ -225,8 +225,7 @@ public class Tui implements View {
                 continue;
             }
 
-            CommandParser.Result result = parser.parse(line);
-            if (result == CommandParser.Result.QUIT) {
+            if (parser.parse(line, () -> { })) {
                 controller.disconnect();
                 return;
             }
@@ -259,28 +258,21 @@ public class Tui implements View {
             return;
         }
 
-        // Lobby leader shortcut: typing just a number sets the player count
         if (model.isLobbyLeader()
                 && model.getExpectedPlayers() < CommandParser.MIN_PLAYERS
                 && line.matches("\\d+")) {
-            parser.parse("players " + line);
+            parser.parse("players " + line, () -> { });
             return;
         }
 
-        // Reject "players" command from non-leaders before delegating to the parser
         if (line.toLowerCase().startsWith("players") && !model.isLobbyLeader()) {
             System.out.println("[ERROR] Only the lobby leader can choose the number of participants.");
             return;
         }
 
-        CommandParser.Result result = parser.parse(line);
-        if (result == CommandParser.Result.QUIT) {
+        if (parser.parse(line, this::printPreGameHelp)) {
             controller.disconnect();
             return;
-        }
-        if (result == CommandParser.Result.UNKNOWN) {
-            // Parser already printed an "Unknown command" hint; show context-aware help
-            printPreGameHelp();
         }
     }
 
@@ -398,8 +390,7 @@ public class Tui implements View {
         }
 
         int buildingId = parseSeeEffectId(line);
-        CardCatalog.CardInfo card = CardCatalog.get(buildingId);
-        if (card.kind != CardCatalog.Kind.BUILDING) {
+        if (!CardCatalog.isBuilding(buildingId)) {
             System.out.println("[ERROR] " + buildingId + " is not a building card.");
             return;
         }

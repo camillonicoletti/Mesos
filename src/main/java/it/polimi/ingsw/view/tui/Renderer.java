@@ -21,6 +21,13 @@ public class Renderer {
 
     private static final int LAST_ROUND = 10;
 
+    private static final CardCatalog.CardVisitor<String> KIND_COLOR = new CardCatalog.CardVisitor<>() {
+        @Override public String visitCharacter(CardCatalog.CardInfo c) { return WHT; }
+        @Override public String visitBuilding(CardCatalog.CardInfo c) { return YLW; }
+        @Override public String visitEvent(CardCatalog.CardInfo c) { return MGN; }
+        @Override public String visitCard(CardCatalog.CardInfo c) { return GRY; }
+    };
+
     private volatile int visibleTribeNumber;
     private volatile int visibleTribeCountdownSeconds;
     private volatile int visibleBuildingEffectId;
@@ -691,24 +698,6 @@ public class Renderer {
         return line.toString();
     }
 
-    private String currentEraLabel(ClientModel model) {
-        return model.getCurrentEra() == null ? "-" : model.getCurrentEra().name();
-    }
-
-    private void simpleScreen(String msg, ClientModel model) {
-        blank();
-        row("  " + YLW + msg + RST);
-        blank();
-        for (PlayerView p : model.getPlayers().values()) {
-            String col = totemColor(p.getTotemColor());
-            row("  " + col + "●" + RST + " " + WHT + String.format("%-16s", p.getNickname()) + RST
-                    + "  " + YLW + p.getFood() + " food" + RST
-                    + "  " + foodBar(p.getFood(), 20)
-                    + "  " + GRN + p.getPrestigePoints() + " PP" + RST);
-        }
-        blank();
-    }
-
     private void eventResolutionScreen(ClientModel model) {
         blank();
         String title = model.getLastResolvedEventTitle();
@@ -810,14 +799,6 @@ public class Renderer {
         return color + BOLD + sign + delta + " " + icon + RST;
     }
 
-    private String formatDelta(int delta, int total, String unit) {
-        String d;
-        if (delta > 0)      d = GRN + "+" + delta + RST;
-        else if (delta < 0) d = RED + String.valueOf(delta) + RST;
-        else                d = GRY + "0" + RST;
-        return d + " (" + total + unit + ")";
-    }
-
     private void endOfRoundScreen(ClientModel model) {
         blank();
         int finishedRound = model.getLastFinishedRound();
@@ -883,18 +864,6 @@ public class Renderer {
         row(center(ORG + "|" + RST + center(WHT + BOLD + "Preparing the next round..." + RST, bw) + ORG + "|" + RST, W));
         row(center(ORG + "|" + RST + center(YLW + BOLD + "NEXT: ROUND " + nextRound + RST, bw) + ORG + "|" + RST, W));
         row(center(roundedBottom(bw, ORG), W));
-    }
-
-    private void printBox(String title, String body) {
-        int width = Math.max(title.length(), body.length()) + 6;
-        String border = "+" + "-".repeat(width - 2) + "+";
-        String pad = "|" + " ".repeat(width - 2) + "|";
-
-        row("  " + CYN + border + RST);
-        row("  " + CYN + "|" + RST + center(YLW + BOLD + title + RST, width - 2) + CYN + "|" + RST);
-        row("  " + CYN + pad + RST);
-        row("  " + CYN + "|" + RST + center(WHT + body + RST, width - 2) + CYN + "|" + RST);
-        row("  " + CYN + border + RST);
     }
 
     private void gameScreen(ClientModel model, boolean totemPhase) {
@@ -1326,12 +1295,7 @@ public class Renderer {
             for (int i = 0; i < myCards.size(); i++) {
                 int id = myCards.get(i);
                 CardCatalog.CardInfo ci = CardCatalog.get(id);
-                String kindColor = switch (ci.kind) {
-                    case CHARACTER -> WHT;
-                    case BUILDING  -> YLW;
-                    case EVENT     -> MGN;
-                    default        -> GRY;
-                };
+                String kindColor = ci.accept(KIND_COLOR);
                 String label   = CardRenderer.tribeCardLabel(ci);
                 String era     = GRY + "  [Era " + ci.era + "]" + RST;
                 String content = " " + kindColor + BOLD + label + RST + era;
@@ -1370,12 +1334,7 @@ public class Renderer {
             for (int i = 0; i < cards.size(); i++) {
                 int id = cards.get(i);
                 CardCatalog.CardInfo ci = CardCatalog.get(id);
-                String kindColor = switch (ci.kind) {
-                    case CHARACTER -> WHT;
-                    case BUILDING  -> YLW;
-                    case EVENT     -> MGN;
-                    default        -> GRY;
-                };
+                String kindColor = ci.accept(KIND_COLOR);
                 String era = GRY + "  [Era " + ci.era + "]" + RST;
                 String content = " " + kindColor + BOLD + CardRenderer.tribeCardLabel(ci) + RST + era;
                 lines.add(color + "|" + RST + padVisual(content, bw) + color + "|" + RST);

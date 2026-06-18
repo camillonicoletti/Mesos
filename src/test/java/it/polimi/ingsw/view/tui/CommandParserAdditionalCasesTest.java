@@ -42,7 +42,7 @@ class CommandParserAdditionalCasesTest {
     /** Parses {@code input} and returns the single message it dispatched, or null. */
     private ClientMessage dispatched(String input) {
         connection.sent.clear();
-        parser.parse(input);
+        parser.parse(input, () -> { });
         return connection.sent.isEmpty()
                 ? null
                 : connection.sent.get(connection.sent.size() - 1);
@@ -56,7 +56,7 @@ class CommandParserAdditionalCasesTest {
         assertNull(dispatched("   "));
         assertNull(dispatched("\t"));
         assertNull(dispatched(null));
-        assertEquals(CommandParser.Result.UNKNOWN, parser.parse(""));
+        assertFalse(parser.parse("", () -> { }));
     }
 
     // ── Place command edge cases ─────────────────────────────────────────────
@@ -209,7 +209,9 @@ class CommandParserAdditionalCasesTest {
         assertNull(dispatched("attack 101"));
         assertNull(dispatched("steal 5"));
         assertNull(dispatched("12345"));
-        assertEquals(CommandParser.Result.UNKNOWN, parser.parse("foobar"));
+        boolean[] unknown = {false};
+        assertFalse(parser.parse("foobar", () -> unknown[0] = true));
+        assertTrue(unknown[0]);
     }
 
     // ── Help is NOT a known parser command (must be handled by Tui) ──────────
@@ -221,6 +223,8 @@ class CommandParserAdditionalCasesTest {
     @Test
     void helpIsNotAKnownParserCommand() {
         assertNull(dispatched("help"));
-        assertEquals(CommandParser.Result.UNKNOWN, parser.parse("help"));
+        boolean[] unknown = {false};
+        assertFalse(parser.parse("help", () -> unknown[0] = true));
+        assertTrue(unknown[0]);
     }
 }

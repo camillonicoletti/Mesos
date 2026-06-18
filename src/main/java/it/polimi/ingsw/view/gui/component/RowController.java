@@ -13,6 +13,7 @@ import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -259,7 +260,8 @@ final class RowController {
         HBox band = upper ? upperMarketBand : lowerMarketBand;
         int sectionIndex = building ? 1 : 0;
         for (Node node : collectCardNodesFromSection(band, sectionIndex)) {
-            if (node.getUserData() instanceof CardMarketView.MarketCardRef ref
+            CardMarketView.MarketCardRef ref = (CardMarketView.MarketCardRef) node.getUserData();
+            if (ref != null
                     && ref.cardId() == cardId
                     && ref.upper() == upper
                     && ref.building() == building) {
@@ -514,13 +516,9 @@ final class RowController {
 
     private List<Node> collectCardNodes(HBox marketBand) {
         List<Node> cards = new ArrayList<>();
-        for (Node child : marketBand.getChildren()) {
-            if (child instanceof VBox row) {
-                for (Node rowChild : row.getChildren()) {
-                    if (rowChild instanceof HBox hbox) {
-                        cards.addAll(hbox.getChildren());
-                    }
-                }
+        for (Node section : marketBand.getChildren()) {
+            for (Node row : childrenOf(section)) {
+                cards.addAll(childrenOf(row));
             }
         }
         return cards;
@@ -528,15 +526,17 @@ final class RowController {
 
     private List<Node> collectCardNodesFromSection(HBox marketBand, int sectionIndex) {
         List<Node> cards = new ArrayList<>();
-        if (marketBand.getChildren().size() > sectionIndex
-                && marketBand.getChildren().get(sectionIndex) instanceof VBox row) {
-            for (Node rowChild : row.getChildren()) {
-                if (rowChild instanceof HBox hbox) {
-                    cards.addAll(hbox.getChildren());
-                }
+        if (marketBand.getChildren().size() > sectionIndex) {
+            Node section = marketBand.getChildren().get(sectionIndex);
+            for (Node row : childrenOf(section)) {
+                cards.addAll(childrenOf(row));
             }
         }
         return cards;
+    }
+
+    private List<Node> childrenOf(Node node) {
+        return ((Parent) node).getChildrenUnmodifiable();
     }
 
     private List<Node> collectCharacterCardNodes(HBox marketBand) {

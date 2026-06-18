@@ -38,67 +38,50 @@ final class CardRenderer {
      * resolved flag, so this class stays stateless.
      */
     static String[] drawCard(int id, boolean showBuildingEffect) {
-        CardCatalog.CardInfo c = CardCatalog.get(id);
-
-        if (c.kind == CardCatalog.Kind.CHARACTER) {
-            return drawCharacterCard(c);
-        }
-        if (c.kind == CardCatalog.Kind.BUILDING) {
-            if (showBuildingEffect) {
-                return drawBuildingEffectCard(c);
+        return CardCatalog.get(id).accept(new CardCatalog.CardVisitor<String[]>() {
+            @Override
+            public String[] visitCharacter(CardCatalog.CardInfo c) {
+                return drawCharacterCard(c);
             }
-            return drawBuildingCard(c);
-        }
-        if (c.kind == CardCatalog.Kind.EVENT && "Hunt".equals(c.eventTag)) {
-            return drawHuntEventCard(c);
-        }
-        if (c.kind == CardCatalog.Kind.EVENT && "Cave".equals(c.eventTag)) {
-            return drawCavePaintEventCard(c);
-        }
-        if (c.kind == CardCatalog.Kind.EVENT && "Sust".equals(c.eventTag)) {
-            return drawSustenanceEventCard(c);
-        }
-        if (c.kind == CardCatalog.Kind.EVENT && "Sham".equals(c.eventTag)) {
-            return drawShamanicRitualEventCard(c);
-        }
 
-        String bc = switch (c.kind) {
-            case CHARACTER -> WHT;
-            case BUILDING  -> YLW;
-            case EVENT     -> MGN;
-            default        -> GRY;
+            @Override
+            public String[] visitBuilding(CardCatalog.CardInfo c) {
+                return showBuildingEffect ? drawBuildingEffectCard(c) : drawBuildingCard(c);
+            }
+
+            @Override
+            public String[] visitEvent(CardCatalog.CardInfo c) {
+                return drawEventCard(c);
+            }
+
+            @Override
+            public String[] visitCard(CardCatalog.CardInfo c) {
+                return drawGenericCard(c, GRY);
+            }
+        });
+    }
+
+    static String[] drawEventCard(CardCatalog.CardInfo c) {
+        return switch (c.eventTag) {
+            case "Hunt" -> drawHuntEventCard(c);
+            case "Cave" -> drawCavePaintEventCard(c);
+            case "Sust" -> drawSustenanceEventCard(c);
+            case "Sham" -> drawShamanicRitualEventCard(c);
+            default -> drawGenericCard(c, MGN);
         };
+    }
 
-        String idStr = "#" + c.id;
-        String typeLine = c.typeName;
-        String detLine = c.detail;
-        String eraLine = "Era " + c.era;
-        String extraLine = (c.kind == CardCatalog.Kind.BUILDING)
-                ? c.foodCost + " food  +" + c.pointsEnd + "PP"
-                : "";
-
-        // All card variants must produce exactly CARD_H lines so they can be
-        // composed side-by-side by the row renderer without alignment drift.
+    static String[] drawGenericCard(CardCatalog.CardInfo c, String bc) {
         String[] out = new String[CARD_H];
-        out[0] = makeCardTopBorder(idStr, CARD_W, bc);
+        out[0] = makeCardTopBorder("#" + c.id, CARD_W, bc);
         out[1] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-        out[2] = bc + "|" + RST + BOLD + bc + centerStr(typeLine, CARD_W) + RST + bc + "|" + RST;
+        out[2] = bc + "|" + RST + BOLD + bc + centerStr(c.typeName, CARD_W) + RST + bc + "|" + RST;
         out[3] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-
-        if (!extraLine.isEmpty()) {
-            out[4] = bc + "|" + RST + GRY + centerStr(extraLine, CARD_W) + RST + bc + "|" + RST;
-            out[5] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-            out[6] = bc + "|" + RST + GRY + centerStr(detLine, CARD_W) + RST + bc + "|" + RST;
-            out[7] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-            out[8] = bc + "|" + RST + DIM + centerStr(eraLine, CARD_W) + RST + bc + "|" + RST;
-        } else {
-            out[4] = bc + "|" + RST + GRY + centerStr(detLine, CARD_W) + RST + bc + "|" + RST;
-            out[5] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-            out[6] = bc + "|" + RST + DIM + centerStr(eraLine, CARD_W) + RST + bc + "|" + RST;
-            out[7] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-            out[8] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
-        }
-
+        out[4] = bc + "|" + RST + GRY + centerStr(c.detail, CARD_W) + RST + bc + "|" + RST;
+        out[5] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
+        out[6] = bc + "|" + RST + DIM + centerStr("Era " + c.era, CARD_W) + RST + bc + "|" + RST;
+        out[7] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
+        out[8] = bc + "|" + " ".repeat(CARD_W) + "|" + RST;
         out[9] = bc + "+" + "-".repeat(CARD_W) + "+" + RST;
         return out;
     }
@@ -355,26 +338,6 @@ final class CardRenderer {
         };
     }
 
-    /**
-     * Kept with the character-card helpers because it belonged to the original
-     * extracted rendering group. Currently has no callers.
-     */
-    static String characterInfoLine(CardCatalog.CardInfo c, boolean bottomLine) {
-        return switch (c.typeName) {
-            case "Hunter" -> bottomLine && "+".equals(c.detail) ? "+1🍖" : "";
-
-            case "Builder" -> {
-                int pp = parseBuilderPoints(c.detail);
-                int discount = parseBuilderDiscount(c.detail);
-                yield bottomLine ? "+" + pp + "🌟" : "−" + discount + "🍖";
-            }
-
-            case "Shaman" -> bottomLine ? c.detail.replace("★", "🔯") : "";
-
-            default -> "";
-        };
-    }
-
     static int parseBuilderPoints(String detail) {
         if (detail == null || detail.isBlank()) return 0;
 
@@ -479,44 +442,69 @@ final class CardRenderer {
         return " ".repeat(7) + emoji + " ".repeat(7);
     }
 
-    static String cardIcon(CardCatalog.CardInfo c) {
-        if (c.kind == CardCatalog.Kind.CHARACTER) {
-            return switch (c.typeName) {
-                case "Hunter"   -> "🏹";
-                case "Builder"  -> "🔨";
-                case "Gatherer" -> "🌾";
-                case "Artist"   -> "🎨";
-                case "Inventor" -> "🧠";
-                case "Shaman"   -> "🔮";
-                default -> "?";
-            };
-        }
-        if (c.kind == CardCatalog.Kind.BUILDING) return "🏛";
-        return "📋";
+    static String cardIcon(CardCatalog.CardInfo card) {
+        return card.accept(new CardCatalog.CardVisitor<String>() {
+            @Override
+            public String visitCharacter(CardCatalog.CardInfo c) {
+                return switch (c.typeName) {
+                    case "Hunter"   -> "🏹";
+                    case "Builder"  -> "🔨";
+                    case "Gatherer" -> "🌾";
+                    case "Artist"   -> "🎨";
+                    case "Inventor" -> "🧠";
+                    case "Shaman"   -> "🔮";
+                    default -> "?";
+                };
+            }
+
+            @Override
+            public String visitBuilding(CardCatalog.CardInfo c) {
+                return "🏛";
+            }
+
+            @Override
+            public String visitCard(CardCatalog.CardInfo c) {
+                return "📋";
+            }
+        });
     }
 
     static String tribeCardLabel(CardCatalog.CardInfo ci) {
         return cardIcon(ci) + " " + ci.typeName + tribeCardExtra(ci);
     }
 
-    static String tribeCardExtra(CardCatalog.CardInfo ci) {
-        if (ci.kind == CardCatalog.Kind.BUILDING) {
-            return "  " + ci.foodCost + "🍖 +" + ci.pointsEnd + "PP";
-        }
-        if (ci.kind == CardCatalog.Kind.CHARACTER && "Builder".equals(ci.typeName)) {
+    static String tribeCardExtra(CardCatalog.CardInfo card) {
+        return card.accept(new CardCatalog.CardVisitor<String>() {
+            @Override
+            public String visitBuilding(CardCatalog.CardInfo c) {
+                return "  " + c.foodCost + "🍖 +" + c.pointsEnd + "PP";
+            }
+
+            @Override
+            public String visitCharacter(CardCatalog.CardInfo c) {
+                return characterCardExtra(c);
+            }
+
+            @Override
+            public String visitCard(CardCatalog.CardInfo c) {
+                return c.detail.isEmpty() ? "" : "  " + c.detail;
+            }
+        });
+    }
+
+    static String characterCardExtra(CardCatalog.CardInfo ci) {
+        if ("Builder".equals(ci.typeName)) {
             int pp = parseBuilderPoints(ci.detail);
             int discount = parseBuilderDiscount(ci.detail);
             return "  -" + discount + "🍖 +" + pp + "🌟";
         }
-        if (ci.kind == CardCatalog.Kind.CHARACTER
-                && "Hunter".equals(ci.typeName)
-                && "+".equals(ci.detail)) {
+        if ("Hunter".equals(ci.typeName) && "+".equals(ci.detail)) {
             return "  +1🍖";
         }
-        if (ci.kind == CardCatalog.Kind.CHARACTER && "Inventor".equals(ci.typeName)) {
+        if ("Inventor".equals(ci.typeName)) {
             return "  " + inventorNumber(ci.detail);
         }
-        if (ci.kind == CardCatalog.Kind.CHARACTER && "Shaman".equals(ci.typeName)) {
+        if ("Shaman".equals(ci.typeName)) {
             return "  " + ci.detail.replace("★", "🌟");
         }
         return ci.detail.isEmpty() ? "" : "  " + ci.detail;

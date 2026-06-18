@@ -4,6 +4,7 @@ import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.client.ClientController;
 import it.polimi.ingsw.network.client.ClientModel;
 import it.polimi.ingsw.view.gui.util.GuiIcons;
+import it.polimi.ingsw.view.gui.util.TotemPalette;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -235,22 +236,10 @@ public final class LoginView {
     }
 
     private String totemAssetPath(TotemColor color) {
-        return switch (color == null ? TotemColor.WHITE : color) {
-            case RED -> "assets/tokens/totem_red.png";
-            case YELLOW -> "assets/tokens/totem_yellow.png";
-            case BLUE -> "assets/tokens/totem_blue.png";
-            case PURPLE -> "assets/tokens/totem_purple.png";
-            case WHITE -> "assets/tokens/totem_white.png";
-        };
+        return TotemPalette.assetPath(color);
     }
 
     private String totemColorHex(TotemColor color) {
-        return switch (color == null ? TotemColor.WHITE : color) {
-            case RED -> "#b94a3a";
-            case BLUE -> "#3c6f9e";
-            case PURPLE -> "#77529a";
-            case YELLOW -> "#d7a93d";
-            case WHITE -> "#f3ebdc";
-        };
+        return TotemPalette.fillHex(color);
     }
 }

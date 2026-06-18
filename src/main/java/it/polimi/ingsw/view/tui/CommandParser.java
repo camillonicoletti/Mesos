@@ -7,18 +7,6 @@ public class CommandParser {
     public static final int MIN_PLAYERS = 2;
     public static final int MAX_PLAYERS = 5;
 
-    /**
-     * Outcome of parsing one command line.
-     * <ul>
-     *   <li>{@code HANDLED} — a valid command was executed (or a usage hint was
-     *       printed for a malformed one); the caller has nothing else to do.</li>
-     *   <li>{@code QUIT} — the user asked to leave; the caller should disconnect
-     *       and stop reading input.</li>
-     *   <li>{@code UNKNOWN} — the command was not recognised.</li>
-     * </ul>
-     */
-    public enum Result { HANDLED, QUIT, UNKNOWN }
-
     private final ClientController controller;
 
     public CommandParser(ClientController controller) {
@@ -26,24 +14,13 @@ public class CommandParser {
     }
 
     /**
-     * Parses one command line and executes the matching action through the
-     * shared {@link ClientController} façade — the same methods the GUI buttons
-     * call, so the message construction lives in one place.
-     *
-     * Supported commands:
-     * <pre>
-     *   ready
-     *   unready
-     *   players {@code <n>}           (2..5)
-     *   place {@code <tileId>}        e.g. place A
-     *   pick {@code <cardId>} upper|lower
-     *   build {@code <cardId>} upper|lower
-     *   quit
-     * </pre>
+     * Parses and runs one command line via the shared {@link ClientController}.
+     * Returns {@code true} when the user asked to quit; {@code onUnknown} runs
+     * when the command is not recognised.
      */
-    public Result parse(String input) {
+    public boolean parse(String input, Runnable onUnknown) {
         if (input == null || input.isBlank()) {
-            return Result.UNKNOWN;
+            return false;
         }
 
         String[] parts = input.trim().split("\\s+");
@@ -53,23 +30,23 @@ public class CommandParser {
             case "ready":
                 if (parts.length != 1) {
                     System.out.println("Usage: ready");
-                    return Result.HANDLED;
+                    return false;
                 }
                 controller.setReady(true);
-                return Result.HANDLED;
+                return false;
 
             case "unready":
                 if (parts.length != 1) {
                     System.out.println("Usage: unready");
-                    return Result.HANDLED;
+                    return false;
                 }
                 controller.setReady(false);
-                return Result.HANDLED;
+                return false;
 
             case "players":
                 if (parts.length != 2) {
                     System.out.println("Usage: players <" + MIN_PLAYERS + "-" + MAX_PLAYERS + ">");
-                    return Result.HANDLED;
+                    return false;
                 }
 
                 try {
@@ -77,80 +54,81 @@ public class CommandParser {
                     if (n < MIN_PLAYERS || n > MAX_PLAYERS) {
                         System.out.println("[ERROR] Player count must be between "
                                 + MIN_PLAYERS + " and " + MAX_PLAYERS + ".");
-                        return Result.HANDLED;
+                        return false;
                     }
                     controller.setPlayersCount(n);
                 } catch (NumberFormatException e) {
                     System.out.println("[ERROR] Invalid number.");
                 }
-                return Result.HANDLED;
+                return false;
 
             case "place":
                 if (parts.length != 2 || parts[1].length() != 1) {
                     System.out.println("Usage: place <letter>   e.g. place A");
-                    return Result.HANDLED;
+                    return false;
                 }
                 controller.placeTotem(parts[1].toUpperCase().charAt(0));
-                return Result.HANDLED;
+                return false;
 
             case "pick":
                 if (parts.length != 3) {
                     System.out.println("Usage: pick <cardId> upper|lower");
-                    return Result.HANDLED;
+                    return false;
                 }
                 if (!isValidRow(parts[2])) {
                     System.out.println("[ERROR] Row must be 'upper' or 'lower'.");
-                    return Result.HANDLED;
+                    return false;
                 }
                 controller.pickCharacterCard(parts[1], isUpperRow(parts[2]));
-                return Result.HANDLED;
+                return false;
 
             case "build":
                 if (parts.length != 3) {
                     System.out.println("Usage: build <cardId> upper|lower");
-                    return Result.HANDLED;
+                    return false;
                 }
                 if (!isValidRow(parts[2])) {
                     System.out.println("[ERROR] Row must be 'upper' or 'lower'.");
-                    return Result.HANDLED;
+                    return false;
                 }
                 controller.pickBuildingCard(parts[1], isUpperRow(parts[2]));
-                return Result.HANDLED;
+                return false;
 
             case "skip":
                 if (parts.length != 1) {
                     System.out.println("Usage: skip");
-                    return Result.HANDLED;
+                    return false;
                 }
                 controller.skipRound();
-                return Result.HANDLED;
+                return false;
 
             case "skipextra":
                 if (parts.length != 1) {
                     System.out.println("Usage: skipextra");
-                    return Result.HANDLED;
+                    return false;
                 }
                 controller.skipExtraPick();
-                return Result.HANDLED;
+                return false;
 
             case "endgame":
                 if (parts.length != 1) {
                     System.out.println("Usage: endgame");
-                    return Result.HANDLED;
+                    return false;
                 }
                 controller.skipToEnd();
-                return Result.HANDLED;
+                return false;
 
             case "quit":
                 if (parts.length != 1) {
                     System.out.println("Usage: quit");
-                    return Result.HANDLED;
+                    return false;
                 }
-                return Result.QUIT;
+                return true;
 
             default:
                 System.out.println("Unknown command: " + cmd);
-                return Result.UNKNOWN;
+                onUnknown.run();
+                return false;
         }
     }
 

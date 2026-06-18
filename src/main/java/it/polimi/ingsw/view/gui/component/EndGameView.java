@@ -9,9 +9,13 @@ import it.polimi.ingsw.network.client.ClientModel;
 import it.polimi.ingsw.network.client.PlayerView;
 import it.polimi.ingsw.network.protocol.clientbound.EventResolvedMessage;
 import it.polimi.ingsw.view.EndGameHelper;
+import it.polimi.ingsw.view.card.BuildingEffect;
+import it.polimi.ingsw.view.card.BuildingScoring;
+import it.polimi.ingsw.view.card.CharacterType;
+import it.polimi.ingsw.view.card.EventType;
 import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
+import it.polimi.ingsw.view.gui.util.TotemPalette;
 import it.polimi.ingsw.view.gui.util.GuiAnimations;
-import it.polimi.ingsw.view.gui.util.GuiAudio;
 import it.polimi.ingsw.view.gui.util.GuiIcons;
 import javafx.animation.FadeTransition;
 import javafx.animation.ParallelTransition;
@@ -32,7 +36,6 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignL;
-import org.kordamp.ikonli.materialdesign2.MaterialDesignV;
 import javafx.util.Duration;
 
 import java.util.ArrayList;
@@ -45,12 +48,9 @@ import java.util.Set;
 public final class EndGameView {
     private static final String PRESTIGE_BADGE_PATH = "assets/icons/endgame_prestige_badge.png";
     private static final String FOOD_BADGE_PATH = "assets/icons/engame_food_badge_prova.png";
-    private static final String ICON_HUNTER = "assets/icons/summary/hunter.png";
     private static final String ICON_BUILDER = "assets/icons/summary/builder.png";
-    private static final String ICON_GATHERER = "assets/icons/summary/gatherer.png";
     private static final String ICON_ARTIST = "assets/icons/summary/artist.png";
     private static final String ICON_INVENTOR = "assets/icons/summary/inventor.png";
-    private static final String ICON_SHAMAN = "assets/icons/summary/shaman.png";
     private static final double PRESTIGE_BADGE_SIZE = 48;
     private static final double FOOD_BADGE_SIZE = 48;
     private static final double BREAKDOWN_ICON_SIZE = 28;
@@ -164,7 +164,7 @@ public final class EndGameView {
         header.setMaxWidth(Double.MAX_VALUE);
 
         Label title = titleLabel();
-        Button audio = audioToggleButton();
+        Button audio = GuiViews.menuAudioToggleButton();
         audio.getStyleClass().add("endgame-audio-button");
 
         header.getChildren().addAll(title, audio);
@@ -245,7 +245,7 @@ public final class EndGameView {
         foodCell.setPrefWidth(120);
         foodCell.setAlignment(Pos.CENTER);
 
-        Button breakdownButton = new Button("Esplora punti");
+        Button breakdownButton = new Button("Score breakdown");
         breakdownButton.getStyleClass().add("endgame-breakdown-button");
         GuiAnimations.addHoverScale(breakdownButton);
         breakdownButton.setOnAction(event -> showBreakdown(nickname, score));
@@ -340,7 +340,7 @@ public final class EndGameView {
         panel.maxHeightProperty().bind(breakdownLayer.heightProperty().subtract(64));
         panel.setAlignment(Pos.TOP_CENTER);
 
-        Label title = new Label("Ripartizione punti");
+        Label title = new Label("Score breakdown");
         title.getStyleClass().add("endgame-breakdown-title");
 
         Label subtitle = new Label(nickname.toUpperCase());
@@ -470,15 +470,15 @@ public final class EndGameView {
         subtotal += sumPoints(eventRows);
 
         int artists = artistPoints(player);
-        rows.add(new ScoreBreakdownRow("Artisti", artists, "10 PP per coppia di artisti", ICON_ARTIST, -1));
+        rows.add(new ScoreBreakdownRow("Artists", artists, "10 PP per pair of Artists", ICON_ARTIST, -1));
         subtotal += artists;
 
         int inventors = inventorPoints(player);
-        rows.add(new ScoreBreakdownRow("Inventori", inventors, "Inventori x icone invenzione diverse", ICON_INVENTOR, -1));
+        rows.add(new ScoreBreakdownRow("Inventors", inventors, "Inventors × distinct invention icons", ICON_INVENTOR, -1));
         subtotal += inventors;
 
         int builders = builderCharacterPoints(player);
-        rows.add(new ScoreBreakdownRow("Costruttori", builders, "PP stampati sulle carte costruttore", ICON_BUILDER, -1));
+        rows.add(new ScoreBreakdownRow("Builders", builders, "Printed PP on Builder cards", ICON_BUILDER, -1));
         subtotal += builders;
 
         List<ScoreBreakdownRow> buildingRows = buildingBreakdownRows(player);
@@ -487,7 +487,7 @@ public final class EndGameView {
 
         int adjustment = finalScore - subtotal;
         if (adjustment != 0) {
-            rows.add(new ScoreBreakdownRow("Altro", adjustment, "Tessere turno o punti non dettagliati dagli eventi",
+            rows.add(new ScoreBreakdownRow("Other", adjustment, "Turn tiles or points not detailed by events",
                     PRESTIGE_BADGE_PATH, -1));
         }
         return rows;
@@ -500,10 +500,10 @@ public final class EndGameView {
             int points = effect != null ? effect.getPointsDelta() : 0;
             int food = effect != null ? effect.getFoodDelta() : 0;
             String title = nullSafe(event.getTitle());
-            String label = "Evento - " + title;
-            String detail = "Carta #" + event.getCardId();
+            String label = "Event - " + title;
+            String detail = "Card #" + event.getCardId();
             if (food != 0) {
-                detail += " | Cibo " + formatPoints(food);
+                detail += " | Food " + formatPoints(food);
             }
             rows.add(new ScoreBreakdownRow(label, points, detail, eventIconPath(event.getCardId()), -1));
         }
@@ -525,7 +525,7 @@ public final class EndGameView {
             JsonObject details = assetCatalog.findCardDetails(cardId).orElse(null);
             int printed = intDetail(details, "pointsEndOfMatch");
             int bonus = details != null ? endGameEffectPoints(player, details.get("effect")) : 0;
-            String detail = "Stampati " + printed + " PP";
+            String detail = "Printed " + printed + " PP";
             if (bonus != 0) {
                 detail += " | Bonus " + formatPoints(bonus) + " PP";
             }
@@ -574,20 +574,33 @@ public final class EndGameView {
     }
 
     private int endGameEffectPoints(PlayerView player, JsonElement effect) {
-        return switch (effectName(effect)) {
-            case "EndBuilderPP" -> builderCharacterPoints(player);
-            case "EndFullSetPP" -> fullSetCount(player) * 6;
-            case "EndPP" -> 25;
-            case "EndCharacterCountPP" -> characterTypeCount(player, effectTarget(effect)) * effectInt(effect, "pointsPerCard");
-            default -> 0;
+        return BuildingEffect.from(effectName(effect)).endGamePoints(effect, scoringFor(player));
+    }
+
+    private BuildingScoring scoringFor(PlayerView player) {
+        return new BuildingScoring() {
+            @Override
+            public int builderCharacterPoints() {
+                return EndGameView.this.builderCharacterPoints(player);
+            }
+
+            @Override
+            public int fullSetCount() {
+                return EndGameView.this.fullSetCount(player);
+            }
+
+            @Override
+            public int characterTypeCount(String characterType) {
+                return EndGameView.this.characterTypeCount(player, characterType);
+            }
         };
     }
 
     private int fullSetCount(PlayerView player) {
         if (player == null) return 0;
         int fullSets = Integer.MAX_VALUE;
-        for (String type : List.of("hunter", "builder", "gatherer", "artist", "inventor", "shaman")) {
-            fullSets = Math.min(fullSets, characterTypeCount(player, type));
+        for (CharacterType type : CharacterType.playable()) {
+            fullSets = Math.min(fullSets, characterTypeCount(player, type.token()));
         }
         return fullSets == Integer.MAX_VALUE ? 0 : fullSets;
     }
@@ -606,62 +619,17 @@ public final class EndGameView {
         String type = assetCatalog.findCardDetails(cardId)
                 .map(details -> stringDetail(details, "type"))
                 .orElse("");
-        return switch (type) {
-            case "hunt" -> ICON_HUNTER;
-            case "sustenance" -> ICON_GATHERER;
-            case "shamanicRitual" -> ICON_SHAMAN;
-            case "cavePaintings" -> ICON_ARTIST;
-            default -> PRESTIGE_BADGE_PATH;
-        };
+        return EventType.from(type).iconPath();
     }
 
     private String buildingIconPath(JsonObject details) {
-        if (details == null) return ICON_BUILDER;
-        String effect = effectName(details.get("effect"));
-        if ("EndCharacterCountPP".equals(effect)) {
-            return characterTypeIcon(effectTarget(details.get("effect")));
-        }
-        return switch (effect) {
-            case "EndBuilderPP" -> ICON_BUILDER;
-            case "EndFullSetPP" -> ICON_INVENTOR;
-            case "EndPP" -> PRESTIGE_BADGE_PATH;
-            default -> ICON_BUILDER;
-        };
-    }
-
-    private String characterTypeIcon(String type) {
-        return switch (type) {
-            case "hunter" -> ICON_HUNTER;
-            case "builder" -> ICON_BUILDER;
-            case "gatherer" -> ICON_GATHERER;
-            case "artist" -> ICON_ARTIST;
-            case "inventor" -> ICON_INVENTOR;
-            case "shaman" -> ICON_SHAMAN;
-            default -> ICON_BUILDER;
-        };
+        JsonElement effect = details != null ? details.get("effect") : null;
+        return BuildingEffect.from(effectName(effect)).iconPath(effect);
     }
 
     private String buildingLabel(int cardId, JsonObject details) {
-        String effect = details != null ? effectName(details.get("effect")) : "";
-        return switch (effect) {
-            case "EndBuilderPP" -> "Edificio costruttori #" + cardId;
-            case "EndFullSetPP" -> "Edificio set completo #" + cardId;
-            case "EndPP" -> "Edificio prestigio #" + cardId;
-            case "EndCharacterCountPP" -> "Edificio " + characterTypeLabel(effectTarget(details.get("effect"))) + " #" + cardId;
-            default -> "Edificio #" + cardId;
-        };
-    }
-
-    private String characterTypeLabel(String type) {
-        return switch (type) {
-            case "hunter" -> "cacciatori";
-            case "builder" -> "costruttori";
-            case "gatherer" -> "raccoglitori";
-            case "artist" -> "artisti";
-            case "inventor" -> "inventori";
-            case "shaman" -> "sciamani";
-            default -> "personaggi";
-        };
+        JsonElement effect = details != null ? details.get("effect") : null;
+        return BuildingEffect.from(effectName(effect)).label(effect, cardId);
     }
 
     private String formatPoints(int points) {
@@ -670,7 +638,7 @@ public final class EndGameView {
     }
 
     private String nullSafe(String text) {
-        return text == null || text.isBlank() ? "Evento" : text;
+        return text == null || text.isBlank() ? "Event" : text;
     }
 
     private String stringDetail(JsonObject object, String key) {
@@ -694,18 +662,9 @@ public final class EndGameView {
         return stringDetail(object, "name");
     }
 
-    private String effectTarget(JsonElement effect) {
-        if (effect == null || effect.isJsonNull() || !effect.isJsonObject()) return "";
-        return stringDetail(effect.getAsJsonObject(), "targetType");
-    }
-
-    private int effectInt(JsonElement effect, String key) {
-        if (effect == null || effect.isJsonNull() || !effect.isJsonObject()) return 0;
-        return intDetail(effect.getAsJsonObject(), key);
-    }
 
     private Button disconnectButton() {
-        Button quit = new Button("Esci");
+        Button quit = new Button("Quit");
         quit.getStyleClass().addAll("secondary-button", "endgame-quit-button");
         GuiIcons.decorateButton(quit, MaterialDesignL.LOGOUT);
         GuiAnimations.addHoverScale(quit);
@@ -714,26 +673,6 @@ public final class EndGameView {
             Platform.exit();
         });
         return quit;
-    }
-
-    private Button audioToggleButton() {
-        Button button = new Button("Audio");
-        button.getStyleClass().addAll("secondary-button", "game-rules-button");
-        button.setAccessibleText("Toggle audio");
-        GuiIcons.decorateButton(button, audioIcon());
-        GuiAnimations.addHoverScale(button);
-        button.setOnAction(event -> {
-            boolean enabled = GuiAudio.toggleEnabled();
-            if (enabled) {
-                GuiAudio.playMenuMusic();
-            }
-            GuiIcons.decorateButton(button, audioIcon());
-        });
-        return button;
-    }
-
-    private MaterialDesignV audioIcon() {
-        return GuiAudio.isEnabled() ? MaterialDesignV.VOLUME_HIGH : MaterialDesignV.VOLUME_OFF;
     }
 
     private int foodOf(String nickname) {
@@ -750,13 +689,7 @@ public final class EndGameView {
     }
 
     private String totemColorHex(TotemColor color) {
-        return switch (color == null ? TotemColor.WHITE : color) {
-            case RED    -> "#e05a46";
-            case BLUE   -> "#5b9fd4";
-            case PURPLE -> "#a070cc";
-            case YELLOW -> "#e8be5a";
-            case WHITE  -> "#f3ebdc";
-        };
+        return TotemPalette.textHex(color);
     }
 
     private void playIntroOnce() {
@@ -789,9 +722,7 @@ public final class EndGameView {
     }
 
     private void setFixedSize(Region region, double width, double height) {
-        region.setMinSize(width, height);
-        region.setPrefSize(width, height);
-        region.setMaxSize(width, height);
+        GuiViews.setFixedSize(region, width, height);
     }
 
     private record ScoreBreakdownRow(String label, int points, String detail, String iconPath, int cardId) {}

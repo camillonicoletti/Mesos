@@ -8,13 +8,6 @@ import it.polimi.ingsw.view.View;
 import java.util.List;
 import java.util.function.Consumer;
 
-/**
- * Thin {@link View} for the JavaFX client. It launches the JavaFX application
- * and forwards the controller-driven View callbacks to the live
- * {@link GuiApplication} instance. The controller's dispatcher runs these on the
- * JavaFX thread, so forwarding is a direct call; before the application has
- * started the instance is {@code null} and events are harmlessly ignored.
- */
 public final class Gui implements View {
     private final ClientController controller;
     private final ClientModel model;

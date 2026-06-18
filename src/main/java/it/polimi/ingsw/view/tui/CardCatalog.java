@@ -9,11 +9,29 @@ import java.util.Map;
 
 public final class CardCatalog {
 
-    public enum Kind { CHARACTER, BUILDING, EVENT, UNKNOWN }
+    /**
+     * Visitor over the card families. Specific cards forward to their typed
+     * {@code visitXxx} method; the defaults cascade to {@link #visitCard} so a
+     * visitor only overrides the cases it cares about.
+     */
+    public interface CardVisitor<R> {
+        default R visitCharacter(CardInfo card) {
+            return visitCard(card);
+        }
 
-    public static final class CardInfo {
+        default R visitBuilding(CardInfo card) {
+            return visitCard(card);
+        }
+
+        default R visitEvent(CardInfo card) {
+            return visitCard(card);
+        }
+
+        R visitCard(CardInfo card);
+    }
+
+    public abstract static class CardInfo {
         public final int id;
-        public final Kind kind;
         public final String era;       // "I" / "II" / "III"
         public final String typeName;  // "Hunter", "Builder", "Bldg", "Event", ...
         public final String detail;    // short qualifier, e.g. "+", "[9]", "2★", "+3 -1c", "FullSet"
@@ -28,34 +46,11 @@ public final class CardCatalog {
         public final int eventRequired;
         public final int eventPenalty;
 
-        CardInfo(int id, Kind kind, String era, String typeName, String detail,
-                 int foodCost, int pointsEnd, String eventTag) {
-            this(id, kind, era, typeName, detail, foodCost, pointsEnd,
-                    "", "", 0, eventTag, 0, 0, 0, 0);
-        }
-
-        CardInfo(int id, Kind kind, String era, String typeName, String detail,
-                 int foodCost, int pointsEnd, String eventTag, int eventFood, int eventPoints) {
-            this(id, kind, era, typeName, detail, foodCost, pointsEnd,
-                    "", "", 0, eventTag, eventFood, eventPoints, 0, 0);
-        }
-
-        CardInfo(int id, Kind kind, String era, String typeName, String detail,
-                 int foodCost, int pointsEnd,
-                 String buildingEffectName, String buildingEffectTarget, int buildingEffectPointsPerCard,
-                 String eventTag) {
-            this(id, kind, era, typeName, detail, foodCost, pointsEnd,
-                    buildingEffectName, buildingEffectTarget, buildingEffectPointsPerCard,
-                    eventTag, 0, 0, 0, 0);
-        }
-
-        CardInfo(int id, Kind kind, String era, String typeName, String detail,
-                 int foodCost, int pointsEnd,
-                 String buildingEffectName, String buildingEffectTarget, int buildingEffectPointsPerCard,
-                 String eventTag,
-                 int eventFood, int eventPoints, int eventRequired, int eventPenalty) {
+        protected CardInfo(int id, String era, String typeName, String detail,
+                           int foodCost, int pointsEnd,
+                           String buildingEffectName, String buildingEffectTarget, int buildingEffectPointsPerCard,
+                           String eventTag, int eventFood, int eventPoints, int eventRequired, int eventPenalty) {
             this.id = id;
-            this.kind = kind;
             this.era = era;
             this.typeName = typeName;
             this.detail = detail;
@@ -70,6 +65,54 @@ public final class CardCatalog {
             this.eventRequired = eventRequired;
             this.eventPenalty = eventPenalty;
         }
+
+        public abstract <R> R accept(CardVisitor<R> visitor);
+    }
+
+    public static final class CharacterCardInfo extends CardInfo {
+        CharacterCardInfo(int id, String era, String typeName, String detail) {
+            super(id, era, typeName, detail, 0, 0, "", "", 0, "", 0, 0, 0, 0);
+        }
+
+        @Override
+        public <R> R accept(CardVisitor<R> visitor) {
+            return visitor.visitCharacter(this);
+        }
+    }
+
+    public static final class BuildingCardInfo extends CardInfo {
+        BuildingCardInfo(int id, String era, String typeName, String detail, int foodCost, int pointsEnd,
+                         String effectName, String effectTarget, int pointsPerCard) {
+            super(id, era, typeName, detail, foodCost, pointsEnd, effectName, effectTarget, pointsPerCard, "", 0, 0, 0, 0);
+        }
+
+        @Override
+        public <R> R accept(CardVisitor<R> visitor) {
+            return visitor.visitBuilding(this);
+        }
+    }
+
+    public static final class EventCardInfo extends CardInfo {
+        EventCardInfo(int id, String era, String typeName, String detail,
+                      String eventTag, int eventFood, int eventPoints, int eventRequired, int eventPenalty) {
+            super(id, era, typeName, detail, 0, 0, "", "", 0, eventTag, eventFood, eventPoints, eventRequired, eventPenalty);
+        }
+
+        @Override
+        public <R> R accept(CardVisitor<R> visitor) {
+            return visitor.visitEvent(this);
+        }
+    }
+
+    public static final class UnknownCardInfo extends CardInfo {
+        UnknownCardInfo(int id) {
+            super(id, "?", "?", "", 0, 0, "", "", 0, "", 0, 0, 0, 0);
+        }
+
+        @Override
+        public <R> R accept(CardVisitor<R> visitor) {
+            return visitor.visitCard(this);
+        }
     }
 
     private static final Map<Integer, CardInfo> CARDS = new HashMap<>();
@@ -82,13 +125,27 @@ public final class CardCatalog {
     }
 
     public static CardInfo get(int id) {
-        return CARDS.getOrDefault(id, new CardInfo(id, Kind.UNKNOWN, "?", "?", "", 0, 0, ""));
+        return CARDS.getOrDefault(id, new UnknownCardInfo(id));
     }
 
     public static String label(int id) {
         CardInfo c = get(id);
         return "#" + c.id + " " + c.era + " " + c.typeName
                 + (c.detail.isEmpty() ? "" : " " + c.detail);
+    }
+
+    public static boolean isBuilding(int id) {
+        return get(id).accept(new CardVisitor<Boolean>() {
+            @Override
+            public Boolean visitBuilding(CardInfo card) {
+                return true;
+            }
+
+            @Override
+            public Boolean visitCard(CardInfo card) {
+                return false;
+            }
+        });
     }
 
     // ── loading ──────────────────────────────────────────────────────────────
@@ -123,7 +180,7 @@ public final class CardCatalog {
                 }
                 default -> { typeName = type; detail = ""; }
             }
-            CARDS.put(id, new CardInfo(id, Kind.CHARACTER, era, typeName, detail, 0, 0, ""));
+            CARDS.put(id, new CharacterCardInfo(id, era, typeName, detail));
         }
     }
 
@@ -149,8 +206,8 @@ public final class CardCatalog {
                     pointsPerCard = fx.get("pointsPerCard").getAsInt();
                 }
             }
-            CARDS.put(id, new CardInfo(id, Kind.BUILDING, era, "Bldg",
-                    shortFx(fxName), cost, pp, fxName, targetType, pointsPerCard, ""));
+            CARDS.put(id, new BuildingCardInfo(id, era, "Bldg",
+                    shortFx(fxName), cost, pp, fxName, targetType, pointsPerCard));
         }
     }
 
@@ -176,8 +233,8 @@ public final class CardCatalog {
                 case "shamanicRitual" -> o.get("ppLoss").getAsInt();
                 default -> 0;
             };
-            CARDS.put(id, new CardInfo(id, Kind.EVENT, era, "Event", detail, 0, 0,
-                    "", "", 0, tag, eventFood, eventPoints, eventRequired, eventPenalty));
+            CARDS.put(id, new EventCardInfo(id, era, "Event", detail,
+                    tag, eventFood, eventPoints, eventRequired, eventPenalty));
         }
     }
 
