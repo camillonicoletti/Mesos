@@ -34,12 +34,6 @@ final class SocketAcceptLoop {
                                        LobbyManager lobby,
                                        MessageDispatcher dispatcher) {
         connection.setOnMessage(message -> dispatcher.dispatch(connection, message));
-        connection.setOnDisconnect(() -> {
-            if (connection.getNickname() != null) {
-                lobby.handleDisconnect(connection.getNickname());
-            } else {
-                lobby.unregisterPendingConnection(connection);
-            }
-        });
+        connection.setOnDisconnect(() -> lobby.handleConnectionClosed(connection));
     }
 }

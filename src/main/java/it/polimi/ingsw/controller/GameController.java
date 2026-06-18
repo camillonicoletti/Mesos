@@ -163,7 +163,7 @@ public class GameController implements Serializable {
         // resume only if we are still wrapping the interrupted state. The
         // wrapped state may already have advanced during onPlayerReconnected().
         if (wasSuspended && !isSuspended()) {
-            if (currentState instanceof SuspendedState) {
+            if (SuspendedState.wraps(currentState)) {
                 resumeSuspendedState();
             }
             notifyListeners(GameListener::onGameResumed);
@@ -445,7 +445,7 @@ public class GameController implements Serializable {
     public void markAllPlayersDisconnected() {
         getDisconnectionManager().markAllDisconnected(lobbyPlayers, game, disconnectedPlayers);
         updateSuspensionStatus();
-        if (isSuspended() && !(currentState instanceof SuspendedState)) {
+        if (isSuspended() && !SuspendedState.wraps(currentState)) {
             enterSuspendedState();
             notifyListeners(GameListener::onGameSuspended);
         }

@@ -141,7 +141,7 @@ public class SuspensionManager implements Serializable {
     }
 
     public SuspendedState enter(Game game, GameState currentState) {
-        if (currentState instanceof SuspendedState || game == null || game.isGameOver()) {
+        if (SuspendedState.wraps(currentState) || game == null || game.isGameOver()) {
             return null;
         }
 
@@ -150,7 +150,7 @@ public class SuspensionManager implements Serializable {
     }
 
     public GameState resume(GameState currentState) {
-        if (!(currentState instanceof SuspendedState) || suspendedStateReturn == null) {
+        if (!SuspendedState.wraps(currentState) || suspendedStateReturn == null) {
             return null;
         }
 

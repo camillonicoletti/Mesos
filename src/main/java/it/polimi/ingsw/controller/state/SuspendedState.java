@@ -29,6 +29,17 @@ public class SuspendedState extends AbstractGameState {
         return suspendedState;
     }
 
+    public static boolean wraps(GameState state) {
+        return state instanceof SuspendedState;
+    }
+
+    public static GameState unwrap(GameState state) {
+        if (state instanceof SuspendedState suspendedState) {
+            return suspendedState.getSuspendedState();
+        }
+        return state;
+    }
+
     @Override
     public void handleAction(GameController ctx, String playerNickname, GameAction action) {
         throw new IllegalStateException("Game is suspended while waiting for another player to reconnect");

@@ -88,11 +88,7 @@ public class RMIServer extends UnicastRemoteObject implements RemoteServer {
         }
 
         connection.close();
-        if (connection.getNickname() != null) {
-            lobbyManager.handleDisconnect(connection.getNickname());
-        } else {
-            lobbyManager.unregisterPendingConnection(connection);
-        }
+        lobbyManager.handleConnectionClosed(connection);
     }
 
     @Override
@@ -123,11 +119,7 @@ public class RMIServer extends UnicastRemoteObject implements RemoteServer {
             synchronized (RMIServer.this) {
                 connections.remove(client);
             }
-            if (created.getNickname() != null) {
-                lobbyManager.handleDisconnect(created.getNickname());
-            } else {
-                lobbyManager.unregisterPendingConnection(created);
-            }
+            lobbyManager.handleConnectionClosed(created);
         });
 
         System.out.println("New RMI connection: " + client);

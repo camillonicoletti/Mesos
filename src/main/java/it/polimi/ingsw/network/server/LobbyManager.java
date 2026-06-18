@@ -19,8 +19,10 @@ import it.polimi.ingsw.network.transport.ServerSideConnection;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -47,7 +49,7 @@ import it.polimi.ingsw.network.protocol.clientbound.LeaderboardMessage;
  * also covered by the same lock without reentrancy across different monitors.
  *
  * <p>The internal collections ({@code connections}, {@code views},
- * {@code pendingConnections}) are plain non-concurrent maps/lists on purpose:
+ * {@code pendingConnections}) are plain non-concurrent collections on purpose:
  * they are only ever touched under this lock. Per-connection outbound writes
  * ({@code connection.send(...)}) are additionally synchronized inside the
  * connection object, so two threads writing to the same client cannot
@@ -66,7 +68,7 @@ public class LobbyManager {
     private final GameController gameController;
     private final Map<String, ServerSideConnection> connections = new HashMap<>();
     private final Map<String, VirtualView> views = new HashMap<>();
-    private final List<ServerSideConnection> pendingConnections = new ArrayList<>();
+    private final Set<ServerSideConnection> pendingConnections = new LinkedHashSet<>();
     private final ScheduledExecutorService suspensionTimeoutExecutor;
     private final LeaderboardService leaderboardService;
     /**
@@ -300,6 +302,20 @@ public class LobbyManager {
         if (gameController.getGame() == null) {
             broadcastLobbyUpdate();
         }
+    }
+
+    public synchronized void handleConnectionClosed(ServerSideConnection connection) {
+        if (connection == null) {
+            return;
+        }
+
+        String nickname = connection.getNickname();
+        if (nickname == null) {
+            unregisterPendingConnection(connection);
+            return;
+        }
+
+        handleDisconnect(nickname);
     }
 
     /**

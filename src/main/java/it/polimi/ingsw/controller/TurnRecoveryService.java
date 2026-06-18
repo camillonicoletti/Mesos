@@ -34,9 +34,6 @@ public class TurnRecoveryService implements Serializable {
     }
 
     public GameState unwrapSuspendedState(GameState state) {
-        if (state instanceof SuspendedState suspendedState) {
-            return suspendedState.getSuspendedState();
-        }
-        return state;
+        return SuspendedState.unwrap(state);
     }
 }
