@@ -3,7 +3,9 @@ package it.polimi.ingsw.network.rmi;
 import it.polimi.ingsw.controller.action.GameAction;
 import it.polimi.ingsw.controller.action.SkipExtraPickAction;
 import it.polimi.ingsw.model.enums.TotemColor;
+import it.polimi.ingsw.network.protocol.clientbound.DummyServerMessage;
 import it.polimi.ingsw.network.protocol.clientbound.LoginAckMessage;
+import it.polimi.ingsw.network.protocol.clientbound.PingMessage;
 import it.polimi.ingsw.network.protocol.clientbound.ServerMessage;
 import it.polimi.ingsw.network.protocol.serverbound.ReconnectMessage;
 import it.polimi.ingsw.network.protocol.serverbound.SetPlayersCountMessage;
@@ -212,6 +214,85 @@ class RMIServerTest {
         }
     }
 
+    @Test
+    void forceEndGameForwardsToLobbyManager() throws Exception {
+        RecordingLobbyManager lobby = new RecordingLobbyManager();
+        RMIServer server = new RMIServer(lobby);
+        try {
+            CollectingClient client = new CollectingClient();
+            server.register(client);
+
+            server.forceEndGame(client);
+
+            assertTrue(lobby.forceEndGameCalled.get(),
+                    "RMI forceEndGame must reach LobbyManager.handleForceEndGame");
+        } finally {
+            UnicastRemoteObject.unexportObject(server, true);
+        }
+    }
+
+    @Test
+    void pongCanReturnWhileAnotherRmiCallIsDispatching() throws Exception {
+        DeadlockProbeLobbyManager lobby = new DeadlockProbeLobbyManager();
+        AtomicReference<RMIServer> serverRef = new AtomicReference<>();
+        PongDuringCallbackClient client = new PongDuringCallbackClient(serverRef);
+        RMIServer server = new RMIServer(lobby);
+        serverRef.set(server);
+
+        CountDownLatch pingReturned = new CountDownLatch(1);
+        CountDownLatch actionReturned = new CountDownLatch(1);
+        Thread pingThread = null;
+        Thread actionThread = null;
+
+        try {
+            server.register(client);
+            ServerSideConnection connection = lobby.connection.get();
+            assertNotNull(connection, "Registration should create the RMI server-side connection");
+
+            pingThread = new Thread(() -> {
+                connection.send(new PingMessage());
+                pingReturned.countDown();
+            }, "rmi-deadlock-test-ping");
+            pingThread.start();
+
+            assertTrue(client.awaitPingCallback(1, TimeUnit.SECONDS),
+                    "The test must enter the client callback before starting the action");
+
+            actionThread = new Thread(() -> {
+                try {
+                    server.performAction(client, new SkipExtraPickAction());
+                } catch (Exception exception) {
+                    throw new AssertionError(exception);
+                } finally {
+                    actionReturned.countDown();
+                }
+            }, "rmi-deadlock-test-action");
+            actionThread.start();
+
+            assertTrue(lobby.awaitSendAttempt(1, TimeUnit.SECONDS),
+                    "The action should try to send a callback while the ping callback is still open");
+
+            client.releasePong();
+
+            assertTrue(pingReturned.await(1, TimeUnit.SECONDS),
+                    "Pong must not wait for the whole action dispatch to release the RMIServer monitor");
+            assertTrue(actionReturned.await(1, TimeUnit.SECONDS),
+                    "After pong returns, the action callback can acquire the connection send lock and complete");
+        } finally {
+            client.releasePong();
+            if (lobby.connection.get() != null) {
+                lobby.connection.get().close();
+            }
+            if (pingThread != null) {
+                pingThread.join(100);
+            }
+            if (actionThread != null) {
+                actionThread.join(100);
+            }
+            UnicastRemoteObject.unexportObject(server, true);
+        }
+    }
+
     // ---------- stubs ----------
 
     /**
@@ -225,6 +306,8 @@ class RMIServerTest {
         final AtomicReference<Integer> lastPlayersCount = new AtomicReference<>();
         final AtomicReference<Boolean> lastReadyFlag = new AtomicReference<>();
         final AtomicReference<GameAction> lastAction = new AtomicReference<>();
+        final java.util.concurrent.atomic.AtomicBoolean forceEndGameCalled =
+                new java.util.concurrent.atomic.AtomicBoolean(false);
 
         @Override
         public synchronized void handleReconnect(ServerSideConnection connection, ReconnectMessage message) {
@@ -244,6 +327,64 @@ class RMIServerTest {
         @Override
         public synchronized void handleGameAction(String nickname, GameAction action) {
             lastAction.set(action);
+        }
+
+        @Override
+        public synchronized void handleForceEndGame() {
+            forceEndGameCalled.set(true);
+        }
+    }
+
+    private static class DeadlockProbeLobbyManager extends LobbyManager {
+        final AtomicReference<ServerSideConnection> connection = new AtomicReference<>();
+        private final CountDownLatch sendAttempt = new CountDownLatch(1);
+
+        @Override
+        public synchronized void registerPendingConnection(ServerSideConnection connection) {
+            this.connection.set(connection);
+        }
+
+        @Override
+        public synchronized void handleGameAction(String nickname, GameAction action) {
+            sendAttempt.countDown();
+            connection.get().send(new DummyServerMessage("action callback"));
+        }
+
+        boolean awaitSendAttempt(long timeout, TimeUnit unit) throws InterruptedException {
+            return sendAttempt.await(timeout, unit);
+        }
+    }
+
+    private static class PongDuringCallbackClient implements RemoteClient {
+        private final AtomicReference<RMIServer> server;
+        private final CountDownLatch pingCallbackStarted = new CountDownLatch(1);
+        private final CountDownLatch releasePong = new CountDownLatch(1);
+
+        PongDuringCallbackClient(AtomicReference<RMIServer> server) {
+            this.server = server;
+        }
+
+        @Override
+        public void onServerMessage(ServerMessage message) {
+            if (!(message instanceof PingMessage)) {
+                return;
+            }
+
+            pingCallbackStarted.countDown();
+            try {
+                releasePong.await(1, TimeUnit.SECONDS);
+                server.get().pong(this);
+            } catch (Exception exception) {
+                throw new AssertionError(exception);
+            }
+        }
+
+        boolean awaitPingCallback(long timeout, TimeUnit unit) throws InterruptedException {
+            return pingCallbackStarted.await(timeout, unit);
+        }
+
+        void releasePong() {
+            releasePong.countDown();
         }
     }
 

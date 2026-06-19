@@ -38,6 +38,7 @@ public class ClientController {
     private final Map<Class<? extends ServerMessage>, Consumer<ServerMessage>> messageHandlers;
     private final Map<Class<? extends ServerMessage>, Consumer<ServerMessage>> viewNotifications;
     private Consumer<Runnable> dispatcher = Runnable::run;
+    private Consumer<Runnable> outboundDispatcher = Runnable::run;
     private View view;
     private volatile boolean voluntaryClose;
 
@@ -68,6 +69,15 @@ public class ClientController {
     }
 
     /**
+     * Sets the executor used for outgoing client messages. The GUI uses a
+     * background executor so RMI calls cannot block the JavaFX thread while the
+     * server is processing a long action such as event resolution.
+     */
+    public void setOutboundDispatcher(Consumer<Runnable> outboundDispatcher) {
+        this.outboundDispatcher = outboundDispatcher != null ? outboundDispatcher : Runnable::run;
+    }
+
+    /**
      * Registers the view the controller drives. After applying each incoming
      * server message to the model, the controller calls the matching
      * {@link View} method so the view re-renders the new state. This is the
@@ -79,14 +89,18 @@ public class ClientController {
 
 
     public void send(ClientMessage message) {
+        outboundDispatcher.accept(() -> sendNow(message));
+    }
+
+    private void sendNow(ClientMessage message) {
         if (!model.isConnected()) {
-            handleRecoverableConnectionLoss("Server unavailable. Reconnecting...");
+            dispatcher.accept(() -> handleRecoverableConnectionLoss("Server unavailable. Reconnecting..."));
             return;
         }
         try {
             connection.send(message);
         } catch (RuntimeException exception) {
-            handleRecoverableConnectionLoss("Connection to server lost. Reconnecting...");
+            dispatcher.accept(() -> handleRecoverableConnectionLoss("Connection to server lost. Reconnecting..."));
         }
     }
 

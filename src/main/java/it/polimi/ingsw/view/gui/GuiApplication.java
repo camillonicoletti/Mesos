@@ -47,6 +47,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public final class GuiApplication extends Application {
     private static final Duration TOAST_VISIBLE_DURATION = Duration.seconds(10);
@@ -57,6 +59,7 @@ public final class GuiApplication extends Application {
 
     private ClientController controller;
     private ClientModel model;
+    private ExecutorService outboundExecutor;
     private GuiAssetCatalog assetCatalog;
     private StackPane sceneRoot;
     private BorderPane root;
@@ -119,7 +122,13 @@ public final class GuiApplication extends Application {
 
         controller = launchContext.controller();
         model = launchContext.model();
+        outboundExecutor = Executors.newSingleThreadExecutor(runnable -> {
+            Thread thread = new Thread(runnable, "gui-client-outbound");
+            thread.setDaemon(true);
+            return thread;
+        });
         controller.setDispatcher(Platform::runLater);
+        controller.setOutboundDispatcher(outboundExecutor::execute);
         assetCatalog = GuiAssetCatalog.loadDefault();
         GuiAudio.preloadActionClick();
         root = new BorderPane();
@@ -156,6 +165,9 @@ public final class GuiApplication extends Application {
     public void stop() {
         if (timer != null) {
             timer.stop();
+        }
+        if (outboundExecutor != null) {
+            outboundExecutor.shutdownNow();
         }
         GuiAudio.shutdown();
     }

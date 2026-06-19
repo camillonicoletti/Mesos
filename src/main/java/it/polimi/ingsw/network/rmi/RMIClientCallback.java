@@ -22,7 +22,11 @@ public class RMIClientCallback extends UnicastRemoteObject implements RemoteClie
 
     @Override
     public void onServerMessage(ServerMessage message) {
-        owner.handleInbound(message);
+        try {
+            owner.handleInbound(message);
+        } catch (RuntimeException exception) {
+            System.err.println("Error while handling RMI server message: " + exception.getMessage());
+        }
     }
 
     public void shutdown() {

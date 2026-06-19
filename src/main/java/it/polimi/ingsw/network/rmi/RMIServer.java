@@ -3,8 +3,11 @@ package it.polimi.ingsw.network.rmi;
 import it.polimi.ingsw.controller.action.GameAction;
 import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.protocol.serverbound.GameActionMessage;
+import it.polimi.ingsw.network.protocol.serverbound.ForceEndGameMessage;
+import it.polimi.ingsw.network.protocol.serverbound.GetLeaderboardMessage;
 import it.polimi.ingsw.network.protocol.serverbound.LoginMessage;
 import it.polimi.ingsw.network.protocol.serverbound.PongMessage;
+import it.polimi.ingsw.network.protocol.serverbound.QuitMessage;
 import it.polimi.ingsw.network.protocol.serverbound.ReadyMessage;
 import it.polimi.ingsw.network.protocol.serverbound.ReconnectMessage;
 import it.polimi.ingsw.network.protocol.serverbound.ClientMessage;
@@ -14,8 +17,8 @@ import it.polimi.ingsw.network.server.MessageDispatcher;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * RMI server endpoint that adapts remote invocations to the existing
@@ -38,46 +41,61 @@ public class RMIServer extends UnicastRemoteObject implements RemoteServer {
         }
         this.lobbyManager = lobbyManager;
         this.dispatcher = new MessageDispatcher(lobbyManager);
-        this.connections = new HashMap<>();
+        this.connections = new ConcurrentHashMap<>();
     }
 
     @Override
-    public synchronized void register(RemoteClient client) throws RemoteException {
+    public void register(RemoteClient client) throws RemoteException {
         connectionFor(client);
     }
 
     @Override
-    public synchronized void login(RemoteClient client, String nickname, TotemColor color) throws RemoteException {
+    public void login(RemoteClient client, String nickname, TotemColor color) throws RemoteException {
         receive(client, new LoginMessage(nickname, color));
     }
 
     @Override
-    public synchronized void reconnect(RemoteClient client, String nickname) throws RemoteException {
+    public void reconnect(RemoteClient client, String nickname) throws RemoteException {
         receive(client, new ReconnectMessage(nickname));
     }
 
     @Override
-    public synchronized void setPlayersCount(RemoteClient client, int count) throws RemoteException {
+    public void setPlayersCount(RemoteClient client, int count) throws RemoteException {
         receive(client, new SetPlayersCountMessage(count));
     }
 
     @Override
-    public synchronized void setReady(RemoteClient client, boolean ready) throws RemoteException {
+    public void setReady(RemoteClient client, boolean ready) throws RemoteException {
         receive(client, new ReadyMessage(ready));
     }
 
     @Override
-    public synchronized void performAction(RemoteClient client, GameAction action) throws RemoteException {
+    public void performAction(RemoteClient client, GameAction action) throws RemoteException {
         receive(client, new GameActionMessage(action));
     }
 
     @Override
-    public synchronized void pong(RemoteClient client) throws RemoteException {
+    public void forceEndGame(RemoteClient client) throws RemoteException {
+        receive(client, new ForceEndGameMessage());
+    }
+
+    @Override
+    public void getLeaderboard(RemoteClient client, int playersCount, int limit) throws RemoteException {
+        receive(client, new GetLeaderboardMessage(playersCount, limit));
+    }
+
+    @Override
+    public void quit(RemoteClient client) throws RemoteException {
+        receive(client, new QuitMessage());
+    }
+
+    @Override
+    public void pong(RemoteClient client) throws RemoteException {
         receive(client, new PongMessage());
     }
 
     @Override
-    public synchronized void disconnect(RemoteClient client) {
+    public void disconnect(RemoteClient client) {
         if (client == null) {
             return;
         }
@@ -108,23 +126,19 @@ public class RMIServer extends UnicastRemoteObject implements RemoteServer {
     }
 
     private RMIServerConnection getOrCreateConnection(RemoteClient client) {
-        RMIServerConnection existing = connections.get(client);
-        if (existing != null) {
-            return existing;
-        }
+        return connections.computeIfAbsent(client, this::createConnection);
+    }
 
+    private RMIServerConnection createConnection(RemoteClient client) {
         RMIServerConnection created = new RMIServerConnection(client);
         created.setOnMessage(message -> dispatcher.dispatch(created, message));
         created.setOnDisconnect(() -> {
-            synchronized (RMIServer.this) {
-                connections.remove(client);
-            }
+            connections.remove(client, created);
             lobbyManager.handleConnectionClosed(created);
         });
 
         System.out.println("New RMI connection: " + client);
         lobbyManager.registerPendingConnection(created);
-        connections.put(client, created);
         return created;
     }
 

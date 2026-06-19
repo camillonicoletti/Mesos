@@ -29,6 +29,12 @@ public interface RemoteServer extends Remote {
 
     void performAction(RemoteClient client, GameAction action) throws RemoteException;
 
+    void forceEndGame(RemoteClient client) throws RemoteException;
+
+    void getLeaderboard(RemoteClient client, int playersCount, int limit) throws RemoteException;
+
+    void quit(RemoteClient client) throws RemoteException;
+
     void pong(RemoteClient client) throws RemoteException;
 
     /**

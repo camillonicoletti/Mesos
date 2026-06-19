@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -94,6 +95,28 @@ class ClientControllerTest {
 
         assertTrue(model.isReconnecting());
         assertEquals(1, view.connectionLostCount);
+    }
+
+    @Test
+    void outgoingMessagesUseConfiguredOutboundDispatcher() throws Exception {
+        ClientModel model = new ClientModel();
+        FakeConnection connection = new FakeConnection();
+        ClientController controller = new ClientController(model, connection);
+
+        CountDownLatch outboundUsed = new CountDownLatch(1);
+        AtomicReference<Runnable> queuedSend = new AtomicReference<>();
+        controller.setOutboundDispatcher(runnable -> {
+            queuedSend.set(runnable);
+            outboundUsed.countDown();
+        });
+
+        controller.setReady(true);
+
+        assertTrue(outboundUsed.await(1, TimeUnit.SECONDS));
+        assertEquals(null, connection.lastSent);
+
+        queuedSend.get().run();
+        assertInstanceOf(ReadyMessage.class, connection.lastSent);
     }
 
     private static final class FakeConnection implements ClientSideConnection {

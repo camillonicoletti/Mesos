@@ -44,6 +44,10 @@ import java.util.Set;
  * </ul>
  */
 final class RowController {
+    private static final long DEAL_STAGGER_MILLIS = 90;
+    private static final Duration DEAL_DURATION = Duration.millis(300);
+    private static final long DEAL_FINISH_BUFFER_MILLIS = 60;
+
     private final ClientModel model;
     private final CardMarketView cardMarketView;
     private final DeckView deckView;
@@ -445,9 +449,6 @@ final class RowController {
             if (i < lowerCards.size()) dealOrder.add(lowerCards.get(i));
         }
 
-        long staggerMs = 280;
-        Duration dealDur = Duration.millis(420);
-
         StackPane deckCard = deckView.getCardBackNode();
         Point2D deckCenter = computeDeckCenter(deckCard);
         double scale = board.getScaleX();
@@ -468,10 +469,10 @@ final class RowController {
         // Animate each card from deck to its final slot, staggered
         for (int i = 0; i < dealOrder.size(); i++) {
             final Node card = dealOrder.get(i);
-            PauseTransition wait = new PauseTransition(Duration.millis(i * staggerMs));
+            PauseTransition wait = new PauseTransition(Duration.millis(i * DEAL_STAGGER_MILLIS));
             wait.setOnFinished(ev -> {
                 card.setOpacity(1);
-                TranslateTransition slide = new TranslateTransition(dealDur, card);
+                TranslateTransition slide = new TranslateTransition(DEAL_DURATION, card);
                 slide.setToX(0);
                 slide.setToY(0);
                 slide.setInterpolator(Interpolator.EASE_OUT);
@@ -482,7 +483,9 @@ final class RowController {
 
         // Release the transition lock and sync the displayed-state tracker once
         // everything has landed, so a subsequent refresh() won't redraw the bands.
-        long totalMs = dealOrder.size() * staggerMs + (long) dealDur.toMillis() + 80;
+        long totalMs = dealOrder.size() * DEAL_STAGGER_MILLIS
+                + (long) DEAL_DURATION.toMillis()
+                + DEAL_FINISH_BUFFER_MILLIS;
         PauseTransition done = new PauseTransition(Duration.millis(totalMs));
         done.setOnFinished(ev -> {
             for (Node card : dealOrder) {

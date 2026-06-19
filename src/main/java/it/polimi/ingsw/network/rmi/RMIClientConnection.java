@@ -3,9 +3,12 @@ package it.polimi.ingsw.network.rmi;
 import it.polimi.ingsw.network.protocol.clientbound.ServerMessage;
 import it.polimi.ingsw.network.protocol.serverbound.ClientMessage;
 import it.polimi.ingsw.network.protocol.serverbound.DisconnectMessage;
+import it.polimi.ingsw.network.protocol.serverbound.ForceEndGameMessage;
 import it.polimi.ingsw.network.protocol.serverbound.GameActionMessage;
+import it.polimi.ingsw.network.protocol.serverbound.GetLeaderboardMessage;
 import it.polimi.ingsw.network.protocol.serverbound.LoginMessage;
 import it.polimi.ingsw.network.protocol.serverbound.PongMessage;
+import it.polimi.ingsw.network.protocol.serverbound.QuitMessage;
 import it.polimi.ingsw.network.protocol.serverbound.ReadyMessage;
 import it.polimi.ingsw.network.protocol.serverbound.ReconnectMessage;
 import it.polimi.ingsw.network.protocol.serverbound.SetPlayersCountMessage;
@@ -68,7 +71,7 @@ public class RMIClientConnection implements ClientSideConnection {
     }
 
     @Override
-    public synchronized void send(ClientMessage message) {
+    public void send(ClientMessage message) {
         if (message == null) {
             throw new IllegalArgumentException("Message cannot be null");
         }
@@ -105,6 +108,12 @@ public class RMIClientConnection implements ClientSideConnection {
                 message -> remoteServer.setReady(callback, message.isReady()));
         register(calls, GameActionMessage.class,
                 message -> remoteServer.performAction(callback, message.getAction()));
+        register(calls, ForceEndGameMessage.class,
+                message -> remoteServer.forceEndGame(callback));
+        register(calls, GetLeaderboardMessage.class,
+                message -> remoteServer.getLeaderboard(callback, message.playersCount(), message.limit()));
+        register(calls, QuitMessage.class,
+                message -> remoteServer.quit(callback));
         register(calls, PongMessage.class,
                 message -> remoteServer.pong(callback));
         register(calls, DisconnectMessage.class,
@@ -200,4 +209,3 @@ public class RMIClientConnection implements ClientSideConnection {
         void invoke(T message) throws RemoteException;
     }
 }
-
