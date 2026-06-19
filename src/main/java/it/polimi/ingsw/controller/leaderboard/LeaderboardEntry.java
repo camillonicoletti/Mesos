@@ -3,10 +3,7 @@ package it.polimi.ingsw.controller.leaderboard;
 import java.io.Serializable;
 import java.time.Instant;
 
-/**
- * Immutable row of a leaderboard query: a player's rank in matches with the
- * given {@code playersCount}, with their best score and when it was achieved.
- */
+// One row of a leaderboard query: a player's rank and score in matches with a given playersCount.
 public record LeaderboardEntry(
         int rank,
         String nickname,

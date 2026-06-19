@@ -9,29 +9,15 @@ import it.polimi.ingsw.model.enums.Era;
 
 import java.util.Map;
 
-/**
- * Game listener that persists the controller to disk on every event that
- * meaningfully changes game state.
- *
- * <p>This listener is the only bridge between the in-memory game and
- * {@link Persistence}: model and controller stay unaware of disk I/O,
- * preserving MVC separation. Events that are pure consequences of an already-
- * saved action (food/points changes, lobby join notifications) are skipped to
- * avoid redundant writes.
- *
- * <p>When the match ends ({@link #onGameEnded}), the on-disk file is cleared
- * instead of saved: the next server start should begin with a clean slate.
- */
+// Game listener that persists the controller to disk on every event that meaningfully changes game state.
+// It is the only bridge between the in-memory game and Persistence: model and controller stay unaware
+// of disk I/O, preserving MVC separation. Events that are consequences of an already-persisted action
+// (food/points changes, lobby join notifications) are skipped here to avoid redundant writes.
+// When the match ends (onGameEnded), the on-disk file is cleared instead of saved.
 public class PersistenceListener implements GameListener {
 
     private final GameController controller;
 
-    /**
-     * Creates a listener bound to the given controller. The controller is the
-     * one that will be serialized on every save trigger.
-     *
-     * @param controller the controller whose state must be persisted
-     */
     public PersistenceListener(GameController controller) {
         if (controller == null) {
             throw new IllegalArgumentException("Controller cannot be null");
@@ -53,7 +39,7 @@ public class PersistenceListener implements GameListener {
     @Override
     public void onStateChanged(GameState newState) {
         if (newState instanceof EndGameState) {
-            return;  // skip: clear() already called by onGameEnded
+            return;  // skip: EndGameState.onEnter() fires onGameEnded next, which clears the save file instead
         }
         persist();
     }
@@ -114,12 +100,12 @@ public class PersistenceListener implements GameListener {
 
     @Override
     public void onPlayerJoined(String nickname) {
-        // Covered by the subsequent onStateChanged when the lobby fills up.
+        // Saved post-handler by GameController.onMessageReceived, even when this join doesn't fill the lobby.
     }
 
     @Override
     public void onPlayersCountSet(int count) {
-        // Covered by the subsequent onStateChanged when the lobby fills to the chosen count.
+        // Saved post-handler by GameController.onMessageReceived.
     }
 
     @Override

@@ -8,11 +8,8 @@ import it.polimi.ingsw.model.board.LowerRowSlot;
 import it.polimi.ingsw.model.board.OfferTile;
 import it.polimi.ingsw.model.board.UpperRowSlot;
 
-/**
- * Internal helper that applies the immediate effects of an offer tile's slots
- * to the acting player (food gains) and accumulates the upper/lower row pick
- * budget the player is entitled to into a {@link RowPickBudget}.
- */
+// Internal helper that applies the immediate effects of an offer tile's slots to the acting player
+// (food gains) and accumulates the upper/lower row pick budget the player is entitled to.
 final class OfferTileSlotResolver {
 
     private OfferTileSlotResolver() {

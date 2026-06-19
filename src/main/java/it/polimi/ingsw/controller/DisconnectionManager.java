@@ -7,12 +7,8 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Owns the disconnect bookkeeping on behalf of the {@link GameController}:
- * marks players connected/disconnected, counts how many game players are
- * still reachable and exposes the only-connected-player lookup used by the
- * suspension timeout flow (FA4).
- */
+// Helper used by GameController to track which players are connected/disconnected, count how many
+// game players are still reachable, and look up the only connected player for the suspension flow.
 public class DisconnectionManager implements Serializable {
     private static final long serialVersionUID = 1L;
 

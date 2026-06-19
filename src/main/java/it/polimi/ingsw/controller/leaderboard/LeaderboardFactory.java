@@ -11,23 +11,14 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
-/**
- * Builds a {@link LeaderboardService} from {@code db.properties}, applying
- * the bundled MySQL schema on first connect. Falls back to a no-op service
- * whenever the configuration is missing, malformed, or the database cannot
- * be reached, so the rest of the application can run without a leaderboard.
- */
+// Builds a LeaderboardService from db.properties, applying the bundled MySQL schema on first connect.
+// Falls back to a no-op service whenever the config is missing, malformed, or the DB is unreachable.
 public final class LeaderboardFactory {
 
     private static final String DEFAULT_PROPERTIES_PATH = "db.properties";
 
     private LeaderboardFactory() {}
 
-    /**
-     * Builds a {@link LeaderboardService} from {@code db.properties} in the
-     * working directory. Falls back to a no-op implementation if the file is
-     * missing, malformed, or the database is unreachable.
-     */
     public static LeaderboardService createDefault() {
         return create(Path.of(DEFAULT_PROPERTIES_PATH));
     }

@@ -9,11 +9,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Internal helper of {@link ActionResolutionState}: orders players by the
- * offer tile they chose during totem placement and yields them in tile order
- * so the action phase resolves deterministically.
- */
+// Internal helper of ActionResolutionState: orders players by the offer tile they chose during totem
+// placement and yields them in tile order so the action phase resolves deterministically.
 final class ActionTurnQueue implements Serializable {
 
     private static final long serialVersionUID = 1L;

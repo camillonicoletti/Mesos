@@ -1,8 +1,5 @@
 package it.polimi.ingsw.controller.action;
 
-/**
- * Action used to set the expected number of players in the lobby.
- */
 public class SetPlayerCountAction implements GameAction {
 
     private static final long serialVersionUID = 1L;

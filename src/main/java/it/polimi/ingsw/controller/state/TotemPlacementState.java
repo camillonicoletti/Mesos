@@ -6,11 +6,9 @@ import it.polimi.ingsw.controller.action.PlaceTotemAction;
 import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.board.OfferTile;
 
-/**
- * Round-opening state in which players place their totems on the offer tiles
- * in turn-order. Drives the player rotation through {@link TotemPlacementTurnQueue}
- * and transitions to {@link ActionResolutionState} when every player has placed.
- */
+// Round-opening state in which players place their totems on the offer tiles in turn-order. Drives
+// the player rotation through TotemPlacementTurnQueue and transitions to ActionResolutionState when
+// every connected player has placed.
 public class TotemPlacementState extends AbstractGameState {
 
     private static final long serialVersionUID = 1L;

@@ -5,11 +5,9 @@ import it.polimi.ingsw.controller.action.GameAction;
 
 import java.io.Serial;
 
-/**
- * Wrapper state activated when too few players are connected (FA4). Holds a
- * reference to the interrupted state so that it can be resumed unchanged once
- * enough players reconnect. Rejects every gameplay action while suspended.
- */
+// Wrapper state activated when too few players are connected. Holds a reference to the interrupted
+// state so that it can be resumed unchanged once enough players reconnect. Rejects every gameplay
+// action while suspended.
 public class SuspendedState extends AbstractGameState {
 
     @Serial

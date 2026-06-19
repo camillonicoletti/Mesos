@@ -8,19 +8,14 @@ import it.polimi.ingsw.network.protocol.clientbound.EventResolvedMessage;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Observer of {@link it.polimi.ingsw.controller.GameController} and model events.
- * Concrete listeners (virtual views, persistence hook, GUI/TUI adapters)
- * implement only the callbacks they care about; methods declared {@code default}
- * are optional and no-op by default. The controller broadcasts events to every
- * registered listener and swallows individual listener exceptions so that one
- * misbehaving client cannot break the broadcast.
- */
+// Observer of GameController and model events. Concrete listeners (virtual views, persistence hook,
+// GUI/TUI adapters) implement only the callbacks they care about; default methods are optional no-ops.
+// The controller swallows exceptions from individual listeners so one misbehaving client can't break the broadcast.
 public interface GameListener {
     // Lobby
     void onPlayerJoined(String nickname);
     void onPlayersCountSet(int count);
-    // Disconnections and Recconetctions
+    // Disconnections and reconnections
     void onPlayerDisconnected(String nickname);
     void onPlayerReconnected(String nickname);
     void onGameSuspended();
@@ -28,7 +23,7 @@ public interface GameListener {
     // Start
     void onGameStarted();
     void onStateChanged(GameState newState);
-    // Totem Placing-
+    // Totem placement
     void onTotemPlaced(String nickname, char tileId);
     // Resources change
     void onFoodChanged(String nickname, int newAmount, int delta);

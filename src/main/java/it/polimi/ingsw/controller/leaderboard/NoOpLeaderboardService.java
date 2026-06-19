@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/** Used when the DB is not configured or unreachable. */
+// Used when the DB is not configured or unreachable.
 public final class NoOpLeaderboardService implements LeaderboardService {
 
     @Override

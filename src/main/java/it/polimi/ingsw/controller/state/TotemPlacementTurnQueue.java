@@ -10,11 +10,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Internal helper of {@link TotemPlacementState}: yields the next player who
- * still has to place their totem this round, following the turn-order tile,
- * and skips already-placed players on resume.
- */
+// Internal helper of TotemPlacementState: yields the next player who still has to place their totem
+// this round, following the turn-order tile, and skips already-placed players on resume.
 final class TotemPlacementTurnQueue implements Serializable {
 
     private static final long serialVersionUID = 1L;

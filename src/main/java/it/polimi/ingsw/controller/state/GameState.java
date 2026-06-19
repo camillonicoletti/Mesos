@@ -5,54 +5,19 @@ import it.polimi.ingsw.controller.action.GameAction;
 
 import java.io.Serializable;
 
-/**
- * Represents a generic state of the game flow.
- */
+// State pattern: each concrete state implements the controller behaviour for one phase of the game flow.
 public interface GameState extends Serializable {
 
-    /**
-     * Called when the controller enters this state.
-     *
-     * @param ctx the game controller context
-     */
     void onEnter(GameController ctx);
 
-    /**
-     * Handles an action received from a player while the controller is in this state.
-     *
-     * @param ctx the game controller context
-     * @param playerNickname the nickname of the player who sent the action
-     * @param action the received action
-     */
     void handleAction(GameController ctx, String playerNickname, GameAction action);
 
-    /**
-     * Handles a player disconnection while the controller is in this state.
-     *
-     * @param ctx the game controller context
-     * @param playerNickname the nickname of the disconnected player
-     */
     void onPlayerDisconnected(GameController ctx, String playerNickname);
 
-    /**
-     * Handles a player reconnection while the controller is in this state.
-     *
-     * @param ctx the game controller context
-     * @param playerNickname the nickname of the reconnected player
-     */
     void onPlayerReconnected(GameController ctx, String playerNickname);
 
-    /**
-     * Called when the controller restores this state after a suspension.
-     *
-     * @param ctx the game controller context
-     */
+    // Called instead of onEnter() when resuming from SuspendedState, to avoid re-entering the state from scratch.
     void onResume(GameController ctx);
 
-    /**
-     * Called when the controller exits this state.
-     *
-     * @param ctx the game controller context
-     */
     void onExit(GameController ctx);
 }

@@ -9,12 +9,9 @@ import java.io.Serial;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
-/**
- * Terminal state of the {@link GameController} state machine. Freezes final
- * scores, resolves the winner (consuming any forced winner set by a suspension
- * timeout) and notifies listeners with the end-of-game result. Persists the
- * match outcome to the leaderboard when one is configured.
- */
+// Terminal state of the GameController state machine. Freezes final scores, resolves the winner
+// (consuming any forced winner set by a suspension timeout) and notifies listeners with the
+// end-of-game result. Persists the match outcome to the leaderboard when one is configured.
 public class EndGameState extends AbstractGameState {
     @Serial
     private static final long serialVersionUID = 1L;
@@ -22,7 +19,7 @@ public class EndGameState extends AbstractGameState {
     @Override
     public void onEnter(GameController ctx) {
         Game game = ctx.getGame();
-        // end() calculates and freezes final scores, then sets gameEnded=true.
+        // end() sets gameEnded=true, then calculates and freezes final scores.
         // Must be called before getFinalScores()/getWinner() so they read the frozen values.
         game.end();
         // A suspension timeout can override normal score-based winner calculation.

@@ -16,7 +16,7 @@ import it.polimi.ingsw.model.card.effect.ExtraCardUpperRowEffect;
 
 import java.util.List;
 
-/** Resolves offer-tile actions in tile order, then handles extra upper-row picks granted by buildings. */
+// Resolves offer-tile actions in tile order, then handles extra upper-row picks granted by buildings.
 public class ActionResolutionState extends AbstractGameState {
 
     private static final long serialVersionUID = 1L;

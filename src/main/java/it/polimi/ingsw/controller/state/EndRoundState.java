@@ -8,13 +8,9 @@ import it.polimi.ingsw.model.Round;
 
 import java.io.Serial;
 
-/**
- * State applied between two rounds. Resets the board offer tiles, discards the
- * lower row, shifts upper rows down, refills the upper row from the tribute
- * deck and checks for an era transition. Ends the game when the last round
- * has just finished; otherwise advances the model to the next round and
- * transitions to {@link TotemPlacementState}.
- */
+// State applied between two rounds. Resets the board offer tiles, discards the lower row, shifts
+// upper rows down, refills the upper row and checks for an era transition. Ends the game when the
+// last round has just finished; otherwise advances to the next round and transitions to TotemPlacementState.
 public class EndRoundState extends AbstractGameState {
     @Serial
     private static final long serialVersionUID = 1L;

@@ -1,9 +1,6 @@
 package it.polimi.ingsw.controller.action;
 
-/**
- * Command: the player toggles their ready flag in the lobby's ready-check
- * phase. The match starts once every player is ready.
- */
+// Toggles the player's ready flag during the lobby's ready-check phase; the match starts once everyone is ready.
 public class ReadyAction implements GameAction {
 
     private static final long serialVersionUID = 1L;

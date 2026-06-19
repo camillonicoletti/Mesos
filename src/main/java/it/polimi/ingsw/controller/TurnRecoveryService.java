@@ -7,9 +7,7 @@ import it.polimi.ingsw.controller.state.TotemPlacementState;
 
 import java.io.Serializable;
 
-/**
- * Centralizes read-only turn lookup across normal and suspended states.
- */
+// Centralizes read-only turn lookup across normal and suspended states.
 public class TurnRecoveryService implements Serializable {
 
     private static final long serialVersionUID = 1L;

@@ -7,7 +7,7 @@ import it.polimi.ingsw.model.Player;
 
 import java.io.Serializable;
 
-/** Tracks suspension timing and forced-winner logic when too few players remain connected. */
+// Tracks suspension timing and forced-winner logic when too few players remain connected.
 public class SuspensionManager implements Serializable {
     private static final long serialVersionUID = 1L;
 

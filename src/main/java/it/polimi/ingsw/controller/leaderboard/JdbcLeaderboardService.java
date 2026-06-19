@@ -15,13 +15,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * JDBC-backed {@link LeaderboardService}. Persists one row per player per
- * match into {@code match_result} and computes ranked leaderboards filtered
- * by player count. Owns its {@link java.sql.Connection} and releases it
- * through {@link #close()}; all SQL errors are caught and converted into
- * empty results so the game stays runnable when the database is unreachable.
- */
+// JDBC-backed LeaderboardService: persists one row per player per match and computes ranked
+// leaderboards filtered by player count. Opens and closes its own Connection per call (no pooling).
+// All SQL errors are caught and converted into empty results so the game stays runnable when the DB is down.
 public final class JdbcLeaderboardService implements LeaderboardService, AutoCloseable {
 
     private static final String INSERT_SQL = """

@@ -7,11 +7,7 @@ import it.polimi.ingsw.controller.action.ReadyAction;
 import it.polimi.ingsw.controller.action.SetPlayerCountAction;
 import it.polimi.ingsw.model.Player;
 
-/**
- * State responsible for lobby management.
- * In this state players can join and the first player can choose
- * the number of participants.
- */
+// State responsible for lobby management: players can join, and the first player can choose the player count.
 public class LobbyState extends AbstractGameState {
 
     private static final long serialVersionUID = 1L;
