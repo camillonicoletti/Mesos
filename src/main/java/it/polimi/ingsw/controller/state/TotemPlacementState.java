@@ -24,13 +24,13 @@ public class TotemPlacementState extends AbstractGameState {
 
     @Override
     public void handleAction(GameController ctx, String playerNickname, GameAction action) {
-        if (!(action instanceof PlaceTotemAction)) {
+        if (!(action instanceof PlaceTotemAction placeTotem)) {
             rejectAction(action);
+            return;
         }
         if (ctx.isPlayerUnavailableThisRound(playerNickname)) {
             throw new IllegalStateException("This player cannot act in the current round");
         }
-        PlaceTotemAction placeTotem = (PlaceTotemAction) action;
 
         turnQueue.advanceToNextAvailablePlayer(ctx);
         String currentPlayerNickname = getCurrentPlayerNickname(ctx);

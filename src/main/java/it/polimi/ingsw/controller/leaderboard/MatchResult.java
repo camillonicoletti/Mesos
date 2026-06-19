@@ -7,6 +7,8 @@ import java.util.UUID;
  * Per-player outcome of a finished match, used as the unit of insertion into
  * the leaderboard store. One {@code MatchResult} per player per match.
  */
+
+//FOR TEST
 public record MatchResult(
         UUID matchId,
         String nickname,
