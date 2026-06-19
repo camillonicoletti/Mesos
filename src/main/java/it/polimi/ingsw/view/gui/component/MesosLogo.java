@@ -1,5 +1,6 @@
 package it.polimi.ingsw.view.gui.component;
 
+import it.polimi.ingsw.view.gui.asset.GuiAssetLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -16,7 +17,7 @@ final class MesosLogo {
     }
 
     static Node create(double fitWidth, String styleClass) {
-        try (InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(LOGO_PATH)) {
+        try (InputStream stream = GuiAssetLoader.open(LOGO_PATH).orElse(null)) {
             if (stream != null) {
                 ImageView logo = new ImageView(new Image(stream));
                 logo.setViewport(TITLE_VIEWPORT);

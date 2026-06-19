@@ -4,6 +4,7 @@ import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.client.ClientController;
 import it.polimi.ingsw.network.client.ClientModel;
 import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
+import it.polimi.ingsw.view.gui.asset.GuiAssetLoader;
 import it.polimi.ingsw.view.gui.util.GuiAnimations;
 import it.polimi.ingsw.view.gui.util.GuiIcons;
 import javafx.application.Platform;
@@ -279,8 +280,7 @@ public final class LobbyView {
     }
 
     private Node lobbyLogo() {
-        try (InputStream stream = Thread.currentThread().getContextClassLoader()
-                .getResourceAsStream(LOBBY_LOGO_PATH)) {
+        try (InputStream stream = GuiAssetLoader.open(LOBBY_LOGO_PATH).orElse(null)) {
             if (stream != null) {
                 ImageView logo = new ImageView(new Image(stream));
                 logo.setViewport(LOBBY_LOGO_VIEWPORT);

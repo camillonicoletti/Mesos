@@ -1,5 +1,6 @@
 package it.polimi.ingsw.view.gui.util;
 
+import it.polimi.ingsw.view.gui.asset.GuiAssetLoader;
 import javafx.scene.media.AudioClip;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
@@ -7,8 +8,8 @@ import javafx.scene.media.MediaPlayer;
 import java.net.URL;
 
 public final class GuiAudio {
-    private static final String MENU_MUSIC_PATH = "/assets/audio/menu-music.mp3";
-    private static final String ACTION_CLICK_PATH = "/assets/audio/action-click.wav";
+    private static final String MENU_MUSIC_PATH = "assets/audio/menu-music.mp3";
+    private static final String ACTION_CLICK_PATH = "assets/audio/action-click.wav";
     private static final double MUSIC_VOLUME = 0.32;
     private static final double EFFECT_VOLUME = 0.72;
 
@@ -85,7 +86,7 @@ public final class GuiAudio {
             return null;
         }
 
-        URL url = GuiAudio.class.getResource(MENU_MUSIC_PATH);
+        URL url = GuiAssetLoader.url(MENU_MUSIC_PATH).orElse(null);
         if (url == null) {
             menuMusicUnavailable = true;
             return null;
@@ -121,7 +122,7 @@ public final class GuiAudio {
             return null;
         }
 
-        URL url = GuiAudio.class.getResource(ACTION_CLICK_PATH);
+        URL url = GuiAssetLoader.url(ACTION_CLICK_PATH).orElse(null);
         if (url == null) {
             actionClickUnavailable = true;
             return null;

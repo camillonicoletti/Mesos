@@ -5,6 +5,7 @@ import it.polimi.ingsw.controller.leaderboard.LeaderboardEntry;
 import it.polimi.ingsw.network.client.ClientController;
 import it.polimi.ingsw.network.client.ClientModel;
 import it.polimi.ingsw.view.gui.asset.GuiAssetCatalog;
+import it.polimi.ingsw.view.gui.asset.GuiAssetLoader;
 import it.polimi.ingsw.view.gui.component.EndGameView;
 import it.polimi.ingsw.view.gui.component.GameBoardView;
 import it.polimi.ingsw.view.gui.component.LoginView;
@@ -394,10 +395,10 @@ public final class GuiApplication extends Application {
         for (int p = 1; p <= 8; p++) {
             try {
                 String path = "gui/assets/rules/page-" + p + ".png";
-                URL url = GuiApplication.class.getClassLoader().getResource(path);
-                if (url != null) {
+                String externalForm = GuiAssetLoader.url(path).map(URL::toExternalForm).orElse(null);
+                if (externalForm != null) {
                     ImageView imgView = new ImageView();
-                    Image img = new Image(url.toExternalForm(), true);
+                    Image img = new Image(externalForm, true);
                     imgView.setImage(img);
                     imgView.setPreserveRatio(true);
                     imgView.fitWidthProperty().bind(scrollPane.widthProperty().subtract(48));
@@ -442,7 +443,7 @@ public final class GuiApplication extends Application {
         Image bg = loadSuspensionBackground();
         if (bg != null) {
             overlay.setStyle("-fx-background-image: url('"
-                    + getClass().getResource("/assets/suspension/suspended_match_bg.png").toExternalForm()
+                    + GuiAssetLoader.url("assets/suspension/suspended_match_bg.png").map(URL::toExternalForm).orElse("")
                     + "'); -fx-background-size: cover; -fx-background-position: center;");
         } else {
             overlay.getStyleClass().add("suspension-overlay-fallback");
@@ -505,7 +506,7 @@ public final class GuiApplication extends Application {
 
     private Image loadSuspensionBackground() {
         try {
-            URL url = getClass().getResource("/assets/suspension/suspended_match_bg.png");
+            URL url = GuiAssetLoader.url("assets/suspension/suspended_match_bg.png").orElse(null);
             if (url == null) {
                 return null;
             }
@@ -579,7 +580,7 @@ public final class GuiApplication extends Application {
         Image bg = loadSuspensionBackground();
         if (bg != null) {
             overlay.setStyle("-fx-background-image: url('"
-                    + getClass().getResource("/assets/suspension/suspended_match_bg.png").toExternalForm()
+                    + GuiAssetLoader.url("assets/suspension/suspended_match_bg.png").map(URL::toExternalForm).orElse("")
                     + "'); -fx-background-size: cover; -fx-background-position: center;");
         } else {
             overlay.getStyleClass().add("suspension-overlay-fallback");
@@ -701,8 +702,8 @@ public final class GuiApplication extends Application {
     }
 
     private String cssResource() {
-        return GuiApplication.class.getClassLoader()
-                .getResource("gui/gui.css")
+        return GuiAssetLoader.url("gui/gui.css")
+                .orElseThrow(() -> new IllegalStateException("Missing GUI stylesheet"))
                 .toExternalForm();
     }
 

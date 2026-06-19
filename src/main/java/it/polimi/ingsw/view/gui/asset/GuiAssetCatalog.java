@@ -77,7 +77,7 @@ public final class GuiAssetCatalog {
     }
 
     public Optional<InputStream> openResource(String resourcePath) {
-        return Optional.ofNullable(classLoader().getResourceAsStream(resourcePath));
+        return GuiAssetLoader.open(resourcePath);
     }
 
     /**
@@ -94,10 +94,8 @@ public final class GuiAssetCatalog {
         if (cached != null) {
             return Optional.of(cached);
         }
-        try (InputStream stream = classLoader().getResourceAsStream(resourcePath)) {
-            if (stream == null) {
-                return Optional.empty();
-            }
+        try (InputStream stream = GuiAssetLoader.open(resourcePath).orElse(null)) {
+            if (stream == null) return Optional.empty();
             Image image = new Image(stream);
             imageCache.put(resourcePath, image);
             return Optional.of(image);
@@ -115,7 +113,7 @@ public final class GuiAssetCatalog {
     }
 
     private static JsonObject loadJson(String resourcePath) {
-        InputStream stream = classLoader().getResourceAsStream(resourcePath);
+        InputStream stream = GuiAssetLoader.open(resourcePath).orElse(null);
         if (stream == null) {
             throw new IllegalStateException("Missing GUI asset manifest: " + resourcePath);
         }
@@ -127,15 +125,11 @@ public final class GuiAssetCatalog {
     }
 
     private static boolean resourceExists(String resourcePath) {
-        try (InputStream stream = classLoader().getResourceAsStream(resourcePath)) {
+        try (InputStream stream = GuiAssetLoader.open(resourcePath).orElse(null)) {
             return stream != null;
         } catch (Exception exception) {
             return false;
         }
-    }
-
-    private static ClassLoader classLoader() {
-        return Thread.currentThread().getContextClassLoader();
     }
 
     private static String requiredString(JsonObject object, String key) {

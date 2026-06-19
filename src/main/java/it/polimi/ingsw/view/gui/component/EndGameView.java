@@ -269,8 +269,7 @@ public final class EndGameView {
         badge.getStyleClass().add("endgame-prestige-badge");
         setFixedSize(badge, PRESTIGE_BADGE_SIZE, PRESTIGE_BADGE_SIZE);
 
-        try (InputStream stream = Thread.currentThread().getContextClassLoader()
-                .getResourceAsStream(PRESTIGE_BADGE_PATH)) {
+        try (InputStream stream = assetCatalog.openResource(PRESTIGE_BADGE_PATH).orElse(null)) {
             if (stream != null) {
                 ImageView image = new ImageView(new Image(stream));
                 image.setPreserveRatio(true);
@@ -298,8 +297,7 @@ public final class EndGameView {
         badge.getStyleClass().add("endgame-food-badge");
         setFixedSize(badge, FOOD_BADGE_SIZE, FOOD_BADGE_SIZE);
 
-        try (InputStream stream = Thread.currentThread().getContextClassLoader()
-                .getResourceAsStream(FOOD_BADGE_PATH)) {
+        try (InputStream stream = assetCatalog.openResource(FOOD_BADGE_PATH).orElse(null)) {
             if (stream != null) {
                 ImageView image = new ImageView(new Image(stream));
                 image.setPreserveRatio(true);

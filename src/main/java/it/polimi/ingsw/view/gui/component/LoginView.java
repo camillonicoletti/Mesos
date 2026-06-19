@@ -3,6 +3,7 @@ package it.polimi.ingsw.view.gui.component;
 import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.client.ClientController;
 import it.polimi.ingsw.network.client.ClientModel;
+import it.polimi.ingsw.view.gui.asset.GuiAssetLoader;
 import it.polimi.ingsw.view.gui.util.GuiIcons;
 import it.polimi.ingsw.view.gui.util.TotemPalette;
 import javafx.geometry.Insets;
@@ -206,8 +207,7 @@ public final class LoginView {
     }
 
     private Node totemGraphic(TotemColor color) {
-        try (InputStream stream = Thread.currentThread().getContextClassLoader()
-                .getResourceAsStream(totemAssetPath(color))) {
+        try (InputStream stream = GuiAssetLoader.open(totemAssetPath(color)).orElse(null)) {
             if (stream != null) {
                 ImageView image = new ImageView(new Image(stream));
                 image.setPreserveRatio(true);

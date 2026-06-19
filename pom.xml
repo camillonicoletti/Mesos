@@ -164,6 +164,7 @@
                                 </filter>
                             </filters>
                             <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>it.polimi.ingsw.network.server.ServerLauncher</mainClass>
                                 </transformer>
@@ -199,6 +200,7 @@
                                 </filter>
                             </filters>
                             <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>it.polimi.ingsw.network.client.ClientLauncher</mainClass>
                                 </transformer>
