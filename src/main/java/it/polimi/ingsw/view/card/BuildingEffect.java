@@ -6,15 +6,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * The building effects plus an unknown fallback. Each instance owns its own rule
- * text, end-game scoring, summary icon and label; the base class provides the
- * defaults used by effects that do not override a given aspect. Callers dispatch
- * through polymorphic methods instead of switching on the effect name.
- */
+// Represents the possible effects of building cards.
+// Each effect explains how it is shown and scored in the view.
+// The JSON token is used to select the right effect.
+
 public abstract class BuildingEffect {
     private static final String PRESTIGE_BADGE_PATH = "assets/icons/endgame_prestige_badge.png";
 
+    //ruleLines returns the text lines that describe the building card effect shown to the player.
     public static final BuildingEffect FULL_SET_FOOD = new BuildingEffect("FullSetFood") {
         @Override public List<String> ruleLines(JsonElement effect) {
             return List.of(
@@ -161,6 +160,7 @@ public abstract class BuildingEffect {
     public static final BuildingEffect UNKNOWN = new BuildingEffect("") {
     };
 
+    //A map that links the effect name, called the token, to the corresponding BuildingEffect object.`
     private static final List<BuildingEffect> KNOWN = List.of(
             FULL_SET_FOOD, SUSTENANCE_FOOD_DISCOUNT, SHAMANIC_RITUAL_IMMUNITY, TOTEM_SLOT_FOOD_BONUS,
             INVENTOR_PAIR_FOOD, SHAMANIC_RITUAL_DOUBLE_PP, SHAMAN_3_EXTRA_STARS, HUNT_1_FOOD_1_PP,
@@ -204,6 +204,9 @@ public abstract class BuildingEffect {
         return BY_TOKEN.getOrDefault(token, UNKNOWN);
     }
 
+
+    //`target reads the target character type from the effect JSON, while amount reads a numeric value
+    // from the effect JSON using the given key.`
     protected static String target(JsonElement effect) {
         return effect != null && effect.isJsonObject()
                 ? CardJson.string(effect.getAsJsonObject(), "targetType")

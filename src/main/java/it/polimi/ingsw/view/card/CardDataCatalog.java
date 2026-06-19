@@ -15,6 +15,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+// Loads card data from the characters, buildings and events JSON files.
+// It stores the data so the view can show the cards.
+// It returns copies to avoid changing and reloading the original catalog.
+
 public final class CardDataCatalog {
     private static final String CHARACTERS_RESOURCE = "characters.json";
     private static final String BUILDINGS_RESOURCE = "buildings.json";
@@ -68,6 +72,8 @@ public final class CardDataCatalog {
         return details == null ? Optional.empty() : Optional.of(details.deepCopy());
     }
 
+    //immutableDeepCopy creates a protected copy of the map, so the original catalog data cannot be changed.
+    //deepCopyValues(Map<Integer, JsonObject> source)
     private static Map<Integer, JsonObject> loadResource(String resourcePath) {
         InputStream stream = CardDataCatalog.class.getClassLoader().getResourceAsStream(resourcePath);
         if (stream == null) {

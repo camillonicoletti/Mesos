@@ -6,11 +6,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * The six character families plus an unknown fallback. Each is a named instance
- * that owns its own labels, summary icon, rule text and tribe-tally behaviour, so
- * callers dispatch through polymorphic methods instead of switching on a token.
- */
+// Represents the 6 character card types.
+// Each type defines its icon, rule text and scoring data.
+// It helps the view describe and count character cards.
+
 public abstract class CharacterType {
     private static final int FOOD_DISCOUNT_PER_GATHERER = 3;
     private static final String ICON_DIR = "assets/icons/summary/";
@@ -20,6 +19,7 @@ public abstract class CharacterType {
         @Override public String plural() { return "Hunters"; }
         @Override public String iconPath() { return ICON_DIR + "hunter.png"; }
 
+        //ruleLines(JsonObject details) creates the descriptive text shown in the view to explain what the card does.`
         @Override public List<String> ruleLines(JsonObject details) {
             return CardJson.bool(details, "foodIcon")
                     ? List.of(
