@@ -115,12 +115,35 @@ Dopo la connessione, il client chiede quale interfaccia usare:
 2 - GUI
 ```
 
+## Risorse grafiche
+
+Le risorse grafiche non sono incluse nei JAR e devono essere presenti localmente nella cartella:
+
+```text
+src/main/resources/assets/
+```
+
 ## Leaderboard opzionale
 
 Per abilitare la leaderboard JDBC, copiare un file `db.properties` nella directory da cui viene avviato il server. Un esempio si trova in:
 
 ```text
 deliverables/final/dump/db.properties.example
+```
+
+Per preparare il database locale MySQL:
+
+```bash
+mysql -u root -p < deliverables/final/dump/setup.sql
+cp deliverables/final/dump/db.properties.example db.properties
+```
+
+Il file `setup.sql` crea il database `mesos`, l'utente `mesos` e assegna i permessi necessari. Il server crea automaticamente la tabella della leaderboard al primo avvio.
+
+Il server deve essere avviato dalla directory che contiene `db.properties`, ad esempio dal root del progetto:
+
+```bash
+java -jar deliverables/final/jar/mesos-server.jar --fresh
 ```
 
 Se `db.properties` non e presente o il database non e raggiungibile, il gioco resta eseguibile e la leaderboard viene disabilitata.
