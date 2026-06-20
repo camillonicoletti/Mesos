@@ -15,6 +15,18 @@ Regole complete, TUI, GUI JavaFX, Socket, RMI, server unico Socket+RMI, disconne
 - Java 23 o superiore.
 - Maven 3.9 o superiore solo se si vuole ricompilare il progetto.
 
+## Librerie utilizzate
+
+- **JavaFX**: interfaccia grafica.
+- **ControlsFX**: componenti GUI aggiuntivi.
+- **AtlantaFX**: tema/stile grafico.
+- **Ikonli**: icone per la GUI.
+- **Gson**: lettura dati JSON.
+- **MySQL Connector/J**: leaderboard JDBC opzionale.
+- **JUnit Jupiter**: test automatici.
+- **JaCoCo**: report di copertura.
+- **Maven Shade Plugin**: creazione JAR eseguibili.
+
 ## Build dei JAR
 
 Dal root del progetto:
