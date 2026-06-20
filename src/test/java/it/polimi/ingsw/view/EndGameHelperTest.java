@@ -9,18 +9,19 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit tests for EndGameHelper (view).
  *
- * <p>Verifies: leaderboard text formatting from final scoring results.
+ * Verifies leaderboard text formatting from final scoring results.
  */
 class EndGameHelperTest {
 
     @Test
     void forcedWinnerByTimeoutBeatsHigherScoringDisconnectedPlayer() {
-        // FA4 regression: the still-connected player declared as forced winner must be
-        // shown as the sole winner even if a disconnected player accumulated more PP.
+        // A server-declared forced winner (disconnection timeout) must be trusted
+        // as the sole winner even if a disconnected player has a higher raw score.
         ClientModel model = new ClientModel();
         Map<String, Integer> scores = new LinkedHashMap<>();
         scores.put("Alice", 10);
@@ -61,6 +62,6 @@ class EndGameHelperTest {
 
         List<String> winners = EndGameHelper.resolveWinners(model);
         assertEquals(2, winners.size());
-        assertEquals(true, winners.contains("Alice") && winners.contains("Bob"));
+        assertTrue(winners.contains("Alice") && winners.contains("Bob"));
     }
 }

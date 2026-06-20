@@ -45,7 +45,7 @@ public class BuildingEffectsTest {
         player.addCharacterCard(new InventorCard(5, Era.I, 2, InventorIcons.INVENTION_1));
         player.addCharacterCard(new ShamanCard(6, Era.I, 2, 2)); // completes set
 
-        assertEquals(5, player.getFood()); // +5 per set completato
+        assertEquals(5, player.getFood()); // 5 food for the one completed set
     }
 
     @Test
@@ -73,9 +73,9 @@ public class BuildingEffectsTest {
         player.addBuildingCard(new BuildingCard(1, Era.I, 0, new InventorPairFoodEffect(), 0));
 
         player.addCharacterCard(new InventorCard(1, Era.I, 2, InventorIcons.INVENTION_1));
-        player.addCharacterCard(new InventorCard(2, Era.I, 2, InventorIcons.INVENTION_1)); // coppia!
+        player.addCharacterCard(new InventorCard(2, Era.I, 2, InventorIcons.INVENTION_1)); // pair!
 
-        assertEquals(3, player.getFood()); // +3 per coppia
+        assertEquals(3, player.getFood()); // 3 food for the one completed pair
     }
 
     @Test
@@ -84,7 +84,7 @@ public class BuildingEffectsTest {
         player.addBuildingCard(new BuildingCard(1, Era.I, 0, new InventorPairFoodEffect(), 0));
 
         player.addCharacterCard(new InventorCard(1, Era.I, 2, InventorIcons.INVENTION_1));
-        player.addCharacterCard(new InventorCard(2, Era.I, 2, InventorIcons.INVENTION_2)); // icone diverse
+        player.addCharacterCard(new InventorCard(2, Era.I, 2, InventorIcons.INVENTION_2)); // different icons, no pair
 
         assertEquals(0, player.getFood());
     }
@@ -330,7 +330,7 @@ public class BuildingEffectsTest {
         new ShamanicRitualEventCard(1, Era.I, false, 4, 2).resolve(game);
 
         assertEquals(4, p1.getPrestigePoints());
-        assertEquals(0, p2.getPrestigePoints()); // immune, non perde PP
+        assertEquals(0, p2.getPrestigePoints()); // immune, loses no PP
     }
 
     // -------------------------------------------------------
@@ -361,7 +361,7 @@ public class BuildingEffectsTest {
         Game game = buildGame(List.of(player));
         game.calculateFinalScores();
 
-        // calculateBuilderPoints aggiunge 3, EndBuilderPPEffect aggiunge altri 3.
+        // calculateBuilderPoints adds 3, EndBuilderPPEffect adds another 3.
         assertEquals(6, game.getFinalScores().get(player));
     }
 
@@ -373,13 +373,14 @@ public class BuildingEffectsTest {
         player.addCharacterCard(new GathererCard(3, Era.I, 2));
         player.addCharacterCard(new HunterCard(4, Era.I, 2, false));
         player.addCharacterCard(new InventorCard(5, Era.I, 2, InventorIcons.INVENTION_1));
-        player.addCharacterCard(new ShamanCard(6, Era.I, 2, 2)); // 1 set completo
+        player.addCharacterCard(new ShamanCard(6, Era.I, 2, 2)); // 1 complete set
         player.addBuildingCard(new BuildingCard(7, Era.I, 0, new EndFullSetPPEffect(), 0));
 
         Game game = buildGame(List.of(player));
         game.calculateFinalScores();
 
-        assertTrue(game.getFinalScores().get(player) >= 6); // almeno 1 set × 6 PP
+        // 1 full set × 6 PP (effect) + 1 inventor × 1 distinct icon = 7
+        assertEquals(7, game.getFinalScores().get(player));
     }
 
     @Test
@@ -394,6 +395,7 @@ public class BuildingEffectsTest {
         Game game = buildGame(List.of(player));
         game.calculateFinalScores();
 
-        assertTrue(game.getFinalScores().get(player) >= 6); // at least 3×2 = 6 PP from the effect
+        // base artist-pair rule: 1 pair × 10 = 10, plus the effect: 3 artists × 2 PP = 6 → 16
+        assertEquals(16, game.getFinalScores().get(player));
     }
 }

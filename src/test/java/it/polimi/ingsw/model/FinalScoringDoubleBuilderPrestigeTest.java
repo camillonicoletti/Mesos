@@ -14,21 +14,11 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Bug-hunter: building with {@link EndBuilderPPEffect} (rulebook building #9)
- * must double the Builder end-of-match PP. The doubling is implemented by
- * adding a second copy of the builder PP via the building's EndGameEffect,
- * on top of the base sum computed by {@code calculateBuilderPoints}.
- *
- * <p>These tests pin down:
- * <ul>
- *   <li>Without the building: builder PP counted once.</li>
- *   <li>With one copy of the building: builder PP counted twice.</li>
- *   <li>With two copies: builder PP counted three times (additive effects).</li>
- *   <li>Final score is idempotent across repeated {@code calculateFinalScores} calls.</li>
- * </ul>
- *
- * <p>If the project intentionally wants to cap the doubling at "x2 even with
- * multiple copies", the third test will start failing and should be revisited.
+ * Final scoring tests for EndBuilderPPEffect (rulebook building id 107), which
+ * doubles the Builder end-of-match PP by adding a second copy via the
+ * building's EndGameEffect on top of the base sum from calculateBuilderPoints.
+ * Verifies that each extra copy of the building adds another full Builder-PP
+ * bonus, and that calculateFinalScores is idempotent across repeated calls.
  */
 class FinalScoringDoubleBuilderPrestigeTest {
 

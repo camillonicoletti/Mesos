@@ -10,15 +10,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Regression tests for the reset of the "last resolved event" snapshot
- * performed by {@link ClientModel#applyStateChanged(StateChangedMessage)}
- * when the new state is {@code EventResolutionState}.
- *
- * <p>Rationale: when the server enters a new event-resolution phase the
- * client must clear the previously shown event banner, otherwise the UI
- * would display the previous round's outcome on top of a fresh phase.
- * The reset must happen only for {@code EventResolutionState}: transitions
- * to other states must not wipe the cached event so the banner can keep
- * fading out across unrelated phase changes.
+ * performed by ClientModel.applyStateChanged(StateChangedMessage) when the
+ * new state is EventResolutionState. The reset must happen only for that
+ * state, so unrelated phase transitions don't wipe the cached event banner.
  */
 class ClientModelEventResetTest {
 

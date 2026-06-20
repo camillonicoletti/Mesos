@@ -10,9 +10,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Unit tests for the pure text/layout helpers in {@link TuiText}.
+ * Unit tests for the pure text/layout helpers in TuiText.
  *
- * <p>These guard the byte-for-byte rendering contract of the TUI: any
+ * These guard the byte-for-byte rendering contract of the TUI: any
  * regression in width measurement, padding or centering would silently shift
  * borders by one or more cells.
  */
@@ -186,7 +186,8 @@ class TuiTextTest {
 
     @Test
     void makeCardTopBorderHasExpectedShape() {
-        // "+--- #1 ---+" pattern with cardW dashes total around the label.
+        // Border is "+", dashes, " #1 ", dashes, "+", with the dash count on
+        // each side chosen so the whole label fits within cardW.
         String out = TuiText.makeCardTopBorder("#1", 8, CYN);
         assertTrue(out.startsWith(CYN + "+"));
         assertTrue(out.endsWith("+" + RST));

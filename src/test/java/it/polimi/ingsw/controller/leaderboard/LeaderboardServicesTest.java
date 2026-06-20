@@ -22,25 +22,19 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for the leaderboard package and its on-the-wire DTOs.
  *
- * <p>Covers three concerns:
- * <ul>
- *   <li>{@link NoOpLeaderboardService}: the graceful-degradation implementation
- *       returned whenever the database is not available. It must never throw
- *       and must return empty results so gameplay is never blocked by a
- *       leaderboard failure.</li>
- *   <li>{@link LeaderboardFactory} fallback paths: missing, empty, incomplete,
- *       or malformed {@code db.properties} must all yield a
- *       {@code NoOpLeaderboardService} rather than propagating exceptions.
- *       Configurations are written to a per-test {@code @TempDir} to keep the
- *       tests hermetic and independent from the working directory.</li>
- *   <li>Protocol DTOs ({@link it.polimi.ingsw.network.protocol.serverbound.GetLeaderboardMessage},
- *       {@link it.polimi.ingsw.network.protocol.clientbound.LeaderboardRankMessage},
- *       {@link it.polimi.ingsw.network.protocol.clientbound.LeaderboardMessage}):
- *       they cross the socket transport, so they must round-trip through Java
- *       serialization preserving every field.</li>
- * </ul>
+ * Covers three concerns: NoOpLeaderboardService, the graceful-degradation
+ * implementation returned whenever the database is not available (it must
+ * never throw and must return empty results so gameplay is never blocked by
+ * a leaderboard failure); LeaderboardFactory fallback paths, where missing,
+ * empty, incomplete, or malformed db.properties must all yield a
+ * NoOpLeaderboardService rather than propagating exceptions (configurations
+ * are written to a per-test @TempDir to keep the tests hermetic and
+ * independent from the working directory); and the protocol DTOs
+ * (GetLeaderboardMessage, LeaderboardRankMessage, LeaderboardMessage), which
+ * cross the socket transport and so must round-trip through Java
+ * serialization preserving every field.
  *
- * <p>No real MySQL instance is contacted: the "DB unreachable" path is
+ * No real MySQL instance is contacted: the "DB unreachable" path is
  * intentionally not exercised here to keep the suite deterministic and
  * independent from local network state.
  */

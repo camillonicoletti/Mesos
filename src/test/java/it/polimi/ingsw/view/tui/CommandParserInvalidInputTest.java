@@ -8,8 +8,8 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Bug hunter tests for malformed TUI commands: a rejected command must send
- * nothing to the server.
+ * Tests for malformed TUI commands: a rejected command must send nothing
+ * to the server.
  */
 class CommandParserInvalidInputTest {
 
@@ -23,7 +23,7 @@ class CommandParserInvalidInputTest {
         parser = new CommandParser(controller);
     }
 
-    /** Parses {@code input} and asserts that nothing was dispatched to the server. */
+    /** Parses input and asserts that nothing was dispatched to the server. */
     private void assertNothingSent(String input) {
         connection.sent.clear();
         parser.parse(input, () -> { });

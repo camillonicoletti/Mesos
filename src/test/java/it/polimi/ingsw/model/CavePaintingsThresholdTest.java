@@ -14,16 +14,12 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Bug-hunter: pins down the threshold behavior of the Cave Paintings event card.
- *
- * <p>The rulebook describes two thresholds (a losing threshold and a gaining
- * threshold) with a neutral band in between. The current model exposes a
- * single {@code minArtists} threshold so the resolution becomes dichotomic:
- * artists < minArtists ⇒ lose PP, otherwise ⇒ gain PP per artist.
- *
- * <p>These tests assert the dichotomic behaviour. If the project later moves
- * to the two-threshold rule, this test will start failing and must be
- * rewritten — the failure flags the regulation discrepancy explicitly.
+ * Threshold contract test for CavePaintingsEventCard: below minArtists the
+ * player loses ppPenalty PP, at or above it the player gains artists times
+ * ppPerArtist PP. Uses synthetic parameters (minArtists = 3, ppPenalty = 2,
+ * ppPerArtist = 4) to cover both sides of the boundary, and confirms that
+ * CavePaintingsFoodEffect (building id 108) grants 1 food per artist
+ * regardless of which side of the threshold the player falls on.
  */
 class CavePaintingsThresholdTest {
 
@@ -69,8 +65,7 @@ class CavePaintingsThresholdTest {
     void twoArtistsStillBelowThreshold_losesFlatPenalty() {
         Player p = makePlayer("Alice", TotemColor.RED, 2);
         resolveOn(p);
-        // Two thresholds rule would make this a "neutral" zone (no PP delta).
-        // The current single-threshold implementation still penalises here.
+        // 2 < minArtists (=3) ⇒ flat penalty.
         assertEquals(-PP_PENALTY, p.getPrestigePoints());
     }
 

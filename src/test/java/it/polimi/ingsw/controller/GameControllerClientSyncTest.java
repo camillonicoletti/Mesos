@@ -121,9 +121,8 @@ class GameControllerClientSyncTest {
     // ── Food notification after building purchase ─────────────────────────────
 
     /**
-     * After a player buys a building, {@code onFoodChanged} must be fired immediately
-     * (not deferred to the next snapshot).  Before the fix, 0 food-change events were
-     * emitted during a building purchase.
+     * After a player buys a building, onFoodChanged must be fired immediately
+     * so the client does not have to wait for the next full snapshot.
      */
     @Test
     void buyingBuildingFiresFoodChangedNotification() {
@@ -173,7 +172,7 @@ class GameControllerClientSyncTest {
 
     /**
      * When a player buys a building with cost 0 (full builder discount), no food
-     * changes so {@code onFoodChanged} must NOT fire for cost-0 purchases.
+     * changes so onFoodChanged must NOT fire for cost-0 purchases.
      * Food must stay unchanged in the model.
      */
     @Test
@@ -219,7 +218,7 @@ class GameControllerClientSyncTest {
 
     /**
      * When a player's totem lands on slot 1 (GainFoodSlotEffect, +1 food in a 2-player game),
-     * {@code onFoodChanged} must be fired immediately.
+     * onFoodChanged must be fired immediately.
      */
     @Test
     void totemOnGainFoodSlotFiresFoodChangedNotification() {
@@ -256,7 +255,7 @@ class GameControllerClientSyncTest {
 
     /**
      * When the last player's totem lands on slot 2 (PayFoodSlotEffect in a 2-player game),
-     * either {@code onFoodChanged} (food paid) or {@code onPointsChanged} (PP penalty)
+     * either onFoodChanged (food paid) or onPointsChanged (PP penalty)
      * must be fired.
      */
     @Test

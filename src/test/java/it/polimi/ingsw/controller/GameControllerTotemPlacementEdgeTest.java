@@ -114,8 +114,9 @@ public class GameControllerTotemPlacementEdgeTest {
     }
 
     /**
-     * Regulation-inspired case: tile A gives food and has no card choices.
-     * When all selected tiles contain only automatic effects, ActionResolutionState should not wait for picks forever.
+     * Tiles granting only automatic Food effects (e.g. tile A) leave the
+     * player no choice to make, so ActionResolutionState must advance the
+     * round immediately instead of waiting for a pick that will never come.
      */
     @Test
     void automaticFoodOnlyTilesDoNotLeaveControllerStuckInActionResolution() {
@@ -129,9 +130,10 @@ public class GameControllerTotemPlacementEdgeTest {
     }
 
     /**
-     * BUG-HUNTER: if a tile grants a lower-row pick but the lower row is empty, the rules say
-     * the player obtains nothing. The controller should skip the pick instead of waiting forever.
-     * This may currently fail or remain stuck depending on ActionResolutionState implementation.
+     * Verifies that when a placed tile requires a pick from a row that is
+     * empty, the controller auto-skips the pick instead of leaving the
+     * player stuck waiting. The round must advance past ActionResolutionState
+     * without an action from the player.
      */
     @Test
     void emptyRequiredRowShouldAutoSkipInsteadOfWaitingForImpossiblePick() {

@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for EventCard hierarchy (model.card).
  *
- * <p>Verifies: Hunt, Shamanic Ritual, Cave Paintings and Sustenance event card behaviour.
+ * Verifies: Hunt, Shamanic Ritual, Cave Paintings and Sustenance event card behaviour.
  */
 public class EventCardTest {
 
@@ -78,7 +78,7 @@ public class EventCardTest {
         Game game = buildGame(List.of(player));
         new CavePaintingsEventCard(1, Era.I, false, 2, 3, 1).resolve(game);
 
-        assertEquals(2, player.getPrestigePoints()); // 2 artisti × 1 PP
+        assertEquals(2, player.getPrestigePoints()); // 2 artists × 1 PP
         assertEquals(0, player.getFood());
     }
 

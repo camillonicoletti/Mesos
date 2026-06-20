@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Unit tests for ClientModel turn synchronization (network.client).
  *
- * <p>Verifies: client-side model stays consistent with server snapshots across turns.
+ * Verifies: client-side model stays consistent with server snapshots across turns.
  */
 class ClientModelTurnSyncTest {
 

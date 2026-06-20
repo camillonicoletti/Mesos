@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for Game final scoring (model).
  *
- * <p>Verifies: end-of-game scoring with mixed character compositions and building effects.
+ * Verifies: end-of-game scoring with mixed character compositions and building effects.
  */
 class GameFinalScoringTest {
 

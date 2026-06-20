@@ -22,7 +22,8 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Extra edge cases for the controller lobby/ready/disconnection logic.
+ * Additional controller lobby/ready/disconnection contracts: host promotion,
+ * suspension rejecting in-game actions, and reconnection with a blank nickname.
  * These tests intentionally avoid network, server, VirtualView and client code.
  */
 public class GameControllerMoreLobbyEdgeTest {
@@ -194,9 +195,8 @@ public class GameControllerMoreLobbyEdgeTest {
     }
 
     /**
-     * BUG-HUNTER: currently this may fail.
-     * If players can join before the first player sets the count, the first player should not be
-     * allowed to choose a number lower than the number of players already waiting in lobby.
+     * Verifies that SetPlayerCountAction is rejected when the requested count is
+     * lower than the number of players already in the lobby.
      */
     @Test
     void cannotChoosePlayerCountLowerThanAlreadyJoinedPlayers() {
@@ -212,9 +212,9 @@ public class GameControllerMoreLobbyEdgeTest {
     }
 
     /**
-     * BUG-HUNTER: currently this may fail depending on your chosen design.
-     * If the player who chose the count disconnects before game start, the lobby may need to reset
-     * the chosen count, otherwise the remaining players inherit a decision made by someone who left.
+     * Verifies the lobby behaviour when the first player (host) disconnects
+     * after choosing the player count: the remaining players inherit the
+     * chosen count and the next player in the lobby becomes the new host.
      */
     @Test
     void disconnectingFirstPlayerAfterChoosingCountShouldResetCountForRemainingLobby() {

@@ -16,13 +16,11 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Bug-hunter tests focused on encapsulation gaps in {@link Game}.
- *
- * The game holds several mutable internal collections.  Some getters return
- * the underlying list directly, allowing arbitrary external mutation.
- *
- * The brief states: "usare copie difensive, List.copyOf, getter immutabili."
- * These tests detect exposed mutability so we can fix only what's needed.
+ * Encapsulation tests focused on Game getters. Verifies that getters exposing
+ * internal collections (tribute deck, building decks, current round views)
+ * return defensive copies or unmodifiable views: external code must not be
+ * able to mutate the game-internal state by writing to the returned
+ * collection.
  */
 class GameAndClientMutabilityTest {
 
@@ -41,8 +39,8 @@ class GameAndClientMutabilityTest {
     }
 
     /**
-     * {@link Game#getPlayers()} returns an unmodifiable view — modifying it
-     * must throw.  This is a regression guard.
+     * Game.getPlayers() returns an unmodifiable view — modifying it must
+     * throw. This is a regression guard.
      */
     @Test
     void getPlayersIsUnmodifiable() {
@@ -54,10 +52,8 @@ class GameAndClientMutabilityTest {
     }
 
     /**
-     * {@link Game#getTributeDeck()} must return an unmodifiable view to
-     * prevent external code from draining the internal deck.  Currently it
-     * returns the underlying mutable list — this test fails until that is
-     * fixed.
+     * Game.getTributeDeck() returns an unmodifiable view, preventing external
+     * code from draining the internal deck — regression guard.
      */
     @Test
     void getTributeDeckMustBeUnmodifiable() {
@@ -72,8 +68,8 @@ class GameAndClientMutabilityTest {
     }
 
     /**
-     * {@link Round#getUpperRowTribute()} and friends already return
-     * unmodifiable views — guard against regression.
+     * Round.getUpperRowTribute() and friends already return unmodifiable
+     * views — guard against regression.
      */
     @Test
     void roundCardListGettersAreUnmodifiable() {
@@ -97,9 +93,9 @@ class GameAndClientMutabilityTest {
     }
 
     /**
-     * {@link Tribe#getCharacterCards()} and {@link Tribe#getBuildingCards()}
-     * must not allow direct mutation of the underlying collection — guard
-     * against regression.
+     * Tribe.getCharacterCards() and Tribe.getBuildingCards() must not allow
+     * direct mutation of the underlying collection — guard against
+     * regression.
      */
     @Test
     void tribeCardListGettersAreUnmodifiable() {

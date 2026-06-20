@@ -22,30 +22,26 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Diagnostic test for INC-03: verifies that the extra-pick queue is ordered by
- * join order (game.getPlayers() iteration) rather than by the turn-order tile
- * after action resolution.
+ * Verifies that the extra-pick queue (triggered by the
+ * ExtraCardUpperRowEffect building) is ordered by the turn-order
+ * tile reached after action resolution, not by lobby join order.
  *
  * Setup:
  *   - Alice joins first, Bob joins second  → join order = [Alice, Bob]
  *   - Both players receive an ExtraCardUpperRowEffect building
- *   - Tile assignment is arranged so that Bob (2nd in join order) always lands on
- *     tile B (earlier letter) and Alice lands on tile C (later letter)
+ *   - Tile assignment is arranged so that Bob always lands on tile B
+ *     (earlier letter) and Alice lands on tile C (later letter)
  *   - Tile B resolves before tile C, so Bob returns his totem first →
  *     turn-order tile after round = [Bob, Alice]  (reverse of join order)
  *
- * Expected current behavior:  extra-pick order = [Alice, Bob]  (join order)
- * Expected rule-based behavior: extra-pick order = [Bob, Alice] (turn order
- *     after round, i.e. the order on the turn-order tile when the extra pick starts)
- *
- * The two assertions at the bottom make the divergence explicit:
- *   - extraPickOrder == joinOrder          (current behavior, always passes)
- *   - extraPickOrder != turnOrderAfterRound (shows the incoherence)
+ * The extra-pick notifications must fire in turn-order-tile order
+ * ([Bob, Alice]), not in join order ([Alice, Bob]) — the two orders are
+ * deliberately set up to differ so the distinction is provable.
  */
 class ExtraPickQueueOrderTest {
 
     @Test
-    void extraPickOrderIsJoinOrderNotTurnOrderAfterRound() {
+    void extraPickOrderFollowsTurnOrderTileAfterRound() {
         GameController controller = createTwoPlayerGame();
         Game game = controller.getGame();
         Round round = game.getCurrentRound();
@@ -98,7 +94,7 @@ class ExtraPickQueueOrderTest {
         assertEquals(1, extraPickOrder.size(),
                 "Exactly one onExtraCardPickAvailable should have fired after Alice's pick");
 
-        // After the fix the queue follows the turn-order tile: Bob is in slot 1
+        // The queue follows the turn-order tile: Bob is in slot 1
         // (resolved tile B first), so Bob gets the first extra-pick notification.
         // Advance the queue with Bob's skip to capture Alice's notification.
         controller.onMessageReceived("Bob", new SkipExtraPickAction());

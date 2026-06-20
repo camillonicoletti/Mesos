@@ -27,18 +27,14 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Bug-hunter tests for the delta payloads of {@link EventResolvedMessage}.
+ * Delta-consistency tests for EventResolvedMessage.
  *
- * Brief: "Event resolution can show inconsistent totals if partial messages
- * do not include all the deltas."
- *
- * These tests verify that for every event the message carries:
- *   - foodDelta and pointsDelta matching what actually changed in the model
- *   - newFood and newPoints matching the player's state AFTER resolution
- *
- * NOTE: tests bypass the 5-second sleep in EventResolutionState by replacing
- * the round's events with a single non-Sustenance event and inspecting the
- * captured message right after resolution.
+ * Verifies that for every resolved event the message carries foodDelta and
+ * pointsDelta matching the model delta, and newFood/newPoints matching the
+ * player's state after resolution. To keep the test fast, each test injects
+ * a single non-Sustenance event and inspects the captured listener message
+ * immediately after resolution, bypassing the per-event 5-second sleep used
+ * in EventResolutionState.
  */
 class EventResolvedDeltaConsistencyTest {
 

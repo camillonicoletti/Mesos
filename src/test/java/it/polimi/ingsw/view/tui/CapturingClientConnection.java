@@ -11,8 +11,7 @@ import java.util.function.Consumer;
 /**
  * Test double that records every message the controller sends, so command-parser
  * tests can assert on what was dispatched (the parser now executes actions
- * through {@link it.polimi.ingsw.network.client.ClientController} instead of
- * returning the message).
+ * through ClientController instead of returning the message).
  */
 final class CapturingClientConnection implements ClientSideConnection {
 

@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * Unit tests for Socket transport (network.transport).
  *
- * <p>Verifies: round-trip message exchange between SocketClientConnection and SocketServerConnection over a real loopback socket.
+ * Verifies: round-trip message exchange between SocketClientConnection and SocketServerConnection over a real loopback socket.
  */
 class SocketConnectionTest {
 

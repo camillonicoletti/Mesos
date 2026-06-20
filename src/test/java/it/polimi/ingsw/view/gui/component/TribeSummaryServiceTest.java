@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * Unit tests for TribeSummaryService (view.gui.component).
  *
- * <p>Verifies: GUI-facing summary of a tribe state.
+ * Verifies GUI-facing summary of a tribe state.
  */
 class TribeSummaryServiceTest {
 

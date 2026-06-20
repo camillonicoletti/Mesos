@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for Game aggregate (model).
  *
- * <p>Verifies: round lifecycle, turn order, refill and final scoring orchestration in the model layer.
+ * Verifies round lifecycle, turn order, refill and final scoring orchestration in the model layer.
  */
 public class GameTest {
 

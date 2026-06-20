@@ -30,8 +30,8 @@ class TuiStyleTest {
 
     @Test
     void mainPanelWidthIs140() {
-        // W = 140 is the screen-wide reference used by header/footer and
-        // every centerVisual(...) call site.
+        // W = 140 is the full screen width Renderer centers every header,
+        // footer and full-row line against.
         assertEquals(140, TuiStyle.W);
     }
 

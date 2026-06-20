@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for CardFactory (model.card).
  *
- * <p>Verifies: deterministic construction of tribute and building decks per era.
+ * Verifies: deterministic construction of tribute and building decks per era.
  */
 public class CardFactoryTest {
 
@@ -84,7 +84,7 @@ public class CardFactoryTest {
     @Test
     void tribeDeck_eraOrdering_IbeforeII_IIbeforeIII() {
         List<Card> deck = CardFactory.createTribeDeck(5);
-        // ignora i closeEvents in fondo
+        // ignore the closeEvents at the end of the deck
         int lastNonClose = deck.size() - 1;
         while (lastNonClose >= 0 && deck.get(lastNonClose) instanceof EventCard ec && ec.isCloseEvent()) {
             lastNonClose--;
@@ -127,8 +127,8 @@ public class CardFactoryTest {
         List<BuildingCard> all = CardFactory.createBuildingCards(Era.III, 5);
         boolean hasParameterized = all.stream().anyMatch(b ->
                 b.getEffect().getClass().getSimpleName().contains("EndCharacterCountPP"));
-        // Out of 5 cards from a pool containing many EndCharacterCountPP, it is almost certain (statistical, but deterministic within ranges).
-        // For a non-statistical check, use a repeated loop:
+        // A single draw could miss this effect by chance, so retry a few times
+        // before concluding it is genuinely absent from the pool.
         for (int i = 0; i < 20 && !hasParameterized; i++) {
             hasParameterized = CardFactory.createBuildingCards(Era.III, 5).stream().anyMatch(b ->
                     b.getEffect().getClass().getSimpleName().contains("EndCharacterCountPP"));

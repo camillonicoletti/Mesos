@@ -13,20 +13,14 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Verifies that {@link PersistenceListener} correctly drives the
- * {@link Persistence} facade in response to controller lifecycle events.
+ * Verifies that PersistenceListener correctly drives the Persistence facade
+ * in response to controller lifecycle events.
  *
- * <p>Components under test: {@link PersistenceListener} (controller layer)
- * and its interaction with the {@link Persistence} save-file API.
- *
- * <p>Note on isolation: {@link Persistence} resolves its save file against the
- * JVM working directory through {@code Path.of("mesos-savestate.bin")}. Because
- * the JDK caches the working directory at startup, neither {@code user.dir}
- * nor a JUnit {@code @TempDir} can redirect it without changing production
- * code. The test therefore writes to the working directory and guarantees
- * cleanup via {@code @BeforeEach} and {@code @AfterEach}. Migrating this to
- * a real {@code @TempDir} requires exposing a path-aware overload on
- * {@link PersistenceListener} and is tracked as a P1 cleanup item.
+ * Persistence resolves its save file against the JVM working directory
+ * (Path.of("mesos-savestate.bin")). The JDK caches that directory at startup,
+ * so it cannot be redirected to a temp directory without changing production
+ * code. The test writes to the real working directory instead and guarantees
+ * cleanup via the cleanup() method, run both before and after each test.
  */
 class PersistenceListenerTest {
 

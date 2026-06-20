@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Unit tests for LobbyManager (network.server).
  *
- * <p>Verifies: login, set-player-count, ready, reconnect handling and broadcast contents.
+ * Verifies: login, set-player-count, ready, reconnect handling and broadcast contents.
  */
 class LobbyManagerTest {
 
@@ -93,7 +93,7 @@ class LobbyManagerTest {
 
     @Test
     void voluntaryQuitDuringGameEndsMatchForEveryone() throws Exception {
-        // FA4 policy: a voluntary quit (QuitMessage) terminates the match for all players,
+        // A voluntary quit (QuitMessage) terminates the match for all players;
         // it does NOT enter / stay in the suspended state waiting for reconnection.
         LobbyManager lobby = new LobbyManager();
         RecordingConnection alice = new RecordingConnection();

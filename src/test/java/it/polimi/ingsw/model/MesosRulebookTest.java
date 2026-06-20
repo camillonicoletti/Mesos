@@ -410,9 +410,8 @@ class MesosRulebookTest {
     // ╔══════════════════════════════════════════════════════════════════════╗
     // ║ T7 — Last round resolves upper-row events                            ║
     // ║                                                                      ║
-    // ║ Rule (Regolamento p.7): "Al termine di questo round risolvete tutti  ║
-    // ║ gli Eventi visibili, anche quelli che si trovano nella fila          ║
-    // ║ superiore."                                                          ║
+    // ║ Rule (Rulebook p.7): "At the end of this round resolve all visible   ║
+    // ║ Events, including those in the upper row."                           ║
     // ╚══════════════════════════════════════════════════════════════════════╝
 
     @Test

@@ -18,7 +18,10 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Bug hunter tests for lobby login edge cases.
+ * Validation tests for LobbyManager login handling: the lobby must reject
+ * null, blank and whitespace-only nicknames, reject duplicate nicknames
+ * (including those differing only by leading/trailing whitespace), and not
+ * deliver lobby/state messages to a rejected connection.
  */
 class LobbyManagerValidationRegressionTest {
 

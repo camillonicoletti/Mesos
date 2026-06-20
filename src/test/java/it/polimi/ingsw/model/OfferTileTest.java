@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for OfferTile (model.board).
  *
- * <p>Verifies: action-slot composition and pick-budget handling of an offer tile.
+ * Verifies action-slot composition and pick-budget handling of an offer tile.
  */
 public class OfferTileTest {
 

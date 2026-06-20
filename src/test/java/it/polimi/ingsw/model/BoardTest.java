@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for Board (model.board).
  *
- * <p>Verifies: offer tiles, turn-order tile, refill rules and board snapshot.
+ * Verifies: offer tiles, turn-order tile, refill rules and board snapshot.
  */
 public class BoardTest {
 

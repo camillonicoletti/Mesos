@@ -19,17 +19,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
- * Lifecycle tests for the Socket transport ({@code SocketClientConnection},
- * {@code SocketServerConnection}).
- *
- * <p>Components under test: socket round-trip ordering across multiple
- * messages and the {@code setOnDisconnect} notification path that fires when
+ * Lifecycle tests for the Socket transport (SocketClientConnection,
+ * SocketServerConnection): socket round-trip ordering across multiple
+ * messages, and the setOnDisconnect notification path that fires when
  * either side closes its socket.
  *
- * <p>All tests run on a local loopback connection bound to an
- * OS-allocated ephemeral port ({@code ServerSocket(0)}). Synchronization is
- * deterministic via {@link CountDownLatch} — no {@code Thread.sleep},
- * no fixed ports, no external network, no reflection.
+ * All tests run on a local loopback connection bound to an OS-allocated
+ * ephemeral port (ServerSocket(0)). Synchronization is deterministic via
+ * CountDownLatch — no Thread.sleep, no fixed ports, no external network,
+ * no reflection.
  */
 class SocketConnectionLifecycleTest {
 
@@ -38,8 +36,8 @@ class SocketConnectionLifecycleTest {
     /**
      * Three messages sent in sequence by the client must be received in the
      * same order on the server side. Guards the assumption that
-     * {@code ObjectOutputStream}/{@code ObjectInputStream} preserve FIFO
-     * order on a single socket.
+     * ObjectOutputStream/ObjectInputStream preserve FIFO order on a single
+     * socket.
      */
     @Test
     void socketExchangesMultipleMessagesInOrder() throws Exception {
@@ -108,9 +106,9 @@ class SocketConnectionLifecycleTest {
 
     /**
      * When the client closes its socket, the server-side reader detects the
-     * end of the stream and must invoke the {@code onDisconnect} callback
-     * previously registered via {@code setOnDisconnect}. This is the
-     * server-side hook used by the lobby to mark a player as disconnected.
+     * end of the stream and must invoke the onDisconnect callback previously
+     * registered via setOnDisconnect. This is the server-side hook used by
+     * the lobby to mark a player as disconnected.
      */
     @Test
     void serverIsNotifiedWhenClientClosesSocket() throws Exception {
@@ -164,9 +162,9 @@ class SocketConnectionLifecycleTest {
     /**
      * Symmetric to the previous test: when the server closes its socket, the
      * client-side reader detects the end of the stream and must invoke the
-     * {@code onDisconnect} callback previously registered via
-     * {@code setOnDisconnect}. This is the client-side hook used by the UI
-     * to surface "connection lost" feedback.
+     * onDisconnect callback previously registered via setOnDisconnect. This
+     * is the client-side hook used by the UI to surface "connection lost"
+     * feedback.
      */
     @Test
     void clientIsNotifiedWhenServerClosesSocket() throws Exception {

@@ -17,26 +17,12 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Unit tests for {@link GathererCard} during the Sustenance event.
+ * Unit tests for GathererCard during the Sustenance event.
  *
- * <p>Components under test: {@link GathererCard} (model.card) and the
- * food-discount logic of {@link SustenanceEventCard}.
- *
- * <p>Verifies the Mesos rulebook constraints on Gatherers:
- * <ul>
- *   <li>Gatherers never grant food directly when added to a tribe.</li>
- *   <li>During a Sustenance event each Gatherer reduces the required food
- *       amount by exactly 3.</li>
- *   <li>Sustenance counts character cards only, not buildings.</li>
- *   <li>Multiple Gatherers stack their discounts linearly.</li>
- *   <li>The discounted food requirement is clamped at zero and never
- *       becomes negative.</li>
- *   <li>If the player cannot pay the full discounted cost, prestige is lost
- *       in proportion to the missing food (not to the unfed characters
- *       before discount).</li>
- *   <li>Gatherer discount and {@link SustenanceFoodDiscountEffect} building
- *       discounts are cumulative.</li>
- * </ul>
+ * Verifies the Mesos rulebook constraints on Gatherers: they never grant food directly,
+ * each one reduces the Sustenance food requirement by 3 (clamped at zero, counting only
+ * character cards), discounts stack linearly and combine with SustenanceFoodDiscountEffect
+ * building discounts, and any prestige loss is proportional to the missing food after discount.
  */
 class GathererCardTest {
 

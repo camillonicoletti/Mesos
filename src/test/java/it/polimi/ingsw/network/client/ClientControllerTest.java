@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Unit tests for ClientController (network.client).
  *
- * <p>Verifies: client-side handling of server messages and user commands.
+ * Verifies: client-side handling of server messages and user commands.
  */
 class ClientControllerTest {
 

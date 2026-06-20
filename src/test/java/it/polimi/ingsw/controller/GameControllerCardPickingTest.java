@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for GameController card picking action.
  *
- * <p>Verifies: pick-card flow including upper/lower row, building picks and event-card rejection.
+ * Verifies: pick-card flow including upper/lower row, building picks and event-card rejection.
  */
 class GameControllerCardPickingTest {
 
@@ -186,8 +186,8 @@ class GameControllerCardPickingTest {
 
         clearUpperRowBuildings(round);
         addUpperRowBuilding(round, discountedBuilding);
-        // No characters must remain in the upper row; otherwise the mandatory-character-pick
-        // rule would reject the building pick before the discount logic is exercised.
+        // Clear leftover character cards from the default game setup so the upper row
+        // contains only the building under test, keeping the row-size assertions below exact.
         clearUpperRowTribute(round);
 
         int boardBuildingsBefore = round.getUpperRowBuildings().size();

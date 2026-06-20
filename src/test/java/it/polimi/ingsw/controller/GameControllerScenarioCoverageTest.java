@@ -23,7 +23,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for GameController state machine.
  *
- * <p>Verifies: edge cases across lobby, totem placement, action resolution and end-game.
+ * Verifies lobby/ready validation, listener notification robustness, and
+ * state-rollback behavior.
  */
 public class GameControllerScenarioCoverageTest {
 
@@ -202,9 +203,9 @@ public class GameControllerScenarioCoverageTest {
         assertInstanceOf(LobbyState.class, controller.getCurrentState());
     }
 
-    // BUG-HUNTER TEST 1:
-    // This should be rejected because the selected TotemColor is already taken.
-    // If it fails, GameController is probably comparing Totem objects instead of TotemColor.
+    // Verifies that lobby uniqueness is enforced on TotemColor, not on Totem
+    // object identity: two different Totem instances with the same color must
+    // not be allowed to coexist in the lobby.
     @Test
     void duplicateTotemColorShouldBeRejectedEvenWhenTotemObjectsAreDifferent() {
         GameController controller = new GameController();
@@ -218,9 +219,9 @@ public class GameControllerScenarioCoverageTest {
         assertEquals(1, controller.getLobbyPlayers().size());
     }
 
-    // BUG-HUNTER TEST 2:
-    // A player that is not in the lobby should not be allowed to send ReadyAction(false).
-    // If it fails, ReadyCheckState validates ReadyAction(true) but not ReadyAction(false).
+    // Verifies that ReadyCheckState validates the sender for both
+    // ReadyAction(true) and ReadyAction(false): a nickname not in the lobby
+    // must be rejected even when un-readying.
     @Test
     void unknownPlayerCannotSendReadyFalseAction() {
         GameController controller = createReadyCheckController();
@@ -230,9 +231,9 @@ public class GameControllerScenarioCoverageTest {
         );
     }
 
-    // BUG-HUNTER TEST 3:
-    // If entering a new state fails, the controller should not remain stuck in that invalid state.
-    // If it fails, changeState assigns currentState before checking whether onEnter succeeds.
+    // Verifies that changeState preserves the previous state when the target
+    // state's onEnter throws: the controller must not be left pointing at a
+    // state whose entry failed.
     @Test
     void failedStateTransitionShouldKeepPreviousState() {
         GameController controller = new GameController();

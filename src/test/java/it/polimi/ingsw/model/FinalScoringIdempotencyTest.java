@@ -17,13 +17,11 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Bug-hunter tests for final scoring idempotency.
- *
- * Brief: "Final scoring must be invoked only at game over, after the final events,
- * and only once."
- *
- * These tests verify the cached behaviour and that calling
- * {@link Game#calculateFinalScores()} twice does not double-count.
+ * Idempotency tests for Game.calculateFinalScores(). Rulebook section 14:
+ * final scoring is applied once at game over, after all remaining events
+ * have been resolved. Verifies that calling calculateFinalScores() a second
+ * time does not double-count prestige contributions from buildings,
+ * inventors, artists, etc.
  */
 class FinalScoringIdempotencyTest {
 
@@ -41,10 +39,10 @@ class FinalScoringIdempotencyTest {
     }
 
     /**
-     * After {@link Game#end()}, calling {@link Game#calculateFinalScores()}
-     * a second time must NOT recompute (it must short-circuit on the
-     * {@code finalScoresCalculated} guard).  Verified by mutating a player
-     * AFTER end() and confirming the cached score is unchanged.
+     * After Game.end(), calling calculateFinalScores() a second time must
+     * NOT recompute (it must short-circuit on the finalScoresCalculated
+     * guard). Verified by mutating a player after end() and confirming the
+     * cached score is unchanged.
      */
     @Test
     void calculateFinalScoresGuardPreventsRecomputationAfterEnd() {
@@ -66,9 +64,8 @@ class FinalScoringIdempotencyTest {
     }
 
     /**
-     * Before {@link Game#end()} is invoked, {@link Game#getFinalScores()}
-     * returns a LIVE preview, not a cached result.  After end(), the score
-     * is frozen.
+     * Before Game.end() is invoked, Game.getFinalScores() returns a live
+     * preview, not a cached result. After end(), the score is frozen.
      */
     @Test
     void finalScoresAreFrozenAfterEnd() {
@@ -93,9 +90,10 @@ class FinalScoringIdempotencyTest {
     }
 
     /**
-     * Before end(), calculateFinalScores() can be called manually.  This
-     * still freezes the cache.  This documents the current contract — it
-     * may be a footgun but it's the existing behaviour.
+     * Calling calculateFinalScores() manually populates the internal cache,
+     * but getFinalScores() only reads that cache once the game has actually
+     * ended (gameEnded == true). Before that, it always recomputes a live
+     * preview, so a manual call before end() has no visible effect.
      */
     @Test
     void manualCalculateBeforeEndStillFreezes() {
@@ -103,17 +101,14 @@ class FinalScoringIdempotencyTest {
         Player p0 = game.getPlayers().get(0);
         p0.addPrestigePoints(3);
 
-        game.calculateFinalScores(); // freezes prematurely
+        game.calculateFinalScores(); // populates the cache, but game has not ended yet
         p0.addPrestigePoints(10);
         Map<Player, Integer> after = game.getFinalScores();
 
-        // getFinalScores() with isGameOver()==false returns a LIVE preview
-        // (it always recomputes).  But getFinalScore(player) returns the cached
-        // value once frozen and after end().  Since end() hasn't been called,
-        // getFinalScores() still returns a fresh preview and INCLUDES the +10.
+        // Game has not ended, so getFinalScores() ignores the cache and
+        // recomputes live, including the +10 added after the manual call.
         assertEquals(13, after.get(p0),
-                "Before end(), getFinalScores() returns a live preview. " +
-                "If you see 3, then calculateFinalScores() prematurely froze " +
-                "the visible result without end() being called.");
+                "Before end(), getFinalScores() must return a live preview, " +
+                "not the value cached by the manual calculateFinalScores() call.");
     }
 }

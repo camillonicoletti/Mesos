@@ -50,11 +50,9 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Behaviour-grouped suite covering previously uncovered controller cases.
  *
- * <p>Scope: controller / state / action layer. Tests are organized into
- * {@link Nested} groups by behaviour: lobby and ready flow, totem placement,
- * card picking and validation, event resolution, end-of-round and era
- * transition. Some tests are intentionally strict probes that pin down
- * design decisions discussed by the team.
+ * Scope: controller / state / action layer. Tests are organized into Nested
+ * groups by behaviour: lobby and ready flow, totem placement, card picking
+ * and validation, event resolution, end-of-round and era transition.
  */
 public class GameControllerAdditionalScenariosTest {
 

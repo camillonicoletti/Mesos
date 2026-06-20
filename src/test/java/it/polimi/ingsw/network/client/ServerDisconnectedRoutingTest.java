@@ -17,19 +17,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Targeted tests for the involuntary server-disconnection routing introduced
  * alongside the dedicated "server disconnected" GUI overlay.
  *
- * <p>The model exposes two distinct entry points for connection loss:
- * {@link ClientModel#applyConnectionLost(String)} for voluntary
- * {@code quit}/{@code disconnect}, and
- * {@link ClientModel#applyServerDisconnected(String)} for involuntary drops
- * (socket failure, heartbeat timeout, remote exception). These tests pin down
- * which path each {@link ClientController} entry uses, since mixing the two
- * would make the GUI show the wrong overlay on a user-initiated quit.</p>
+ * The model exposes two distinct entry points for connection loss:
+ * applyConnectionLost(String) for a voluntary quit/disconnect, and
+ * applyServerDisconnected(String) for involuntary drops (socket failure,
+ * heartbeat timeout, remote exception). These tests pin down which path
+ * each ClientController entry uses, since mixing the two would make the
+ * GUI show the wrong overlay on a user-initiated quit.
  */
 class ServerDisconnectedRoutingTest {
 
     /**
      * Voluntary path must not set the server-disconnected flag, otherwise a
-     * normal {@code quit} would surface the "server disconnected" overlay.
+     * normal quit would surface the "server disconnected" overlay.
      */
     @Test
     void applyConnectionLostLeavesServerDisconnectedFlagFalse() {
@@ -76,7 +75,7 @@ class ServerDisconnectedRoutingTest {
 
     /**
      * On the application send path, a transport-level RuntimeException must
-     * route through {@code applyServerDisconnected}. The controller keeps the
+     * route through applyServerDisconnected. The controller keeps the
      * client alive and starts reconnect instead of crashing the view.
      */
     @Test
@@ -95,7 +94,7 @@ class ServerDisconnectedRoutingTest {
     }
 
     /**
-     * The transport-layer {@code onDisconnect} callback is wired in the
+     * The transport-layer onDisconnect callback is wired in the
      * controller's constructor; firing it must mark the drop as involuntary.
      */
     @Test
@@ -125,7 +124,7 @@ class ServerDisconnectedRoutingTest {
         assertFalse(model.isServerDisconnected());
     }
 
-    /** Connection stub whose {@code send} always throws, simulating a dead socket. */
+    /** Connection stub whose send always throws, simulating a dead socket. */
     private static final class ThrowingConnection implements ClientSideConnection {
         @Override
         public void send(ClientMessage message) {
@@ -148,7 +147,7 @@ class ServerDisconnectedRoutingTest {
         }
     }
 
-    /** Connection stub that captures the {@code onDisconnect} callback so the test can fire it. */
+    /** Connection stub that captures the onDisconnect callback so the test can fire it. */
     private static final class CapturingConnection implements ClientSideConnection {
         private Runnable capturedOnDisconnect;
 

@@ -11,28 +11,27 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Targeted tests for the forced-win countdown anchoring in {@link SuspensionManager},
- * focused on the persistence-restore scenario (FA4 + persistence interaction).
+ * Targeted tests for the forced-win countdown anchoring in SuspensionManager,
+ * focused on the persistence-restore scenario (resilience + persistence interaction).
  *
- * <p>The fix decouples two concepts that used to be conflated in
- * {@link SuspensionManager#updateStatus}: the match being <em>suspended</em>
- * (≤1 connected player → paused, overlay shown) and the forced-win
- * <em>countdown</em> actually running (only with <em>exactly</em> one connected
- * player). The countdown must not run while zero players are connected — the
- * window right after a restore from disk, before anyone has reconnected — and
- * any stale absolute timestamp restored from a savestate that was written while
- * already suspended must be invalidated.</p>
+ * SuspensionManager.updateStatus treats two concepts separately: the match
+ * being suspended (at most 1 connected player, paused, overlay shown) and
+ * the forced-win countdown actually running (only with exactly one
+ * connected player). The countdown must not run while zero players are
+ * connected — the window right after a restore from disk, before anyone has
+ * reconnected — and any stale absolute timestamp restored from a savestate
+ * that was written while already suspended must be invalidated.
  *
- * <p>All timing is injected through the explicit {@code nowMillis} parameters so
- * the tests are fully deterministic and never touch the wall clock.</p>
+ * All timing is injected through the explicit nowMillis parameters so
+ * the tests are fully deterministic and never touch the wall clock.
  */
 class SuspensionManagerRestoreTest {
 
     private static final long TIMEOUT_MILLIS = 60_000L;
 
     /**
-     * Builds a minimal in-progress game. {@code updateStatus} only inspects
-     * {@link Game#isGameOver()} (false by default), so the empty player list and
+     * Builds a minimal in-progress game. updateStatus only inspects
+     * Game.isGameOver() (false by default), so the empty player list and
      * null collaborators are irrelevant to what we exercise here.
      */
     private static Game inProgressGame() {
@@ -42,7 +41,7 @@ class SuspensionManagerRestoreTest {
 
     /**
      * Case 1 — restore with 0 connected players (all marked disconnected by
-     * {@code markAllPlayersDisconnected}). The match is suspended (overlay will
+     * markAllPlayersDisconnected). The match is suspended (overlay will
      * show "waiting"), but the forced-win countdown must NOT be running yet:
      * with nobody connected there is no candidate to win the timeout.
      */
@@ -86,7 +85,7 @@ class SuspensionManagerRestoreTest {
 
     /**
      * Case 3 — secondary bug: the savestate was written while already suspended,
-     * so a stale absolute {@code suspensionStartedAtMillis} is restored. We
+     * so a stale absolute suspensionStartedAtMillis is restored. We
      * reproduce a "stale" anchor via the public API (anchor at t=1000 with 1
      * connected) and then drop to 0 connected at a much later time, as happens on
      * restore. The stale timestamp must be invalidated, leaving the countdown
@@ -113,8 +112,8 @@ class SuspensionManagerRestoreTest {
     /**
      * Case 4 — normal in-game flow (no persistence): a 2-player match where one
      * player disconnects (count 2 → 1). The countdown must start normally at that
-     * moment, from the full timeout — confirming the fix does not regress the
-     * standard FA4 suspension path.
+     * moment, from the full timeout — confirming the persistence-restore handling
+     * above does not change the standard suspension path.
      */
     @Test
     void normalTwoToOneDisconnectionStartsCountdown() {

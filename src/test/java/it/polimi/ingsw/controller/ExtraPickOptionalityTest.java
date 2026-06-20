@@ -24,22 +24,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Bug-hunter: the rulebook states that the extra pick granted by building #13
- * ({@link ExtraCardUpperRowEffect}) is <strong>optional</strong>. The current
- * implementation does <em>not</em> expose any way for the player to decline.
+ * Tests for the optional extra pick granted by building #13
+ * (ExtraCardUpperRowEffect). Per rulebook section 15, this extra pick is
+ * optional: the player must be able to decline via SkipExtraPickAction.
  *
- * <p>These tests pin down the (likely incorrect) behaviour so the team can
- * decide whether to add a SkipExtraPickAction. Two stuck-state scenarios are
- * also documented:
- * <ul>
- *   <li>only events left in upper ⇒ player cannot pick (events are not pickable),</li>
- *   <li>only unaffordable buildings left in upper ⇒ player cannot pick.</li>
- * </ul>
+ * Verifies the action contract for the extra-pick phase: ReadyAction is
+ * rejected during it, SkipExtraPickAction from the active player advances
+ * the queue without taking a card, from a non-active player it is rejected,
+ * and it is rejected outside the extra-pick phase. Two additional methods
+ * verify how the extra-pick queue treats a row whose only remaining content
+ * is an Event card (never pickable, so the row counts as empty) versus a
+ * row whose only remaining content is an unaffordable Building (still
+ * counts as non-empty, so the player gets a turn that fails unless they
+ * skip).
  */
 class ExtraPickOptionalityTest {
 
@@ -52,6 +55,20 @@ class ExtraPickOptionalityTest {
     private GameController bootstrapToExtraPickWithUpper(
             List<CharacterCard> upperContent,
             List<BuildingCard> upperBuildings) {
+        return bootstrapToExtraPickWithUpper(upperContent, upperBuildings, new ArrayList<>());
+    }
+
+    /**
+     * Same as bootstrapToExtraPickWithUpper(List, List) but also seeds
+     * the upper row with event cards from the start, so their effect on the
+     * extra-pick "is the row empty" check can be observed at the moment it
+     * actually runs (right after Bob's regular picks), not after the round
+     * has already moved on.
+     */
+    private GameController bootstrapToExtraPickWithUpper(
+            List<CharacterCard> upperContent,
+            List<BuildingCard> upperBuildings,
+            List<it.polimi.ingsw.model.card.EventCard> upperEvents) {
         Player alice = new Player("Alice", new Totem(TotemColor.RED,  "OFFER_TRACK"));
         Player bob   = new Player("Bob",   new Totem(TotemColor.BLUE, "OFFER_TRACK"));
         List<Player> players = new ArrayList<>(List.of(alice, bob));
@@ -65,7 +82,7 @@ class ExtraPickOptionalityTest {
                 new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
 
         Round round = new Round(1, game, Era.I,
-                new ArrayList<>(), new ArrayList<>(),
+                new ArrayList<>(), new ArrayList<>(upperEvents),
                 new ArrayList<>(), new ArrayList<>(upperContent),
                 new ArrayList<>(), new ArrayList<>(upperBuildings));
         game.setCurrentRound(round);
@@ -113,17 +130,6 @@ class ExtraPickOptionalityTest {
             java.lang.reflect.Field f = Round.class.getDeclaredField("upperRowBuildings");
             f.setAccessible(true);
             return (List<BuildingCard>) f.get(round);
-        } catch (ReflectiveOperationException e) {
-            throw new AssertionError(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private List<it.polimi.ingsw.model.card.EventCard> upperRowEventsMutable(Round round) {
-        try {
-            java.lang.reflect.Field f = Round.class.getDeclaredField("upperRowEventCards");
-            f.setAccessible(true);
-            return (List<it.polimi.ingsw.model.card.EventCard>) f.get(round);
         } catch (ReflectiveOperationException e) {
             throw new AssertionError(e);
         }
@@ -256,26 +262,40 @@ class ExtraPickOptionalityTest {
     }
 
     @Test
-    void extraPick_blocksPickActionForEventIdInUpper() {
-        // Upper has 2 chars (consumed by Bob) plus an event. Alice's extra-pick
-        // turn finds upper non-empty (event present). She cannot pick the event.
+    void extraPick_skippedWhenOnlyAnEventRemainsInUpperRow() {
+        // The Hunt event is seeded in the upper row from the start (not added
+        // afterwards): once Bob's 2 regular picks empty the tribute/building
+        // lists, the only thing left in the row is the event. An Event card
+        // never counts as pickable, so the "is the row empty" check treats
+        // the row as empty and Alice's extra pick must be skipped entirely —
+        // she must never be offered a turn to act on.
         GameController ctrl = bootstrapToExtraPickWithUpper(
                 new ArrayList<>(List.of(
                         new HunterCard(101, Era.I, 0, false),
                         new HunterCard(102, Era.I, 0, false)
                 )),
-                new ArrayList<>());
-        Round round = ctrl.getGame().getCurrentRound();
-        upperRowEventsMutable(round).add(new HuntEventCard(900, Era.I, false, 1, 1));
+                new ArrayList<>(),
+                new ArrayList<>(List.of(new HuntEventCard(900, Era.I, false, 1, 1))));
 
-        // After Bob's 2 picks, upper tribute is empty but eventCards still has 1 event.
-        // upperRowEmpty in prepareExtraPickPlayer checks tribute+buildings only — both
-        // empty ⇒ queue auto-advances past Alice ⇒ transitions to EventResolutionState.
-        // So the failure mode is silent skipping, not a stuck player. We document it.
-        // ActionResolutionState may have already transitioned away.
-        assertTrue(ctrl.getCurrentState() != null);
-        // The event is still in upper because EventResolutionState may have already
-        // resolved it (depending on the sleep timing). We accept either state.
+        Player alice = ctrl.getGame().getPlayers().stream()
+                .filter(p -> p.getNickname().equals("Alice"))
+                .findFirst().orElseThrow();
+
+        // Alice's tribe cannot have grown: there was nothing left for her to
+        // pick once Bob took both Hunters, event included.
+        assertEquals(0, alice.getTribe().getCharacterCards().size(),
+                "Alice's extra pick must be skipped when only an Event card "
+                        + "remains in the upper row");
+
+        // Stronger check: if the Event had wrongly counted as "available"
+        // content, Alice would still be waiting in the extra-pick phase
+        // instead of the queue having moved past her automatically.
+        boolean aliceStuckWaitingForExtraPick =
+                ctrl.getCurrentState() instanceof ActionResolutionState ars
+                        && "Alice".equals(ars.getCurrentPlayerNickname());
+        assertFalse(aliceStuckWaitingForExtraPick,
+                "Alice must not be offered an extra pick when only an Event "
+                        + "remains in the upper row");
     }
 
     @Test
@@ -293,7 +313,9 @@ class ExtraPickOptionalityTest {
         assertInstanceOf(ActionResolutionState.class, ctrl.getCurrentState());
         ActionResolutionState state = (ActionResolutionState) ctrl.getCurrentState();
         String currentNick = state.getCurrentPlayerNickname();
-        if (currentNick == null) return; // queue advanced — nothing to check
+        assertNotNull(currentNick,
+                "Alice must still be on the hook: an unaffordable building does "
+                        + "not count as an empty row, unlike an Event card");
 
         assertThrows(IllegalStateException.class,
                 () -> ctrl.onMessageReceived(currentNick, new PickBuildingAction("7777", true)));

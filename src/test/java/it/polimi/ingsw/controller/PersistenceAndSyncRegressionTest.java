@@ -48,11 +48,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Bug-hunter tests for areas not yet covered:
- *   - Persistence layer (notifier wiring after restore)
- *   - Client model out-of-order message handling
- *   - Disconnection mid-event-resolution
- *   - ExtraCardPickAvailable information preservation
+ * Cross-layer tests covering persistence, client-model message handling and
+ * disconnection during event resolution.
+ *
+ * Topics: Persistence (Game.notifier is transient and must be re-wired by
+ * Persistence.load after a server restart), ClientModel robustness to
+ * in-order and reverse-order RoundEndedMessage/GameSyncMessage pairs,
+ * ClientModel preserving ExtraCardPickAvailableMessage information until
+ * the extra pick is consumed, and EventResolutionState correctly marking
+ * players disconnected so subsequent states skip them.
  */
 class PersistenceAndSyncRegressionTest {
 
@@ -96,13 +100,10 @@ class PersistenceAndSyncRegressionTest {
         }
     }
 
-    // ╔══════════════════════════════════════════════════════════════════════╗
-    // ║ P1 — Persistence: Game.notifier is not re-wired after restore        ║
-    // ║                                                                      ║
-    // ║ Symptom: after a server crash + load, food/PP changes emitted by    ║
-    // ║ the model (Game.notifyListeners) are silently dropped because       ║
-    // ║ Game.notifier is transient and never re-set.                         ║
-    // ╚══════════════════════════════════════════════════════════════════════╝
+    // ── Persistence: Game.notifier re-wiring after deserialization ──────────
+    // Game.notifier is transient. After serialization round-trip it must be
+    // null, and Persistence.load must explicitly restore the wiring so that
+    // model-emitted events still reach controller listeners after a restart.
 
     /**
      * Game.notifier is transient.  After deserialization it must be null,
@@ -114,9 +115,9 @@ class PersistenceAndSyncRegressionTest {
         AtomicInteger fired = new AtomicInteger(0);
         game.setNotifier(event -> fired.incrementAndGet());
 
-        // Sanity: pre-roundtrip the notifier works.
+        // Pre-condition: the notifier is wired before the serialization round-trip.
         game.notifyListeners(l -> {});
-        assertEquals(1, fired.get(), "Sanity: notifier must work pre-roundtrip");
+        assertEquals(1, fired.get(), "Notifier must fire on the original Game instance");
 
         Game restored = deepCopyViaSerialization(game);
 
@@ -141,7 +142,7 @@ class PersistenceAndSyncRegressionTest {
         controller.onMessageReceived("Alice", new SetPlayerCountAction(2));
         controller.onMessageReceived("Alice", new ReadyAction(true));
         controller.onMessageReceived("Bob",   new ReadyAction(true));
-        assertNotNull(controller.getGame(), "Sanity: game must be started");
+        assertNotNull(controller.getGame(), "Pre-condition: game must be started");
 
         // 2) Save + load.
         Path target = tempDir.resolve("savestate.bin");
@@ -169,13 +170,11 @@ class PersistenceAndSyncRegressionTest {
                 "events still reach controller listeners after restore.");
     }
 
-    // ╔══════════════════════════════════════════════════════════════════════╗
-    // ║ P2 — ClientModel: out-of-order RoundEnded vs GameSync                ║
-    // ║                                                                      ║
-    // ║ In the normal flow (EndRoundState), RoundEnded is emitted BEFORE     ║
-    // ║ GameSync, both via the same TCP connection so order is preserved.    ║
-    // ║ But the apply* methods are individually fragile to a swap — verify.  ║
-    // ╚══════════════════════════════════════════════════════════════════════╝
+    // ── ClientModel: RoundEnded / GameSync ordering ─────────────────────────
+    // In the normal flow, RoundEnded is emitted before GameSync on the same
+    // TCP connection so ordering is preserved. These tests assert that
+    // ClientModel stays consistent in both orders: the newer round
+    // number from a GameSync must not be overwritten by an older RoundEnded.
 
     /**
      * Normal in-order flow: RoundEnded first, then GameSync.
@@ -215,12 +214,10 @@ class PersistenceAndSyncRegressionTest {
                 Era.I, round, Map.of(), List.of("Alice"));
     }
 
-    // ╔══════════════════════════════════════════════════════════════════════╗
-    // ║ P3 — ClientModel: ExtraCardPickAvailable info is preserved           ║
-    // ║                                                                      ║
-    // ║ The client model tracks the extra upper-row picks so GUI/TUI can     ║
-    // ║ keep enabling the correct row until the extra choices are consumed.  ║
-    // ╚══════════════════════════════════════════════════════════════════════╝
+    // ── ClientModel: ExtraCardPickAvailable preservation ────────────────────
+    // The client model must keep the extra-upper-pick availability set so the
+    // GUI/TUI re-enable the correct row until the granted extra picks are
+    // consumed by CharacterCardTaken / BuildingCardTaken.
 
     @Test
     void clientModelTracksExtraCardPickAvailabilityUntilConsumed() {
@@ -240,9 +237,10 @@ class PersistenceAndSyncRegressionTest {
         assertFalse(m.canCurrentActionPlayerPickFromRow(true));
     }
 
-    // ╔══════════════════════════════════════════════════════════════════════╗
-    // ║ P4 — EventResolutionState marks disconnections during the phase      ║
-    // ╚══════════════════════════════════════════════════════════════════════╝
+    // ── EventResolutionState: disconnections during the phase ───────────────
+    // Verifies that EventResolutionState.onPlayerDisconnected marks
+    // the player as disconnected so subsequent states (EndRound,
+    // TotemPlacement) correctly skip that player.
 
     @Test
     void eventResolutionStateMarksPlayerDisconnectedWhenNotified() {

@@ -6,7 +6,11 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Bug hunter tests for food spending semantics after spendFood was made strict.
+ * Tests for the food-spending contract on Player.
+ *
+ * Verifies that spendFood is strict — overspending throws and does not silently
+ * fall back to a prestige penalty — while the dedicated applyTurnPenalty converts
+ * missing food into prestige loss according to the turn-order rules.
  */
 class PlayerFoodRulesTest {
 

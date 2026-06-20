@@ -22,14 +22,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Regression: when a player gets disconnected during ActionResolutionState
- * AND it is their turn, the controller still places their totem on the turn
- * order tile and applies the slot effect (food gain / food cost / PP loss).
+ * When a player gets disconnected during ActionResolutionState AND it is
+ * their turn, the controller still places their totem on the turn order
+ * tile and applies the slot effect (food gain / food cost / PP loss).
  *
- * <p>This behaviour was confirmed as intentional during Phase 1 of the bug
- * hunt: a disconnected player still "completes" their action by routing the
- * totem to the next available turn-order slot. The test pins it down so that
- * future refactors don't silently change it.
+ * This is intentional: under the disconnection-resilience rule, a
+ * disconnected player still "completes" their action by routing the totem
+ * to the next available turn-order slot, rather than leaving the round
+ * stuck waiting for input that will never come.
  */
 class DisconnectedTurnSlotEffectRegressionTest {
 

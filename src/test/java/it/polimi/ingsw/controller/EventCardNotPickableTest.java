@@ -25,16 +25,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Bug-hunter: an {@link EventCard} that sits in the upper or lower row must
- * never be acquirable through a {@link PickCardAction}. The character pick
- * row exposed by {@link Round#getUpperRowTribute()} only contains
- * {@code CharacterCard}s, so an event id lookup must throw.
+ * Rulebook section 8 enforcement: event cards cannot be picked by players.
  *
- * <p>The test bootstraps a 2-player game, advances to ActionResolutionState
- * by having both players place their totems on upper-pick tiles, then injects
- * an event card into the upper tribute "view" — actually only the event-row
- * list, since events live there — and attempts to pick by event id. The
- * controller is expected to reject the action.
+ * Verifies that a PickCardAction targeting an event id is rejected, unknown
+ * ids are rejected, and that a regular character pick still succeeds when an
+ * event shares the upper row. The character pick row exposed by
+ * Round.getUpperRowTribute() only contains CharacterCards, so any event id
+ * lookup must throw.
  */
 class EventCardNotPickableTest {
 

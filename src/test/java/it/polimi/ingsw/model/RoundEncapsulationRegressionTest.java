@@ -15,8 +15,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * Bug hunter tests for Round board encapsulation.
- * External code must not be able to mutate board rows directly through getters.
+ * Encapsulation tests for Round board-row getters.
+ *
+ * Verifies that the lower/upper character, event and building row getters return
+ * unmodifiable views. External code calling clear() on any of them must throw
+ * UnsupportedOperationException and leave the underlying row unchanged.
  */
 class RoundEncapsulationRegressionTest {
 

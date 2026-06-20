@@ -18,18 +18,17 @@ import java.util.function.Consumer;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Regression test for the forced-win countdown delivered on reconnect after a
- * server restart from persistence (FA4 + persistence interaction).
+ * Test for the forced-win countdown delivered on reconnect after a server
+ * restart from persistence (resilience + persistence interaction).
  *
- * <p>Scenario reproduced end-to-end through the production restore path:
- * a 2-player game is started, then a fresh {@link LobbyManager} is built around
- * the same controller via the restore constructor (as {@code LobbyBootstrap}
- * does after a crash). That marks every player disconnected → zero connected →
- * suspended with the countdown NOT yet running. When the first player
- * reconnects, the connected count goes 0 → 1 and the countdown must be anchored
- * fresh, so the {@code GameSuspendedMessage} sent to that client must carry a
- * positive remaining (≈ the full timeout) — not the stale {@code -1} computed
- * while still at zero connected.</p>
+ * Scenario reproduced end-to-end through the production restore path: a
+ * 2-player game is started, then a fresh LobbyManager is built around the
+ * same controller via the restore constructor (as LobbyBootstrap does after
+ * a crash). That marks every player disconnected, zero connected, suspended
+ * with the countdown not yet running. When the first player reconnects, the
+ * connected count goes 0 to 1 and the countdown must be anchored fresh, so
+ * the GameSuspendedMessage sent to that client must carry a positive
+ * remaining time, not the stale -1 computed while still at zero connected.
  */
 class ReconnectAfterRestoreSuspensionTest {
 

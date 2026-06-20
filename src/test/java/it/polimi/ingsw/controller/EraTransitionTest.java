@@ -20,14 +20,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
- * Bug-hunter: era transitions are detected by scanning the upper row after the
- * refill. If a card of era N+2 leaks into the upper row while the game is in
- * era N, the controller must still advance only by one step
- * ({@code endEra} guards against skipping). A second transition will be
- * picked up next round.
+ * Era transition tests for Round.checkEraTransition().
  *
- * <p>Also verifies that on Era II→III the lower buildings are discarded and
- * the upper buildings are shifted, per rulebook.
+ * Verifies that finding an Era II card in the upper row while in Era I
+ * advances the game to Era II, that finding an Era III card while still in
+ * Era I does not skip directly to Era III (the state machine advances one
+ * era at a time), and that on the Era II to III transition the lower-row
+ * buildings are discarded while the upper buildings shift to lower, per
+ * rulebook section 13.
  */
 class EraTransitionTest {
 
@@ -73,7 +73,7 @@ class EraTransitionTest {
         assertEquals(Era.I, game.getCurrentEra());
         round.checkEraTransition();
 
-        // We went from Era.I to Era.II — and only that.
+        // The game advanced from Era.I to Era.II — and only by one step.
         assertEquals(Era.II, game.getCurrentEra());
         // The Era II building reveal happened in the upper buildings row.
         assertEquals(1, round.getUpperRowBuildings().size());

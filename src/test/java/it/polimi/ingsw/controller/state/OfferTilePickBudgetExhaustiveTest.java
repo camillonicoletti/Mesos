@@ -19,11 +19,10 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Bug-hunter / contract test for {@link OfferTileSlotResolver}: for every
- * offer tile A–G defined in {@code offer_tiles.json} the resolver must
- * produce the expected upper / lower pick budget. Drifts between the JSON
- * resource and the client-side hardcoded budget in {@code ClientModel}
- * surface here.
+ * Contract test for OfferTileSlotResolver: for every offer tile
+ * A-G defined in offer_tiles.json the resolver must produce the
+ * expected upper / lower pick budget. A drift between the JSON resource
+ * and the client-side hardcoded budget in ClientModel surfaces here.
  */
 class OfferTilePickBudgetExhaustiveTest {
 

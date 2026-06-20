@@ -28,9 +28,10 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Regression tests for the FA3 (persistence) + FA4 (suspension) interaction.
+ * Tests for the interaction between persistence and the suspension/resilience
+ * feature when a server restarts from a saved game.
  *
- * <p>When a server crashes while the match is suspended (only one player left),
+ * When a server crashes while the match is suspended (only one player left),
  * the lone-player countdown must not be judged by the stale pre-crash timestamp
  * after the restart. With nobody connected the countdown is paused; it restarts
  * fresh from the moment the first player reconnects, and the match resumes once

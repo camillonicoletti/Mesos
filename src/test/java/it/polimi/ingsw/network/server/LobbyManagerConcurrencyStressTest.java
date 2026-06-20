@@ -22,24 +22,14 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Stress test for the {@link LobbyManager} synchronization model.
- *
- * <p>Hammers the lobby with concurrent {@code handle*} calls from many
- * threads and asserts that:
- * <ul>
- *   <li>no unchecked exception escapes the dispatcher,</li>
- *   <li>the lobby state stays internally consistent (ready set, lobby
- *       players, disconnected players all reference the same nickname
- *       universe),</li>
- *   <li>when 4 players reach the ready state the controller transitions
- *       exactly once into a started game (no double-start race).</li>
- * </ul>
- *
- * <p>If {@code synchronized} were removed from {@code LobbyManager} this
- * test would fail intermittently with concurrent modification exceptions or
- * inconsistent state. Its passing is the empirical confirmation that the
- * monitor of {@code LobbyManager} is the single, sufficient serialization
- * point for the server.
+ * Stress test for the LobbyManager synchronization model. Hammers the lobby
+ * with concurrent handle* calls from many threads and asserts that no
+ * unchecked exception escapes the dispatcher, the lobby state stays
+ * internally consistent (ready set, lobby players and disconnected players
+ * all reference the same nickname universe), and that when 4 players reach
+ * the ready state the controller transitions exactly once into a started
+ * game (no double-start race). If synchronized were removed from
+ * LobbyManager, this test would fail intermittently.
  */
 class LobbyManagerConcurrencyStressTest {
 

@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for EventResolution in the model layer.
  *
- * <p>Verifies: Hunting, Shamanic Ritual, Cave Paintings and Sustenance event resolution.
+ * Verifies: Hunting, Shamanic Ritual, Cave Paintings and Sustenance event resolution.
  */
 class GameEventResolutionTest {
 

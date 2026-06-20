@@ -35,7 +35,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for GameController disconnection / reconnection flow.
  *
- * <p>Verifies: behaviour when players disconnect during lobby, action resolution and event resolution.
+ * Verifies: behaviour when players disconnect during the lobby, ready-check and
+ * totem-placement phases, plus suspension/resume and the suspension-timeout win condition.
  */
 public class GameControllerDisconnectionTest {
 

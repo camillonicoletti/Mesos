@@ -38,7 +38,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Regression tests for rule-based controller/model behaviors discovered by the full legacy test suite.
+ * Tests for rule-based controller/model behaviors: lobby start, food spending,
+ * event-card pick rejection, building cost/discount, and extra-pick auto-skip.
  */
 public class GameControllerRulesEnforcementTest {
 
@@ -107,7 +108,7 @@ public class GameControllerRulesEnforcementTest {
         assertEquals(0, alice.getTribe().countCharacterCards());
         assertEquals("Alice", controller.getCurrentActionPlayerNickname());
     }
-    //le building must be taken and the exact discounted cost must be paid. */
+    /** An affordable building must be taken and the exact discounted cost must be paid. */
     @Test
     void affordableBuildingIsTakenAndExactDiscountedCostIsPaid() {
         Player alice = new Player("Alice", createTotem(TotemColor.RED));
@@ -187,7 +188,11 @@ public class GameControllerRulesEnforcementTest {
         assertFalse(controller.getCurrentState() instanceof ActionResolutionState);
         assertInstanceOf(TotemPlacementState.class, controller.getCurrentState());    }
 
-    /** Once ReadyCheckState has started, the chosen player count must not be changed. */
+    /**
+     * Once ReadyCheckState has started, the first player can still raise the
+     * chosen player count; if the new count exceeds the current lobby size,
+     * the controller returns to LobbyState to wait for more players.
+     */
     @Test
     void playerCountCanBeChangedAfterReadyCheckStarted() {
         GameController controller = new GameController();

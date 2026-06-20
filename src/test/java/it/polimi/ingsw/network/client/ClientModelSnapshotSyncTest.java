@@ -15,16 +15,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Unit tests for the {@link ClientModel#applySnapshot(GameSnapshot)} contract.
- *
- * <p>Components under test: {@link ClientModel} (network.client) and its
- * synchronization with {@link GameSnapshot} / {@link PlayerSnapshot} from the
- * clientbound protocol.
- *
- * <p>These tests do not start JavaFX, do not open sockets and do not use
- * reflection. They drive the client model exclusively through its public
- * {@code applySnapshot(...)} API and assert on the read-only getters used by
- * the GUI / TUI layers.
+ * Unit tests for the ClientModel.applySnapshot(GameSnapshot) contract:
+ * synchronization of ClientModel with GameSnapshot / PlayerSnapshot from the
+ * clientbound protocol. These tests drive the model only through its public
+ * applySnapshot API and assert on the read-only getters used by the GUI/TUI.
  */
 class ClientModelSnapshotSyncTest {
 
@@ -62,10 +56,8 @@ class ClientModelSnapshotSyncTest {
 
     /**
      * After applying a snapshot, every player carried by the snapshot must
-     * appear in {@code getPlayers()} as a {@link PlayerView} with food,
-     * prestige and card ids matching the snapshot fields. This guards the
-     * GUI assumption that all visible opponents (not only the current
-     * player) are available for rendering after a sync.
+     * appear in getPlayers() as a PlayerView with food, prestige and card
+     * ids matching the snapshot fields, including non-current opponents.
      */
     @Test
     void applySnapshotPopulatesAllVisiblePlayersWithFoodPrestigeAndCardIds() {
@@ -107,11 +99,10 @@ class ClientModelSnapshotSyncTest {
     }
 
     /**
-     * The two row id lists carried by {@link GameSnapshot} mix character and
-     * event card ids. The client model receives the event ids separately and
-     * must classify them via {@link ClientModel#isEventCard(int)}. Character
-     * ids in the same lists must NOT be reported as events. This is the
-     * client-side guard for "event cards cannot be picked as tribute".
+     * The two row id lists carried by GameSnapshot mix character and event
+     * card ids. The client model receives the event ids separately and must
+     * classify them via ClientModel.isEventCard(int); character ids in the
+     * same lists must not be reported as events.
      */
     @Test
     void eventCardIdsFromSnapshotAreRecognizedAsEventsAndNotCharacters() {
@@ -143,11 +134,9 @@ class ClientModelSnapshotSyncTest {
     }
 
     /**
-     * Two consecutive {@code applySnapshot} calls must REPLACE stale player
-     * and row state, not accumulate it. A player removed between snapshots
-     * must disappear, and rows must reflect only the latest snapshot's ids.
-     * This protects the GUI from showing ghost players or duplicated cards
-     * after a refresh.
+     * Two consecutive applySnapshot calls must replace stale player and row
+     * state, not accumulate it: a removed player must disappear, and rows
+     * must reflect only the latest snapshot's ids.
      */
     @Test
     void consecutiveSnapshotsReplaceStalePlayerAndRowDataInsteadOfAccumulating() {
@@ -201,9 +190,8 @@ class ClientModelSnapshotSyncTest {
     }
 
     /**
-     * The global fields exposed by {@link ClientModel} ({@code roundNumber},
-     * {@code currentEra}, {@code remainingTribeDeckCards}) are read by the
-     * HUD and must reflect the latest snapshot, not the first one applied.
+     * The global fields exposed by ClientModel (roundNumber, currentEra,
+     * remainingTribeDeckCards) must reflect the latest snapshot applied.
      */
     @Test
     void applySnapshotUpdatesGlobalRoundEraAndRemainingDeckFields() {

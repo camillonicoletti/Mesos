@@ -22,9 +22,10 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Unit tests for GameController lobby ready flow.
+ * Unit tests for GameController lobby and ready-check flow.
  *
- * <p>Verifies: ready / unready transitions and game-start trigger when all players are ready.
+ * Verifies: joining the lobby, player-count selection, ready/unready transitions,
+ * the game-start trigger once all players are ready, and disconnection handling in both states.
  */
 public class GameControllerLobbyReadyTest {
 

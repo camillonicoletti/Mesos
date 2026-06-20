@@ -17,16 +17,11 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Bug-hunter for the "only new sets / pairs" tracking in
- * {@link FullSetFoodEffect} and {@link InventorPairFoodEffect}.
- *
- * <p>Pins down:
- * <ul>
- *   <li>Buying a building with an already-completed set does NOT retroactively reward.</li>
- *   <li>Each new set rewards once and only once.</li>
- *   <li>Multiple copies of the building each reward independently (additive).</li>
- *   <li>InventorPair counts floor(count/2) per icon group, rewards on new pairs only.</li>
- * </ul>
+ * "Only new sets / pairs" reward contract for FullSetFoodEffect and
+ * InventorPairFoodEffect: buying a building with an already-completed set or
+ * pair does not retroactively reward, each new set/pair rewards once, copies
+ * of the building reward independently, and InventorPairFoodEffect counts
+ * floor(count/2) per icon group.
  */
 class FullSetAndInventorPairRewardTest {
 
@@ -48,7 +43,7 @@ class FullSetAndInventorPairRewardTest {
 
         // Acquire building AFTER the set was completed — no retroactive food.
         p.addBuildingCard(new BuildingCard(900, Era.I, 0, new FullSetFoodEffect(), 0));
-        assertEquals(0, p.getFood(), "Building #1 must not reward already-completed sets");
+        assertEquals(0, p.getFood(), "FullSetFoodEffect must not reward already-completed sets");
     }
 
     @Test
@@ -88,7 +83,7 @@ class FullSetAndInventorPairRewardTest {
         // Complete the set — both buildings fire independently.
         p.addCharacterCard(new ShamanCard(6, Era.I, 2, 1));
         assertEquals(10, p.getFood(),
-                "Two copies of building #1 each grant 5 food on the first completed set");
+                "Two copies of FullSetFoodEffect each grant 5 food on the first completed set");
     }
 
     @Test
@@ -122,7 +117,7 @@ class FullSetAndInventorPairRewardTest {
 
         // Building acquired AFTER the pair was formed — no retroactive food.
         p.addBuildingCard(new BuildingCard(900, Era.I, 0, new InventorPairFoodEffect(), 0));
-        assertEquals(0, p.getFood(), "Building #5 must not reward already-formed pairs");
+        assertEquals(0, p.getFood(), "InventorPairFoodEffect must not reward already-formed pairs");
     }
 
     @Test

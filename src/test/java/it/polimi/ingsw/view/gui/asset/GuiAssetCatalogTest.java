@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Unit tests for GuiAssetCatalog (view.gui.asset).
  *
- * <p>Verifies: lookup of GUI image and style assets by key.
+ * Verifies lookup of GUI image and style assets by key.
  */
 class GuiAssetCatalogTest {
 

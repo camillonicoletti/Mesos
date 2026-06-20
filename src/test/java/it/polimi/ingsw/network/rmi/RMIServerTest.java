@@ -23,12 +23,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Unit tests for {@link RMIServer}.
- *
- * <p>The server is constructed directly (no real RMI registry) and exercised
- * through its {@link RemoteServer} interface with local {@link RemoteClient}
- * stubs. Each test unexports the server afterwards to avoid leaking the
- * exported object across the test suite.
+ * Unit tests for RMIServer. The server is constructed directly (no real RMI
+ * registry) and exercised through its RemoteServer interface with local
+ * RemoteClient stubs. Each test unexports the server afterwards to avoid
+ * leaking the exported object across the test suite.
  */
 class RMIServerTest {
 

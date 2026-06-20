@@ -14,10 +14,8 @@ import static org.junit.jupiter.api.Assertions.*;
  * Tests for BoardFactory.
  *
  * BoardFactory reads offer_tiles.json and filters tiles based on the number of players.
- * The current JSON contains three tiles:
- *   - A (minPlayers: 2) — always included
- *   - B (minPlayers: 2) — always included
- *   - C (minPlayers: 3) — only included with 3 or more players
+ * The JSON contains seven tiles: A (minPlayers: 5), B/C/E/F (minPlayers: 2),
+ * D (minPlayers: 3), G (minPlayers: 4).
  *
  * This test suite verifies:
  *   1. Offer tile filtering: the correct tiles are included/excluded per player count

@@ -13,19 +13,17 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Deep bug-hunter tests for the TUI {@link CommandParser}.
+ * Edge-case parsing tests for the TUI CommandParser.
  *
- * <p>The parser now executes commands through the {@link ClientController}
- * façade rather than returning a message, so these tests capture what was
- * dispatched (via {@link CapturingClientConnection}) and inspect it. A rejected
- * command must dispatch nothing.
+ * The parser executes commands through the ClientController facade rather
+ * than returning a message, so these tests capture what was dispatched
+ * (via CapturingClientConnection) and inspect it. A rejected command must
+ * dispatch nothing.
  *
- * Focus on subtle parsing behaviours:
- *   - whitespace handling
- *   - case sensitivity
- *   - non-letter tile arguments
- *   - extra spaces between tokens
- *   - missing or partial arguments
+ * Covered parsing behaviours: whitespace handling (leading, trailing,
+ * between tokens); case sensitivity of tile letters and row names;
+ * non-letter tile arguments; missing or partial arguments; fully unknown
+ * commands.
  */
 class CommandParserAdditionalCasesTest {
 
@@ -39,7 +37,7 @@ class CommandParserAdditionalCasesTest {
         parser = new CommandParser(controller);
     }
 
-    /** Parses {@code input} and returns the single message it dispatched, or null. */
+    /** Parses input and returns the single message it dispatched, or null. */
     private ClientMessage dispatched(String input) {
         connection.sent.clear();
         parser.parse(input, () -> { });
@@ -62,9 +60,9 @@ class CommandParserAdditionalCasesTest {
     // ── Place command edge cases ─────────────────────────────────────────────
 
     /**
-     * The parser must accept lowercase tile letters and normalise them.
-     * Bug indicator: returning null on lowercase would be a UX regression
-     * since users frequently type lowercase.
+     * Verifies that the parser accepts both lowercase and uppercase tile
+     * letters and normalises them to uppercase before dispatching the
+     * PlaceTotemAction.
      */
     @Test
     void placeAcceptsLowercaseAndUppercaseLetters() {
@@ -136,10 +134,9 @@ class CommandParserAdditionalCasesTest {
     }
 
     /**
-     * Pick with non-numeric id — the parser does not validate that the id
-     * is a number, it passes the string through.  This is documented behaviour
-     * because the server identifies cards by numeric id but the parser is
-     * row-agnostic and simply forwards the string.
+     * Pick with non-numeric id — the parser treats the card id as an opaque
+     * string and forwards it as-is, with no numeric check (unlike the row
+     * argument, which the parser does validate).
      */
     @Test
     void pickWithNonNumericIdIsAcceptedByParser() {

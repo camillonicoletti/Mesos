@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * Unit tests for ClientLaunchOptions (network.client).
  *
- * <p>Verifies: command-line option parsing for the client entry point.
+ * Verifies: command-line option parsing for the client entry point.
  */
 class ClientLaunchOptionsTest {
 

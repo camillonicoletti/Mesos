@@ -19,14 +19,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Bug hunter tests for duplicated/replayed game actions.
+ * Tests for replayed game actions in GameController.
+ *
+ * Verifies that a PickCardAction accepted once cannot be applied twice: a
+ * replay from the same player must throw and must not duplicate the card in
+ * the tribe or advance the action-resolution queue again.
  */
 class GameControllerReplayRegressionTest {
 
-    /**
-     * Replaying the same card-pick action after it has already been accepted must be rejected.
-     * The replay must not add the same card twice and must not advance the action resolution state again.
-     */
     @Test
     void replayedPickCardActionFromPreviousPlayerIsRejectedWithoutMutatingTwice() {
         GameController controller = createActionResolutionWithFirstPlayerOn('B', 'C');

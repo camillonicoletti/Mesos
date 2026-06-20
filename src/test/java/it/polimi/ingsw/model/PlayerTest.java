@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for Player (model).
  *
- * <p>Verifies: tribe management, food / PP accounting and building-effect application on the Player entity.
+ * Verifies tribe management, food / PP accounting and building-effect application on the Player entity.
  */
 public class PlayerTest {
 
@@ -290,9 +290,9 @@ public class PlayerTest {
         player.addBuildingCard(new BuildingCard(1, Era.I, 0, new InventorPairFoodEffect(), 0));
 
         player.addCharacterCard(new InventorCard(1, Era.I, 2, InventorIcons.INVENTION_1));
-        player.addCharacterCard(new InventorCard(2, Era.I, 2, InventorIcons.INVENTION_1)); // coppia 1 → +3
+        player.addCharacterCard(new InventorCard(2, Era.I, 2, InventorIcons.INVENTION_1)); // pair 1 → +3
         player.addCharacterCard(new InventorCard(3, Era.I, 2, InventorIcons.INVENTION_2));
-        player.addCharacterCard(new InventorCard(4, Era.I, 2, InventorIcons.INVENTION_2)); // coppia 2 → +3
+        player.addCharacterCard(new InventorCard(4, Era.I, 2, InventorIcons.INVENTION_2)); // pair 2 → +3
 
         assertEquals(6, player.getFood()); // 3 + 3
     }

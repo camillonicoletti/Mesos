@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Unit tests for CardDescriptionService (view.gui.component).
  *
- * <p>Verifies: human-readable description of cards for the GUI layer.
+ * Verifies human-readable description of cards for the GUI layer.
  */
 class CardDescriptionServiceTest {
 

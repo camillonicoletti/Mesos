@@ -10,9 +10,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Unit tests for Persistence.save().
- *
- * <p>Verifies: atomic save-file creation and overwrite (controller persistence facade).
+ * Unit tests for Persistence.save(): verifies atomic save-file creation
+ * and overwrite (controller persistence facade).
  */
 class PersistenceSaveTest {
 

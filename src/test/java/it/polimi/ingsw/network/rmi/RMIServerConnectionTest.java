@@ -15,9 +15,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Unit tests for {@link RMIServerConnection}: the server-side adapter that
- * fronts a remote callback object and feeds inbound messages to the dispatcher.
- * No real RMI registry is involved — the {@link RemoteClient} is a local stub.
+ * Unit tests for RMIServerConnection: the server-side adapter that fronts a
+ * remote callback object and feeds inbound messages to the dispatcher.
+ * No real RMI registry is involved — RemoteClient is a local stub.
  */
 class RMIServerConnectionTest {
 

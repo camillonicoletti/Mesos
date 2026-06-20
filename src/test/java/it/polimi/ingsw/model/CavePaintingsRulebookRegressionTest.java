@@ -13,21 +13,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Regression test pinning down the rulebook-verified behaviour of the three
- * physical Cave Paintings cards.
- *
- * <p>The Italian rulebook describes the card with two adjacent thresholds —
- * "lose row" and "gain row" — without a neutral band:
- * <ul>
- *   <li>Era I  (id 88, minArtists=1, ppPenalty=2, ppPerArtist=1):
- *       0 artists ⇒ -2 PP; 1+ artists ⇒ 1 × artists PP.</li>
- *   <li>Era II (id 92, minArtists=2, ppPenalty=2, ppPerArtist=2):
- *       0-1 artists ⇒ -2 PP; 2+ artists ⇒ 2 × artists PP.</li>
- *   <li>Era III(id 94, minArtists=3, ppPenalty=2, ppPerArtist=3):
- *       0-2 artists ⇒ -2 PP; 3+ artists ⇒ 3 × artists PP.</li>
- * </ul>
- *
- * <p>These tests freeze that contract. If anyone refactors {@code resolve} or
- * tweaks the event JSON, this test will catch unintended drift.
+ * physical Cave Paintings cards: the rulebook uses two adjacent thresholds,
+ * "lose row" and "gain row", with no neutral band in between. These tests
+ * freeze that contract so refactors of resolve or the event JSON don't drift.
  */
 class CavePaintingsRulebookRegressionTest {
 

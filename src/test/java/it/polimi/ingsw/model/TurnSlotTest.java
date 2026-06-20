@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for TurnSlot (model.board).
  *
- * <p>Verifies: turn-slot effect application and ordering on the turn-order tile.
+ * Verifies turn-slot effect application and ordering on the turn-order tile.
  */
 public class TurnSlotTest {
 

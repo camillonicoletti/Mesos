@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for Totem (model).
  *
- * <p>Verifies: totem color, position track and equality semantics.
+ * Verifies totem color, position track and equality semantics.
  */
 public class TotemTest {
 

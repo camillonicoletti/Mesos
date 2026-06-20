@@ -25,22 +25,18 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Bug-hunter: EventResolutionState resolves events for every player in the
- * game — including disconnected ones. This is consistent with the rulebook
- * (Sustenance is "obbligatorio" and Hunt is automatic) but the controller
- * does not currently check the suspension flag during the per-event sleep
- * loop. The tests pin down:
+ * Disconnection-resilience tests for EventResolutionState.
  *
- * <ul>
- *   <li>Disconnected players still receive Hunt food/PP.</li>
- *   <li>Disconnected players still pay Sustenance food (or lose PP).</li>
- *   <li>onEnter does not throw when all players are disconnected before resolution starts.</li>
- * </ul>
+ * Per rulebook section 12, Hunt and Sustenance are automatic events that
+ * apply to every player at end of round; combined with the
+ * disconnection-resilience rule, a disconnected player must still receive
+ * Hunt food and PP, pay Sustenance food (or lose PP if unable to pay), and
+ * onEnter must not throw when all players are disconnected before
+ * resolution starts.
  *
- * <p>To avoid the 5-second per-event sleep multiplying the test runtime, each
- * test injects exactly one event. The actual 5s sleep still fires, but only
- * once per test; assertions read the model state after the daemon thread has
- * had ~300ms to run the event.
+ * Each test injects a single event to bound the runtime of the per-event
+ * 5s sleep used by EventResolutionState. Assertions read the model state
+ * after the daemon thread has had ~300ms to execute.
  */
 class EventResolutionWithDisconnectedPlayersTest {
 

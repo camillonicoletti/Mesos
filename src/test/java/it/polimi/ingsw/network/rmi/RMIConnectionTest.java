@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Unit tests for RMI transport (network.rmi).
  *
- * <p>Verifies: round-trip callback exchange between RMIClientConnection and a remote server stub.
+ * Verifies: round-trip callback exchange between RMIClientConnection and a remote server stub.
  */
 class RMIConnectionTest {
 

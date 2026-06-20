@@ -14,8 +14,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * Bug hunter tests for model encapsulation.
- * These tests verify that external code cannot corrupt core model collections directly.
+ * Encapsulation tests for the Game and Player model.
+ *
+ * Verifies that getters exposing collections (getPlayers, getCharacterCards, getBuildingCards)
+ * return unmodifiable views: external code cannot mutate the underlying lists through
+ * clear() or other write operations.
  */
 class ModelEncapsulationRegressionTest {
 

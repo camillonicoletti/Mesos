@@ -11,7 +11,10 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Bug hunter tests for final scoring lifecycle.
+ * Final scoring lifecycle tests for Game. Verifies that querying the winner
+ * or a player's final score before Game.end() is called does not freeze the
+ * cached final scores: subsequent prestige changes must still be reflected
+ * once the game actually ends.
  */
 class FinalScoringRegressionTest {
 

@@ -8,14 +8,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Tests for {@link CardRenderer}, the pure card-drawing layer extracted from
- * {@link Renderer}. Focuses on:
- * <ul>
- *   <li>shape invariants ({@link TuiStyle#CARD_H} rows per card);</li>
- *   <li>each card kind picked via {@link CardCatalog} (Character / Building /
- *       Event variants + UNKNOWN fallback);</li>
- *   <li>pure helpers that previously lived as private methods on Renderer.</li>
- * </ul>
+ * Tests for CardRenderer, the pure card-drawing layer extracted from Renderer.
+ * Focuses on shape invariants (TuiStyle.CARD_H rows per card), each card kind
+ * picked via CardCatalog (Character / Building / Event variants + UNKNOWN
+ * fallback), and pure helpers that previously lived as private methods on Renderer.
  * Card IDs hard-coded below come from the bundled JSON resources
  * (characters.json / buildings.json / events.json).
  */

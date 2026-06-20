@@ -42,16 +42,14 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Behaviour-grouped edge-case suite for the controller package.
+ * Covers GameController's lobby/ready, totem-placement, action-resolution,
+ * disconnection and client-sync contracts.
  *
- * <p>Scope: controller / state / action / listener layer only. No network,
- * server, client, VirtualView or socket/RMI classes are used.
- *
- * <p>Tests are organized into {@link Nested} groups by behaviour:
- * lobby/ready flow, totem placement, card picking, disconnection and
- * suspension, state machine and client-facing notifications. Some tests are
- * intentionally strict probes: if they fail, they reveal a controller
- * validation or state-flow issue worth discussing with the team.
+ * Scope: controller / state / action / listener layer only. No network,
+ * server, client, VirtualView or socket/RMI classes are used. Tests are
+ * organized into Nested groups by behaviour: lobby/ready flow, totem
+ * placement, card picking, disconnection and suspension, state machine
+ * and client-facing notifications.
  */
 public class GameControllerComprehensiveBehaviorTest {
 
@@ -403,7 +401,7 @@ public class GameControllerComprehensiveBehaviorTest {
 
     /**
      * Verifies that the controller state machine rejects illegal transitions
-     * (null target, failing {@code onEnter}) and preserves the previous state
+     * (null target, failing onEnter) and preserves the previous state
      * when a transition fails.
      */
     @Nested
@@ -431,7 +429,7 @@ public class GameControllerComprehensiveBehaviorTest {
     }
 
     /**
-     * Verifies the {@link GameListener} contract: null listeners are rejected,
+     * Verifies the GameListener contract: null listeners are rejected,
      * removed listeners receive no further events, a throwing listener does
      * not block the others and state changes produce the expected
      * notifications.
@@ -491,7 +489,7 @@ public class GameControllerComprehensiveBehaviorTest {
     /**
      * Verifies disconnection / reconnection input validation, the suspension
      * threshold rule for two-player games, the resume path from a
-     * {@link SuspendedState}, the suspension timeout policy and the cleanup
+     * SuspendedState, the suspension timeout policy and the cleanup
      * of suspension data when the game is cleared.
      */
     @Nested
@@ -596,7 +594,7 @@ public class GameControllerComprehensiveBehaviorTest {
                     () -> controller.onMessageReceived("Alice", new PlaceTotemAction('B')));
         }
 
-        /** Design choice: reconnecting an already-connected player must not produce a duplicate notification. */
+        /** Reconnecting an already-connected player is rejected and must not fire a duplicate notification. */
         @Test
         void reconnectingAlreadyConnectedPlayerShouldBeRejectedOrIgnoredWithoutNotification() {
             GameController controller = createStartedTotemPlacementController(2, List.of(
@@ -1082,7 +1080,8 @@ public class GameControllerComprehensiveBehaviorTest {
                 new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
         game.setCurrentRound(round);
 
-        // The Round constructor receives a Game, so rebuild it if the passed round belongs to a temporary game.
+        // The incoming round was built against a throwaway placeholder Game (see createRoundWithRows),
+        // so rebuild it here bound to the real game before attaching it to the controller.
         Round actualRound = new Round(round.getNumber(), game, round.getEra(),
                 new ArrayList<>(round.getLowerRowEvents()),
                 new ArrayList<>(round.getUpperRowEvents()),

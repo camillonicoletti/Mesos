@@ -13,8 +13,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * Bug hunter tests for client-bound snapshots and messages.
- * DTOs sent to clients must not expose mutable internal collections.
+ * Immutability tests for clientbound DTOs (GameSnapshot, PlayerSnapshot,
+ * LobbyUpdateMessage): every collection they expose must be an unmodifiable
+ * view, so a holder cannot mutate it to influence server-side state. Each
+ * test calls clear() on one exposed collection and expects
+ * UnsupportedOperationException.
  */
 class SnapshotImmutabilityRegressionTest {
 
@@ -104,6 +107,50 @@ class SnapshotImmutabilityRegressionTest {
     }
 
     /**
+     * GameSnapshot must not expose disconnected players as a mutable internal collection.
+     */
+    @Test
+    void gameSnapshotDisconnectedPlayersAreNotExternallyMutable() {
+        GameSnapshot snapshot = createGameSnapshot();
+
+        assertThrows(UnsupportedOperationException.class, () -> snapshot.getDisconnectedPlayers().clear());
+        assertEquals(1, snapshot.getDisconnectedPlayers().size());
+    }
+
+    /**
+     * GameSnapshot must not expose turn order positions as a mutable internal collection.
+     */
+    @Test
+    void gameSnapshotTurnOrderPositionsAreNotExternallyMutable() {
+        GameSnapshot snapshot = createGameSnapshot();
+
+        assertThrows(UnsupportedOperationException.class, () -> snapshot.getTurnOrderPositions().clear());
+        assertEquals(1, snapshot.getTurnOrderPositions().size());
+    }
+
+    /**
+     * GameSnapshot must not expose upper row event ids as a mutable internal collection.
+     */
+    @Test
+    void gameSnapshotUpperRowEventIdsAreNotExternallyMutable() {
+        GameSnapshot snapshot = createGameSnapshot();
+
+        assertThrows(UnsupportedOperationException.class, () -> snapshot.getUpperRowEventIds().clear());
+        assertEquals(1, snapshot.getUpperRowEventIds().size());
+    }
+
+    /**
+     * GameSnapshot must not expose lower row event ids as a mutable internal collection.
+     */
+    @Test
+    void gameSnapshotLowerRowEventIdsAreNotExternallyMutable() {
+        GameSnapshot snapshot = createGameSnapshot();
+
+        assertThrows(UnsupportedOperationException.class, () -> snapshot.getLowerRowEventIds().clear());
+        assertEquals(1, snapshot.getLowerRowEventIds().size());
+    }
+
+    /**
      * PlayerSnapshot must not expose character card ids as a mutable internal collection.
      */
     @Test
@@ -148,6 +195,9 @@ class SnapshotImmutabilityRegressionTest {
         Map<Character, String> totemOnTiles = new HashMap<>();
         totemOnTiles.put('A', "Alice");
 
+        Map<String, Integer> turnOrderPositions = new HashMap<>();
+        turnOrderPositions.put("Alice", 0);
+
         return new GameSnapshot(
                 new ArrayList<>(List.of(createPlayerSnapshot())),
                 new ArrayList<>(List.of(10, 11)),
@@ -157,7 +207,12 @@ class SnapshotImmutabilityRegressionTest {
                 Era.I,
                 1,
                 totemOnTiles,
-                new ArrayList<>(List.of("Alice", "Bob"))
+                new ArrayList<>(List.of("Alice", "Bob")),
+                turnOrderPositions,
+                new ArrayList<>(List.of("Bob")),
+                new ArrayList<>(List.of(900)),
+                new ArrayList<>(List.of(901)),
+                10
         );
     }
 

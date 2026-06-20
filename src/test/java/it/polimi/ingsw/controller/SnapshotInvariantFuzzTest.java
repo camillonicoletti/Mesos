@@ -38,12 +38,12 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Deterministic fuzz of a single round: random but legal actions are sent to
- * the controller from {@link TotemPlacementState} through
- * {@link ActionResolutionState}. After every action snapshot invariants are
- * checked. The test bails out as soon as the round leaves
- * ActionResolutionState (so the 5s per-event/end-round sleeps do not run).
+ * the controller from TotemPlacementState through ActionResolutionState.
+ * After every action snapshot invariants are checked. The test bails out as
+ * soon as the round leaves ActionResolutionState (so the 5s per-event/end-round
+ * sleeps do not run).
  *
- * <p>Seed is fixed so failures are reproducible; the recorded action log is
+ * Seed is fixed so failures are reproducible; the recorded action log is
  * printed when an invariant breaks.
  */
 class SnapshotInvariantFuzzTest {

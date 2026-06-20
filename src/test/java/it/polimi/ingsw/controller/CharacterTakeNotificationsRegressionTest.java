@@ -28,18 +28,13 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Bug-hunter tests for client-side synchronisation when a character card is
- * picked.  Several model side-effects mutate food without firing
- * {@code onFoodChanged}, leaving the TUI showing stale food values.
+ * Notification tests for character-card pick side-effects.
  *
- * Suspect points:
- *   1. {@link Player#addCharacterCard(CharacterCard)} triggers
- *      {@link FullSetFoodEffect} / {@link InventorPairFoodEffect} which add food
- *      but never notify.
- *   2. {@code Game.applyCharacterImmediateEffects} adds food for hunters with
- *      the food icon without notifying.
- *
- * These tests confirm whether the bug exists and document the expected fix.
+ * Verifies that every food change triggered by picking a character card
+ * fires onFoodChanged so the client (TUI/GUI) stays in sync with the
+ * server-side model. Covers the Hunter immediate food bonus, FullSetFoodEffect
+ * and InventorPairFoodEffect triggered inside Player.addCharacterCard, and
+ * checks that the expected notified delta matches the actual delta on Player.
  */
 class CharacterTakeNotificationsRegressionTest {
 
@@ -120,7 +115,7 @@ class CharacterTakeNotificationsRegressionTest {
     /**
      * When a Hunter with the "food icon" (Hunter that grants +1 food per Hunter
      * already in tribe) is picked, the player gains food via
-     * {@code applyCharacterImmediateEffects} and the client must be notified.
+     * applyCharacterImmediateEffects and the client must be notified.
      *
      * Reproduction:
      *   1. Give the player a Hunter card (no food icon) before the action.
@@ -166,7 +161,7 @@ class CharacterTakeNotificationsRegressionTest {
         int expectedDelta = 3;
         int actualDelta   = resolverPlayer.getFood() - foodBefore;
         assertEquals(expectedDelta, actualDelta,
-                "Sanity: food should have grown by 1 (slot) + 2 (hunter immediate)");
+                "Model food delta must equal +1 (slot-1 gain) + +2 (hunter immediate bonus)");
 
         assertEquals(2L, positiveEvents,
                 "Expected TWO positive food events — slot-1 gain and hunter " +
@@ -179,8 +174,7 @@ class CharacterTakeNotificationsRegressionTest {
      * When picking a character card that completes a "full set" of all 6
      * character types AND the player owns a building with FullSetFoodEffect,
      * the player gains +5 food via the effect's apply() inside
-     * {@link Player#addCharacterCard(CharacterCard)}.  This food change is not
-     * notified anywhere.
+     * Player.addCharacterCard. This food change is not notified anywhere.
      */
     @Test
     void fullSetFoodEffectFromBuildingDoesNotFireFoodChanged() {
@@ -218,7 +212,7 @@ class CharacterTakeNotificationsRegressionTest {
         // = +6
         int actualDelta = resolverPlayer.getFood() - foodBefore;
         assertEquals(6, actualDelta,
-                "Sanity: full set food + slot gain should add 6 food");
+                "Model food delta must equal +1 (slot-1 gain) + +5 (FullSetFoodEffect)");
 
         // Sum of all positive food deltas notified for the resolver
         int notifiedDelta = listener.food.stream()
@@ -268,7 +262,7 @@ class CharacterTakeNotificationsRegressionTest {
         // = +4
         int actualDelta = resolverPlayer.getFood() - foodBefore;
         assertEquals(4, actualDelta,
-                "Sanity: inventor pair effect + slot gain should add 4 food");
+                "Model food delta must equal +1 (slot-1 gain) + +3 (InventorPairFoodEffect for one new pair)");
 
         int notifiedDelta = listener.food.stream()
                 .filter(e -> e.nick().equals(resolver) && e.delta() > 0)
