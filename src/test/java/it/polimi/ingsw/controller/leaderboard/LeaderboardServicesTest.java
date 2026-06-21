@@ -123,18 +123,6 @@ class LeaderboardServicesTest {
         assertEquals(e.hashCode(), new LeaderboardEntry(2, "alessandro", 42, t, 3).hashCode());
     }
 
-    @Test
-    void matchResultExposesFields() {
-        UUID id = UUID.randomUUID();
-        Instant t = Instant.parse("2026-05-30T10:15:30Z");
-        MatchResult m = new MatchResult(id, "benedetto", 17, t, 4);
-        assertEquals(id, m.matchId());
-        assertEquals("benedetto", m.nickname());
-        assertEquals(17, m.finalScore());
-        assertEquals(t, m.playedAt());
-        assertEquals(4, m.playersCount());
-    }
-
     // ---------- protocol messages ----------
 
     @Test

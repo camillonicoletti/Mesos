@@ -7,7 +7,6 @@ import it.polimi.ingsw.controller.listener.GameListener;
 import it.polimi.ingsw.controller.state.GameState;
 import it.polimi.ingsw.controller.state.ActionResolutionState;
 import it.polimi.ingsw.controller.state.EndGameState;
-import it.polimi.ingsw.controller.state.EndRoundState;
 import it.polimi.ingsw.controller.state.LobbyState;
 import it.polimi.ingsw.controller.state.SuspendedState;
 import it.polimi.ingsw.controller.state.TotemPlacementState;

@@ -1,7 +1,5 @@
 package it.polimi.ingsw.controller.action;
 
-import java.io.Serializable;
-
 // The player buys the building identified by cardId from the upper or lower row,
 // paying its (possibly builder-discounted) food cost.
 public class PickBuildingAction implements GameAction {
