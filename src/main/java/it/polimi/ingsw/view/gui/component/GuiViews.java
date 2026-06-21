@@ -12,10 +12,8 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignV;
 
-/**
- * Small stateless helpers shared by the GUI components, factored out of the
- * copies that used to live in each view.
- */
+// Small helper methods shared by the GUI components (spacers, titles, etc.).
+// Just shortcuts so the same little pieces of code are not repeated everywhere.
 final class GuiViews {
     private GuiViews() {
     }
@@ -57,11 +55,7 @@ final class GuiViews {
         return GuiAudio.isEnabled() ? MaterialDesignV.VOLUME_HIGH : MaterialDesignV.VOLUME_OFF;
     }
 
-    /**
-     * The menu-screen audio toggle (lobby and end game): toggles audio and, when
-     * re-enabled, resumes the menu music. {@code extraStyleClasses} lets callers
-     * add their own layout classes on top of the shared look.
-     */
+
     static Button menuAudioToggleButton(String... extraStyleClasses) {
         Button button = new Button("Audio");
         button.getStyleClass().addAll("secondary-button", "game-rules-button");

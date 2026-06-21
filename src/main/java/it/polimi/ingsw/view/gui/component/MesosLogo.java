@@ -9,6 +9,7 @@ import javafx.scene.image.ImageView;
 
 import java.io.InputStream;
 
+// Builds the "MESOS" title logo image (or a text fallback if the image is missing).
 final class MesosLogo {
     private static final String LOGO_PATH = "assets/ui/mesos_title.png";
     private static final Rectangle2D TITLE_VIEWPORT = new Rectangle2D(160, 230, 1220, 430);

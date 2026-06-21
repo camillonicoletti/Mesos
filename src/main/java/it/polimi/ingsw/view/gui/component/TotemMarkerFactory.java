@@ -11,6 +11,7 @@ import javafx.scene.layout.StackPane;
 
 import java.util.Optional;
 
+// Builds the little totem markers (the colored player pieces) shown on the board.
 final class TotemMarkerFactory {
     private static final Object BOARD_TOTEM_OWNER_KEY = new Object();
 

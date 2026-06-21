@@ -14,10 +14,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Centralizes user-facing card descriptions for the GUI.
- * Keeping this out of GameBoardView avoids mixing layout code with rule text.
- */
+// Builds the text shown to the player to describe a card (its rules and cost).
+// It reads the card data from the asset catalog and turns it into easy lines.
 final class CardDescriptionService {
     private final GuiAssetCatalog assetCatalog;
 

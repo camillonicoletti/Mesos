@@ -38,6 +38,7 @@ import java.util.function.IntConsumer;
 import java.util.stream.Collectors;
 
 
+// Shows each player's area: name, totem, resources and a summary of their tribe.
 final class PlayerDockView {
     private static final int MAX_VISIBLE_SUMMARIES = 3;
     private static final String PRESTIGE_BADGE_PATH = "assets/icons/endgame_prestige_badge.png";

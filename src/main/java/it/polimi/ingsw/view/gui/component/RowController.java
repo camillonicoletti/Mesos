@@ -29,20 +29,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * Decides when and how the two market bands need redrawing and plays the card
- * dealing animations. It owns the "displayed" snapshot of what is currently on
- * screen so it can diff against the model and avoid rebuilding the rows when
- * nothing relevant changed.
- *
- * <ul>
- *   <li>Initial deal (round 0): both rows are dealt from the deck.</li>
- *   <li>Round-end transition (round &gt; 0): the upper row slides down onto the
- *       lower row, then the upper row is refilled from the deck. Buildings only
- *       move at an era change (when their ids differ).</li>
- *   <li>Otherwise, bands are rebuilt in place only when they are out of date.</li>
- * </ul>
- */
+// Decides when the card rows need redrawing and plays the card-dealing animations.
+// It remembers what is on screen so it only rebuilds the rows when something changed.
 final class RowController {
     private static final long DEAL_STAGGER_MILLIS = 90;
     private static final Duration DEAL_DURATION = Duration.millis(300);

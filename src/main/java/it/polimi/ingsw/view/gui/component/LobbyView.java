@@ -31,6 +31,8 @@ import org.kordamp.ikonli.materialdesign2.MaterialDesignL;
 
 import java.io.InputStream;
 
+// The waiting room screen before the game starts.
+// Shows the joined players and the buttons to get ready and start the game.
 public final class LobbyView {
     private static final String LOBBY_LOGO_PATH = "assets/icons/icon_mesos.png";
     private static final Rectangle2D LOBBY_LOGO_VIEWPORT = new Rectangle2D(100, 230, 1240, 450);

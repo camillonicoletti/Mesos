@@ -11,6 +11,8 @@ import javafx.scene.layout.VBox;
 
 import java.util.List;
 
+// Builds the rows of cards on the table that players can look at and take.
+// Makes the character row, the building row and the small card used in animations.
 final class CardMarketView {
     private static final double CARD_WIDTH = 96;
     private static final double CARD_HEIGHT = 135;

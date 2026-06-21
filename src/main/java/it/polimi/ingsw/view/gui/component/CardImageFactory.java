@@ -11,6 +11,8 @@ import javafx.scene.layout.StackPane;
 
 import java.util.Optional;
 
+// Builds the picture of a card from its id.
+// If the image is missing, it shows a simple text placeholder instead.
 final class CardImageFactory implements PlayerDockView.CardImageProvider {
     private final GuiAssetCatalog assetCatalog;
 

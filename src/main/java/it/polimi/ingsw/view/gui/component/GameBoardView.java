@@ -24,6 +24,8 @@ import javafx.scene.layout.VBox;
 import java.util.ArrayList;
 import java.util.List;
 
+// The main game screen: puts together the card rows, decks, players and overlays.
+// It builds the whole board and refreshes it every time the game changes.
 public final class GameBoardView {
     private final ClientModel model;
     private final CardDescriptionService cardDescriptions;

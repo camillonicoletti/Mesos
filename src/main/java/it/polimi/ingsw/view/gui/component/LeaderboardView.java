@@ -26,6 +26,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+// Shows the leaderboard: my position plus a popup with the full ranking list.
 public final class LeaderboardView {
     private static final double LEADERBOARD_INFO_WIDTH = 500;
     private static final double LEADERBOARD_ACTION_WIDTH = 160;

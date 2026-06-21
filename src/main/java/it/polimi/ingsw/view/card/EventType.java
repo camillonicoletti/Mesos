@@ -6,11 +6,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * The four era events plus an unknown fallback. Each instance owns its own rule
- * text and the summary icon that represents it, so callers dispatch through
- * polymorphic methods instead of switching on a token.
- */
+// Represents the 4 game events (Hunt, Sustenance, Shamanic Ritual, Cave Paintings), plus an unknown fallback.
+// Each event knows how to write its own description and which icon it uses.
+// from(token) finds the right event based on its name.
+
 public abstract class EventType {
     private static final String PRESTIGE_BADGE_PATH = "assets/icons/endgame_prestige_badge.png";
 

@@ -13,6 +13,7 @@ import javafx.scene.layout.VBox;
 import java.util.Locale;
 import java.util.Optional;
 
+// Shows the tribe deck: the face-down card back and how many cards are left.
 final class DeckView {
     private static final double CARD_WIDTH = 96;
     private static final double CARD_HEIGHT = 135;

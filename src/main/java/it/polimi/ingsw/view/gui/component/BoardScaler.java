@@ -4,11 +4,8 @@ import javafx.application.Platform;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 
-/**
- * Keeps the fixed-size board scaled to fit inside the available root area.
- * Installs listeners on the root layer and board bounds and recomputes a
- * uniform scale factor clamped to a sensible range.
- */
+// Keeps the game board the right size so it always fits inside the window.
+// It watches the window and board size and scales the board up or down.
 final class BoardScaler {
     private static final double MIN_SCALE = 0.72;
     private static final double MAX_SCALE = 1.06;

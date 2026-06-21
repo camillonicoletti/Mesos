@@ -13,11 +13,8 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
-/**
- * Owns the modal inline-panel overlay shown above the game board: it builds the
- * panel chrome, adds it over the root layer with a fade/slide-in, and tears it
- * down again. Shared by every view that pops up a detail panel.
- */
+// Handles the popup panels shown on top of the game board.
+// It builds them, shows them with an animation and removes them again.
 final class OverlayController {
     private static final String OVERLAY_STYLE = "inline-overlay";
 

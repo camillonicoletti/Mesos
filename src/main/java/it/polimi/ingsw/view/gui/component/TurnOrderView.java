@@ -24,6 +24,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+// Shows the turn order: the tiles that tell in which order players will play.
 final class TurnOrderView {
     private static final double TILE_WIDTH = 100;
     private static final double TILE_HEIGHT = 164;

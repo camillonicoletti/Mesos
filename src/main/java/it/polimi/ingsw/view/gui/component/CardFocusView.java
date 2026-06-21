@@ -12,11 +12,8 @@ import javafx.scene.layout.VBox;
 
 import java.util.List;
 
-/**
- * Builds the focused card panel: a large card image beside its rule description
- * and the Close/Take actions. Shown both as a read-only detail view and as the
- * "CONFIRM CARD" dialog when a card can be taken.
- */
+// Shows a single card up close: big image, its description and Close/Take buttons.
+// Used both to just look at a card and to confirm taking it.
 final class CardFocusView {
     private static final double DETAIL_CARD_WIDTH = 330;
     private static final double DETAIL_CARD_HEIGHT = 466;

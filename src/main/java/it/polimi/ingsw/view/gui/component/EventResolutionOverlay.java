@@ -20,11 +20,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-/**
- * Builds and manages the full-screen overlay shown while the game is in
- * {@code EventResolutionState}: a large event card preview alongside a table of
- * per-player point and food deltas.
- */
+// Full-screen overlay shown while an event is being resolved.
+// Shows the big event card and how many points/food each player gained or lost.
 final class EventResolutionOverlay {
     private static final String OVERLAY_STYLE = "event-resolution-overlay";
 
@@ -38,7 +35,8 @@ final class EventResolutionOverlay {
         this.totemMarkers = totemMarkers;
     }
 
-    /** Rebuilds the overlay on top of {@code rootLayer}, or removes it if no longer relevant. */
+
+    // Shows the overlay if an event is being resolved, otherwise removes it.
     void refresh(StackPane rootLayer) {
         if (rootLayer == null) {
             return;
@@ -57,6 +55,7 @@ final class EventResolutionOverlay {
         rootLayer.getChildren().add(overlay);
     }
 
+    // Removes the overlay from the screen.
     void hide(StackPane rootLayer) {
         if (rootLayer == null) {
             return;
@@ -64,6 +63,7 @@ final class EventResolutionOverlay {
         rootLayer.getChildren().removeIf(node -> node.getStyleClass().contains(OVERLAY_STYLE));
     }
 
+    // Builds the whole panel: the big card on the left and the texts/table on the right.
     private Node panel(StackPane rootLayer) {
         HBox panel = new HBox(28);
         panel.getStyleClass().add("event-resolution-panel");
@@ -105,6 +105,7 @@ final class EventResolutionOverlay {
         return panel;
     }
 
+    // Builds the big event card image (or a text placeholder if there is no card).
     private Node eventCardPreviewLarge() {
         StackPane frame = new StackPane();
         frame.getStyleClass().add("event-resolution-card-frame");
@@ -123,6 +124,7 @@ final class EventResolutionOverlay {
         return frame;
     }
 
+    // Builds the table with one row per player, sorted from best to worst result.
     private Node eventEffectsTable() {
         VBox table = new VBox(8);
         table.getStyleClass().add("event-resolution-table");
@@ -157,6 +159,7 @@ final class EventResolutionOverlay {
         return table;
     }
 
+    // Builds one title cell of the table header (PLAYER, PP, FOOD).
     private Label eventHeaderCell(String text, double width) {
         Label label = new Label(text);
         label.getStyleClass().add("event-resolution-header-cell");
@@ -168,6 +171,7 @@ final class EventResolutionOverlay {
         return label;
     }
 
+    // Builds one table row: rank, totem, name and the player's PP and food changes.
     private Node eventEffectRow(int rank, EventResolvedMessage.PlayerEffect effect) {
         HBox row = new HBox(10);
         row.getStyleClass().add("event-resolution-row");
@@ -198,6 +202,7 @@ final class EventResolutionOverlay {
         return row;
     }
 
+    // Builds one number cell: the change (+/-) on top and the new total below.
     private Node deltaCell(int delta, int total) {
         VBox cell = new VBox(2);
         cell.getStyleClass().add("event-resolution-delta-cell");
@@ -221,6 +226,7 @@ final class EventResolutionOverlay {
         return cell;
     }
 
+    // Turns a number into text, adding a "+" in front when it is positive.
     private String formatDelta(int delta) {
         if (delta > 0) {
             return "+" + delta;
@@ -228,6 +234,7 @@ final class EventResolutionOverlay {
         return String.valueOf(delta);
     }
 
+    // Finds the totem color of a player from their nickname.
     private TotemColor totemOf(String nickname) {
         PlayerView player = model.getPlayers().get(nickname);
         return player == null ? null : player.getTotemColor();

@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+// Plays the animation of totems sliding across the board when players place them.
 final class TotemMoveAnimator {
     private static final double TOTEM_MOVE_MIN_DISTANCE = 10;
 

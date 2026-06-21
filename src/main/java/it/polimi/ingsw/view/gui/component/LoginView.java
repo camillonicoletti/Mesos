@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+// The first screen: lets the player type a nickname and pick a totem color to join.
 public final class LoginView {
     private final ClientController controller;
     private final ClientModel model;

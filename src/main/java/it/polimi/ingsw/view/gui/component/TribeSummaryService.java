@@ -11,6 +11,8 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
+// Counts a player's character cards to build a summary of their tribe
+// (how many hunters, builders, shamans... and the bonuses they give).
 final class TribeSummaryService {
     private static final int FOOD_DISCOUNT_PER_GATHERER = 3;
 

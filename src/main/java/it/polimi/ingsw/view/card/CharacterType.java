@@ -6,7 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-// Represents the 6 character card types.
+// Represents the 6 character card types (Hunter, Builder, Gatherer, Artist, Inventor, Shaman).
 // Each type defines its icon, rule text and scoring data.
 // It helps the view describe and count character cards.
 

@@ -45,6 +45,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+// Builds the final screen shown when the game ends.
+// Shows everyone's points, the tribe summary and the leaderboard.
 public final class EndGameView {
     private static final String PRESTIGE_BADGE_PATH = "assets/icons/endgame_prestige_badge.png";
     private static final String FOOD_BADGE_PATH = "assets/icons/engame_food_badge_prova.png";

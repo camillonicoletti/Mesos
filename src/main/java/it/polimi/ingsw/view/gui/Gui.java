@@ -8,6 +8,14 @@ import it.polimi.ingsw.view.View;
 import java.util.List;
 import java.util.function.Consumer;
 
+
+// Entry point of the GUI: implements the View interface and with run() starts GuiApplication (JavaFX).
+// It's a simple "bridge": it draws nothing, but passes the server events (onBoardChanged, onGameEnded, ...)
+// to GuiApplication, which handles the graphics.
+
+// forward() takes the game's graphics window (the GuiApplication object from JavaFX,
+// the library that draws the interface) and passes it the action to do; if it hasn't started yet,
+// it does nothing.
 public final class Gui implements View {
     private final ClientController controller;
     private final ClientModel model;

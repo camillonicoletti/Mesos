@@ -97,15 +97,18 @@ public final class GuiApplication extends Application {
     private int requestedLeaderboardPlayersCount;
     private List<LeaderboardEntry> leaderboardEntries;
 
+    // Saves the controller and model, then starts the JavaFX window.
     static void launchWith(ClientController controller, ClientModel model) {
         launchContext = new LaunchContext(controller, model);
         Application.launch(GuiApplication.class);
     }
 
+    // Gives back the currently open window (or null if not started yet).
     static GuiApplication current() {
         return instance;
     }
 
+    // Opens the rules popup (does nothing if the window is not open).
     public static void openRulesPdf() {
         if (instance == null) {
             return;
@@ -113,6 +116,7 @@ public final class GuiApplication extends Application {
         Platform.runLater(() -> instance.showRulesModal());
     }
 
+    // Builds the whole window when the app starts and shows the first screen.
     @Override
     public void start(Stage stage) {
         instance = this;
@@ -161,6 +165,7 @@ public final class GuiApplication extends Application {
         render();
     }
 
+    // Cleans up (stops timer, threads and audio) when the app closes.
     @Override
     public void stop() {
         if (timer != null) {
@@ -172,6 +177,7 @@ public final class GuiApplication extends Application {
         GuiAudio.shutdown();
     }
 
+    // Asks for a redraw, but only one at a time to avoid useless extra redraws.
     private void scheduleRender() {
         if (renderScheduled) {
             return;
@@ -183,6 +189,7 @@ public final class GuiApplication extends Application {
         });
     }
 
+    // Picks the right screen for the current state and refreshes it.
     private void render() {
         if (model.isLoginSuccess() && model.getMyNickname() == null && pendingNickname != null) {
             model.setMyNickname(pendingNickname);
@@ -198,6 +205,7 @@ public final class GuiApplication extends Application {
         showPendingToasts();
     }
 
+    // Decides which screen to show: login, lobby, game or end game.
     private ScreenController resolveScreen() {
         if (!model.isLoginSuccess()) {
             return loginScreen;
@@ -211,6 +219,7 @@ public final class GuiApplication extends Application {
         return gameScreen;
     }
 
+    // Clears the old screen, sets the menu music and shows the new screen.
     private void switchScreen(ScreenController screen) {
         root.setTop(null);
         root.setLeft(null);
@@ -227,12 +236,14 @@ public final class GuiApplication extends Application {
         root.setCenter(screen.mount());
     }
 
+    // Tells the current screen to update itself with the latest data.
     private void refreshCurrentScreen() {
         if (currentScreen != null) {
             currentScreen.refresh();
         }
     }
 
+    // After login, saves the nickname and asks for a redraw.
     void onLoginResult() {
         if (model.isLoginSuccess() && model.getMyNickname() == null && pendingNickname != null) {
             model.setMyNickname(pendingNickname);
@@ -240,24 +251,29 @@ public final class GuiApplication extends Application {
         scheduleRender();
     }
 
+    // Any game change happened: just ask for a redraw.
     void onBoardEvent() {
         scheduleRender();
     }
 
+    // The server sent the leaderboard: store and show it.
     void onLeaderboard(int playersCount, List<LeaderboardEntry> entries) {
         showLeaderboard(playersCount, entries);
     }
 
+    // The server sent my position in the ranking: store and show it.
     void onMyRank(int rank, int playersCount) {
         showMyLeaderboardRank(rank, playersCount);
     }
 
+    // Keeps the leaderboard list and passes it to the end-game screen.
     private void showLeaderboard(int playersCount, List<LeaderboardEntry> entries) {
         leaderboardEntriesPlayersCount = playersCount;
         leaderboardEntries = entries == null ? List.of() : new ArrayList<>(entries);
         syncLeaderboardToEndGame();
     }
 
+    // Keeps my rank and passes it to the end-game screen.
     private void showMyLeaderboardRank(int rank, int playersCount) {
         leaderboardRank = rank;
         leaderboardRankPlayersCount = playersCount;
@@ -265,6 +281,7 @@ public final class GuiApplication extends Application {
         syncLeaderboardToEndGame();
     }
 
+    // Asks the server for the leaderboard once the final scores are ready.
     private void ensureEndGameLeaderboardRequested() {
         if (endGameView == null || model.getFinalScores().isEmpty()) {
             return;
@@ -277,6 +294,7 @@ public final class GuiApplication extends Application {
         }
     }
 
+    // Copies the saved rank and list into the end-game screen if it exists.
     private void syncLeaderboardToEndGame() {
         if (endGameView == null) {
             return;
@@ -289,12 +307,14 @@ public final class GuiApplication extends Application {
         }
     }
 
+    // Creates the empty container for the end-game screen.
     private BorderPane endGameShell() {
         BorderPane layout = new BorderPane();
         endGameSubtitleLabel = new Label();
         return layout;
     }
 
+    // Shows the rules popup with a fade-and-zoom-in animation.
     public void showRulesModal() {
         if (rulesOverlay != null) {
             sceneRoot.getChildren().remove(rulesOverlay);
@@ -321,6 +341,7 @@ public final class GuiApplication extends Application {
         pt.play();
     }
 
+    // Hides the rules popup with a fade-and-zoom-out animation, then removes it.
     public void hideRulesModal() {
         if (rulesOverlay != null) {
             Node card = rulesOverlay.getChildren().get(0);
@@ -342,6 +363,7 @@ public final class GuiApplication extends Application {
         }
     }
 
+    // Builds the rules popup: title, close button and the 8 rule pages to scroll.
     private StackPane createRulesOverlay() {
         StackPane overlay = new StackPane();
         overlay.getStyleClass().add("rules-overlay");
@@ -445,6 +467,7 @@ public final class GuiApplication extends Application {
         return overlay;
     }
 
+    // Builds the "match paused" screen with player lists, timer and quit button.
     private StackPane createSuspensionOverlay() {
         StackPane overlay = new StackPane();
         overlay.getStyleClass().add("suspension-overlay-root");
@@ -516,6 +539,7 @@ public final class GuiApplication extends Application {
         return overlay;
     }
 
+    // Loads the background image for the pause screen (null if missing).
     private Image loadSuspensionBackground() {
         try {
             URL url = GuiAssetLoader.url("assets/suspension/suspended_match_bg.png").orElse(null);
@@ -529,6 +553,7 @@ public final class GuiApplication extends Application {
         }
     }
 
+    // Shows or hides the pause screen and updates its timer and player lists.
     private void refreshSuspensionOverlay() {
         if (suspensionOverlay == null) {
             return;
@@ -582,6 +607,7 @@ public final class GuiApplication extends Application {
         }
     }
 
+    // Builds the "server disconnected" screen with a message and quit button.
     private StackPane createServerDisconnectedOverlay() {
         StackPane overlay = new StackPane();
         overlay.getStyleClass().add("suspension-overlay-root");
@@ -626,6 +652,7 @@ public final class GuiApplication extends Application {
         return overlay;
     }
 
+    // Shows or hides the "server disconnected" screen based on the state.
     private void refreshServerDisconnectedOverlay() {
         if (serverDisconnectedOverlay == null) {
             return;
@@ -635,6 +662,7 @@ public final class GuiApplication extends Application {
         serverDisconnectedOverlay.setManaged(show);
     }
 
+    // Called every second: updates the overlays and the connection/timer label.
     private void refreshTimer() {
         refreshSuspensionOverlay();
         refreshServerDisconnectedOverlay();
@@ -654,6 +682,7 @@ public final class GuiApplication extends Application {
         }
     }
 
+    // Shows a new toast for the latest connection message or error, only once.
     private void showPendingToasts() {
         long connectionVersion = model.getLastConnectionEventVersion();
         String connectionEvent = model.getLastConnectionEvent();
@@ -670,6 +699,7 @@ public final class GuiApplication extends Application {
         }
     }
 
+    // Shows a small popup message that slides in, waits, then slides out.
     private void showToast(String message, boolean error) {
         Label toast = new Label(message);
         toast.setWrapText(true);
@@ -705,6 +735,7 @@ public final class GuiApplication extends Application {
         animation.play();
     }
 
+    // Turns milliseconds into a "mm:ss" text for the timers.
     private String formatMillis(long millis) {
         if (millis < 0) {
             return "--:--";
@@ -713,6 +744,7 @@ public final class GuiApplication extends Application {
         return String.format("%02d:%02d", totalSeconds / 60L, totalSeconds % 60L);
     }
 
+    // Finds the GUI stylesheet (CSS) file, or fails if it is missing.
     private String cssResource() {
         return GuiAssetLoader.url("gui/gui.css")
                 .orElseThrow(() -> new IllegalStateException("Missing GUI stylesheet"))
@@ -721,17 +753,23 @@ public final class GuiApplication extends Application {
 
     private record LaunchContext(ClientController controller, ClientModel model) {}
 
+    // Base class for the four screens: each one builds itself and updates itself.
     private abstract class ScreenController {
+        // Builds the screen's content and returns it.
         abstract Node mount();
 
+        // Updates the screen with the latest data.
         abstract void refresh();
 
+        // Says if this screen should play the menu music (off by default).
         boolean playsMenuMusic() {
             return false;
         }
     }
 
+    // The login screen.
     private final class LoginScreen extends ScreenController {
+        // Builds the login view the first time and returns it.
         @Override
         Node mount() {
             if (loginView == null) {
@@ -746,13 +784,16 @@ public final class GuiApplication extends Application {
             return loginShell;
         }
 
+        // Updates the login view.
         @Override
         void refresh() {
             loginView.refresh();
         }
     }
 
+    // The lobby (waiting room) screen.
     private final class LobbyScreen extends ScreenController {
+        // Builds the lobby view the first time and returns it.
         @Override
         Node mount() {
             if (lobbyView == null) {
@@ -764,18 +805,22 @@ public final class GuiApplication extends Application {
             return lobbyShell;
         }
 
+        // Updates the lobby view.
         @Override
         void refresh() {
             lobbyView.refresh();
         }
 
+        // The lobby plays the menu music.
         @Override
         boolean playsMenuMusic() {
             return true;
         }
     }
 
+    // The main game board screen.
     private final class GameScreen extends ScreenController {
+        // Builds the game board view the first time and returns it.
         @Override
         Node mount() {
             if (gameBoardView == null) {
@@ -787,13 +832,16 @@ public final class GuiApplication extends Application {
             return gameShell;
         }
 
+        // Updates the game board view.
         @Override
         void refresh() {
             gameBoardView.refresh();
         }
     }
 
+    // The end-game (final results) screen.
     private final class EndGameScreen extends ScreenController {
+        // Builds the end-game view and asks for the leaderboard the first time.
         @Override
         Node mount() {
             if (endGameView == null) {
@@ -811,6 +859,7 @@ public final class GuiApplication extends Application {
             return endGameStack;
         }
 
+        // Updates the winner text and refreshes the end-game view.
         @Override
         void refresh() {
             String winNick = model.getWinnerNickname();
@@ -821,6 +870,7 @@ public final class GuiApplication extends Application {
             endGameView.refresh();
         }
 
+        // The end-game screen plays the menu music.
         @Override
         boolean playsMenuMusic() {
             return true;

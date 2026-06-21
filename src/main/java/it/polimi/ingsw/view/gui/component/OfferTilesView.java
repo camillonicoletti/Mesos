@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+// Shows the offer tiles (A-G) where players place their totems to pick an action.
 final class OfferTilesView {
     private static final double TILE_WIDTH = 100;
     private static final double TILE_HEIGHT = 164;
