@@ -85,6 +85,7 @@ public class SocketServerConnection implements ServerSideConnection {
         }
 
         try {
+            // The output stream is shared by game messages and heartbeat pings.
             out.writeObject(message);
             out.flush();
             out.reset();
@@ -99,6 +100,7 @@ public class SocketServerConnection implements ServerSideConnection {
             return;
         }
 
+        // This is an intentional close, so no disconnect callback is fired here.
         alive = false;
         heartbeatExecutor.shutdownNow();
         closeSocketQuietly();
@@ -132,6 +134,7 @@ public class SocketServerConnection implements ServerSideConnection {
     private void readerLoop() {
         while (alive) {
             try {
+                // This blocks until the client sends the next object.
                 Object inboundObject = in.readObject();
                 lastReceivedAtMillis = System.currentTimeMillis();
                 handleInboundObject(inboundObject);
@@ -147,10 +150,12 @@ public class SocketServerConnection implements ServerSideConnection {
     }
 
     private void handleInboundObject(Object inboundObject) {
+        // Pong only confirms that the client is alive.
         if (inboundObject instanceof PongMessage) {
             return;
         }
 
+        // Real client commands are forwarded to MessageDispatcher.
         if (inboundObject instanceof ClientMessage clientMessage) {
             onMessage.accept(clientMessage);
         }
@@ -161,6 +166,7 @@ public class SocketServerConnection implements ServerSideConnection {
             return;
         }
 
+        // Unexpected socket failures are centralized here.
         alive = false;
         heartbeatExecutor.shutdownNow();
         closeSocketQuietly();
@@ -188,6 +194,7 @@ public class SocketServerConnection implements ServerSideConnection {
             return;
         }
 
+        // If no object arrives for too long, the client is considered gone.
         long silenceMillis = System.currentTimeMillis() - lastReceivedAtMillis;
         if (silenceMillis >= HEARTBEAT_TIMEOUT_SECONDS * 1000L) {
             handleConnectionLoss();

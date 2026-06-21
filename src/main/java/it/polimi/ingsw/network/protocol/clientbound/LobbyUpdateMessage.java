@@ -3,6 +3,9 @@ package it.polimi.ingsw.network.protocol.clientbound;
 import java.io.Serializable;
 import java.util.List;
 
+/**
+ * Lobby state broadcast after logins, ready changes, and player-count changes.
+ */
 public class LobbyUpdateMessage implements ServerMessage, Serializable {
     private final List<LobbyPlayerSnapshot> players;
     private final int expectedPlayers;

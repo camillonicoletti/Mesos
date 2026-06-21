@@ -20,8 +20,10 @@ public final class RMIServerMain {
     public static void main(String[] args) throws Exception {
         ServerLaunchOptions options = ServerLaunchOptions.rmiOnly(args);
         LobbyManager lobbyManager = LobbyBootstrap.create(options.freshStart());
+        // The registry is the RMI name service where clients look up the server.
         Registry registry = LocateRegistry.createRegistry(options.rmiPort());
         RMIServer server = new RMIServer(lobbyManager);
+        // The binding name is the public name used by RMI clients.
         registry.rebind(options.rmiBindingName(), server);
 
         System.out.println("RMI server started on registry port "

@@ -1,4 +1,8 @@
 package it.polimi.ingsw.network.protocol.clientbound;
+
+/**
+ * Tells the client to leave the lobby and build the first local game model.
+ */
 public class GameStartedMessage implements ServerMessage {
     private final GameSnapshot snapshot;
     public GameStartedMessage(GameSnapshot snapshot) { this.snapshot = snapshot; }

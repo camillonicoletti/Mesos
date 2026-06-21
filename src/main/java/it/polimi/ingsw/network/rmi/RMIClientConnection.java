@@ -24,6 +24,9 @@ import java.util.function.Consumer;
 
 /**
  * RMI-based implementation of {@link ClientSideConnection}.
+ *
+ * <p>The rest of the client still speaks in {@link ClientMessage} objects.
+ * This adapter translates each message into the matching remote method call.</p>
  */
 public class RMIClientConnection implements ClientSideConnection {
 
@@ -66,6 +69,10 @@ public class RMIClientConnection implements ClientSideConnection {
                 TimeUnit.SECONDS
         );
     }
+
+    /**
+     * Exports this client callback to the server before the first game message.
+     */
     public void register() throws RemoteException {
         remoteServer.register(callback);
     }
@@ -97,6 +104,7 @@ public class RMIClientConnection implements ClientSideConnection {
     }
 
     private Map<Class<? extends ClientMessage>, RemoteCall<ClientMessage>> createRemoteCalls() {
+        // This map avoids a long if/else chain when a client message must become an RMI call.
         Map<Class<? extends ClientMessage>, RemoteCall<ClientMessage>> calls = new HashMap<>();
         register(calls, LoginMessage.class,
                 message -> remoteServer.login(callback, message.getNickname(), message.getTotemColor()));
@@ -139,6 +147,7 @@ public class RMIClientConnection implements ClientSideConnection {
         alive = false;
         heartbeatExecutor.shutdownNow();
         try {
+            // On a normal close we tell the server to remove this callback.
             remoteServer.disconnect(callback);
         } catch (RemoteException ignored) {
             // The server is already unreachable; local shutdown must still complete.
@@ -161,6 +170,7 @@ public class RMIClientConnection implements ClientSideConnection {
         if (!alive) {
             return;
         }
+        // Server callbacks arrive here and then follow the same path as socket messages.
         lastReceivedAtMillis = System.currentTimeMillis();
         onMessage.accept(message);
     }
@@ -171,6 +181,7 @@ public class RMIClientConnection implements ClientSideConnection {
         }
 
         try {
+            // The client actively calls the server to check that the RMI registry object is alive.
             remoteServer.ping();
             lastReceivedAtMillis = System.currentTimeMillis();
         } catch (RemoteException exception) {
@@ -191,6 +202,7 @@ public class RMIClientConnection implements ClientSideConnection {
 
         alive = false;
         heartbeatExecutor.shutdownNow();
+        // Once the remote server is lost, only local cleanup is possible.
         callback.shutdown();
         notifyDisconnect();
     }

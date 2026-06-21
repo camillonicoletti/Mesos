@@ -92,6 +92,7 @@ public class SocketClientConnection implements ClientSideConnection {
         }
 
         try {
+            // Only one thread at a time can write on the ObjectOutputStream.
             out.writeObject(message);
             out.flush();
             out.reset();
@@ -106,6 +107,7 @@ public class SocketClientConnection implements ClientSideConnection {
             return;
         }
 
+        // A normal close does not notify the controller as an unexpected loss.
         alive = false;
         heartbeatExecutor.shutdownNow();
         closeSocketQuietly();
@@ -146,6 +148,7 @@ public class SocketClientConnection implements ClientSideConnection {
     private void readerLoop() {
         while (alive) {
             try {
+                // This thread waits here until the server sends the next object.
                 Object inboundObject = in.readObject();
                 lastReceivedAtMillis = System.currentTimeMillis();
                 handleInboundObject(inboundObject);
@@ -161,11 +164,13 @@ public class SocketClientConnection implements ClientSideConnection {
     }
 
     private void handleInboundObject(Object inboundObject) {
+        // Ping is a transport-level message: it is answered here, not by the controller.
         if (inboundObject instanceof PingMessage) {
             send(new PongMessage());
             return;
         }
 
+        // Real game messages are passed to ClientController.
         if (inboundObject instanceof ServerMessage serverMessage) {
             onMessage.accept(serverMessage);
         }
@@ -187,6 +192,7 @@ public class SocketClientConnection implements ClientSideConnection {
             return;
         }
 
+        // Every unexpected loss passes through here so the callback runs once.
         alive = false;
         heartbeatExecutor.shutdownNow();
         closeSocketQuietly();

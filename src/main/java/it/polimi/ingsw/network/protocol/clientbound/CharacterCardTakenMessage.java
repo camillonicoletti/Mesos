@@ -1,4 +1,8 @@
 package it.polimi.ingsw.network.protocol.clientbound;
+
+/**
+ * Notifies clients that a player took a tribe card from one row.
+ */
 public class CharacterCardTakenMessage implements ServerMessage {
     private final String nickname;
     private final int cardId;

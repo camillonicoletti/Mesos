@@ -7,6 +7,11 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+/**
+ * Blocking accept loop for socket clients.
+ * Each accepted socket is wrapped in a ServerSideConnection and wired to the
+ * same lobby/dispatcher pipeline used by RMI.
+ */
 final class SocketAcceptLoop {
 
     private SocketAcceptLoop() {
@@ -21,6 +26,7 @@ final class SocketAcceptLoop {
             System.out.println(startedMessage + port);
 
             while (true) {
+                // Accept waits here until a new TCP client connects.
                 Socket socket = serverSocket.accept();
                 ServerSideConnection connection = new SocketServerConnection(socket);
                 wireConnection(connection, lobby, dispatcher);
@@ -33,6 +39,7 @@ final class SocketAcceptLoop {
     private static void wireConnection(ServerSideConnection connection,
                                        LobbyManager lobby,
                                        MessageDispatcher dispatcher) {
+        // Incoming messages go to the dispatcher; disconnections go back to the lobby.
         connection.setOnMessage(message -> dispatcher.dispatch(connection, message));
         connection.setOnDisconnect(() -> lobby.handleConnectionClosed(connection));
     }

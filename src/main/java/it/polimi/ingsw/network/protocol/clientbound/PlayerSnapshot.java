@@ -5,6 +5,9 @@ import it.polimi.ingsw.model.enums.TotemColor;
 import java.io.Serializable;
 import java.util.List;
 
+/**
+ * Network copy of the public data of one player.
+ */
 public class PlayerSnapshot implements Serializable {
     private final String nickname;
     private final TotemColor totemColor;

@@ -1,5 +1,8 @@
 package it.polimi.ingsw.network.protocol.clientbound;
 
+/**
+ * Announces whose turn is active now.
+ */
 public class CurrentPlayerChangedMessage implements ServerMessage {
 
     private final String nickname;

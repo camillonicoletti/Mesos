@@ -20,6 +20,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Comparator;
 
+/**
+ * Builds the complete game snapshot sent to clients.
+ * Snapshots are used at game start, after reconnects and whenever the client
+ * needs to repair its local board from the authoritative server state.
+ */
 public final class SnapshotBuilder {
     private SnapshotBuilder() {}
 
@@ -31,6 +36,7 @@ public final class SnapshotBuilder {
 
         List<PlayerSnapshot> players = new ArrayList<>();
         for (Player p : game.getPlayers()) {
+            // PlayerSnapshot keeps only serializable data needed by the client views.
             List<Integer> charIds = p.getTribe().getCharacterCards().stream()
                     .map(CharacterCard::getId).toList();
             List<Integer> buildIds = p.getTribe().getBuildingCards().stream()
@@ -53,6 +59,7 @@ public final class SnapshotBuilder {
         List<Integer> upperEvents = new ArrayList<>();
         List<Integer> lowerEvents = new ArrayList<>();
         if (round != null) {
+            // Character/event ids are grouped for board rendering; event ids are also kept separately.
             for (CharacterCard c : round.getUpperRowTribute()) upperCharAndEvent.add(c.getId());
             for (EventCard e : round.getUpperRowEvents()) {
                 upperCharAndEvent.add(e.getId());
@@ -69,10 +76,12 @@ public final class SnapshotBuilder {
 
         Board board = game.getBoard();
         Map<Totem, String> ownerByTotem = new HashMap<>();
+        // Totems identify board positions, but clients need nicknames.
         for (Player p : game.getPlayers()) ownerByTotem.put(p.getTotem(), p.getNickname());
 
         Map<Character, String> totemOnTiles = new HashMap<>();
         if (board != null) {
+            // Offer tiles tell the client which player chose which action tile.
             for (OfferTile tile : board.getOfferTiles()) {
                 Totem t = tile.getTotemSlot();
                 if (t != null) {
@@ -87,6 +96,7 @@ public final class SnapshotBuilder {
         if (board != null && board.getTurnOrderTile() != null) {
             List<TurnSlot> sortedSlots = new ArrayList<>(board.getTurnOrderTile().getSlots());
             sortedSlots.sort(Comparator.comparingInt(TurnSlot::getPosition));
+            // Turn order must be stable, so slots are read by their board position.
             for (TurnSlot slot : sortedSlots) {
                 if (slot.isOccupied()) {
                     String nick = ownerByTotem.get(slot.getOccupiedBy());
@@ -108,6 +118,7 @@ public final class SnapshotBuilder {
 
         List<String> disconnectedPlayers = new ArrayList<>();
         for (Player p : game.getPlayers()) {
+            // The client uses this list to grey out players and skip invalid local turns.
             if (controller.isPlayerDisconnected(p.getNickname())) {
                 disconnectedPlayers.add(p.getNickname());
             }

@@ -1,4 +1,8 @@
 package it.polimi.ingsw.network.protocol.clientbound;
+
+/**
+ * Notifies clients that a player took a building card from one row.
+ */
 public class BuildingCardTakenMessage implements ServerMessage {
     private final String nickname;
     private final int cardId;

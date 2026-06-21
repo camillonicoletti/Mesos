@@ -14,6 +14,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+/**
+ * Local read model used by TUI and GUI.
+ * It is rebuilt and updated only from server messages, so the views never need
+ * to know the real server-side Game object.
+ */
 public class ClientModel {
 
     private static final long CONNECTION_EVENT_VISIBLE_MILLIS = 10_000L;
@@ -133,15 +138,18 @@ public class ClientModel {
 
 
     public void applyGameStarted(GameStartedMessage m) {
+        // A new game starts from a full snapshot, so old event animations are cleared.
         resolvedEvents.clear();
         applySnapshot(m.getSnapshot());
     }
 
     public void applyGameSync(GameSyncMessage m) {
+        // Sync messages are full snapshots sent after reconnects or important updates.
         applySnapshot(m.getSnapshot());
     }
 
     public void applySnapshot(GameSnapshot snap) {
+        // Snapshot replaces the client-side board with the server truth.
         players.clear();
         for (PlayerSnapshot ps : snap.getPlayers()) {
             players.put(ps.getNickname(), new PlayerView(
@@ -172,6 +180,7 @@ public class ClientModel {
     }
 
     public void applyStateChanged(StateChangedMessage m) {
+        // State changes define which commands and panels the views should expose.
         gameState = m.getStateName();
         GamePhase phase = gamePhase();
         // Clear the current player when the new state does not actively manage turns.
@@ -198,6 +207,7 @@ public class ClientModel {
     }
 
     public void applyCurrentPlayerChanged(CurrentPlayerChangedMessage m) {
+        // The server is authoritative about whose action is currently expected.
         String previousPlayer = currentActionPlayer;
         currentActionPlayer = m.getNickname();
         // Any current-player change clears a lingering extra-pick prompt: the
@@ -215,12 +225,14 @@ public class ClientModel {
     }
 
     public void applyTotemPlaced(TotemPlacedMessage m) {
+        // A placed totem leaves the turn order and appears on the chosen offer tile.
         lastError = null;
         turnOrder.remove(m.getNickname());
         totemOnTiles.put(m.getTileId(), m.getNickname());
     }
 
     public void applyEventResolved(EventResolvedMessage m) {
+        // Event resolution stores both the animation data and the updated player values.
         lastError = null;
         lastResolvedEventCardId       = m.getCardId();
         lastResolvedEventTitle        = m.getTitle();
@@ -236,10 +248,12 @@ public class ClientModel {
     }
 
     public void applyEraChanged(EraChangedMessage m) {
+        // Era changes affect labels and available cards, but the full rows come from snapshots.
         currentEra = m.getNewEra();
     }
 
     public void applyFoodChanged(FoodChangedMessage m) {
+        // Small delta message: update only the affected player.
         replacePlayer(m.getNickname(), old -> new PlayerView(
                 old.getNickname(), old.getTotemColor(), m.getNewAmount(),
                 old.getPrestigePoints(), old.getCharacterCardIds(), old.getBuildingCardIds()
@@ -247,6 +261,7 @@ public class ClientModel {
     }
 
     public void applyPointsChanged(PointsChangedMessage m) {
+        // Small delta message: update only the affected player.
         replacePlayer(m.getNickname(), old -> new PlayerView(
                 old.getNickname(), old.getTotemColor(), old.getFood(),
                 m.getNewPoints(), old.getCharacterCardIds(), old.getBuildingCardIds()
@@ -254,6 +269,7 @@ public class ClientModel {
     }
 
     public void applyCharacterCardTaken(CharacterCardTakenMessage m) {
+        // Remove the card from the visible row and add it to the player's tribe.
         lastError = null;
         rememberTakenCard(m.getNickname(), m.getCardId(), m.isFromUpperRow(), false);
         if (m.isFromUpperRow()) upperRowCharacterIds.remove(Integer.valueOf(m.getCardId()));
@@ -269,6 +285,7 @@ public class ClientModel {
     }
 
     public void applyBuildingCardTaken(BuildingCardTakenMessage m) {
+        // Building picks update the board row and the player's building list.
         lastError = null;
         rememberTakenCard(m.getNickname(), m.getCardId(), m.isFromUpperRow(), true);
         if (m.isFromUpperRow()) upperRowBuildingIds.remove(Integer.valueOf(m.getCardId()));
@@ -284,11 +301,13 @@ public class ClientModel {
     }
 
     public void applyRoundEnded(RoundEndedMessage m) {
+        // Kept separately so the views can briefly show which round just closed.
         lastFinishedRound = m.getRoundNumber();
         roundNumber = Math.max(roundNumber, m.getRoundNumber());
     }
 
     public void applyGameEnded(GameEndedMessage m) {
+        // Final scores are frozen here; from this point the client shows end-game data.
         winnerNickname = m.getWinnerNickname();
         finalScores    = new HashMap<>(m.getFinalScores());
         gameState      = GamePhase.END_GAME.stateName();
@@ -299,11 +318,13 @@ public class ClientModel {
     }
 
     public void applyError(ErrorMessage m) {
+        // Version increments let the views notice repeated errors with the same text.
         lastError = m.getReason();
         lastErrorVersion++;
     }
 
     public void applyGameSuspended(GameSuspendedMessage m) {
+        // Suspension means the server is waiting for disconnected players to return.
         gameSuspended = true;
         suspensionDeadlineMillis = m.getRemainingMillis() >= 0L
                 ? System.currentTimeMillis() + m.getRemainingMillis()
@@ -311,11 +332,13 @@ public class ClientModel {
     }
 
     public void applyGameResumed(GameResumedMessage m) {
+        // Once everyone is back, the suspended overlay can disappear.
         gameSuspended = false;
         suspensionDeadlineMillis = -1L;
     }
 
     public void applyPlayerDisconnected(PlayerDisconnectedMessage m) {
+        // Player-level disconnection is different from this client's own connection loss.
         lastDisconnectedPlayer = m.getNickname();
         disconnectedPlayers.add(m.getNickname());
         clearCurrentActionPlayerIfActor(m.getNickname());
@@ -323,12 +346,14 @@ public class ClientModel {
     }
 
     public void applyPlayerReconnected(PlayerReconnectedMessage m) {
+        // Remove the player from the disconnected set and show a temporary banner.
         lastDisconnectedPlayer = null;
         disconnectedPlayers.remove(m.getNickname());
         setConnectionEvent(m.getNickname() + " reconnected");
     }
 
     public void applyExtraCardPickAvailable(ExtraCardPickAvailableMessage m) {
+        // Extra picks override the normal row budget for the targeted player.
         currentActionPlayer = m.getNickname();
         pickBudgetPlayer = m.getNickname();
         remainingUpperPicks = Math.max(0, m.getPicks());
@@ -349,6 +374,7 @@ public class ClientModel {
     }
 
     public void applyConnectionLost(String reason) {
+        // Used for local close/quit paths and non-recovering connection loss.
         connected = false;
         reconnecting = false;
         lastError = reason;
@@ -356,6 +382,7 @@ public class ClientModel {
     }
 
     public void applyReconnecting(String reason) {
+        // The client is offline for now, but the supervisor is still trying.
         connected = false;
         reconnecting = true;
         if (!Objects.equals(lastError, reason)) {
@@ -404,6 +431,10 @@ public class ClientModel {
     public boolean isReconnecting()                { return reconnecting; }
     public String getLastError()                   { return lastError; }
     public long getLastErrorVersion()              { return lastErrorVersion; }
+
+    /**
+     * Returns a temporary connection banner, or null after it expires.
+     */
     public String getLastConnectionEvent() {
         if (lastConnectionEvent == null) {
             return null;
@@ -422,6 +453,10 @@ public class ClientModel {
     public int getExpectedPlayers()                { return expectedPlayers; }
     public String getGameState()                   { return gameState; }
     public String getCurrentActionPlayer()         { return currentActionPlayer; }
+
+    /**
+     * Returns a short turn-change message while it is still visible.
+     */
     public String getLastTurnEvent() {
         if (lastTurnEvent == null) {
             return null;
@@ -452,6 +487,10 @@ public class ClientModel {
     public Map<String, Integer> getFinalScores()   { return Collections.unmodifiableMap(finalScores); }
     public Map<String, Integer> getFinalFood()     { return Collections.unmodifiableMap(finalFood); }
     public boolean isGameSuspended()               { return gameSuspended; }
+
+    /**
+     * Computes the remaining suspension time locally from the server deadline.
+     */
     public long getSuspensionRemainingMillis() {
         if (!gameSuspended || suspensionDeadlineMillis < 0L) {
             return -1L;
@@ -466,6 +505,9 @@ public class ClientModel {
         return Collections.unmodifiableMap(lobbyPlayerColors);
     }
 
+    /**
+     * Returns the colors not currently used in the lobby.
+     */
     public List<TotemColor> getAvailableTotemColors() {
         Set<TotemColor> taken = new HashSet<>(lobbyPlayerColors.values());
         List<TotemColor> available = new ArrayList<>();
@@ -492,6 +534,7 @@ public class ClientModel {
 
 
     public boolean isMyTurn() {
+        // In action resolution, only the current non-disconnected player can act.
         return myNickname != null
                 && myNickname.equals(getCurrentActionResolutionPlayer());
     }
@@ -512,6 +555,7 @@ public class ClientModel {
     }
 
     public String getCurrentActionResolutionPlayer() {
+        // During action resolution, disconnected players are skipped on the client side too.
         if (!gamePhase().isActionResolution()) {
             return null;
         }
@@ -553,6 +597,7 @@ public class ClientModel {
     public int getLastFinishedRound() { return lastFinishedRound; }
 
     public String getCurrentTotemPlacementPlayer() {
+        // Totem placement uses either the server-provided player or an inferred one from turn order.
         if (!gamePhase().isTotemPlacement()) {
             return null;
         }
@@ -581,6 +626,7 @@ public class ClientModel {
     // ── helper ───────────────────────────────────────────────────────────────
 
     private void replacePlayer(String nickname, java.util.function.UnaryOperator<PlayerView> updater) {
+        // PlayerView is immutable, so updates replace the whole snapshot for that player.
         PlayerView old = players.get(nickname);
         if (old != null) players.put(nickname, updater.apply(old));
     }
@@ -590,17 +636,20 @@ public class ClientModel {
     }
 
     private void setConnectionEvent(String message) {
+        // Temporary banners avoid leaving stale reconnect messages on screen.
         lastConnectionEvent = message;
         lastConnectionEventExpiresAtMillis = System.currentTimeMillis() + CONNECTION_EVENT_VISIBLE_MILLIS;
         lastConnectionEventVersion++;
     }
 
     private void setTurnEvent(String message) {
+        // Turn banners use the same short visibility window.
         lastTurnEvent = message;
         lastTurnEventExpiresAtMillis = System.currentTimeMillis() + CONNECTION_EVENT_VISIBLE_MILLIS;
     }
 
     private void clearCurrentActionPlayerIfActor(String nickname) {
+        // If the acting player disconnects, the current local action becomes invalid.
         if (currentActionPlayer != null
                 && currentActionPlayer.equals(nickname)) {
             currentActionPlayer = null;
@@ -609,6 +658,7 @@ public class ClientModel {
     }
 
     private void ensureTurnOrderPositions() {
+        // Older snapshots may not contain explicit positions; derive them from order when needed.
         int nextPosition = 1;
         for (String nickname : turnOrder) {
             turnOrderPositions.putIfAbsent(nickname, nextPosition);
@@ -624,6 +674,7 @@ public class ClientModel {
     }
 
     private void initializeRegularPickBudget(String nickname) {
+        // The offer tile determines how many upper/lower row picks are allowed.
         if (nickname == null) {
             clearPickBudget();
             return;
@@ -636,6 +687,7 @@ public class ClientModel {
     }
 
     private void decrementPickBudget(String nickname, boolean upper) {
+        // Only the tracked player's picks consume the current budget.
         if (!Objects.equals(pickBudgetPlayer, nickname)) {
             return;
         }
@@ -659,10 +711,12 @@ public class ClientModel {
     }
 
     private void rememberTakenCard(String nickname, int cardId, boolean fromUpperRow, boolean building) {
+        // The sequence helps views animate repeated picks even if two cards share nearby data.
         lastTakenCardEvent = new TakenCardEvent(++takenCardEventSequence, nickname, cardId, fromUpperRow, building);
     }
 
     private char offerTileForPlayer(String nickname) {
+        // Totem placement tells us which offer tile controls this player's picks.
         if (nickname == null) {
             return 0;
         }
@@ -675,6 +729,7 @@ public class ClientModel {
     }
 
     private boolean tileAllowsRow(char tile, boolean upper) {
+        // Used as a fallback when the server has not sent an explicit pick budget yet.
         return upper ? upperPicksForTile(tile) > 0 : lowerPicksForTile(tile) > 0;
     }
 

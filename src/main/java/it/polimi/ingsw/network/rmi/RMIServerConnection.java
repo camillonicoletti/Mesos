@@ -14,6 +14,9 @@ import java.util.function.Consumer;
 
 /**
  * Server-side connection adapter used by the RMI transport.
+ *
+ * <p>It gives the server the same {@link ServerSideConnection} shape used by
+ * sockets, even if messages are actually delivered through RMI callbacks.</p>
  */
 public class RMIServerConnection implements ServerSideConnection {
 
@@ -65,6 +68,7 @@ public class RMIServerConnection implements ServerSideConnection {
         }
 
         try {
+            // RMI sends server messages by calling the client's exported callback.
             remoteClient.onServerMessage(message);
         } catch (RemoteException exception) {
             handleConnectionLoss();
@@ -108,9 +112,11 @@ public class RMIServerConnection implements ServerSideConnection {
             throw new IllegalStateException("Connection is closed");
         }
         lastReceivedAtMillis = System.currentTimeMillis();
+        // Pong is part of the heartbeat and is not a game command.
         if (message instanceof PongMessage) {
             return;
         }
+        // Real client messages are dispatched exactly like socket messages.
         onMessage.accept(message);
     }
 
@@ -121,6 +127,7 @@ public class RMIServerConnection implements ServerSideConnection {
 
         alive = false;
         heartbeatExecutor.shutdownNow();
+        // The lobby must hear about this only once.
         notifyDisconnect();
     }
 
@@ -145,6 +152,7 @@ public class RMIServerConnection implements ServerSideConnection {
         }
 
         try {
+            // The server pushes ping messages through the same callback channel.
             send(new PingMessage());
         } catch (IllegalStateException ignored) {
         }

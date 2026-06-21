@@ -7,6 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Parsed command-line options for server startup.
+ * It supports socket-only, RMI-only and unified startup while sharing the same parser.
+ */
 public final class ServerLaunchOptions {
     public static final int DEFAULT_SOCKET_PORT = 1234;
 
@@ -23,6 +27,7 @@ public final class ServerLaunchOptions {
     }
 
     public static ServerLaunchOptions socketOnly(String[] args) {
+        // Used by the legacy socket-only Server main.
         PositionalArguments parsed = PositionalArguments.from(args);
         Optional<Integer> socketPort = parsed.nextPort("socket port");
         parsed.rejectRemaining("Too many arguments for socket server startup.");
@@ -34,6 +39,7 @@ public final class ServerLaunchOptions {
     }
 
     public static ServerLaunchOptions rmiOnly(String[] args) {
+        // Used by the RMI-only bootstrap.
         PositionalArguments parsed = PositionalArguments.from(args);
         Optional<Integer> rmiPort = parsed.nextPort("RMI registry port");
         Optional<String> rmiBindingName = parsed.nextString();
@@ -46,6 +52,7 @@ public final class ServerLaunchOptions {
     }
 
     public static ServerLaunchOptions unified(String[] args) {
+        // Used by the final server JAR: socket port, RMI port and binding name.
         PositionalArguments parsed = PositionalArguments.from(args);
         Optional<Integer> socketPort = parsed.nextPort("socket port");
         Optional<Integer> rmiPort = parsed.nextPort("RMI registry port");
@@ -96,6 +103,7 @@ public final class ServerLaunchOptions {
             boolean freshStart = false;
             List<String> values = new ArrayList<>();
             for (String arg : args) {
+                // --fresh is a flag; all other arguments stay positional.
                 if ("--fresh".equalsIgnoreCase(arg)) {
                     freshStart = true;
                     continue;

@@ -1,6 +1,6 @@
 package it.polimi.ingsw.network.protocol.serverbound;
 
 /**
- * Message used only when the server is started in debug mode.
+ * Debug-only message used to force the match to end from a client.
  */
 public class ForceEndGameMessage implements ClientMessage {}

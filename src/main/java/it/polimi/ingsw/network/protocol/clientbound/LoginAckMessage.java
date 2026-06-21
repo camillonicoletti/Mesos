@@ -1,5 +1,8 @@
 package it.polimi.ingsw.network.protocol.clientbound;
 
+/**
+ * Login or reconnect result sent only to the client that tried to enter.
+ */
 public class LoginAckMessage implements ServerMessage {
 
     public enum Outcome{

@@ -1,4 +1,8 @@
 package it.polimi.ingsw.network.protocol.clientbound;
+
+/**
+ * Updates one player's prestige points after an action or event.
+ */
 public class PointsChangedMessage implements ServerMessage {
     private final String nickname;
     private final int newPoints;

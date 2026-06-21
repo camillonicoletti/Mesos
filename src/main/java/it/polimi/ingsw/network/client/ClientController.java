@@ -26,7 +26,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-
+/**
+ * Client-side coordinator between the view, the local model and the server connection.
+ *
+ * <p>Views call this class to send commands. Incoming server messages update
+ * {@link ClientModel} first and then notify the current {@link View}.</p>
+ */
 public class ClientController {
 
     private static final int LEADERBOARD_FETCH_LIMIT = 10;
@@ -89,6 +94,7 @@ public class ClientController {
 
 
     public void send(ClientMessage message) {
+        // Outgoing messages may run on a background executor in the GUI.
         outboundDispatcher.accept(() -> sendNow(message));
     }
 
@@ -100,6 +106,7 @@ public class ClientController {
         try {
             connection.send(message);
         } catch (RuntimeException exception) {
+            // A failed send is treated like a recoverable connection loss.
             dispatcher.accept(() -> handleRecoverableConnectionLoss("Connection to server lost. Reconnecting..."));
         }
     }
@@ -205,19 +212,23 @@ public class ClientController {
     }
 
     public void onMessage(ServerMessage message) {
+        // Some transport messages must be answered immediately and should not wait for the UI thread.
         Consumer<ServerMessage> immediateHandler = immediateMessageHandlers.get(message.getClass());
         if (immediateHandler != null) {
             immediateHandler.accept(message);
             return;
         }
+        // Normal game messages are dispatched through the configured model executor.
         dispatcher.accept(() -> dispatch(message));
     }
 
     private void dispatch(ServerMessage message) {
+        // First mutate the client model.
         Consumer<ServerMessage> handler = messageHandlers.get(message.getClass());
         if (handler != null) {
             handler.accept(message);
         }
+        // Then tell the view what kind of refresh is needed.
         notifyView(message);
     }
 
@@ -236,11 +247,13 @@ public class ClientController {
 
     private Map<Class<? extends ServerMessage>, Consumer<ServerMessage>> createImmediateMessageHandlers() {
         Map<Class<? extends ServerMessage>, Consumer<ServerMessage>> handlers = new HashMap<>();
+        // Ping is transport-level: the controller answers with Pong without touching the model.
         register(handlers, PingMessage.class, ignored -> connection.send(new PongMessage()));
         return Map.copyOf(handlers);
     }
 
     private Map<Class<? extends ServerMessage>, Consumer<ServerMessage>> createMessageHandlers() {
+        // This map replaces a long if/else chain with one handler per server message type.
         Map<Class<? extends ServerMessage>, Consumer<ServerMessage>> handlers = new HashMap<>();
         register(handlers, LoginAckMessage.class, model::applyLoginAck);
         register(handlers, LobbyUpdateMessage.class, model::applyLobbyUpdate);
@@ -269,6 +282,7 @@ public class ClientController {
     }
 
     private Map<Class<? extends ServerMessage>, Consumer<ServerMessage>> createViewNotifications() {
+        // The view notification map is separate from model updates because not every message redraws the same screen.
         Map<Class<? extends ServerMessage>, Consumer<ServerMessage>> notifications = new HashMap<>();
         register(notifications, LoginAckMessage.class, ignored -> view.onLoginResult());
         register(notifications, LobbyUpdateMessage.class, ignored -> view.onLobbyChanged());
@@ -304,20 +318,24 @@ public class ClientController {
         if (voluntaryClose) {
             return;
         }
+        // Unexpected drops are recoverable: the supervisor will try to reconnect.
         dispatcher.accept(() -> handleRecoverableConnectionLoss("Connection to server lost. Reconnecting..."));
     }
 
     private synchronized void installConnection(ClientSideConnection connection) {
+        // Every new or recovered connection uses the same inbound callbacks.
         connection.setOnMessage(this::onMessage);
         connection.setOnDisconnect(this::onDisconnect);
     }
 
     private synchronized void installRecoveredConnection(ClientSideConnection recoveredConnection) {
+        // After reconnect succeeds, future sends must use the fresh connection.
         this.connection = recoveredConnection;
         installConnection(recoveredConnection);
     }
 
     private void handleRecoverableConnectionLoss(String reason) {
+        // The model stores a visible disconnected state while reconnect attempts continue.
         model.applyServerDisconnected(reason);
         if (view != null) {
             view.onConnectionLost();
@@ -333,6 +351,7 @@ public class ClientController {
         if (nickname == null || nickname.isBlank() || !model.isLoginSuccess()) {
             return;
         }
+        // Only logged-in players can be matched to a suspended server-side session.
         connectionSupervisor.start(nickname);
     }
 

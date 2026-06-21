@@ -17,6 +17,7 @@ public final class SocketClientConnectionFactory implements ClientConnectionFact
 
     @Override
     public ClientSideConnection create() throws Exception {
+        // Each call opens a new TCP socket, useful both at startup and during reconnect.
         return new SocketClientConnection(new Socket(host, port));
     }
 

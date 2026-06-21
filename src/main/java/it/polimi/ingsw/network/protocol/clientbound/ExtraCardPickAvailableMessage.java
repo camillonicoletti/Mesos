@@ -1,4 +1,8 @@
 package it.polimi.ingsw.network.protocol.clientbound;
+
+/**
+ * Tells one player that a card effect grants extra picks.
+ */
 public class ExtraCardPickAvailableMessage implements ServerMessage {
     private final String nickname;
     private final int picks;

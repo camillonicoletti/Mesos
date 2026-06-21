@@ -1,4 +1,8 @@
 package it.polimi.ingsw.network.protocol.clientbound;
+
+/**
+ * Notifies clients that a player's totem was placed on a tile.
+ */
 public class TotemPlacedMessage implements ServerMessage {
     private final String nickname;
     private final char tileId;

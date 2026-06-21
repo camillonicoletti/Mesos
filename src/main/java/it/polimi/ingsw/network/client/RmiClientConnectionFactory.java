@@ -21,6 +21,7 @@ public final class RmiClientConnectionFactory implements ClientConnectionFactory
 
     @Override
     public ClientSideConnection create() throws Exception {
+        // Look up the remote server by name, then wrap it in our common connection interface.
         Registry registry = LocateRegistry.getRegistry(host, registryPort);
         RemoteServer remoteServer = (RemoteServer) registry.lookup(bindingName);
         return new RMIClientConnection(remoteServer);

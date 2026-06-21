@@ -4,10 +4,16 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
+/**
+ * Describes the result of an event card so the client can show the effects.
+ */
 public class EventResolvedMessage implements ServerMessage, Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Effect applied to a single player during the event resolution.
+     */
     public static final class PlayerEffect implements Serializable {
         @Serial
         private static final long serialVersionUID = 1L;

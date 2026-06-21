@@ -2,6 +2,9 @@ package it.polimi.ingsw.network.protocol.clientbound;
 
 import java.io.Serial;
 
+/**
+ * Rank of one player after the server saves a finished game.
+ */
 public record LeaderboardRankMessage(
         String nickname,
         int rank,

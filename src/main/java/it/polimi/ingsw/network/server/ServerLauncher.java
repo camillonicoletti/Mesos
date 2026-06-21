@@ -8,6 +8,10 @@ import java.io.IOException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
+/**
+ * Main entry point for the server JAR.
+ * It starts one shared lobby and exposes it through both Socket and RMI.
+ */
 public final class ServerLauncher {
 
     private ServerLauncher() {}
@@ -18,11 +22,13 @@ public final class ServerLauncher {
         LobbyManager lobby = LobbyBootstrap.create(options.freshStart(), leaderboard);
         MessageDispatcher dispatcher = new MessageDispatcher(lobby);
 
+        // RMI clients find this server through the registry and binding name.
         Registry registry = LocateRegistry.createRegistry(options.rmiPort());
         RMIServer rmiServer = new RMIServer(lobby);
         registry.rebind(options.rmiBindingName(), rmiServer);
         System.out.println("Server listening for RMI clients on registry port " + options.rmiPort());
 
+        // Socket clients are accepted on a dedicated thread but use the same lobby.
         final int finalSocketPort = options.socketPort();
         Thread socketThread = new Thread(() -> runSocketAcceptLoop(finalSocketPort, lobby, dispatcher),
                 "socket-accept");

@@ -5,6 +5,9 @@ import it.polimi.ingsw.controller.leaderboard.LeaderboardEntry;
 import java.io.Serial;
 import java.util.List;
 
+/**
+ * Leaderboard page requested by the client from the lobby or menu.
+ */
 public record LeaderboardMessage(
         int playersCount,
         List<LeaderboardEntry> entries

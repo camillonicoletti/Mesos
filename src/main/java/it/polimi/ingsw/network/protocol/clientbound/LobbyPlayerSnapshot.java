@@ -3,6 +3,9 @@ package it.polimi.ingsw.network.protocol.clientbound;
 import it.polimi.ingsw.model.enums.TotemColor;
 import java.io.Serializable;
 
+/**
+ * Small player view used while the client is still in the lobby.
+ */
 public class LobbyPlayerSnapshot implements Serializable {
     private final String nickname;
     private final TotemColor totemColor;

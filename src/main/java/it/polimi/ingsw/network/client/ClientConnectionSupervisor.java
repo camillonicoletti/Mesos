@@ -27,6 +27,7 @@ final class ClientConnectionSupervisor {
             return;
         }
 
+        // A single background thread keeps trying until a reconnect succeeds.
         executor = Executors.newSingleThreadScheduledExecutor(runnable -> {
             Thread thread = new Thread(runnable, "client-reconnect-supervisor");
             thread.setDaemon(true);
@@ -54,11 +55,14 @@ final class ClientConnectionSupervisor {
     private void attemptReconnect(String nickname) {
         ClientSideConnection freshConnection = null;
         try {
+            // Reuse the same factory so the new connection has the original transport.
             freshConnection = connectionFactory.create();
             connectionInstaller.accept(freshConnection);
+            // The first message tells the server which suspended player is coming back.
             freshConnection.send(new ReconnectMessage(nickname));
             stop();
         } catch (Exception ignored) {
+            // Failed attempts are closed and the scheduler will try again later.
             if (freshConnection != null) {
                 freshConnection.close();
             }

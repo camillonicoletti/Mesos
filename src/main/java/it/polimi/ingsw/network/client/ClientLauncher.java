@@ -3,6 +3,10 @@ package it.polimi.ingsw.network.client;
 import it.polimi.ingsw.network.transport.ClientSideConnection;
 import java.util.Arrays;
 
+/**
+ * Main entry point for the client JAR.
+ * The first argument selects the transport, while the rest is parsed by ClientLaunchOptions.
+ */
 public final class ClientLauncher {
 
     private ClientLauncher() {
@@ -17,6 +21,7 @@ public final class ClientLauncher {
         String protocol = args[0].toLowerCase();
         String[] protocolArgs = Arrays.copyOfRange(args, 1, args.length);
 
+        // The two transports stay explicit for the user, but share the same client runtime.
         switch (protocol) {
             case "socket" -> runSocketClient(protocolArgs);
             case "rmi" -> runRmiClient(protocolArgs);
@@ -37,6 +42,7 @@ public final class ClientLauncher {
         SocketClientConnectionFactory factory = new SocketClientConnectionFactory(
                 options.host(), options.socketPort());
         ClientSideConnection connection = createConnectionOrExit(factory, factory.endpointDescription());
+        // Socket does not need an extra registration step after the TCP connection.
         ClientRuntime.run(connection, factory);
     }
 
@@ -55,6 +61,7 @@ public final class ClientLauncher {
                 options.registryPort(),
                 options.rmiBindingName());
         ClientSideConnection connection = createConnectionOrExit(factory, factory.endpointDescription());
+        // RMI must export and register the client callback before the view starts.
         ClientRuntime.run(connection, factory,
                 () -> ((it.polimi.ingsw.network.rmi.RMIClientConnection) connection).register());
     }

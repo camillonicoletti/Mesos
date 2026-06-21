@@ -46,11 +46,13 @@ public class RMIServer extends UnicastRemoteObject implements RemoteServer {
 
     @Override
     public void register(RemoteClient client) throws RemoteException {
+        // Registration creates the same server-side connection object used by the lobby.
         connectionFor(client);
     }
 
     @Override
     public void login(RemoteClient client, String nickname, TotemColor color) throws RemoteException {
+        // Remote calls are converted back into our normal protocol DTOs.
         receive(client, new LoginMessage(nickname, color));
     }
 
@@ -100,6 +102,7 @@ public class RMIServer extends UnicastRemoteObject implements RemoteServer {
             return;
         }
 
+        // Explicit disconnect is the RMI equivalent of closing a socket.
         RMIServerConnection connection = connections.remove(client);
         if (connection == null) {
             return;
@@ -115,6 +118,7 @@ public class RMIServer extends UnicastRemoteObject implements RemoteServer {
     }
 
     private void receive(RemoteClient client, ClientMessage message) {
+        // From this point on, RMI and socket clients share the same dispatcher path.
         connectionFor(client).receive(message);
     }
 
@@ -126,11 +130,13 @@ public class RMIServer extends UnicastRemoteObject implements RemoteServer {
     }
 
     private RMIServerConnection getOrCreateConnection(RemoteClient client) {
+        // One exported client callback corresponds to one logical connection.
         return connections.computeIfAbsent(client, this::createConnection);
     }
 
     private RMIServerConnection createConnection(RemoteClient client) {
         RMIServerConnection created = new RMIServerConnection(client);
+        // Wire the RMI adapter to the same lobby and dispatcher used by sockets.
         created.setOnMessage(message -> dispatcher.dispatch(created, message));
         created.setOnDisconnect(() -> {
             connections.remove(client, created);

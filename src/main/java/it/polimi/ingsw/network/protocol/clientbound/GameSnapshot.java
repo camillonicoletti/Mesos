@@ -6,6 +6,9 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Full game state sent to rebuild the client model after start or reconnect.
+ */
 public class GameSnapshot implements Serializable {
     private final List<PlayerSnapshot> players;
     private final List<Integer> upperRowCharacterAndEventIds;
@@ -22,6 +25,8 @@ public class GameSnapshot implements Serializable {
     private final List<Integer> lowerRowEventIds;
     private final int remainingTribeDeckCards;
 
+    // Shorter constructors are kept for tests and older call sites.
+    // They all end in the complete constructor below.
     public GameSnapshot(List<PlayerSnapshot> players,
                         List<Integer> upperRowCharacterAndEventIds,
                         List<Integer> lowerRowCharacterAndEventIds,
@@ -118,6 +123,7 @@ public class GameSnapshot implements Serializable {
                         List<Integer> upperRowEventIds,
                         List<Integer> lowerRowEventIds,
                         int remainingTribeDeckCards) {
+        // Copy all collections so the snapshot cannot change after it is sent.
         this.players = List.copyOf(players);
         this.upperRowCharacterAndEventIds = List.copyOf(upperRowCharacterAndEventIds);
         this.lowerRowCharacterAndEventIds = List.copyOf(lowerRowCharacterAndEventIds);

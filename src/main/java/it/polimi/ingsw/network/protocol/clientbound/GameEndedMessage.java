@@ -3,14 +3,16 @@ package it.polimi.ingsw.network.protocol.clientbound;
 import java.io.Serial;
 import java.util.Map;
 
+/**
+ * Final result of the match, including data needed for the victory screen.
+ */
 public class GameEndedMessage implements ServerMessage {
     @Serial
     private static final long serialVersionUID = 1L;
 
     private final String winnerNickname;
     private final Map<String, Integer> finalScores;
-    // Server-authoritative food at game end; used by the client for tiebreaker display
-    // because PlayerView.getFood() may lag behind (not all events trigger a snapshot).
+    // Server-authoritative food used for tiebreaker display.
     private final Map<String, Integer> finalFood;
 
     public GameEndedMessage(String winnerNickname, Map<String, Integer> finalScores, Map<String, Integer> finalFood) {

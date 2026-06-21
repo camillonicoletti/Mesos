@@ -12,6 +12,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Server-side view attached to one remote client.
+ *
+ * <p>The GameController emits listener callbacks; this adapter converts them
+ * into clientbound DTOs and sends them through the player's connection.</p>
+ */
 public class VirtualView implements GameListener {
     private final ServerSideConnection connection;
     private final String nickname;
@@ -43,6 +49,7 @@ public class VirtualView implements GameListener {
 
     @Override
     public void onStateChanged(GameState newState) {
+        // State changes drive which screen/actions the client should show.
         connection.send(new StateChangedMessage(newState.getClass().getSimpleName()));
         sendCurrentPlayerIfAvailable();
     }
@@ -84,6 +91,7 @@ public class VirtualView implements GameListener {
 
     @Override
     public void onGameEnded(Player winner, Map<Player, Integer> finalScores) {
+        // Convert server-side Player keys into simple nickname-based DTO data.
         Map<String, Integer> scoresByNickname = finalScores.entrySet().stream()
                 .collect(Collectors.toMap(e -> e.getKey().getNickname(), Map.Entry::getValue));
         // Read food directly from server-side Player objects so the client receives
@@ -106,6 +114,7 @@ public class VirtualView implements GameListener {
 
     @Override
     public void onGameSuspended() {
+        // The remaining time lets the client show a suspension countdown.
         connection.send(new GameSuspendedMessage(controller.getSuspensionRemainingMillis()));
     }
 
@@ -125,6 +134,7 @@ public class VirtualView implements GameListener {
     }
 
     private void sendCurrentPlayerIfAvailable() {
+        // Some states need the current actor immediately after the state name.
         String currentPlayer = controller.getCurrentTurnPlayerNickname();
         if (currentPlayer != null) {
             connection.send(new CurrentPlayerChangedMessage(currentPlayer));
@@ -132,6 +142,7 @@ public class VirtualView implements GameListener {
     }
     @Override
     public void onGameSnapshotChanged() {
+        // A full sync repairs or refreshes the whole client-side board.
         connection.send(new GameSyncMessage(SnapshotBuilder.build(controller)));
     }
     @Override

@@ -23,6 +23,7 @@ public class RMIClientCallback extends UnicastRemoteObject implements RemoteClie
     @Override
     public void onServerMessage(ServerMessage message) {
         try {
+            // RMI calls this method from a remote thread; the owner forwards it to ClientController.
             owner.handleInbound(message);
         } catch (RuntimeException exception) {
             System.err.println("Error while handling RMI server message: " + exception.getMessage());
@@ -31,6 +32,7 @@ public class RMIClientCallback extends UnicastRemoteObject implements RemoteClie
 
     public void shutdown() {
         try {
+            // The callback must be unexported when the client closes.
             UnicastRemoteObject.unexportObject(this, true);
         } catch (Exception ignored) {
             // Best-effort cleanup of the exported callback.

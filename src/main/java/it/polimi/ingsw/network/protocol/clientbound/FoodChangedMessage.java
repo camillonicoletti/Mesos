@@ -1,4 +1,8 @@
 package it.polimi.ingsw.network.protocol.clientbound;
+
+/**
+ * Updates one player's food after an action or event.
+ */
 public class FoodChangedMessage implements ServerMessage {
     private final String nickname;
     private final int newAmount;

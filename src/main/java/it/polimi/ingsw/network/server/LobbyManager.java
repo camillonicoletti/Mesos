@@ -114,6 +114,7 @@ public class LobbyManager {
             this.gameController.markAllPlayersDisconnected();
         }
         this.gameController.addListener(new PersistenceListener(this.gameController));
+        // The scheduler is only responsible for the suspended-game timeout.
         this.suspensionTimeoutExecutor = Executors.newSingleThreadScheduledExecutor(runnable -> {
             Thread thread = new Thread(runnable, "suspension-timeout-monitor");
             thread.setDaemon(true);
@@ -139,6 +140,7 @@ public class LobbyManager {
     // Synchronization serializes game actions with connection and disconnection events.
     public synchronized void handleGameAction(String nickname, GameAction action) {
         try {
+            // Once authenticated, player actions go directly to the GameController state machine.
             gameController.onMessageReceived(nickname, action);
         } catch (Exception exception) {
             ServerSideConnection connection = connections.get(nickname);
@@ -151,6 +153,7 @@ public class LobbyManager {
     public synchronized void handleLogin(ServerSideConnection connection, LoginMessage message) {
         String nickname = message.getNickname();
 
+        // Login is allowed only before the game starts and only for brand-new nicknames.
         if (nickname == null || nickname.isBlank()) {
             connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, "Invalid nickname"));
             return;
@@ -178,6 +181,7 @@ public class LobbyManager {
         }
 
         unregisterPendingConnection(connection);
+        // From this point the connection belongs to an authenticated player.
         registerConnection(nickname, connection);
         connection.send(new LoginAckMessage(LoginAckMessage.Outcome.LOGIN_OK, null));
         broadcastLobbyUpdate();
@@ -187,6 +191,7 @@ public class LobbyManager {
     public synchronized void handleReconnect(ServerSideConnection connection, ReconnectMessage message) {
         String nickname = message.getNickname();
 
+        // Reconnect is allowed only for known game players currently marked disconnected.
         if (nickname == null || nickname.isBlank()) {
             connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, "Invalid nickname"));
             return;
@@ -251,6 +256,7 @@ public class LobbyManager {
         try {
             boolean gameWasNotStarted = gameController.getGame() == null;
             gameController.onMessageReceived(nickname, new SetPlayerCountAction(message.getCount()));
+            // Setting the count can start the match when the lobby becomes complete.
             if (gameWasNotStarted && gameController.getGame() != null) {
                 broadcastGameStarted();
             } else {
@@ -268,6 +274,7 @@ public class LobbyManager {
         try {
             boolean gameWasNotStarted = gameController.getGame() == null;
             gameController.onMessageReceived(nickname, new ReadyAction(ready));
+            // Ready can also trigger the transition from lobby to game.
             if (gameWasNotStarted && gameController.getGame() != null) {
                 broadcastGameStarted();
             } else {
@@ -293,6 +300,7 @@ public class LobbyManager {
         }
 
         try {
+            // The controller decides whether this removes a lobby player or suspends the match.
             gameController.onPlayerDisconnection(nickname);
         } catch (Exception ignored) {
             // The controller is the source of truth; if the player was already processed,
@@ -311,6 +319,7 @@ public class LobbyManager {
 
         String nickname = connection.getNickname();
         if (nickname == null) {
+            // A client can disconnect before completing login.
             unregisterPendingConnection(connection);
             return;
         }
@@ -366,12 +375,14 @@ public class LobbyManager {
     }
     public synchronized void handleGetLeaderboard(ServerSideConnection connection,
                                                   GetLeaderboardMessage message) {
+        // Limit is capped server-side even if a client asks for more.
         int requestedLimit = Math.min(message.limit(), 10);
         List<LeaderboardEntry> entries =
                 leaderboardService.getTop(message.playersCount(), requestedLimit);
         connection.send(new LeaderboardMessage(message.playersCount(), entries));
     }
     private void broadcastLobbyUpdate() {
+        // Lobby updates are small and are also useful before login completes.
         LobbyUpdateMessage message = buildLobbyUpdateMessage();
 
         for (ServerSideConnection connection : connections.values()) {
@@ -386,6 +397,7 @@ public class LobbyManager {
 
 
     private void broadcastGameStarted() {
+        // Game start needs a full snapshot, not just a state name.
         GameStartedMessage message = new GameStartedMessage(SnapshotBuilder.build(gameController));
         StateChangedMessage stateMessage = new StateChangedMessage(
                 gameController.getCurrentState().getClass().getSimpleName()
@@ -400,6 +412,7 @@ public class LobbyManager {
         unregisterConnection(nickname);
         connections.put(nickname, connection);
 
+        // VirtualView is the per-client listener that receives future game events.
         VirtualView view = new VirtualView(connection, nickname, gameController);
         views.put(nickname, view);
         gameController.addListener(view);
@@ -410,6 +423,7 @@ public class LobbyManager {
         ServerSideConnection removedConnection = connections.remove(nickname);
         VirtualView removedView = views.remove(nickname);
         if (removedView != null) {
+            // Removing the listener prevents messages from being sent to a stale connection.
             gameController.removeListener(removedView);
         }
         if (removedConnection != null && removedConnection.isAlive()) {
@@ -445,6 +459,7 @@ public class LobbyManager {
     }
 
     private LobbyUpdateMessage buildLobbyUpdateMessage() {
+        // The lobby DTO intentionally contains only lightweight player status.
         List<LobbyPlayerSnapshot> players = new ArrayList<>();
 
         for (Player player : gameController.getLobbyPlayers()) {
