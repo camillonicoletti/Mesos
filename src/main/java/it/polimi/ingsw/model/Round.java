@@ -15,9 +15,7 @@ import java.util.*;
 /**
  * Per-round state of a Mesos match: the lower/upper rows of tribute, event and
  * building cards, the round number, and the per-player offer-tile
- * choices made during totem placement. Provides the operations that mutate
- * these rows (setup, refill, era transition, discard) and the deterministic
- * event-resolution ordering consumed by {@link Game}.
+ * choices made during totem placement.
  */
 public class Round implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -74,14 +72,6 @@ public class Round implements Serializable {
 
     List<BuildingCard> mutableUpperRowBuildings() {
         return upperRowBuildings;
-    }
-
-    List<EventCard> mutableLowerRowEvents() {
-        return lowerRowEventCards;
-    }
-
-    List<EventCard> mutableUpperRowEvents() {
-        return upperRowEventCards;
     }
 
     public List<EventCard> getLowerRowEvents() {
@@ -147,15 +137,7 @@ public class Round implements Serializable {
         upperRowBuildings = new ArrayList<>(buildings);
     }
 
-    private void drawCardToUpperRow(List<Card> deck) {
-        Card drawn = deck.remove(0);
-        addTribeCardToRows(drawn, upperRowEventCards, upperRowTribute, "tribute deck");
-    }
 
-    private void drawCardToLowerRow(List<Card> deck) {
-        Card drawn = deck.remove(0);
-        addTribeCardToRows(drawn, lowerRowEventCards, lowerRowTribute, "tribute deck");
-    }
 
 
     public boolean placeTotemOffer(Player player, OfferTile chosenTile) {
@@ -171,22 +153,7 @@ public class Round implements Serializable {
         playerChoices.put(player, chosenTile);
         return true;
     }
-
-    public boolean clearOfferChoiceForPlayer(Player player) {
-        if (player == null) {
-            return false;
-        }
-
-        OfferTile chosenTile = playerChoices.remove(player);
-        if (chosenTile == null) {
-            return false;
-        }
-
-        if (chosenTile.getTotemSlot() == player.getTotem()) {
-            chosenTile.removeTotem();
-        }
-        return true;
-    }
+    
 
     public boolean returnTotemToLowestFreeTurnOrderSlot(Player player) {
         if (player == null || player.getTotem() == null) {
@@ -315,25 +282,6 @@ public class Round implements Serializable {
         return ordered;
     }
 
-    /**
-     * Resolves the events visible in this round directly on the model, without
-     * emitting any client-facing notification. This is a legacy model-only entry
-     * point retained for pre-existing unit tests.
-     *
-     * <p><strong>Do not call from production code.</strong> The production event
-     * resolution flow goes through {@code EventResolutionState}, which captures
-     * per-player food/prestige snapshots before each event, invokes
-     * {@code event.resolve(game)} on the ordered event list, and emits
-     * client-facing updates with deltas and new totals.
-     *
-     * <p>Bypassing that state leaves clients unaware of the resulting food and
-     * prestige changes until a later synchronization message reaches them.
-     *
-     * @deprecated Production code should resolve events through the controller
-     *             state flow. This method should be removed after the remaining
-     *             model-only tests are migrated to call {@code event.resolve(game)}
-     *             over {@link #getOrderedEventsForResolution(boolean)}.
-     */
     @Deprecated
     public void resolveEvent() {
         boolean includeUpperRow = game.isLastRound();
@@ -344,21 +292,7 @@ public class Round implements Serializable {
         }
     }
 
-    public List<Card> getCurrentBoardCardsUp() {
-        List<Card> cards = new ArrayList<>();
-        cards.addAll(upperRowTribute);
-        cards.addAll(upperRowEventCards);
-        cards.addAll(upperRowBuildings);
-        return cards;
-    }
 
-    public List<Card> getCurrentBoardCardsLow() {
-        List<Card> cards = new ArrayList<>();
-        cards.addAll(lowerRowTribute);
-        cards.addAll(lowerRowEventCards);
-        cards.addAll(lowerRowBuildings);
-        return cards;
-    }
 
     public void discardLowerRow() {
         lowerRowEventCards.clear();
