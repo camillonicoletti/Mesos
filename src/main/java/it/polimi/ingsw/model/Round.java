@@ -137,6 +137,9 @@ public class Round implements Serializable {
         // Then fill the upper row.
         while (getUpperTributeRowSize() < upperTarget) {
             Card drawnCard = game.drawTribeCard();
+            if (drawnCard == null) {
+                throw new IllegalStateException("Tribute deck is empty during initial setup");
+            }
 
             addTribeCardToRows(drawnCard, upperRowEventCards, upperRowTribute, "tribute deck");
         }

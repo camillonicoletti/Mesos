@@ -51,35 +51,6 @@ public class Game implements Serializable {
     private boolean finalScoresCalculated = false;
     private boolean gameEnded = false;
 
-    // Uses the rulebook table to decide how many buildings each era reveals.
-    private int getBuildingCountForEra(Era era) {
-        int playersCount = players.size();
-
-        return switch (playersCount) {
-            case 2 -> switch (era) {
-                case I -> 1;
-                case II -> 2;
-                case III -> 3;
-            };
-            case 3 -> switch (era) {
-                case I -> 2;
-                case II -> 2;
-                case III -> 4;
-            };
-            case 4 -> switch (era) {
-                case I -> 2;
-                case II -> 3;
-                case III -> 4;
-            };
-            case 5 -> switch (era) {
-                case I -> 2;
-                case II -> 3;
-                case III -> 5;
-            };
-            default -> throw new IllegalStateException("Unsupported number of players");
-        };
-    }
-
     /**
      * Creates a game with its players, decks and optional saved state.
      * It is used both for a new match and when a saved match is restored.
