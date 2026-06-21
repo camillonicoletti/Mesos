@@ -6,6 +6,8 @@ import it.polimi.ingsw.model.board.ActionSlot;
 import it.polimi.ingsw.model.board.FoodSlot;
 import it.polimi.ingsw.model.board.LowerRowSlot;
 import it.polimi.ingsw.model.board.OfferTile;
+import it.polimi.ingsw.model.board.SlotEffect;
+import it.polimi.ingsw.model.board.SlotEffectVisitor;
 import it.polimi.ingsw.model.board.UpperRowSlot;
 
 // Internal helper that applies the immediate effects of an offer tile's slots to the acting player
@@ -19,16 +21,33 @@ final class OfferTileSlotResolver {
         RowPickBudget budget = new RowPickBudget();
 
         for (ActionSlot slot : tile.getSlots()) {
-            if (slot.getEffect() instanceof FoodSlot) {
-                int amount = slot.getAmount();
-                player.addFood(amount);
-                ctx.notifyListeners(l -> l.onFoodChanged(
-                        player.getNickname(), player.getFood(), amount));
-            } else if (slot.getEffect() instanceof UpperRowSlot) {
-                budget.addUpper(slot.getAmount());
-            } else if (slot.getEffect() instanceof LowerRowSlot) {
-                budget.addLower(slot.getAmount());
-            }
+            slot.getEffect().accept(new SlotEffectVisitor<Void>() {
+                @Override
+                public Void visitFood(FoodSlot effect) {
+                    int amount = slot.getAmount();
+                    player.addFood(amount);
+                    ctx.notifyListeners(l -> l.onFoodChanged(
+                            player.getNickname(), player.getFood(), amount));
+                    return null;
+                }
+
+                @Override
+                public Void visitUpperRow(UpperRowSlot effect) {
+                    budget.addUpper(slot.getAmount());
+                    return null;
+                }
+
+                @Override
+                public Void visitLowerRow(LowerRowSlot effect) {
+                    budget.addLower(slot.getAmount());
+                    return null;
+                }
+
+                @Override
+                public Void visitEffect(SlotEffect effect) {
+                    return null;
+                }
+            });
         }
 
         return budget;

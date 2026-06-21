@@ -4,12 +4,15 @@ import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.card.HunterCard;
 
 /**
- * Building effect triggered by the Hunt event: grants 1 extra food and 1
- * extra PP per Hunter in the tribe on top of the event base reward.
+ * Building effect used during Hunt.
+ * It gives one extra food and one extra point for each Hunter in the tribe.
  */
 public class Hunt1Food1PPEffect implements Effect{
     private static final long serialVersionUID = 1L;
-    // During Hunt Event Only
+
+    /**
+     * Adds the extra Hunt reward based on Hunter count.
+     */
     @Override
     public void apply(Player player) {
         int hunters = player.getTribe().countCharactersByType(HunterCard.class);

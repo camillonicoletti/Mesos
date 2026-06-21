@@ -9,9 +9,8 @@ import it.polimi.ingsw.model.enums.Era;
 
 
 /**
- * Event card that rewards each player based on the number of Hunter cards in
- * their tribe: every hunter contributes {@code foodPerHunter} food and
- * {@code ppPerHunter} prestige points, plus any building-side hunt bonuses.
+ * Event that rewards each player for the Hunters in their tribe.
+ * Buildings with hunt-related effects are applied after the base reward.
  */
 public class HuntEventCard extends EventCard {
     private static final long serialVersionUID = 1L;
@@ -33,6 +32,9 @@ public class HuntEventCard extends EventCard {
         return ppPerHunter;
     }
 
+    /**
+     * Gives food and points to each player based on their Hunter cards.
+     */
     @Override
     public void resolve(Game game) {
         for (Player player : game.getPlayers()) {
@@ -53,6 +55,9 @@ public class HuntEventCard extends EventCard {
         return visitor.visitHuntEvent(this);
     }
 
+    /**
+     * Applies a building effect that reacts to a Hunt event, if present.
+     */
     private void applyHuntEffect(Player player, BuildingCard building) {
         building.acceptEffect(new EffectVisitor<Void>() {
             @Override public Void visitHunt1Food1PP(Hunt1Food1PPEffect effect) {

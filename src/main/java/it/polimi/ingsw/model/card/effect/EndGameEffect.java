@@ -3,10 +3,12 @@ package it.polimi.ingsw.model.card.effect;
 import it.polimi.ingsw.model.Player;
 
 /**
- * Marker sub-type for effects that contribute to end-of-match scoring.
- * {@link #calculatePoints(Player)} returns the PP added to the player's final
- * score; concrete implementations apply themselves by adding those PP.
+ * Effect used during final scoring.
+ * It calculates how many points a building adds at the end of the match.
  */
 public interface EndGameEffect extends Effect{
+    /**
+     * Returns the end-game points given to the player.
+     */
     int calculatePoints(Player player);
 }

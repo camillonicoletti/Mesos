@@ -3,16 +3,18 @@ package it.polimi.ingsw.model.card.effect;
 import it.polimi.ingsw.model.Player;
 
 /**
- * Passive marker effect: protects the owning player from PP loss during a
- * Shamanic Ritual. Bypassed when every player is tied in stars, since the
- * rule requires the player to have strictly fewer icons than someone else.
+ * Passive effect that protects the player from Shamanic Ritual point loss.
+ * It is ignored when every player is tied in stars.
  */
 public class ShamanicRitualImmunityEffect implements Effect{
     private static final long serialVersionUID = 1L;
+    /**
+     * Does nothing directly because the ritual event checks this protection.
+     */
     @Override
     public void apply(Player player)
     {
-        // Passive: apply() is a no-op; ShamanicRitualEventCard skips PP removal for immune players.
+        // Passive: ShamanicRitualEventCard skips PP removal for immune players.
     }
 
     @Override

@@ -4,12 +4,15 @@ import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.card.ArtistCard;
 
 /**
- * Building effect that grants one food per Artist in the tribe during the
- * Cave Paintings event.
+ * Building effect used during Cave Paintings.
+ * It gives one food for each Artist in the player's tribe.
  */
 public class CavePaintingsFoodEffect implements Effect{
     private static final long serialVersionUID = 1L;
-    // During Cave Paintings Event Only
+
+    /**
+     * Adds food based on the number of Artist cards owned by the player.
+     */
     @Override
     public void apply(Player player) {
         int artists = player.getTribe().countCharactersByType(ArtistCard.class);

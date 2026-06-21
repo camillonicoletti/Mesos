@@ -3,8 +3,7 @@ package it.polimi.ingsw.model.card;
 import it.polimi.ingsw.model.enums.Era;
 
 /**
- * Character used during Cave Paintings events (where minimum-artist thresholds
- * decide PP gain vs. penalty) and at end-of-match scoring through pairs.
+ * Character used for Cave Paintings events and artist-pair end-game scoring.
  */
 public class ArtistCard extends CharacterCard{
     private static final long serialVersionUID = 1L;
@@ -14,6 +13,9 @@ public class ArtistCard extends CharacterCard{
 
     }
 
+    /**
+     * Sends this card to the artist branch of the visitor.
+     */
     @Override
     public <R> R accept(CardVisitor<R> visitor) {
         return visitor.visitArtist(this);

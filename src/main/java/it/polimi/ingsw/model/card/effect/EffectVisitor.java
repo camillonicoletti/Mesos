@@ -1,11 +1,9 @@
 package it.polimi.ingsw.model.card.effect;
 
 /**
- * Visitor over building {@link Effect}s. Specific effects forward to a typed
- * {@code visitXxx} method; the default implementations cascade up to
- * {@link #visitEndGame(EndGameEffect)} for end-game effects and to
- * {@link #visitEffect(Effect)} for the generic case, so visitors only override
- * the cases they care about.
+ * Visitor for building effects.
+ * Specific effects call their own visit method, while default methods fall back to broader cases.
+ * This lets callers handle only the effects they need.
  *
  * @param <R> result type produced by the visit
  */

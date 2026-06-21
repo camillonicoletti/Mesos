@@ -3,9 +3,8 @@ package it.polimi.ingsw.model.card;
 import it.polimi.ingsw.model.enums.Era;
 
 /**
- * Character that contributes to Hunt event payouts (food and PP per hunter).
- * The {@code foodIcon} flag marks the Hunter cards that grant immediate food
- * on acquisition, scaled by the number of hunters already in the tribe.
+ * Character used during Hunt events.
+ * Some Hunter cards also give immediate food when taken.
  */
 public class    HunterCard extends CharacterCard{
     private static final long serialVersionUID = 1L;
@@ -18,10 +17,16 @@ public class    HunterCard extends CharacterCard{
 
     }
 
+    /**
+     * Tells if this Hunter has the immediate food icon.
+     */
     public boolean hasFoodIcon() {
         return foodIcon;
     }
 
+    /**
+     * Sends this card to the hunter branch of the visitor.
+     */
     @Override
     public <R> R accept(CardVisitor<R> visitor) {
         return visitor.visitHunter(this);

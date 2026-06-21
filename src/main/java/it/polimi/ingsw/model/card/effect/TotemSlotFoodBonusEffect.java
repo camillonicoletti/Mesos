@@ -3,11 +3,15 @@ package it.polimi.ingsw.model.card.effect;
 import it.polimi.ingsw.model.Player;
 
 /**
- * Building effect triggered when the owner places their totem on a food-reward
- * turn-order slot: grants 1 extra food on top of the slot's base payout.
+ * Building effect used when the player lands on a food turn-order slot.
+ * It adds one extra food to the slot reward.
  */
 public class TotemSlotFoodBonusEffect implements Effect{
     private static final long serialVersionUID = 1L;
+
+    /**
+     * Adds the extra food bonus.
+     */
     @Override
     public void apply(Player player){
         player.addFood(1);

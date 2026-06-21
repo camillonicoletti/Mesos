@@ -3,8 +3,7 @@ package it.polimi.ingsw.model.card;
 import it.polimi.ingsw.model.enums.Era;
 
 /**
- * Character that reduces the food required during Sustenance events:
- * each Gatherer covers a fixed amount of the upkeep cost.
+ * Character that reduces the food needed during Sustenance events.
  */
 public class GathererCard extends CharacterCard{
     private static final long serialVersionUID = 1L;
@@ -14,6 +13,9 @@ public class GathererCard extends CharacterCard{
 
     }
 
+    /**
+     * Sends this card to the gatherer branch of the visitor.
+     */
     @Override
     public <R> R accept(CardVisitor<R> visitor) {
         return visitor.visitGatherer(this);

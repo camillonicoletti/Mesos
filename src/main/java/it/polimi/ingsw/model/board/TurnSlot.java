@@ -4,6 +4,10 @@ import it.polimi.ingsw.model.Totem;
 
 import java.io.Serializable;
 
+/**
+ * Represents one position in the turn-order track.
+ * A slot can hold one totem and can apply a reward or penalty.
+ */
 public class TurnSlot implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -33,11 +37,17 @@ public class TurnSlot implements Serializable {
         return occupiedBy;
     }
 
+    /**
+     * Places a totem in this turn-order position.
+     */
     public void placeTotem(Totem t) {
         this.occupiedBy = t;
         t.setPosition("TURN_ORDER");
     }
 
+    /**
+     * Removes the totem from this position and returns it.
+     */
     public Totem removeTotem() {
         Totem removed = this.occupiedBy;
         this.occupiedBy = null;

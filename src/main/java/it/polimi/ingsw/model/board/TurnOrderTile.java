@@ -9,6 +9,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Collections;
 
+/**
+ * Represents the turn-order track.
+ * It stores the order of the players and the effect of each turn position.
+ */
 public class TurnOrderTile implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -28,6 +32,9 @@ public class TurnOrderTile implements Serializable {
         return slots;
     }
 
+    /**
+     * Returns the first free turn-order slot, or null if the track is full.
+     */
     public TurnSlot getNextFreeSlot() {
         for (TurnSlot slot : slots) {
             if (!slot.isOccupied()) {
@@ -37,6 +44,9 @@ public class TurnOrderTile implements Serializable {
         return null;
     }
 
+    /**
+     * Returns true when every turn-order slot is occupied.
+     */
     public boolean isFull() {
         for (TurnSlot slot : slots) {
             if (!slot.isOccupied()) {
@@ -46,12 +56,18 @@ public class TurnOrderTile implements Serializable {
         return true;
     }
 
+    /**
+     * Removes all totems from the turn-order track.
+     */
     public void reset() {
         for (TurnSlot slot : slots) {
             slot.removeTotem();
         }
     }
 
+    /**
+     * Builds the next turn order from the occupied offer tiles.
+     */
     public void assignTurnOrder(Board board) {
         // Earlier offer tiles map to earlier turn-order slots for the next round.
         reset();
@@ -74,6 +90,9 @@ public class TurnOrderTile implements Serializable {
         }
     }
 
+    /**
+     * Returns the totems in current turn-order position.
+     */
     public List<Totem> getTurnOrder() {
         List<Totem> order = new ArrayList<>();
         List<TurnSlot> sortedSlots = new ArrayList<>(slots);
@@ -86,6 +105,9 @@ public class TurnOrderTile implements Serializable {
         return order;
     }
 
+    /**
+     * Creates the first random turn order at the start of the match.
+     */
     public void assignRandomTurnOrder(List<Totem> totems) {
         // Used only at game start to create the first turn order before any round has been played.
         reset();
@@ -98,6 +120,9 @@ public class TurnOrderTile implements Serializable {
         }
     }
 
+    /**
+     * Creates the correct turn-order slots and effects for the player count.
+     */
     public static TurnOrderTile createForPlayers(int numPlayers) {
         List<TurnSlot> slots = new ArrayList<>();
 

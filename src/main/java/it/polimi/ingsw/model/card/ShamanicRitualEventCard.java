@@ -13,12 +13,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Event card that ranks players by shaman stars (plus Shaman3ExtraStars
- * bonuses). Top-ranked players gain {@code ppGain} PP (doubled by the
- * ShamanicRitualDoublePP building effect); bottom-ranked players lose
- * {@code ppLoss} PP unless protected by ShamanicRitualImmunity. When every
- * player is tied, immunity does not apply because nobody has strictly fewer
- * stars than another.
+ * Event that ranks players by shaman stars.
+ * Players with most stars gain points, players with least stars lose points,
+ * and building effects can add stars, double rewards or give immunity.
  */
 public class ShamanicRitualEventCard extends EventCard {
     private static final long serialVersionUID = 1L;
@@ -45,7 +42,9 @@ public class ShamanicRitualEventCard extends EventCard {
         return visitor.visitShamanicRitualEvent(this);
     }
 
-    // counts shaman stars for a player, adding 3 extra if they have Shaman3ExtraStarsEffect
+    /**
+     * Counts a player's shaman stars, including building bonuses.
+     */
     private int countStarsForPlayer(Player player) {
         int stars = player.getTribe().countShamanStars();
         for (BuildingCard building : player.getTribe().getBuildingCards()) {
@@ -54,6 +53,9 @@ public class ShamanicRitualEventCard extends EventCard {
         return stars;
     }
 
+    /**
+     * Resolves the ritual by finding the players with most and least shaman stars.
+     */
     @Override
     public void resolve(Game game) {
         List<Player> players = game.getPlayers();
@@ -62,7 +64,7 @@ public class ShamanicRitualEventCard extends EventCard {
             return;
         }
 
-        // count stars for each player including Shaman3ExtraStarsEffect bonus
+        // Count stars for each player, including building bonuses.
         int maxStars = Integer.MIN_VALUE;
         int minStars = Integer.MAX_VALUE;
 
@@ -81,7 +83,7 @@ public class ShamanicRitualEventCard extends EventCard {
             if (stars == minStars) playersWithLeastStars.add(player);
         }
 
-        // award PP to players with most stars — doubled if they have ShamanicRitualDoublePPEffect
+        // Players with most stars gain points; a building can double this reward.
         for (Player player : playersWithMostStars) {
             int pp = ppGain;
 
@@ -94,9 +96,8 @@ public class ShamanicRitualEventCard extends EventCard {
             player.addPrestigePoints(pp);
         }
 
-        // remove PP from players with least stars — unless they have ShamanicRitualImmunityEffect.
-        // Immunity only applies when the player genuinely has fewer stars than someone else;
-        // when all players are tied (maxStars == minStars) nobody has fewer stars, so immunity is bypassed.
+        // Players with least stars lose points.
+        // Immunity works only if the player really has fewer stars than someone else.
         boolean allPlayersTied = maxStars == minStars;
         for (Player player : playersWithLeastStars) {
             if (!allPlayersTied && hasShamanicRitualImmunity(player)) {
@@ -106,6 +107,9 @@ public class ShamanicRitualEventCard extends EventCard {
         }
     }
 
+    /**
+     * Reads extra shaman stars from a building effect.
+     */
     private int extraStarsFrom(BuildingCard building) {
         return building.acceptEffect(new EffectVisitor<>() {
             @Override public Integer visitShaman3ExtraStars(Shaman3ExtraStarsEffect effect) {
@@ -118,6 +122,9 @@ public class ShamanicRitualEventCard extends EventCard {
         });
     }
 
+    /**
+     * Checks if a building doubles the ritual reward.
+     */
     private boolean doublesShamanicRitualPoints(BuildingCard building) {
         return Boolean.TRUE.equals(building.acceptEffect(new EffectVisitor<>() {
             @Override public Boolean visitShamanicRitualDoublePP(ShamanicRitualDoublePPEffect effect) {
@@ -130,6 +137,9 @@ public class ShamanicRitualEventCard extends EventCard {
         }));
     }
 
+    /**
+     * Checks if the player is protected from the ritual penalty.
+     */
     private boolean hasShamanicRitualImmunity(Player player) {
         for (BuildingCard building : player.getTribe().getBuildingCards()) {
             if (Boolean.TRUE.equals(building.acceptEffect(new EffectVisitor<>() {

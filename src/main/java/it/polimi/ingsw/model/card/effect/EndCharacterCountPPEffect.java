@@ -4,8 +4,7 @@ import it.polimi.ingsw.model.Player;
 import it.polimi.ingsw.model.card.CharacterCard;
 
 /**
- * End-game effect that grants {@code pointsPerCard} PP for every character of
- * the configured {@code targetType} held in the tribe.
+ * End-game effect that gives points for each owned character of one target type.
  */
 public class EndCharacterCountPPEffect implements EndGameEffect {
     private static final long serialVersionUID = 1L;
@@ -25,12 +24,18 @@ public class EndCharacterCountPPEffect implements EndGameEffect {
         return pointsPerCard;
     }
 
+    /**
+     * Counts target characters and multiplies them by the configured point value.
+     */
     @Override
     public int calculatePoints(Player player) {
         int count = player.getTribe().countCharactersByType(targetType);
         return count * pointsPerCard;
     }
 
+    /**
+     * Adds the calculated end-game points to the player.
+     */
     @Override
     public void apply(Player player) {
         player.addPrestigePoints(calculatePoints(player));

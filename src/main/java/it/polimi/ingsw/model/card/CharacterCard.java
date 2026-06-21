@@ -3,9 +3,8 @@ package it.polimi.ingsw.model.card;
 import it.polimi.ingsw.model.enums.Era;
 
 /**
- * Base type for the six character archetypes (Hunter, Gatherer, Shaman,
- * Builder, Artist, Inventor). Adds the minimum player count required for the
- * card to be playable, used by {@link CardFactory} when assembling the deck.
+ * Base class for character cards.
+ * It stores the minimum player count needed for the card to be included in the deck.
  */
 public abstract class CharacterCard extends Card {
 
@@ -21,10 +20,16 @@ public abstract class CharacterCard extends Card {
         return minPlayers;
     }
 
+    /**
+     * Checks if this card can be used with the current number of players.
+     */
     public boolean isAvailableFor(int numPlayers) {
         return numPlayers >= minPlayers;
     }
 
+    /**
+     * Sends generic character cards to the character branch of the visitor.
+     */
     @Override
     public <R> R accept(CardVisitor<R> visitor) {
         return visitor.visitCharacter(this);

@@ -10,10 +10,8 @@ import it.polimi.ingsw.model.card.effect.InventorPairFoodEffect;
 import java.io.Serializable;
 
 /**
- * A participant in a Mesos match. Holds the player's food and prestige-point
- * counters, the owned {@link Tribe} of character/building cards and the
- * {@link Totem} used for turn-order and offer-tile placement. Adding a card
- * may trigger building-side effects that depend on tribe composition.
+ * Represents one player in the match.
+ * It stores food, points, tribe cards and the player's totem.
  */
 public class Player implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -57,9 +55,6 @@ public class Player implements Serializable {
 
     /**
      * Adds food to the player.
-     *
-     * @param amount the amount of food to add
-     * @throws IllegalArgumentException if the amount is negative
      */
     public void addFood(int amount) {
         if (amount < 0) {
@@ -70,10 +65,6 @@ public class Player implements Serializable {
 
     /**
      * Spends food from the player's personal reserve.
-     *
-     * @param amount the amount of food to spend
-     * @throws IllegalArgumentException if the amount is negative
-     * @throws IllegalStateException if the player does not have enough food
      */
     public void spendFood(int amount) {
         if (amount < 0) {
@@ -90,9 +81,6 @@ public class Player implements Serializable {
 
     /**
      * Adds prestige points to the player.
-     *
-     * @param amount the amount of prestige points to add
-     * @throws IllegalArgumentException if the amount is negative
      */
     public void addPrestigePoints(int amount) {
         if (amount < 0) {
@@ -103,9 +91,6 @@ public class Player implements Serializable {
 
     /**
      * Removes prestige points from the player.
-     *
-     * @param amount the amount of prestige points to remove
-     * @throws IllegalArgumentException if the amount is negative
      */
     public void removePrestigePoints(int amount) {
         if (amount < 0) {
@@ -115,8 +100,7 @@ public class Player implements Serializable {
     }
 
     /**
-     * Applies a turn order penalty: spends foodCost food if affordable,
-     * otherwise removes prestigePenalty prestige points.
+     * Applies a penalty by spending food first, or points if food is missing.
      */
     public void applyTurnPenalty(int foodCost, int prestigePenalty) {
         if (canAfford(foodCost)) {
@@ -126,17 +110,21 @@ public class Player implements Serializable {
         }
     }
 
-
+    /**
+     * Adds a character card and checks if owned buildings react to it.
+     */
     public void addCharacterCard(CharacterCard card) {
         tribe.addCharacterCard(card);
 
-        // Building effects that depend on tribe composition (e.g. FullSetFood) react here.
+        // Some buildings give rewards when the tribe composition changes.
         for (BuildingCard building : tribe.getBuildingCards()) {
             applyCharacterAddedEffect(building);
         }
     }
 
-
+    /**
+     * Adds a building card and stores its starting progress.
+     */
     public void addBuildingCard(BuildingCard card) {
         tribe.addBuildingCard(card);
         initializeStoredProgress(card);

@@ -13,9 +13,9 @@ import java.util.*;
 
 
 /**
- * Per-round state of a Mesos match: the lower/upper rows of tribute, event and
- * building cards, the round number, and the per-player offer-tile
- * choices made during totem placement.
+ * Represents one round of the match.
+ * It keeps the visible rows of cards and the offer choices made by players.
+ * It also manages row refill, era changes and event resolution order.
  */
 public class Round implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -97,6 +97,11 @@ public class Round implements Serializable {
     public List<BuildingCard> getLowerRowBuildings() {
         return Collections.unmodifiableList(lowerRowBuildings);
     }
+
+    /**
+     * Creates the next round by keeping the current visible rows.
+     * This lets the controller continue from the same board situation.
+     */
     public Round createNextRound(int nextRoundNumber) {
         return new Round(
                 nextRoundNumber,
@@ -111,11 +116,15 @@ public class Round implements Serializable {
         );
     }
 
+    /**
+     * Fills the first tribute rows at the start of the game.
+     * Event cards and character cards are separated while drawing.
+     */
     public void setupInitialRows() {
         int lowerTarget = game.getPlayers().size() + 1;
         int upperTarget = game.getPlayers().size() + 4;
 
-        // 1. Fill the lower row up to target size
+        // Fill the lower row first.
         while (getLowerTributeRowSize() < lowerTarget) {
             Card drawnCard = game.drawTribeCard();
             if (drawnCard == null) {
@@ -125,7 +134,7 @@ public class Round implements Serializable {
             addTribeCardToRows(drawnCard, upperRowEventCards, lowerRowTribute, "tribute deck");
         }
 
-        // 2. Fill the upper row up to target size
+        // Then fill the upper row.
         while (getUpperTributeRowSize() < upperTarget) {
             Card drawnCard = game.drawTribeCard();
 
@@ -133,13 +142,19 @@ public class Round implements Serializable {
         }
     }
 
+    /**
+     * Places the first visible buildings in the upper row.
+     */
     public void setupInitialBuildings(List<BuildingCard> buildings) {
         upperRowBuildings = new ArrayList<>(buildings);
     }
 
 
 
-
+    /**
+     * Places a player's totem on an offer tile and remembers the choice.
+     * The saved choice is later used during action resolution.
+     */
     public boolean placeTotemOffer(Player player, OfferTile chosenTile) {
         int numPlayers = game.getPlayers().size();
         if (!chosenTile.isAvailableFor(numPlayers))
@@ -148,13 +163,35 @@ public class Round implements Serializable {
             return false;
         removeTotemFromTurnOrder(player.getTotem());
         chosenTile.placeTotem(player.getTotem());
-        // Saves the player's choice so that execute() can resolve actions for each player
-        // using their chosen OfferTile during ACTION_RESOLUTION phase
+        // Save the choice for the action resolution phase.
         playerChoices.put(player, chosenTile);
         return true;
     }
-    
 
+    /**
+     * Removes a player's current offer choice, if they had one.
+     * Used when a player disconnects before their action is resolved.
+     */
+    public boolean clearOfferChoiceForPlayer(Player player) {
+        if (player == null) {
+            return false;
+        }
+
+        OfferTile chosenTile = playerChoices.remove(player);
+        if (chosenTile == null) {
+            return false;
+        }
+
+        if (chosenTile.getTotemSlot() == player.getTotem()) {
+            chosenTile.removeTotem();
+        }
+        return true;
+    }
+
+    /**
+     * Puts a disconnected player's totem back into the lowest free turn-order slot.
+     * This keeps the board consistent while the player is not active.
+     */
     public boolean returnTotemToLowestFreeTurnOrderSlot(Player player) {
         if (player == null || player.getTotem() == null) {
             return false;
@@ -181,6 +218,10 @@ public class Round implements Serializable {
         return false;
     }
 
+    /**
+     * Places a player back into the turn order and applies the slot reward.
+     * Food and point changes are reported through game listeners.
+     */
     public void placeTotemOrderForPlayer(Player player) {
         Board board = game.getBoard();
         TurnOrderTile turnOrderTile = board.getTurnOrderTile();
@@ -202,8 +243,8 @@ public class Round implements Serializable {
 
         targetSlot.getEffect().apply(player);
 
-        // TotemSlotFoodBonusEffect applies only on food-reward slots.
-        if (targetSlot.getEffect() instanceof GainFoodSlotEffect) {
+        // This building bonus is applied only on effects that explicitly allow it.
+        if (targetSlot.getEffect().triggersTotemFoodBonus()) {
             for (BuildingCard building : player.getTribe().getBuildingCards()) {
                 applyTotemSlotFoodBonus(player, building);
             }
@@ -244,21 +285,22 @@ public class Round implements Serializable {
             }
         }
     }
-
-
-
+    /**
+     * Returns events in the exact order in which they must be resolved.
+     * Lower-row events always resolve; upper-row events are added only when requested.
+     */
     public List<EventCard> getOrderedEventsForResolution(boolean includeUpperRow) {
         List<EventCard> eventsToResolve = new ArrayList<>();
 
-        // 1. Collect lower-row events
+        // Lower-row events always resolve.
         eventsToResolve.addAll(lowerRowEventCards);
 
-        // 2. On the last round, also include upper-row events
+        // Upper-row events resolve only when requested.
         if (includeUpperRow) {
             eventsToResolve.addAll(upperRowEventCards);
         }
 
-        // 3. Sustenance events are always resolved last
+        // Sustenance events must be kept for the end.
         List<EventCard> normalEvents = new ArrayList<>();
         List<EventCard> sustenanceEvents = new ArrayList<>();
 
@@ -270,11 +312,11 @@ public class Round implements Serializable {
             }
         }
 
-        // 4. Sort each group by Era for deterministic resolution order
+        // Sort by era to keep the order stable.
         normalEvents.sort(Comparator.comparing(EventCard::getEra));
         sustenanceEvents.sort(Comparator.comparing(EventCard::getEra));
 
-        // 5. Reassemble: normal events first, sustenance last
+        // Normal events first, sustenance events last.
         List<EventCard> ordered = new ArrayList<>();
         ordered.addAll(normalEvents);
         ordered.addAll(sustenanceEvents);
@@ -282,23 +324,39 @@ public class Round implements Serializable {
         return ordered;
     }
 
-    @Deprecated
-    public void resolveEvent() {
-        boolean includeUpperRow = game.isLastRound();
-        List<EventCard> eventCards = getOrderedEventsForResolution(includeUpperRow);
-
-        for (EventCard eventCard : eventCards) {
-            eventCard.resolve(game);
-        }
+    /**
+     * Returns every card currently visible in the upper row.
+     */
+    public List<Card> getCurrentBoardCardsUp() {
+        List<Card> cards = new ArrayList<>();
+        cards.addAll(upperRowTribute);
+        cards.addAll(upperRowEventCards);
+        cards.addAll(upperRowBuildings);
+        return cards;
     }
 
+    /**
+     * Returns every card currently visible in the lower row.
+     */
+    public List<Card> getCurrentBoardCardsLow() {
+        List<Card> cards = new ArrayList<>();
+        cards.addAll(lowerRowTribute);
+        cards.addAll(lowerRowEventCards);
+        cards.addAll(lowerRowBuildings);
+        return cards;
+    }
 
-
+    /**
+     * Removes all tribute and event cards from the lower row.
+     */
     public void discardLowerRow() {
         lowerRowEventCards.clear();
         lowerRowTribute.clear();
     }
 
+    /**
+     * Moves upper tribute and event cards down to the lower row.
+     */
     public void shiftUpperToLowerRow() {
         lowerRowEventCards = new ArrayList<>(upperRowEventCards);
         lowerRowTribute = new ArrayList<>(upperRowTribute);
@@ -315,6 +373,10 @@ public class Round implements Serializable {
         return lowerRowTribute.size() + lowerRowEventCards.size();
     }
 
+    /**
+     * Refills the upper tribute row from the deck.
+     * If the deck is empty, the row simply remains smaller.
+     */
     public void refillUpperRow() {
         int targetSize = game.getPlayers().size() + 4;
 
@@ -328,7 +390,10 @@ public class Round implements Serializable {
         }
     }
 
-    // An era ends when a card from the next era appears in the upper row after refill.
+    /**
+     * Checks if a newly revealed card should move the game to the next era.
+     * A card from the next era appearing in the upper row triggers the transition.
+     */
     public void checkEraTransition() {
         Era before = game.getCurrentEra();
 
@@ -350,13 +415,22 @@ public class Round implements Serializable {
         if (after != before) game.notifyListeners(l -> l.onEraChanged(after));
     }
 
+    /**
+     * Moves upper buildings to the lower building row.
+     */
     public void moveUpperBuildingsToLower() {
         lowerRowBuildings = upperRowBuildings;
         upperRowBuildings = new ArrayList<>();
     }
+    /**
+     * Removes the old lower-row buildings.
+     */
     public void discardLowerBuildings() {
         lowerRowBuildings.clear();
     }
+    /**
+     * Reveals the buildings for the new era.
+     */
     public void revealBuildingsForEra(List<BuildingCard> buildings) {
         upperRowBuildings = new ArrayList<>(buildings);
     }

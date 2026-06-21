@@ -5,10 +5,8 @@ import it.polimi.ingsw.model.enums.Era;
 import java.io.Serializable;
 
 /**
- * Root of the card hierarchy. Carries the immutable identity (id) and the era
- * a card belongs to. Subclasses are dispatched through {@link CardVisitor}
- * (Visitor pattern) so that callers avoid {@code instanceof} chains when
- * specialising behaviour per concrete card type.
+ * Base class for every card in the game.
+ * It stores the card id and era, and lets visitors handle cards without long instanceof chains.
  */
 public abstract class Card implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -28,6 +26,10 @@ public abstract class Card implements Serializable {
         return era;
     }
 
+    /**
+     * Lets a visitor handle this card.
+     * Subclasses override this to call a more specific visit method.
+     */
     public <R> R accept(CardVisitor<R> visitor) {
         return visitor.visitCard(this);
     }

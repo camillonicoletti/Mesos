@@ -1,5 +1,9 @@
 package it.polimi.ingsw.model.enums;
 
+/**
+ * Icons printed on Inventor cards.
+ * Inventor scoring uses these values to count distinct icons and matching pairs.
+ */
 public enum InventorIcons {
     INVENTION_1(1),
     INVENTION_2(2),
@@ -18,6 +22,9 @@ public enum InventorIcons {
         this.number = number;
     }
 
+    /**
+     * Returns the numeric id of the invention icon.
+     */
     public int getNumber() {
         return number;
     }

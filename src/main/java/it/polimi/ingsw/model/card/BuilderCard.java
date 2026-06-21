@@ -3,8 +3,7 @@ package it.polimi.ingsw.model.card;
 import it.polimi.ingsw.model.enums.Era;
 
 /**
- * Character that grants a food discount when the player takes a building card
- * and contributes end-of-match points equal to {@code pointsEndOfMatch}.
+ * Character that discounts building costs and can give end-game points.
  */
 public class BuilderCard extends CharacterCard{
     private static final long serialVersionUID = 1L;
@@ -26,6 +25,9 @@ public class BuilderCard extends CharacterCard{
         return pointsEndOfMatch;
     }
 
+    /**
+     * Sends this card to the builder branch of the visitor.
+     */
     @Override
     public <R> R accept(CardVisitor<R> visitor) {
         return visitor.visitBuilder(this);

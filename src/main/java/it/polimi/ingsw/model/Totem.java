@@ -5,9 +5,8 @@ import it.polimi.ingsw.model.enums.TotemColor;
 import java.io.Serializable;
 
 /**
- * A player's coloured marker placed on board slots: turn-order tiles during
- * round setup and offer tiles during totem placement. Identifies the owning
- * player wherever it sits.
+ * Represents a player's colored marker on the board.
+ * It can be placed on turn-order slots or offer tiles.
  */
 public class Totem implements Serializable {
     private static final long serialVersionUID = 1L;

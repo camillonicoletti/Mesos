@@ -5,15 +5,19 @@ import it.polimi.ingsw.model.Player;
 import java.io.Serializable;
 
 /**
- * Behaviour attached to a {@link it.polimi.ingsw.model.card.BuildingCard}.
- * Most effects are passive: their {@link #apply(Player)} is a no-op, and the
- * actual rule is read by the event/scoring code via the {@link EffectVisitor}.
- * The visitor dispatch lets new effects be added without touching callers.
+ * Behavior attached to a building card.
+ * Some effects apply immediately, while passive effects are read by events or scoring through EffectVisitor.
  */
 public interface Effect extends Serializable {
 
+    /**
+     * Applies the effect directly when the effect has active behavior.
+     */
     void apply(Player player);
 
+    /**
+     * Lets a visitor read this effect without using instanceof chains.
+     */
     default <R> R accept(EffectVisitor<R> visitor) {
         return visitor.visitEffect(this);
     }

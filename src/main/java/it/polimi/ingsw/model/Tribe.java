@@ -13,10 +13,8 @@ import java.util.Set;
 import java.util.Collections;
 
 /**
- * The collection of cards a player has acquired during the match: characters
- * and buildings. Exposes derived queries used by scoring, event resolution and
- * effect application (counts by type, full sets, inventor pairs, shaman stars,
- * building discounts).
+ * Stores the cards owned by a player.
+ * It also counts useful groups of cards for effects and final scoring.
  */
 public class Tribe implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -68,6 +66,9 @@ public class Tribe implements Serializable {
         return this.characterCards.size();
     }
 
+    /**
+     * Counts how many characters of a specific type the tribe has.
+     */
     public int countCharactersByType(Class<? extends CharacterCard> type) {
         CardVisitor<Boolean> matcher = CHARACTER_TYPE_MATCHERS.get(type);
         if (matcher == null) {
@@ -76,6 +77,9 @@ public class Tribe implements Serializable {
         return countMatching(matcher);
     }
 
+    /**
+     * Sums all food discounts given by builder cards.
+     */
     public int getBuildingDiscount() {
         return sumValues(new CardVisitor<>() {
             @Override public Integer visitBuilder(BuilderCard builder) {
@@ -96,7 +100,9 @@ public class Tribe implements Serializable {
         return Collections.unmodifiableList(buildingCards);
     }
 
-    // Each full set consumes one card of every character type.
+    /**
+     * Counts complete sets made of one card for each character type.
+     */
     public int countFullSets() {
         int[] counts = {
                 countCharactersByType(ArtistCard.class),
@@ -115,7 +121,9 @@ public class Tribe implements Serializable {
         return sets;
     }
 
-    // Sums star values from Shaman cards only; building bonuses are added by the caller.
+    /**
+     * Counts stars printed on Shaman cards.
+     */
     public int countShamanStars() {
         return sumValues(new CardVisitor<>() {
             @Override public Integer visitShaman(ShamanCard shaman) {
@@ -129,8 +137,7 @@ public class Tribe implements Serializable {
     }
 
     /**
-     * Counts how many different invention icons are present among the Inventor cards in the tribe.
-     * @return the number of distinct invention icons owned by the player
+     * Counts how many different invention icons the player owns.
      */
     public int countDistinctInventorIcons() {
         Set<InventorIcons> distinctIcons = new HashSet<>();
@@ -151,7 +158,9 @@ public class Tribe implements Serializable {
         return distinctIcons.size();
     }
 
-    // Counts same-icon inventor pairs; each icon group contributes floor(count / 2) pairs.
+    /**
+     * Counts pairs of Inventor cards with the same icon.
+     */
     public int countInventorPairs() {
         Map<InventorIcons, Integer> iconCounts = new HashMap<>();
         CardVisitor<Void> collector = new CardVisitor<>() {
@@ -176,7 +185,9 @@ public class Tribe implements Serializable {
         return pairs;
     }
 
-    // Two Artist cards form one pair; odd artists are ignored.
+    /**
+     * Counts pairs of Artist cards.
+     */
     public int countArtistPairs() {
         int artists = countCharactersByType(ArtistCard.class);
         return artists / 2;

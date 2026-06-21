@@ -3,9 +3,8 @@ package it.polimi.ingsw.model.card;
 import it.polimi.ingsw.model.enums.Era;
 
 /**
- * Character that contributes shaman stars used to rank players during a
- * Shamanic Ritual event. The top-ranked players gain PP, the bottom-ranked
- * lose PP (subject to immunity effects).
+ * Character with shaman stars.
+ * Shamanic Ritual events rank players using these stars.
  */
 public class ShamanCard extends CharacterCard{
     private static final long serialVersionUID = 1L;
@@ -22,6 +21,9 @@ public class ShamanCard extends CharacterCard{
         return stars;
     }
 
+    /**
+     * Sends this card to the shaman branch of the visitor.
+     */
     @Override
     public <R> R accept(CardVisitor<R> visitor) {
         return visitor.visitShaman(this);

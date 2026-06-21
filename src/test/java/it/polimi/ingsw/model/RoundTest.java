@@ -274,11 +274,11 @@ public class RoundTest {
     }
 
     // -------------------------------------------------------
-    // resolveEvent
+    // event ordering
     // -------------------------------------------------------
 
     @Test
-    void testResolveEventExecutesLowerRowEventCards() {
+    void testOrderedEventsCanBeResolvedFromLowerRow() {
         player1.addCharacterCard(new HunterCard(50, Era.I, 2, false));
         player1.addCharacterCard(new HunterCard(51, Era.I, 2, false));
 
@@ -290,14 +290,16 @@ public class RoundTest {
         );
         game.setCurrentRound(eventRound);
 
-        eventRound.resolveEvent();
+        for (EventCard event : eventRound.getOrderedEventsForResolution(game.isLastRound())) {
+            event.resolve(game);
+        }
 
         assertEquals(4, player1.getFood());
         assertEquals(6, player1.getPrestigePoints());
     }
 
     @Test
-    void testResolveEventDoesNothingWhenNoEventCards() {
+    void testOrderedEventsIsEmptyWhenNoEventCards() {
         Round emptyEventRound = new Round(1, game, Era.I,
                 new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>(),
@@ -305,7 +307,7 @@ public class RoundTest {
         );
         game.setCurrentRound(emptyEventRound);
 
-        assertDoesNotThrow(() -> emptyEventRound.resolveEvent());
+        assertTrue(emptyEventRound.getOrderedEventsForResolution(game.isLastRound()).isEmpty());
         assertEquals(0, player1.getPrestigePoints());
     }
 }

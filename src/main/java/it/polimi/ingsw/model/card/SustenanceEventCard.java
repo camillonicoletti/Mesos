@@ -9,9 +9,8 @@ import it.polimi.ingsw.model.enums.Era;
 
 
 /**
- * Event card that demands food to feed the tribe. Each Gatherer (and any
- * SustenanceFoodDiscount building) reduces the required amount; food the
- * player cannot pay is converted into a PP penalty per unfed character.
+ * Event that makes each player feed their tribe.
+ * Gatherers and some buildings reduce the food required; missing food becomes a point penalty.
  */
 public class SustenanceEventCard extends EventCard {
 
@@ -35,6 +34,9 @@ public class SustenanceEventCard extends EventCard {
         return visitor.visitSustenanceEvent(this);
     }
 
+    /**
+     * Makes every player pay food for their tribe or lose points for missing food.
+     */
     @Override
     public void resolve(Game game) {
         for (Player player : game.getPlayers()) {
@@ -65,6 +67,9 @@ public class SustenanceEventCard extends EventCard {
         }
     }
 
+    /**
+     * Reads the sustenance discount provided by a building effect.
+     */
     private int sustenanceDiscountFrom(Player player, BuildingCard building) {
         return building.acceptEffect(new EffectVisitor<>() {
             @Override public Integer visitSustenanceFoodDiscount(SustenanceFoodDiscountEffect effect) {

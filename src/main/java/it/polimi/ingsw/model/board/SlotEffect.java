@@ -1,13 +1,17 @@
 package it.polimi.ingsw.model.board;
 
-import it.polimi.ingsw.model.Player;
-import it.polimi.ingsw.model.Round;
-import it.polimi.ingsw.model.card.Card;
-
 import java.io.Serializable;
-import java.util.List;
 
+/**
+ * Common behavior for action slots on offer tiles.
+ * Each implementation represents one kind of action printed on a tile.
+ */
 public interface SlotEffect extends Serializable {
 
-    void resolve(Player player, int amount, List<Card> chosenCards, Round round);
+    /**
+     * Lets a visitor handle this slot effect.
+     */
+    default <R> R accept(SlotEffectVisitor<R> visitor) {
+        return visitor.visitEffect(this);
+    }
 }

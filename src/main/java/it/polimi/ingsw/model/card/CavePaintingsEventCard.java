@@ -9,10 +9,8 @@ import it.polimi.ingsw.model.enums.Era;
 
 
 /**
- * Event card that rewards or penalises players based on Artist count: those
- * below {@code minArtists} lose {@code ppPenalty} PP, the others gain
- * {@code ppPerArtist} for every Artist. Building-side cave-painting bonuses
- * are applied afterwards.
+ * Event that checks how many Artists each player has.
+ * Players below the threshold lose points, while the others gain points per Artist.
  */
 public class CavePaintingsEventCard extends EventCard {
 
@@ -44,6 +42,9 @@ public class CavePaintingsEventCard extends EventCard {
         return ppPerArtist;
     }
 
+    /**
+     * Applies the artist threshold rule to every player.
+     */
     @Override
     public void resolve(Game game) {
         for (Player player : game.getPlayers()) {
@@ -67,6 +68,9 @@ public class CavePaintingsEventCard extends EventCard {
         return visitor.visitCavePaintingsEvent(this);
     }
 
+    /**
+     * Applies a building effect that reacts to Cave Paintings, if present.
+     */
     private void applyCavePaintingsEffect(Player player, BuildingCard building) {
         building.acceptEffect(new EffectVisitor<Void>() {
             @Override public Void visitCavePaintingsFood(CavePaintingsFoodEffect effect) {

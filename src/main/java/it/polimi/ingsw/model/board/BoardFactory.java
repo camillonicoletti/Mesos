@@ -10,8 +10,15 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Builds the board from the JSON configuration.
+ * It loads all offer tiles and keeps only the ones available for the player count.
+ */
 public class BoardFactory {
 
+    /**
+     * Creates the board for a match with the given number of players.
+     */
     public static Board createBoard(int numPlayers) {
         List<OfferTile> allTiles = loadOfferTiles();
         List<OfferTile> filtered = allTiles.stream()
@@ -21,6 +28,9 @@ public class BoardFactory {
         return new Board(filtered, turnOrder);
     }
 
+    /**
+     * Reads offer_tiles.json and converts each entry into an OfferTile.
+     */
     private static List<OfferTile> loadOfferTiles() {
         Gson gson = new Gson();
         InputStream is = BoardFactory.class
@@ -37,6 +47,7 @@ public class BoardFactory {
             List<ActionSlot> slots = new ArrayList<>();
             for (JsonElement slotElem : obj.getAsJsonArray("slots")) {
                 JsonObject slotObj = slotElem.getAsJsonObject();
+                // The JSON type decides which action slot effect will be created.
                 SlotEffect effect = switch (slotObj.get("type").getAsString()) {
                     case "FOOD"      -> new FoodSlot();
                     case "UPPER_ROW" -> new UpperRowSlot();

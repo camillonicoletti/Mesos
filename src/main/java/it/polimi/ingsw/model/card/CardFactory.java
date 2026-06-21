@@ -17,16 +17,17 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Builds the tribute and building decks for a match by loading card definitions
- * from the bundled JSON resources, filtering by player count and era, and
- * shuffling. Encapsulates the rulebook setup tables so that
- * {@link it.polimi.ingsw.model.Game} never deals with raw card construction.
+ * Creates the game decks from JSON files.
+ * It filters cards by player count and era, shuffles them, and hides raw card creation from Game.
  */
 public class CardFactory {
 
 
+    /**
+     * Creates the tribute deck with characters, events and close events in the right order.
+     */
     public static List<Card> createTribeDeck(int numPlayers) {
-        // 1. Load and filter Characters by numPlayers, partition by Era
+        // Load characters, keep only available ones, and split them by era.
         List<CharacterCard> characters = loadCharacterCards();
         List<Card> eraI   = new ArrayList<>();
         List<Card> eraII  = new ArrayList<>();
@@ -40,7 +41,7 @@ public class CardFactory {
             }
         }
 
-        // 2. Load Events; separate end-game close events from era events
+        // Load events and keep close events for the bottom of the deck.
         List<EventCard> events = loadEventCards();
         List<Card> closeEvents = new ArrayList<>();
         for (EventCard e : events) {
@@ -55,13 +56,13 @@ public class CardFactory {
             }
         }
 
-        // 3. Shuffle each era pile and the close-event pile independently
+        // Shuffle each era pile separately.
         Collections.shuffle(eraI);
         Collections.shuffle(eraII);
         Collections.shuffle(eraIII);
         Collections.shuffle(closeEvents);
 
-        // 4. Stack: Era I on top, then II, III, close events at the bottom
+        // Stack the deck by era, with close events at the bottom.
         List<Card> deck = new ArrayList<>();
         deck.addAll(eraI);
         deck.addAll(eraII);
@@ -70,18 +71,21 @@ public class CardFactory {
         return deck;
     }
 
+    /**
+     * Creates the building deck for one era and one player count.
+     */
     public static List<BuildingCard> createBuildingCards(Era era, int numPlayers) {
-        // 1. Load all buildings and keep only those matching the requested Era
+        // Load all buildings and keep only the requested era.
         List<BuildingCard> all = loadBuildingCards();
         List<BuildingCard> filtered = new ArrayList<>();
         for (BuildingCard b : all) {
             if (b.getEra() == era) filtered.add(b);
         }
 
-        // 2. Shuffle before selecting
+        // Shuffle before selecting the rulebook amount.
         Collections.shuffle(filtered);
 
-        // 3. Take the first N cards according to the player-count/Era table
+        // Take the number of buildings required by the setup table.
         int count = getBuildingCountForEra(era, numPlayers);
         if (count > filtered.size()) {
             throw new IllegalStateException(
@@ -89,6 +93,9 @@ public class CardFactory {
         }
         return new ArrayList<>(filtered.subList(0, count));
     }
+    /**
+     * Returns how many building cards must be used for an era and player count.
+     */
     private static int getBuildingCountForEra(Era era, int numPlayers) {
         return switch (numPlayers) {
             case 2 -> switch (era) { case I -> 1; case II -> 2; case III -> 3; };
@@ -120,8 +127,11 @@ public class CardFactory {
         };
     }
 
+    /**
+     * Converts a JSON effect definition into the matching Effect object.
+     */
     private static Effect parseEffect(JsonElement el) {
-        // Effect as a string
+        // Simple effects are stored as strings.
         if (el.isJsonPrimitive()) {
             String name = el.getAsString();
             return switch (name) {
@@ -141,7 +151,7 @@ public class CardFactory {
             };
         }
 
-        // Effect as an object
+        // Effects with parameters are stored as objects.
         JsonObject obj = el.getAsJsonObject();
         String name = obj.get("name").getAsString();
         return switch (name) {
@@ -153,6 +163,9 @@ public class CardFactory {
             default -> throw new IllegalArgumentException("Unknown parameterized effect: " + name);
         };
     }
+    /**
+     * Loads all building cards from buildings.json.
+     */
     private static List<BuildingCard> loadBuildingCards() {
         JsonArray array = readJsonArray("buildings.json");
         List<BuildingCard> result = new ArrayList<>();
@@ -171,6 +184,9 @@ public class CardFactory {
         return result;
     }
 
+    /**
+     * Loads all character cards from characters.json.
+     */
     private static List<CharacterCard> loadCharacterCards() {
         JsonArray array = readJsonArray("characters.json");
         List<CharacterCard> result = new ArrayList<>();
@@ -202,6 +218,9 @@ public class CardFactory {
         }
         return result;
     }
+    /**
+     * Loads all event cards from events.json.
+     */
     private static List<EventCard> loadEventCards() {
         JsonArray array = readJsonArray("events.json");
         List<EventCard> result = new ArrayList<>();
@@ -234,6 +253,9 @@ public class CardFactory {
         }
         return result;
     }
+    /**
+     * Reads one JSON array resource from the classpath.
+     */
     private static JsonArray readJsonArray(String resourceName) {
         InputStream in = CardFactory.class.getClassLoader().getResourceAsStream(resourceName);
         if (in == null) {

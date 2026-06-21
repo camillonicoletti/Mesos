@@ -3,15 +3,17 @@ package it.polimi.ingsw.model.card.effect;
 import it.polimi.ingsw.model.Player;
 
 /**
- * Passive marker effect: during a Shamanic Ritual, doubles the PP gained by
- * the owning player when they end up among the top-ranked. Applies even when
- * every player is tied.
+ * Passive effect that doubles points gained from a Shamanic Ritual reward.
+ * It also works when all players are tied.
  */
 public class ShamanicRitualDoublePPEffect implements Effect{
     private static final long serialVersionUID = 1L;
+    /**
+     * Does nothing directly because the event doubles the reward when it reads this effect.
+     */
     @Override
     public void apply(Player player) {
-        // Passive: apply() is a no-op; ShamanicRitualEventCard doubles the PP amount before awarding.
+        // Passive: ShamanicRitualEventCard doubles the PP amount before awarding.
     }
 
     @Override

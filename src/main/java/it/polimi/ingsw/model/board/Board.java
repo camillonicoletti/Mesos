@@ -4,8 +4,8 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * The shared playing surface of a match. Owns the offer tiles used during
- * totem placement and the turn-order tile that ranks players each round.
+ * Represents the shared board of the match.
+ * It contains the offer tiles and the turn-order tile used every round.
  */
 public class Board implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -29,6 +29,9 @@ public class Board implements Serializable {
         this.turnOrderTile = turnOrderTile;
     }
 
+    /**
+     * Clears all totems from the offer tiles at the end of a placement phase.
+     */
     public void resetOfferTiles() {
         for (OfferTile tile : offerTiles) {
             tile.removeTotem();

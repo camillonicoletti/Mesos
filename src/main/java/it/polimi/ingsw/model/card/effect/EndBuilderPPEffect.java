@@ -7,11 +7,14 @@ import it.polimi.ingsw.model.card.CardVisitor;
 import it.polimi.ingsw.model.card.CharacterCard;
 
 /**
- * End-game effect that grants PP equal to the sum of {@code pointsEndOfMatch}
- * of every Builder card in the tribe.
+ * End-game effect that gives points based on the Builder cards in the tribe.
  */
 public class EndBuilderPPEffect implements EndGameEffect {
     private static final long serialVersionUID = 1L;
+
+    /**
+     * Sums the end-game point value of each Builder card owned by the player.
+     */
     @Override
     public int calculatePoints(Player player) {
         int points = 0;
@@ -27,10 +30,13 @@ public class EndBuilderPPEffect implements EndGameEffect {
         for (CharacterCard card : player.getTribe().getCharacterCards()) {
             points += card.accept(builderPoints);
         }
-        return points; // Sum of each Builder card's end-of-match point value.
+        return points;
     }
 
 
+    /**
+     * Adds the calculated end-game points to the player.
+     */
     @Override
     public void apply(Player player) {
         player.addPrestigePoints(calculatePoints(player));
