@@ -35,6 +35,7 @@ public class Tui implements View {
     private volatile List<LeaderboardEntry> endGameLeaderboard = null;
     private volatile int endGameLeaderboardPlayersCount = 0;
 
+    // Wire up controller, model, command parser, stdin scanner and the renderer.
     public Tui(ClientController controller, ClientModel model) {
         this.controller = controller;
         this.model      = model;
@@ -49,6 +50,7 @@ public class Tui implements View {
      * repaints the end-game artifacts, restores the active prompt and wakes any
      * thread blocked in one of the wait-loops below.
      */
+    // Repaint the whole screen and wake up any thread waiting on the model.
     private void refresh() {
         renderer.render(model);
         paintEndGameLeaderboardArtifacts();
@@ -62,19 +64,20 @@ public class Tui implements View {
 
     // ── View output callbacks (driven by ClientController) ───────────────────
 
-    @Override public void onLoginResult()            { refresh(); }
-    @Override public void onLobbyChanged()           { refresh(); }
-    @Override public void onGameStarted()            { refresh(); }
-    @Override public void onGameStateChanged()       { refresh(); }
-    @Override public void onBoardChanged()           { refresh(); }
-    @Override public void onEventResolved()          { refresh(); }
-    @Override public void onGameEnded()              { refresh(); }
-    @Override public void onError()                  { refresh(); }
-    @Override public void onConnectionLost()         { refresh(); }
-    @Override public void onGameSuspended()          { refresh(); }
-    @Override public void onGameResumed()            { refresh(); }
-    @Override public void onPlayerConnectionChanged(){ refresh(); }
+    @Override public void onLoginResult()            { refresh(); } // server answered our login/reconnect, repaint
+    @Override public void onLobbyChanged()           { refresh(); } // someone joined/left or lobby settings changed
+    @Override public void onGameStarted()            { refresh(); } // match just kicked off
+    @Override public void onGameStateChanged()       { refresh(); } // we moved to a new game phase
+    @Override public void onBoardChanged()           { refresh(); } // board/cards/totems changed
+    @Override public void onEventResolved()          { refresh(); } // an event card got resolved
+    @Override public void onGameEnded()              { refresh(); } // game over
+    @Override public void onError()                  { refresh(); } // server sent an error to show
+    @Override public void onConnectionLost()         { refresh(); } // we dropped the connection
+    @Override public void onGameSuspended()          { refresh(); } // game paused (someone disconnected)
+    @Override public void onGameResumed()            { refresh(); } // game un-paused
+    @Override public void onPlayerConnectionChanged(){ refresh(); } // a player connected/disconnected
 
+    // Entry point: login, wait for first sync, start input + timer threads, then block until the game ends.
     @Override
     public void run() {
         renderer.render(model);
@@ -102,6 +105,7 @@ public class Tui implements View {
 
     // ── Login ────────────────────────────────────────────────────────────────
 
+    // Keep asking for nickname (+ reconnect choice or color) until login succeeds or we drop.
     private void loginLoop() {
         while (!model.isLoginSuccess() && model.isConnected()) {
             String nickname = readLineWithPrompt("Nickname: ").trim();
@@ -125,6 +129,7 @@ public class Tui implements View {
         }
     }
 
+    // Ask y/n whether they want to reconnect to an existing match.
     private boolean askReconnect() {
         while (true) {
             String answer = readLineWithPrompt(
@@ -135,6 +140,7 @@ public class Tui implements View {
         }
     }
 
+    // Ask for a totem color, re-prompting until they pick a free valid one (quit -> null).
     private TotemColor askTotemColor() {
         while (true) {
             java.util.List<TotemColor> available = model.getAvailableTotemColors();
@@ -164,6 +170,7 @@ public class Tui implements View {
     }
     // ── Main input loop ──────────────────────────────────────────────────────
 
+    // Main in-game loop: read a line and route it to the right handler/command.
     private void interactiveInputLoop() {
         while (isClientActive() && !model.isGameEnded()) {
             if (model.isReconnecting()) {
@@ -232,6 +239,7 @@ public class Tui implements View {
         }
     }
 
+    // Background thread: while the game is paused, re-render every second so the countdown ticks.
     private void suspensionTimerRenderLoop() {
         while (isClientActive() && !model.isGameEnded()) {
             if (model.isGameSuspended()) {
@@ -252,6 +260,7 @@ public class Tui implements View {
 
     // ── Pre-game commands (lobby + ready check) ──────────────────────────────
 
+    // Handle lobby / ready-check commands (ready, unready, players <n>, ...).
     private void handlePreGameCommand(String line) {
         if (line.equalsIgnoreCase("help")) {
             printPreGameHelp();
@@ -276,6 +285,7 @@ public class Tui implements View {
         }
     }
 
+    // Print which pre-game commands are available (the leader sees a couple extra).
     private void printPreGameHelp() {
         if (model.isLobbyLeader()) {
             System.out.println("Available commands before the game starts: ready, unready, players <"
@@ -292,6 +302,7 @@ public class Tui implements View {
 
     // ── End ──────────────────────────────────────────────────────────────────
 
+    // Final cleanup: wait for the input thread to finish, then disconnect.
     private void endGame() {
         if (!isClientActive()) {
             System.out.println("\nConnection lost.");
@@ -311,6 +322,7 @@ public class Tui implements View {
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
+    // Block up to 10s waiting for any model update (generic helper).
     private void waitForModel() {
         synchronized (modelLock) {
             try { modelLock.wait(10_000); }
@@ -318,6 +330,7 @@ public class Tui implements View {
         }
     }
 
+    // Block until the server answers our login/reconnect (success, or a new error shows up).
     private void waitForLoginOutcome(String previousError) {
         synchronized (modelLock) {
             while (model.isConnected()
@@ -333,6 +346,7 @@ public class Tui implements View {
         }
     }
 
+    // Block until the game ends or we lose the connection.
     private void waitForGameEnd() {
         synchronized (modelLock) {
             while (isClientActive() && !model.isGameEnded()) {
@@ -342,6 +356,7 @@ public class Tui implements View {
         }
     }
 
+    // Block until the first state/lobby snapshot lands after login.
     private void waitForInitialStateSync() {
         synchronized (modelLock) {
             while (isClientActive()
@@ -353,10 +368,12 @@ public class Tui implements View {
         }
     }
 
+    // True if we're still connected or in the middle of reconnecting.
     private boolean isClientActive() {
         return model.isConnected() || model.isReconnecting();
     }
 
+    // Print a prompt and read one line from stdin (remembers the prompt so it can be repainted).
     private String readLineWithPrompt(String prompt) {
         activePrompt = prompt;
         if (!prompt.isEmpty()) {
@@ -369,6 +386,7 @@ public class Tui implements View {
         }
     }
 
+    // Dump the in-game command cheat sheet.
     private void printHelp() {
         System.out.println("  place <letter>         — place totem");
         System.out.println("  pick <id> upper|lower  — take character card");
@@ -379,10 +397,12 @@ public class Tui implements View {
         System.out.println("  help                   — show available commands");
     }
 
+    // True if the line looks like "see effect <id>".
     private boolean isSeeEffectCommand(String line) {
         return line != null && line.trim().toLowerCase().matches("see\\s+effect\\s+\\d+");
     }
 
+    // Validate and show a building's effect locally for a few seconds.
     private void handleSeeEffectCommand(String line, String state) {
         if (!isBoardVisibleState(state)) {
             System.out.println("[ERROR] see effect is available only while the board is visible.");
@@ -408,15 +428,18 @@ public class Tui implements View {
         scheduleBuildingEffectClose(deadline, buildingId);
     }
 
+    // True if the board is on screen in this game state.
     private boolean isBoardVisibleState(String state) {
         return GamePhase.fromStateName(state).hasBoardVisible();
     }
 
+    // Pull the building id out of "see effect <id>".
     private int parseSeeEffectId(String line) {
         String[] parts = line.trim().split("\\s+");
         return Integer.parseInt(parts[2]);
     }
 
+    // Spawn a daemon that auto-closes the building-effect popup once its time runs out.
     private void scheduleBuildingEffectClose(long deadline, int buildingId) {
         Thread closer = new Thread(() -> {
             while (true) {
@@ -443,10 +466,12 @@ public class Tui implements View {
         closer.start();
     }
 
+    // True if the line looks like "show tribe <n>".
     private boolean isShowTribeCommand(String line) {
         return line != null && line.trim().toLowerCase().matches("show\\s+tribe\\s+\\d+");
     }
 
+    // Validate and show another player's tribe locally for a few seconds.
     private void handleShowTribeCommand(String line, String state) {
         GamePhase phase = GamePhase.fromStateName(state);
         if (GamePhase.isPreGameState(state)) {
@@ -477,11 +502,13 @@ public class Tui implements View {
         scheduleTribeClose(deadline, tribeNumber);
     }
 
+    // Pull the tribe number out of "show tribe <n>".
     private int parseShowTribeNumber(String line) {
         String[] parts = line.trim().split("\\s+");
         return Integer.parseInt(parts[2]);
     }
 
+    // Count how many tribes belong to players other than me.
     private int otherTribeCount() {
         String myNick = model.getMyNickname();
         int count = 0;
@@ -493,6 +520,7 @@ public class Tui implements View {
         return count;
     }
 
+    // Spawn a daemon that ticks the tribe countdown and closes the popup when time's up.
     private void scheduleTribeClose(long deadline, int tribeNumber) {
         Thread closer = new Thread(() -> {
             while (true) {
@@ -526,11 +554,13 @@ public class Tui implements View {
         closer.start();
     }
 
+    // Seconds left until the deadline, rounded up.
     private int countdownSeconds(long deadline) {
         long remainingMillis = Math.max(0L, deadline - System.currentTimeMillis());
         return (int) Math.ceil(remainingMillis / 1000.0);
     }
 
+    // Hide the tribe popup and repaint.
     private void closeTribe() {
         tribeVisibleUntilMillis = -1L;
         visibleTribeNumber = 0;
@@ -541,6 +571,7 @@ public class Tui implements View {
         }
     }
 
+    // Hide the building-effect popup and repaint.
     private void closeBuildingEffect() {
         buildingEffectVisibleUntilMillis = -1L;
         visibleBuildingEffectId = 0;
@@ -557,6 +588,7 @@ public class Tui implements View {
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
                     .withZone(ZoneId.systemDefault());
 
+    // Server told us our final rank: stash it and print the banner.
     @Override
     public void showMyRank(int rank, int playersCount) {
         endGameMyRank = rank;
@@ -569,6 +601,7 @@ public class Tui implements View {
         // which arrives via showLeaderboard() and is painted below the rank banner.
     }
 
+    // Server sent the full leaderboard: stash it and print the table.
     @Override
     public void showLeaderboard(int playersCount, List<LeaderboardEntry> entries) {
         endGameLeaderboard = entries;
@@ -583,6 +616,7 @@ public class Tui implements View {
      * Re-prints the rank banner and leaderboard table after each render cycle,
      * so they survive the screen wipe done by Renderer.render().
      */
+    // Re-print rank + leaderboard after a render wipe so they don't disappear.
     private void paintEndGameLeaderboardArtifacts() {
         Integer rank = endGameMyRank;
         if (rank != null) {
@@ -594,12 +628,14 @@ public class Tui implements View {
         }
     }
 
+    // Print the "you finished #N" line.
     private void paintMyRank(int rank, int playersCount) {
         System.out.println();
         System.out.printf("You finished #%d in the %d-player leaderboard.%n",
                 rank, playersCount);
     }
 
+    // Print the leaderboard table (or a placeholder if it's empty).
     private void paintLeaderboard(int playersCount, List<LeaderboardEntry> entries) {
         StringBuilder out = new StringBuilder();
         out.append('\n');
@@ -623,6 +659,7 @@ public class Tui implements View {
         System.out.println(out);
     }
 
+    // Cut a string down to max length, adding an ellipsis if it was too long.
     private static String truncate(String s, int max) {
         if (s == null) return "";
         return s.length() <= max ? s : s.substring(0, max - 1) + "…";

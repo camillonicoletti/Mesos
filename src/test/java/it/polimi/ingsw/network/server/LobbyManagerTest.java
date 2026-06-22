@@ -7,6 +7,7 @@ import it.polimi.ingsw.network.protocol.clientbound.ServerMessage;
 import it.polimi.ingsw.network.protocol.clientbound.StateChangedMessage;
 import it.polimi.ingsw.network.protocol.clientbound.LobbyUpdateMessage;
 import it.polimi.ingsw.network.protocol.clientbound.LoginAckMessage;
+import it.polimi.ingsw.network.protocol.clientbound.LoginResult;
 import it.polimi.ingsw.network.protocol.serverbound.ClientMessage;
 import it.polimi.ingsw.network.protocol.serverbound.LoginMessage;
 import it.polimi.ingsw.network.protocol.serverbound.ReconnectMessage;
@@ -179,7 +180,7 @@ class LobbyManagerTest {
                             .findFirst()
                             .orElseThrow()
             );
-            assertEquals(LoginAckMessage.Outcome.REJECTED, ack.getOutcome());
+            assertInstanceOf(LoginResult.Rejected.class, ack.getResult());
             assertEquals("Match has already ended", ack.getErrorReason());
         } finally {
             lobby.shutdown();

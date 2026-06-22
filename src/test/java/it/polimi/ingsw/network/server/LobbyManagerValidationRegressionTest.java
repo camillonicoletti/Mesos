@@ -2,6 +2,7 @@ package it.polimi.ingsw.network.server;
 
 import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.protocol.clientbound.LoginAckMessage;
+import it.polimi.ingsw.network.protocol.clientbound.LoginResult;
 import it.polimi.ingsw.network.protocol.clientbound.ServerMessage;
 import it.polimi.ingsw.network.protocol.clientbound.StateChangedMessage;
 import it.polimi.ingsw.network.protocol.serverbound.ClientMessage;
@@ -37,7 +38,7 @@ class LobbyManagerValidationRegressionTest {
             lobby.handleLogin(connection, new LoginMessage(null, TotemColor.RED));
 
             LoginAckMessage ack = firstMessageAs(connection, LoginAckMessage.class);
-            assertEquals(LoginAckMessage.Outcome.REJECTED, ack.getOutcome());
+            assertInstanceOf(LoginResult.Rejected.class, ack.getResult());
         } finally {
             lobby.shutdown();
         }
@@ -55,7 +56,7 @@ class LobbyManagerValidationRegressionTest {
             lobby.handleLogin(connection, new LoginMessage("", TotemColor.RED));
 
             LoginAckMessage ack = firstMessageAs(connection, LoginAckMessage.class);
-            assertEquals(LoginAckMessage.Outcome.REJECTED, ack.getOutcome());
+            assertInstanceOf(LoginResult.Rejected.class, ack.getResult());
         } finally {
             lobby.shutdown();
         }
@@ -73,7 +74,7 @@ class LobbyManagerValidationRegressionTest {
             lobby.handleLogin(connection, new LoginMessage("     ", TotemColor.RED));
 
             LoginAckMessage ack = firstMessageAs(connection, LoginAckMessage.class);
-            assertEquals(LoginAckMessage.Outcome.REJECTED, ack.getOutcome());
+            assertInstanceOf(LoginResult.Rejected.class, ack.getResult());
         } finally {
             lobby.shutdown();
         }
@@ -95,8 +96,8 @@ class LobbyManagerValidationRegressionTest {
             LoginAckMessage firstAck = firstMessageAs(alice, LoginAckMessage.class);
             LoginAckMessage duplicateAck = firstMessageAs(duplicate, LoginAckMessage.class);
 
-            assertEquals(LoginAckMessage.Outcome.LOGIN_OK, firstAck.getOutcome());
-            assertEquals(LoginAckMessage.Outcome.REJECTED, duplicateAck.getOutcome());
+            assertInstanceOf(LoginResult.LoginOk.class, firstAck.getResult());
+            assertInstanceOf(LoginResult.Rejected.class, duplicateAck.getResult());
         } finally {
             lobby.shutdown();
         }
@@ -117,7 +118,7 @@ class LobbyManagerValidationRegressionTest {
 
             LoginAckMessage duplicateAck = firstMessageAs(duplicate, LoginAckMessage.class);
 
-            assertEquals(LoginAckMessage.Outcome.REJECTED, duplicateAck.getOutcome());
+            assertInstanceOf(LoginResult.Rejected.class, duplicateAck.getResult());
             assertTrue(duplicate.messages.stream().noneMatch(StateChangedMessage.class::isInstance));
         } finally {
             lobby.shutdown();
@@ -140,8 +141,8 @@ class LobbyManagerValidationRegressionTest {
             LoginAckMessage firstAck = firstMessageAs(alice, LoginAckMessage.class);
             LoginAckMessage duplicateAck = firstMessageAs(duplicate, LoginAckMessage.class);
 
-            assertEquals(LoginAckMessage.Outcome.LOGIN_OK, firstAck.getOutcome());
-            assertEquals(LoginAckMessage.Outcome.REJECTED, duplicateAck.getOutcome());
+            assertInstanceOf(LoginResult.LoginOk.class, firstAck.getResult());
+            assertInstanceOf(LoginResult.Rejected.class, duplicateAck.getResult());
         } finally {
             lobby.shutdown();
         }

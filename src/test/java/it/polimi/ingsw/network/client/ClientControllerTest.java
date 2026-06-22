@@ -2,6 +2,7 @@ package it.polimi.ingsw.network.client;
 
 import it.polimi.ingsw.network.protocol.clientbound.ErrorMessage;
 import it.polimi.ingsw.network.protocol.clientbound.LoginAckMessage;
+import it.polimi.ingsw.network.protocol.clientbound.LoginResult;
 import it.polimi.ingsw.network.protocol.clientbound.PingMessage;
 import it.polimi.ingsw.network.protocol.clientbound.ServerMessage;
 import it.polimi.ingsw.network.protocol.serverbound.ClientMessage;
@@ -54,7 +55,7 @@ class ClientControllerTest {
     @Test
     void failedSendStartsReconnectAndSendsReconnectMessageOnFreshConnection() throws Exception {
         ClientModel model = new ClientModel();
-        model.applyLoginAck(new LoginAckMessage(LoginAckMessage.Outcome.LOGIN_OK, null));
+        model.applyLoginAck(new LoginAckMessage(new LoginResult.LoginOk()));
         model.setMyNickname("Alice");
 
         FakeConnection brokenConnection = new FakeConnection();
@@ -83,7 +84,7 @@ class ClientControllerTest {
     @Test
     void serverDisconnectMarksClientAsReconnectingAndNotifiesView() {
         ClientModel model = new ClientModel();
-        model.applyLoginAck(new LoginAckMessage(LoginAckMessage.Outcome.LOGIN_OK, null));
+        model.applyLoginAck(new LoginAckMessage(new LoginResult.LoginOk()));
         model.setMyNickname("Alice");
 
         FakeConnection connection = new FakeConnection();

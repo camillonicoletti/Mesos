@@ -1,6 +1,7 @@
 package it.polimi.ingsw.network.rmi;
 
 import it.polimi.ingsw.network.protocol.clientbound.LoginAckMessage;
+import it.polimi.ingsw.network.protocol.clientbound.LoginResult;
 import it.polimi.ingsw.network.protocol.clientbound.ServerMessage;
 import it.polimi.ingsw.network.protocol.serverbound.PongMessage;
 import it.polimi.ingsw.network.protocol.serverbound.ReadyMessage;
@@ -42,7 +43,7 @@ class RMIServerConnectionTest {
         CollectingClient client = new CollectingClient();
         RMIServerConnection conn = new RMIServerConnection(client);
         try {
-            ServerMessage msg = new LoginAckMessage(LoginAckMessage.Outcome.LOGIN_OK, null);
+            ServerMessage msg = new LoginAckMessage(new LoginResult.LoginOk());
             conn.send(msg);
             assertEquals(1, client.received.size());
             assertSame(msg, client.received.get(0));
@@ -67,7 +68,7 @@ class RMIServerConnectionTest {
         conn.close();
         assertFalse(conn.isAlive());
         assertThrows(IllegalStateException.class,
-                () -> conn.send(new LoginAckMessage(LoginAckMessage.Outcome.LOGIN_OK, null)));
+                () -> conn.send(new LoginAckMessage(new LoginResult.LoginOk())));
     }
 
     @Test
@@ -78,7 +79,7 @@ class RMIServerConnectionTest {
         conn.setOnDisconnect(disconnects::incrementAndGet);
 
         IllegalStateException ex = assertThrows(IllegalStateException.class,
-                () -> conn.send(new LoginAckMessage(LoginAckMessage.Outcome.LOGIN_OK, null)));
+                () -> conn.send(new LoginAckMessage(new LoginResult.LoginOk())));
         assertTrue(ex.getCause() instanceof RemoteException);
         assertFalse(conn.isAlive());
         assertEquals(1, disconnects.get(),
@@ -87,7 +88,7 @@ class RMIServerConnectionTest {
         // A subsequent send on a dead connection must throw ISE without
         // firing onDisconnect again.
         assertThrows(IllegalStateException.class,
-                () -> conn.send(new LoginAckMessage(LoginAckMessage.Outcome.LOGIN_OK, null)));
+                () -> conn.send(new LoginAckMessage(new LoginResult.LoginOk())));
         assertEquals(1, disconnects.get());
     }
 

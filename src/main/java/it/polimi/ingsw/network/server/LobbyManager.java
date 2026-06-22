@@ -155,20 +155,20 @@ public class LobbyManager {
 
         // Login is allowed only before the game starts and only for brand-new nicknames.
         if (nickname == null || nickname.isBlank()) {
-            connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, "Invalid nickname"));
+            connection.send(new LoginAckMessage(new LoginResult.Rejected("Invalid nickname")));
             return;
         }
         if (connections.containsKey(nickname)) {
-            connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, "Nickname already in use"));
+            connection.send(new LoginAckMessage(new LoginResult.Rejected("Nickname already in use")));
             return;
         }
         if (gameController.containsLobbyPlayer(nickname) || gameController.containsGamePlayer(nickname)) {
-            connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED,
-                    "Nickname already registered (use reconnect)"));
+            connection.send(new LoginAckMessage(new LoginResult.Rejected(
+                    "Nickname already registered (use reconnect)")));
             return;
         }
         if (gameController.getGame() != null) {
-            connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, "The game has already started"));
+            connection.send(new LoginAckMessage(new LoginResult.Rejected("The game has already started")));
             return;
         }
 
@@ -176,14 +176,14 @@ public class LobbyManager {
         try {
             gameController.onMessageReceived(nickname, new JoinGameAction(totem));
         } catch (Exception exception) {
-            connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, exception.getMessage()));
+            connection.send(new LoginAckMessage(new LoginResult.Rejected(exception.getMessage())));
             return;
         }
 
         unregisterPendingConnection(connection);
         // From this point the connection belongs to an authenticated player.
         registerConnection(nickname, connection);
-        connection.send(new LoginAckMessage(LoginAckMessage.Outcome.LOGIN_OK, null));
+        connection.send(new LoginAckMessage(new LoginResult.LoginOk()));
         broadcastLobbyUpdate();
         connection.send(new StateChangedMessage(gameController.getCurrentState().getClass().getSimpleName()));
     }
@@ -193,33 +193,33 @@ public class LobbyManager {
 
         // Reconnect is allowed only for known game players currently marked disconnected.
         if (nickname == null || nickname.isBlank()) {
-            connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, "Invalid nickname"));
+            connection.send(new LoginAckMessage(new LoginResult.Rejected("Invalid nickname")));
             return;
         }
         if (!gameController.containsGamePlayer(nickname)) {
-            connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, "Unknown player"));
+            connection.send(new LoginAckMessage(new LoginResult.Rejected("Unknown player")));
             return;
         }
         if (connections.containsKey(nickname)) {
-            connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, "Player already connected"));
+            connection.send(new LoginAckMessage(new LoginResult.Rejected("Player already connected")));
             return;
         }
         if (!gameController.isPlayerDisconnected(nickname)) {
-            connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED,
-                    "Player does not appear to be disconnected"));
+            connection.send(new LoginAckMessage(new LoginResult.Rejected(
+                    "Player does not appear to be disconnected")));
             return;
         }
         // Reject reconnects once the match has already ended (e.g. forced-winner timeout in FA4):
         // resuming would resurrect a concluded game and bypass the recorded result.
         if (gameController.getGame() != null && gameController.getGame().isGameOver()) {
-            connection.send(new LoginAckMessage(LoginAckMessage.Outcome.REJECTED, "Match has already ended"));
+            connection.send(new LoginAckMessage(new LoginResult.Rejected("Match has already ended")));
             return;
         }
 
         // 1. Send the ack and the baseline snapshot BEFORE wiring any listener,
         //    so the client always renders state in this order:
         //       ack -> snapshot -> live events.
-        connection.send(new LoginAckMessage(LoginAckMessage.Outcome.RECONNECT_OK, null));
+        connection.send(new LoginAckMessage(new LoginResult.ReconnectOk()));
         connection.send(new GameSyncMessage(SnapshotBuilder.build(gameController)));
         connection.send(new StateChangedMessage(gameController.getCurrentState().getClass().getSimpleName()));
         String currentTurnPlayer = gameController.getCurrentTurnPlayerNickname();

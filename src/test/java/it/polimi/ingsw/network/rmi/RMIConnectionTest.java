@@ -5,6 +5,7 @@ import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.controller.action.GameAction;
 import it.polimi.ingsw.network.protocol.clientbound.DummyServerMessage;
 import it.polimi.ingsw.network.protocol.clientbound.LoginAckMessage;
+import it.polimi.ingsw.network.protocol.clientbound.LoginResult;
 import it.polimi.ingsw.network.protocol.clientbound.PingMessage;
 import it.polimi.ingsw.network.protocol.serverbound.ForceEndGameMessage;
 import it.polimi.ingsw.network.protocol.serverbound.GameActionMessage;
@@ -19,6 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -47,7 +49,7 @@ class RMIConnectionTest {
             client.send(new LoginMessage("RmiSmoke", TotemColor.RED));
 
             assertTrue(ackReceived.await(2, TimeUnit.SECONDS));
-            assertEquals(LoginAckMessage.Outcome.LOGIN_OK, ack.get().getOutcome());
+            assertInstanceOf(LoginResult.LoginOk.class, ack.get().getResult());
         } finally {
             client.close();
         }
@@ -129,7 +131,7 @@ class RMIConnectionTest {
         @Override
         public void login(RemoteClient client, String nickname, TotemColor color) throws RemoteException {
             if ("RmiSmoke".equals(nickname) && color == TotemColor.RED) {
-                client.onServerMessage(new LoginAckMessage(LoginAckMessage.Outcome.LOGIN_OK, null));
+                client.onServerMessage(new LoginAckMessage(new LoginResult.LoginOk()));
             }
         }
 

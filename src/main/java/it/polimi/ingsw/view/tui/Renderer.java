@@ -96,16 +96,16 @@ public class Renderer {
         if (state == null) {
             loginScreen(model);
         } else switch (phase) {
-            case LOBBY             -> lobbyScreen(model);
-            case READY_CHECK       -> renderReadyCheck(model);
-            case START_GAME        -> gameScreen(model, true);
-            case TOTEM_PLACEMENT   -> gameScreen(model, true);
-            case ACTION_RESOLUTION -> gameScreen(model, false);
-            case EVENT_RESOLUTION  -> eventResolutionScreen(model);
-            case END_ROUND         -> endOfRoundScreen(model);
-            case SUSPENDED         -> suspendedScreen(model);
-            case END_GAME          -> endGameScreen(model);
-            default                -> gameScreen(model, false);
+            case GamePhase.Lobby ignored            -> lobbyScreen(model);
+            case GamePhase.ReadyCheck ignored       -> renderReadyCheck(model);
+            case GamePhase.StartGame ignored        -> gameScreen(model, true);
+            case GamePhase.TotemPlacement ignored   -> gameScreen(model, true);
+            case GamePhase.ActionResolution ignored -> gameScreen(model, false);
+            case GamePhase.EventResolution ignored  -> eventResolutionScreen(model);
+            case GamePhase.EndRound ignored         -> endOfRoundScreen(model);
+            case GamePhase.Suspended ignored        -> suspendedScreen(model);
+            case GamePhase.EndGame ignored          -> endGameScreen(model);
+            default                                 -> gameScreen(model, false);
         }
     }
 
@@ -1495,7 +1495,7 @@ public class Renderer {
         }
 
         return switch (phase) {
-            case LOBBY -> {
+            case GamePhase.Lobby ignored -> {
                 int exp = model.getExpectedPlayers();
                 boolean playersCountChosen = exp >= 2;
 
@@ -1539,7 +1539,7 @@ public class Renderer {
                 );
             }
 
-            case READY_CHECK -> {
+            case GamePhase.ReadyCheck ignored -> {
                 boolean iAmFirst = model.getMyNickname() != null
                         && !model.getLobbyPlayers().isEmpty()
                         && model.getMyNickname().equals(model.getLobbyPlayers().get(0));
@@ -1560,7 +1560,7 @@ public class Renderer {
                 );
             }
 
-            case START_GAME, TOTEM_PLACEMENT -> {
+            case GamePhase.StartGame _, GamePhase.TotemPlacement _ -> {
                 List<String[]> cmds = new java.util.ArrayList<>(List.of(
                         new String[]{"place <tile>", "place your totem on a tile, e.g. place B"},
                         new String[]{"see effect <id>", "show a building effect locally"},
@@ -1575,7 +1575,7 @@ public class Renderer {
                 yield cmds;
             }
 
-            case ACTION_RESOLUTION -> {
+            case GamePhase.ActionResolution ignored -> {
                 List<String[]> cmds = new java.util.ArrayList<>(List.of(
                         new String[]{"pick <id> upper", "take a character/event card from the upper row"},
                         new String[]{"pick <id> lower", "take a character/event card from the lower row"},
@@ -1594,25 +1594,25 @@ public class Renderer {
                 yield cmds;
             }
 
-            case EVENT_RESOLUTION -> List.of(
+            case GamePhase.EventResolution ignored -> List.of(
                     new String[]{"wait", "the server is resolving events"},
                     new String[]{"quit", "leave the match"}
             );
 
-            case END_ROUND -> List.of(
+            case GamePhase.EndRound ignored -> List.of(
                     new String[]{"wait", "preparing the next round"},
                     new String[]{"show tribe <n>", "show one other tribe locally"},
                     new String[]{"quit", "leave the match"}
             );
 
-            case SUSPENDED -> List.of(
+            case GamePhase.Suspended ignored -> List.of(
                     new String[]{"wait", "timer active: the only connected player wins when it expires"},
                     new String[]{"see effect <id>", "show a building effect locally"},
                     new String[]{"show tribe <n>", "show one other tribe locally"},
                     new String[]{"quit", "leave the match"}
             );
 
-            case END_GAME -> List.of(
+            case GamePhase.EndGame ignored -> List.of(
                     new String[]{"enter", "close the TUI"},
                     new String[]{"quit", "exit"}
             );

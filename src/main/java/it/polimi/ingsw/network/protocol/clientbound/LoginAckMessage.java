@@ -5,21 +5,13 @@ package it.polimi.ingsw.network.protocol.clientbound;
  */
 public class LoginAckMessage implements ServerMessage {
 
-    public enum Outcome{
-        LOGIN_OK,
-        RECONNECT_OK,
-        REJECTED
+    private final LoginResult result;
+
+    public LoginAckMessage(LoginResult result) {
+        this.result = result;
     }
 
-    private final Outcome outcome;
-    private final String errorReason;
-
-    public LoginAckMessage(Outcome outcome, String errorReason) {
-        this.outcome = outcome;
-        this.errorReason = errorReason;
-    }
-
-    public Outcome getOutcome() { return outcome; }
-    public String getErrorReason() { return errorReason; }
-    public boolean isSuccess() { return outcome != Outcome.REJECTED; }
+    public LoginResult getResult() { return result; }
+    public String getErrorReason() { return result.errorReason(); }
+    public boolean isSuccess() { return result.isSuccess(); }
 }

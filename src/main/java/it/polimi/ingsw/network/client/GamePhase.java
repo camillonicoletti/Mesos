@@ -1,88 +1,84 @@
 package it.polimi.ingsw.network.client;
 
-import java.util.Arrays;
+/**
+ * Client-side view of the match lifecycle.
+ *
+ * <p>Modelled with the <em>State</em> pattern: each phase is its own class that
+ * answers the lifecycle questions polymorphically, so callers never branch on a
+ * type code. The string {@code stateName} is the server state class name carried
+ * by the protocol; {@link #fromStateName(String)} resolves it to the matching
+ * singleton, falling back to {@link #UNKNOWN} for anything unrecognised.</p>
+ */
+public abstract sealed class GamePhase {
 
-public enum GamePhase {
-    LOBBY("LobbyState", "LOBBY", "Lobby", true, false, false),
-    READY_CHECK("ReadyCheckState", "READY CHECK", "Ready check", true, false, false),
-    START_GAME("StartGameState", "START", "Start", false, true, false),
-    TOTEM_PLACEMENT("TotemPlacementState", "TOTEM PLACEMENT", "Totem placement", false, true, true),
-    ACTION_RESOLUTION("ActionResolutionState", "ACTION RESOLUTION", "Action resolution", false, true, true),
-    EVENT_RESOLUTION("EventResolutionState", "EVENT RESOLUTION", "Event resolution", false, false, false),
-    END_ROUND("EndRoundState", "END OF ROUND", "End of round", false, false, false),
-    SUSPENDED("SuspendedState", "PAUSED", "Paused", false, true, false),
-    END_GAME("EndGameState", "GAME OVER", "Game over", false, false, false),
-    UNKNOWN(null, null, null, false, false, false);
+    public static final GamePhase LOBBY = new Lobby();
+    public static final GamePhase READY_CHECK = new ReadyCheck();
+    public static final GamePhase START_GAME = new StartGame();
+    public static final GamePhase TOTEM_PLACEMENT = new TotemPlacement();
+    public static final GamePhase ACTION_RESOLUTION = new ActionResolution();
+    public static final GamePhase EVENT_RESOLUTION = new EventResolution();
+    public static final GamePhase END_ROUND = new EndRound();
+    public static final GamePhase SUSPENDED = new Suspended();
+    public static final GamePhase END_GAME = new EndGame();
+    public static final GamePhase UNKNOWN = new Unknown();
 
-    private final String stateName;
-    private final String displayLabel;
-    private final String titleLabel;
-    private final boolean preGame;
-    private final boolean boardVisible;
-    private final boolean turnManaged;
+    /** Every resolvable phase, in lifecycle order (UNKNOWN is the fallback only). */
+    private static final GamePhase[] KNOWN = {
+            LOBBY, READY_CHECK, START_GAME, TOTEM_PLACEMENT, ACTION_RESOLUTION,
+            EVENT_RESOLUTION, END_ROUND, SUSPENDED, END_GAME
+    };
 
-    GamePhase(String stateName, String displayLabel, String titleLabel,
-              boolean preGame, boolean boardVisible, boolean turnManaged) {
-        this.stateName = stateName;
-        this.displayLabel = displayLabel;
-        this.titleLabel = titleLabel;
-        this.preGame = preGame;
-        this.boardVisible = boardVisible;
-        this.turnManaged = turnManaged;
-    }
+    /** Name of the server state class this phase mirrors, {@code null} for {@link #UNKNOWN}. */
+    public abstract String stateName();
 
-    public String stateName() {
-        return stateName;
-    }
+    /** Short banner label, {@code null} for {@link #UNKNOWN}. */
+    public abstract String displayLabel();
 
-    public String displayLabel() {
-        return displayLabel;
-    }
-
-    public String titleLabel() {
-        return titleLabel;
-    }
+    /** Title-bar label, {@code null} for {@link #UNKNOWN}. */
+    public abstract String titleLabel();
 
     public boolean isPreGame() {
-        return preGame;
+        return false;
     }
 
     public boolean hasBoardVisible() {
-        return boardVisible;
+        return false;
     }
 
     public boolean managesCurrentTurn() {
-        return turnManaged;
+        return false;
     }
 
     public boolean isTotemPlacement() {
-        return this == TOTEM_PLACEMENT;
+        return false;
     }
 
     public boolean isActionResolution() {
-        return this == ACTION_RESOLUTION;
+        return false;
     }
 
     public boolean isEventResolution() {
-        return this == EVENT_RESOLUTION;
+        return false;
     }
 
     public boolean isEndRound() {
-        return this == END_ROUND;
+        return false;
     }
 
     public boolean isEndGame() {
-        return this == END_GAME;
+        return false;
     }
 
     public static GamePhase fromStateName(String stateName) {
         if (stateName == null) {
             return UNKNOWN;
         }
-        return Arrays.stream(values())
-                .filter(phase -> stateName.equals(phase.stateName))
-                .findFirst()
-                .orElse(UNKNOWN);
+        for (GamePhase phase : KNOWN) {
+            if (stateName.equals(phase.stateName())) {
+                return phase;
+            }
+        }
+        return UNKNOWN;
     }
 
     public static boolean isPreGameState(String stateName) {
@@ -104,5 +100,88 @@ public enum GamePhase {
         }
         GamePhase phase = fromStateName(stateName);
         return phase == UNKNOWN ? stateName : phase.titleLabel();
+    }
+
+    public static final class Lobby extends GamePhase {
+        private Lobby() {}
+        @Override public String stateName() { return "LobbyState"; }
+        @Override public String displayLabel() { return "LOBBY"; }
+        @Override public String titleLabel() { return "Lobby"; }
+        @Override public boolean isPreGame() { return true; }
+    }
+
+    public static final class ReadyCheck extends GamePhase {
+        private ReadyCheck() {}
+        @Override public String stateName() { return "ReadyCheckState"; }
+        @Override public String displayLabel() { return "READY CHECK"; }
+        @Override public String titleLabel() { return "Ready check"; }
+        @Override public boolean isPreGame() { return true; }
+    }
+
+    public static final class StartGame extends GamePhase {
+        private StartGame() {}
+        @Override public String stateName() { return "StartGameState"; }
+        @Override public String displayLabel() { return "START"; }
+        @Override public String titleLabel() { return "Start"; }
+        @Override public boolean hasBoardVisible() { return true; }
+    }
+
+    public static final class TotemPlacement extends GamePhase {
+        private TotemPlacement() {}
+        @Override public String stateName() { return "TotemPlacementState"; }
+        @Override public String displayLabel() { return "TOTEM PLACEMENT"; }
+        @Override public String titleLabel() { return "Totem placement"; }
+        @Override public boolean hasBoardVisible() { return true; }
+        @Override public boolean managesCurrentTurn() { return true; }
+        @Override public boolean isTotemPlacement() { return true; }
+    }
+
+    public static final class ActionResolution extends GamePhase {
+        private ActionResolution() {}
+        @Override public String stateName() { return "ActionResolutionState"; }
+        @Override public String displayLabel() { return "ACTION RESOLUTION"; }
+        @Override public String titleLabel() { return "Action resolution"; }
+        @Override public boolean hasBoardVisible() { return true; }
+        @Override public boolean managesCurrentTurn() { return true; }
+        @Override public boolean isActionResolution() { return true; }
+    }
+
+    public static final class EventResolution extends GamePhase {
+        private EventResolution() {}
+        @Override public String stateName() { return "EventResolutionState"; }
+        @Override public String displayLabel() { return "EVENT RESOLUTION"; }
+        @Override public String titleLabel() { return "Event resolution"; }
+        @Override public boolean isEventResolution() { return true; }
+    }
+
+    public static final class EndRound extends GamePhase {
+        private EndRound() {}
+        @Override public String stateName() { return "EndRoundState"; }
+        @Override public String displayLabel() { return "END OF ROUND"; }
+        @Override public String titleLabel() { return "End of round"; }
+        @Override public boolean isEndRound() { return true; }
+    }
+
+    public static final class Suspended extends GamePhase {
+        private Suspended() {}
+        @Override public String stateName() { return "SuspendedState"; }
+        @Override public String displayLabel() { return "PAUSED"; }
+        @Override public String titleLabel() { return "Paused"; }
+        @Override public boolean hasBoardVisible() { return true; }
+    }
+
+    public static final class EndGame extends GamePhase {
+        private EndGame() {}
+        @Override public String stateName() { return "EndGameState"; }
+        @Override public String displayLabel() { return "GAME OVER"; }
+        @Override public String titleLabel() { return "Game over"; }
+        @Override public boolean isEndGame() { return true; }
+    }
+
+    public static final class Unknown extends GamePhase {
+        private Unknown() {}
+        @Override public String stateName() { return null; }
+        @Override public String displayLabel() { return null; }
+        @Override public String titleLabel() { return null; }
     }
 }

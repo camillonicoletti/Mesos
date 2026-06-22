@@ -3,6 +3,7 @@ package it.polimi.ingsw.network.server;
 import it.polimi.ingsw.model.enums.TotemColor;
 import it.polimi.ingsw.network.protocol.clientbound.GameStartedMessage;
 import it.polimi.ingsw.network.protocol.clientbound.LoginAckMessage;
+import it.polimi.ingsw.network.protocol.clientbound.LoginResult;
 import it.polimi.ingsw.network.protocol.clientbound.ServerMessage;
 import it.polimi.ingsw.network.protocol.serverbound.LoginMessage;
 import it.polimi.ingsw.network.protocol.serverbound.SetPlayersCountMessage;
@@ -24,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -101,7 +103,7 @@ class MixedProtocolGameTest {
                 assertTrue(bob.awaitLoginAck(AWAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS),
                         "Bob must receive a login acknowledgement over RMI");
                 LoginAckMessage bobAck = bob.firstOfType(LoginAckMessage.class);
-                assertEquals(LoginAckMessage.Outcome.LOGIN_OK, bobAck.getOutcome(),
+                assertInstanceOf(LoginResult.LoginOk.class, bobAck.getResult(),
                         "Bob's RMI login must be accepted into the same lobby Alice joined over Socket");
 
                 // Both players are now in the SAME lobby, regardless of transport.
