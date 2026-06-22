@@ -4,24 +4,7 @@ import it.polimi.ingsw.controller.leaderboard.LeaderboardEntry;
 
 import java.util.List;
 
-/**
- * Client-side view contract.
- *
- * <p>Both implementations (TUI, GUI) talk to the same
- * {@link it.polimi.ingsw.network.client.ClientModel} and
- * {@link it.polimi.ingsw.network.client.ClientController}, so the set of things
- * a view must do is identical: react to the same server events and render the
- * same state. <em>What</em> happens is shared; only <em>how</em> it is rendered
- * differs (plain text vs JavaFX). This interface declares those shared
- * "absolute" reactions; each implementation provides its own rendering.
- *
- * <p>The methods are invoked by {@link it.polimi.ingsw.network.client.ClientController}
- * right after it applies the matching server message to the model (push model:
- * the controller is the single driver of the view). User-initiated <em>actions</em>
- * are not declared here: they are shared concrete helpers on
- * {@link it.polimi.ingsw.network.client.ClientController}, called identically by
- * the TUI command parser and the GUI buttons.
- */
+
 public interface View {
 
     /**

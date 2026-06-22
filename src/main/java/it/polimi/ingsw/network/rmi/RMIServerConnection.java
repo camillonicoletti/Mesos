@@ -15,8 +15,8 @@ import java.util.function.Consumer;
 /**
  * Server-side connection adapter used by the RMI transport.
  *
- * <p>It gives the server the same {@link ServerSideConnection} shape used by
- * sockets, even if messages are actually delivered through RMI callbacks.</p>
+ * It gives the server the same {@link ServerSideConnection} shape used by
+ * sockets, even if messages are actually delivered through RMI callbacks.
  */
 public class RMIServerConnection implements ServerSideConnection {
 

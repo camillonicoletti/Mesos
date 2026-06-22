@@ -15,8 +15,8 @@ import java.util.stream.Collectors;
 /**
  * Server-side view attached to one remote client.
  *
- * <p>The GameController emits listener callbacks; this adapter converts them
- * into clientbound DTOs and sends them through the player's connection.</p>
+ * The GameController emits listener callbacks; this adapter converts them
+ * into clientbound DTOs and sends them through the player's connection.
  */
 public class VirtualView implements GameListener {
     private final ServerSideConnection connection;

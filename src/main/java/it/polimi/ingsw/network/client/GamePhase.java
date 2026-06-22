@@ -1,14 +1,6 @@
 package it.polimi.ingsw.network.client;
 
-/**
- * Client-side view of the match lifecycle.
- *
- * <p>Modelled with the <em>State</em> pattern: each phase is its own class that
- * answers the lifecycle questions polymorphically, so callers never branch on a
- * type code. The string {@code stateName} is the server state class name carried
- * by the protocol; {@link #fromStateName(String)} resolves it to the matching
- * singleton, falling back to {@link #UNKNOWN} for anything unrecognised.</p>
- */
+
 public abstract sealed class GamePhase {
 
     public static final GamePhase LOBBY = new Lobby();
@@ -28,13 +20,13 @@ public abstract sealed class GamePhase {
             EVENT_RESOLUTION, END_ROUND, SUSPENDED, END_GAME
     };
 
-    /** Name of the server state class this phase mirrors, {@code null} for {@link #UNKNOWN}. */
+    /** Name of the server state class this phase mirrors, {@code null} for  */
     public abstract String stateName();
 
-    /** Short banner label, {@code null} for {@link #UNKNOWN}. */
+    /** Short banner label, {@code null} for  */
     public abstract String displayLabel();
 
-    /** Title-bar label, {@code null} for {@link #UNKNOWN}. */
+    /** Title-bar label, {@code null} for  */
     public abstract String titleLabel();
 
     public boolean isPreGame() {

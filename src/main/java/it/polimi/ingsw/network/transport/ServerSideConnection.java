@@ -8,8 +8,8 @@ import java.util.function.Consumer;
 /**
  * Common interface used by the server to talk with one client.
  *
- * <p>LobbyManager and VirtualView use this interface without caring if the
- * client is connected through Socket or RMI.</p>
+ * LobbyManager and VirtualView use this interface without caring if the
+ * client is connected through Socket or RMI.
  */
 public interface ServerSideConnection {
 

@@ -30,13 +30,7 @@ final class CardRenderer {
 
     private CardRenderer() { }
 
-    /**
-     * Draws the card identified by {@code id}.
-     *
-     * <p>{@code showBuildingEffect} is decided by {@link Renderer} (which owns
-     * the user-selected "see effect &lt;id&gt;" state) and passed in as a
-     * resolved flag, so this class stays stateless.
-     */
+
     static String[] drawCard(int id, boolean showBuildingEffect) {
         return CardCatalog.get(id).accept(new CardCatalog.CardVisitor<String[]>() {
             @Override

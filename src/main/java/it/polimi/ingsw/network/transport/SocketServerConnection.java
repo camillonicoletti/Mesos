@@ -17,8 +17,8 @@ import java.util.function.Consumer;
 /**
  * Socket implementation of the server connection for one client.
  *
- * <p>Each accepted socket gets its own reader thread. The heartbeat sends Ping
- * messages and closes the connection if the client stops answering.</p>
+ * Each accepted socket gets its own reader thread. The heartbeat sends Ping
+ * messages and closes the connection if the client stops answering.
  */
 public class SocketServerConnection implements ServerSideConnection {
 

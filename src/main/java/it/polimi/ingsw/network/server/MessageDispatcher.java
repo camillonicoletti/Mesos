@@ -20,8 +20,8 @@ import java.util.Map;
 /**
  * Routes clientbound commands received by the server to the right lobby method.
  *
- * <p>Socket and RMI connections both arrive here as {@link ClientMessage} DTOs,
- * so the rest of the server can ignore the transport used by the client.</p>
+ * Socket and RMI connections both arrive here as {@link ClientMessage} DTOs,
+ * so the rest of the server can ignore the transport used by the client.
  */
 public class MessageDispatcher {
 

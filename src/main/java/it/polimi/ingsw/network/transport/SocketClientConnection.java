@@ -19,8 +19,8 @@ import java.util.function.Consumer;
 /**
  * Socket implementation of the client connection.
  *
- * <p>This class owns the socket streams, a reader thread for incoming messages
- * and a small heartbeat check to notice when the server is no longer reachable.</p>
+ * This class owns the socket streams, a reader thread for incoming messages
+ * and a small heartbeat check to notice when the server is no longer reachable.
  */
 public class SocketClientConnection implements ClientSideConnection {
 

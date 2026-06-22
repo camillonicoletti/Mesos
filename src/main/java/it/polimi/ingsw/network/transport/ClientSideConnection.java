@@ -8,9 +8,9 @@ import java.util.function.Consumer;
 /**
  * Common interface used by the client to talk with the server.
  *
- * <p>The client code does not need to know if the real transport is Socket or
+ * The client code does not need to know if the real transport is Socket or
  * RMI: it only sends messages, receives server messages and reacts when the
- * connection drops.</p>
+ * connection drops.
  */
 public interface ClientSideConnection {
 

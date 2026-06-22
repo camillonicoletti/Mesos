@@ -29,8 +29,8 @@ import java.util.function.Consumer;
 /**
  * Client-side coordinator between the view, the local model and the server connection.
  *
- * <p>Views call this class to send commands. Incoming server messages update
- * {@link ClientModel} first and then notify the current {@link View}.</p>
+ * Views call this class to send commands. Incoming server messages update
+ * {@link ClientModel} first and then notify the current {@link View}.
  */
 public class ClientController {
 

@@ -6,20 +6,7 @@ import static it.polimi.ingsw.view.tui.TuiStyle.RST;
 import static it.polimi.ingsw.view.tui.TuiStyle.WHT;
 import static it.polimi.ingsw.view.tui.TuiStyle.YLW;
 
-/**
- * Pure text/layout helpers for terminal rendering.
- *
- * <p>These helpers must compute width and alignment against the <em>visible</em>
- * cell width on a terminal, which differs from {@link String#length()} for two
- * reasons:
- * <ul>
- *   <li>ANSI escape sequences (e.g. color/style codes) take zero visible cells
- *       and must be stripped before measuring.</li>
- *   <li>Emoji and keycap sequences typically occupy two cells, and some code
- *       points (variation selectors, combining marks) occupy zero.</li>
- * </ul>
- * All methods are pure and stateless.
- */
+
 final class TuiText {
 
     private TuiText() { }
