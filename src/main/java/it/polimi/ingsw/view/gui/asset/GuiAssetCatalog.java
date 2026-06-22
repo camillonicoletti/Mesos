@@ -15,6 +15,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 
+// The catalog of all card assets, loaded once from a manifest file.
+// Lets the GUI find a card by its id, get its details and reuse cached images.
 public final class GuiAssetCatalog {
     private static final String CARDS_MANIFEST = "assets/manifest/cards.json";
 

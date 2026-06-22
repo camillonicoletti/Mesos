@@ -7,6 +7,8 @@ import javafx.scene.media.MediaPlayer;
 
 import java.net.URL;
 
+// Handles all the game sound: the menu music and the click sound effects.
+// It loads them when first needed and lets the player turn audio on and off.
 public final class GuiAudio {
     private static final String MENU_MUSIC_PATH = "assets/audio/menu-music.mp3";
     private static final String ACTION_CLICK_PATH = "assets/audio/action-click.wav";

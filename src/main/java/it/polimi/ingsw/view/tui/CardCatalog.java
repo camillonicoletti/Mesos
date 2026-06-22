@@ -9,11 +9,7 @@ import java.util.Map;
 
 public final class CardCatalog {
 
-    /**
-     * Visitor over the card families. Specific cards forward to their typed
-     * {@code visitXxx} method; the defaults cascade to {@link #visitCard} so a
-     * visitor only overrides the cases it cares about.
-     */
+
     public interface CardVisitor<R> {
         default R visitCharacter(CardInfo card) {
             return visitCard(card);

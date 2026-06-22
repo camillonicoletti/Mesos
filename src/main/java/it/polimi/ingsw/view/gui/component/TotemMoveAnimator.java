@@ -35,12 +35,17 @@ final class TotemMoveAnimator {
         this.model = model;
     }
 
+    // Saves the screen pieces it needs (the top layer, the board and the track
+    // where the totems live). Called once before any animation.
     void attach(StackPane rootLayer, Region board, Node centerTrack) {
         this.rootLayer = rootLayer;
         this.board = board;
         this.centerTrack = centerTrack;
     }
 
+    // Call this BEFORE the board is redrawn: it takes a "photo" of where the totems
+    // are now and figures out which players moved on/off the offer tile, plays a
+    // sound if needed, and returns all that info to use later in finish().
     Pending begin() {
         Map<String, TotemAnchor> previousTotems = captureBoardTotems();
         Set<String> currentOnTile = totemsOnOfferTile();
@@ -49,15 +54,21 @@ final class TotemMoveAnimator {
         return new Pending(previousTotems, logicalMoves, currentOnTile);
     }
 
+    // Call this AFTER the board is redrawn: it uses the old positions saved in
+    // begin() to slide the totems from where they were to their new spot, and
+    // remembers who is on the tile now for next time.
     void finish(Pending pending, Runnable onAnimationsFinished) {
         playTotemMoveAnimations(pending.previousTotems(), pending.logicalMoves(), onAnimationsFinished);
         displayedOnOfferTile = pending.currentOnTile();
     }
 
+    // Tells if a totem animation is currently playing, so the GUI can wait.
     boolean isAnimating() {
         return animating;
     }
 
+    // Looks at all the totem markers on the board and, for each one, saves its
+    // owner and exact position/size into a map (the "photo" of the totems).
     private Map<String, TotemAnchor> captureBoardTotems() {
         Map<String, TotemAnchor> anchors = new HashMap<>();
         if (centerTrack == null || centerTrack.getScene() == null || rootLayer == null) {
@@ -76,6 +87,8 @@ final class TotemMoveAnimator {
         return anchors;
     }
 
+    // For one totem marker, converts its position into coordinates on the top
+    // layer and works out its center point and size (null if it has no size yet).
     private TotemAnchor anchorFor(Node node) {
         if (node == null || node.getScene() == null || rootLayer == null) {
             return null;
@@ -93,6 +106,8 @@ final class TotemMoveAnimator {
         return new TotemAnchor(node, center, width, height);
     }
 
+    // Builds the set of players whose totem is currently on an offer tile
+    // (ignoring disconnected players).
     private Set<String> totemsOnOfferTile() {
         Set<String> onTile = new HashSet<>();
         for (String nickname : model.getTotemOnTiles().values()) {
@@ -103,6 +118,8 @@ final class TotemMoveAnimator {
         return Set.copyOf(onTile);
     }
 
+    // Compares "who was on the tile before" with "who is on it now" and returns
+    // the players whose state changed (just stepped on, or just left the tile).
     private Set<String> logicalTotemMoves(Set<String> previousOnTile, Set<String> currentOnTile) {
         if (previousOnTile == null) {
             return Set.of();
@@ -117,6 +134,8 @@ final class TotemMoveAnimator {
         return moves;
     }
 
+    // Plays the click sound, but only if a totem really moved and the board was
+    // already on screen (so it stays silent on the first draw).
     private void playTotemMoveSoundIfNeeded(Map<String, TotemAnchor> previousTotems,
                                             Set<String> logicalMoves) {
         if (!logicalMoves.isEmpty()
@@ -127,6 +146,10 @@ final class TotemMoveAnimator {
         }
     }
 
+    // The real animation. It re-reads where each totem is NOW, and for every
+    // player that moved (and far enough to be worth it) it builds a slide from
+    // the old spot to the new one. It runs all slides together, marks itself as
+    // busy while they play, and calls the callback when they finish.
     private boolean playTotemMoveAnimations(Map<String, TotemAnchor> previousTotems,
                                             Set<String> logicalMoves,
                                             Runnable onAnimationsFinished) {
@@ -172,6 +195,9 @@ final class TotemMoveAnimator {
         return true;
     }
 
+    // Builds the slide for one totem: it first "teleports" the totem back to its
+    // old position and size, then animates it moving and scaling smoothly to its
+    // real (new) position, so it looks like the same totem traveled across.
     private ParallelTransition totemMoveAnimation(TotemAnchor from, TotemAnchor to) {
         Node destination = to.node;
         double boardScale = board == null || board.getScaleX() <= 0 ? 1.0 : board.getScaleX();
@@ -199,14 +225,18 @@ final class TotemMoveAnimator {
         return new ParallelTransition(move, scale);
     }
 
+    // Data carried from begin() to finish(): the old totem positions, who moved,
+    // and who is on the tile now.
     record Pending(Map<String, TotemAnchor> previousTotems,
                    Set<String> logicalMoves,
                    Set<String> currentOnTile) {
     }
 
+    // One totem's position snapshot: the marker node, its center point and its size.
     private record TotemAnchor(Node node, Point2D center, double width, double height) {
     }
 
+    // A single move to animate: where a totem comes from and where it goes to.
     private record TotemMove(TotemAnchor from, TotemAnchor to) {
     }
 }

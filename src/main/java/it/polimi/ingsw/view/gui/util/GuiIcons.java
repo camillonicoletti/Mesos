@@ -9,9 +9,10 @@ import org.kordamp.ikonli.materialdesign2.MaterialDesignA;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignC;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignF;
 
+// Small helpers to build the icons used in the GUI (font icons, button icons).
+// Keeps icon creation in one place so every view uses the same look.
 public final class GuiIcons {
-    private GuiIcons() {
-    }
+
 
     public static FontIcon icon(Ikon ikon, int size) {
         return icon(ikon, size, null);
@@ -35,13 +36,5 @@ public final class GuiIcons {
         button.setGraphicTextGap(8);
     }
 
-    public static FontIcon tileIcon(char tile) {
-        return switch (tile) {
-            case 'A' -> icon(MaterialDesignF.FOOD_DRUMSTICK, 14);
-            case 'B', 'D' -> icon(MaterialDesignA.ARROW_DOWN_BOLD, 14, "#a7347b");
-            case 'C', 'F' -> icon(MaterialDesignA.ARROW_UP_BOLD, 14, "#428047");
-            case 'E', 'G' -> icon(MaterialDesignA.ARROW_UP_DOWN_BOLD, 14, "#5f6f35");
-            default -> icon(MaterialDesignC.CARDS, 14);
-        };
-    }
+
 }

@@ -253,11 +253,7 @@ final class TuiText {
         };
     }
 
-    /**
-     * Renders {@code text} as a three-line ASCII banner that fits within
-     * {@code maxWidth} columns. Tries spacing 2 first, then 1, then truncates
-     * the text if even spacing 1 overflows.
-     */
+
     static String[] asciiWordLines(String text, int maxWidth) {
         String safe = text == null ? "" : text.toUpperCase().replaceAll("[^A-Z0-9 _-]", "");
         if (safe.isBlank()) {

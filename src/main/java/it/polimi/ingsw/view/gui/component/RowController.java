@@ -74,6 +74,8 @@ final class RowController {
         this.onAnimationsFinished = onAnimationsFinished;
     }
 
+    // Saves the screen pieces this controller needs to work on (the layers,
+    // the board, the two card rows and the scaler). Called once before use.
     void attach(StackPane rootLayer, Region board, HBox upperMarketBand, HBox lowerMarketBand, BoardScaler boardScaler) {
         this.rootLayer = rootLayer;
         this.board = board;
@@ -82,6 +84,10 @@ final class RowController {
         this.boardScaler = boardScaler;
     }
 
+    // The main "brain": decides what to do each time the game changes.
+    // If an animation is already running it waits; if a card was just taken it
+    // flies it away; if new cards appeared it deals them (initial deal or a
+    // round-end slide); otherwise, if the rows are stale, it just redraws them.
     void update() {
         int currentRound = model.getLastFinishedRound();
         if (currentRound > 0 && currentRound > lastSeenRound) {
@@ -127,10 +133,14 @@ final class RowController {
         }
     }
 
+    // Tells if an animation is currently playing, so the rest of the GUI can wait.
     boolean isAnimating() {
         return roundTransitionPlaying || cardTakeAnimationPlaying;
     }
 
+    // Checks if a new "card taken" event arrived (using a sequence number so each
+    // event is handled only once). If so, finds the card on the row and its target
+    // on the player's dock, then starts the fly-away animation. Returns true if it did.
     private boolean playPendingCardTakeAnimation() {
         ClientModel.TakenCardEvent taken = model.getLastTakenCardEvent();
         if (taken == null || taken.sequence() <= lastHandledTakenCardSequence) {
@@ -148,6 +158,10 @@ final class RowController {
         return true;
     }
 
+    // Plays the "take a card" animation. It hides the real card and creates a
+    // copy on a top layer, then moves it in two steps: first it lifts to the
+    // center growing and spinning, then it flies to the player's area shrinking
+    // and fading. When done it cleans up, redraws the rows if needed and unlocks.
     private void playCardTakeAnimation(Node source, Node target, int cardId) {
         cardTakeAnimationPlaying = true;
         source.setOpacity(0);
@@ -236,6 +250,8 @@ final class RowController {
         sequence.play();
     }
 
+    // Works out the screen spot where the flying card should land: the center of
+    // the player's card if we have one, otherwise the bottom of the board.
     private Point2D targetPoint(Node target, double cardWidth, double cardHeight) {
         if (target != null && target.getScene() != null) {
             Bounds targetBounds = rootLayer.sceneToLocal(target.localToScene(target.getBoundsInLocal()));
@@ -248,6 +264,8 @@ final class RowController {
                 boardBounds.getMaxY() - cardHeight);
     }
 
+    // Looks through the right row and returns the on-screen card that matches the
+    // given id/row/type (each card carries this info in its userData).
     private Node findMarketCardNode(int cardId, boolean upper, boolean building) {
         HBox band = upper ? upperMarketBand : lowerMarketBand;
         int sectionIndex = building ? 1 : 0;
@@ -263,14 +281,18 @@ final class RowController {
         return null;
     }
 
+    // Returns the horizontal middle point of a box.
     private double centerX(Bounds bounds) {
         return (bounds.getMinX() + bounds.getMaxX()) / 2.0;
     }
 
+    // Returns the vertical middle point of a box.
     private double centerY(Bounds bounds) {
         return (bounds.getMinY() + bounds.getMaxY()) / 2.0;
     }
 
+    // Puts all the card ids currently on screen into one set, then checks if the
+    // model now has any id that is not in that set (i.e. a brand new card showed up).
     private boolean newCardsAppeared() {
         Set<Integer> displayed = new HashSet<>();
         displayed.addAll(displayedUpperCharIds);
@@ -284,6 +306,7 @@ final class RowController {
             || hasNewId(model.getLowerRowBuildingIds(), displayed);
     }
 
+    // Helper: returns true if any id in the list is not already shown on screen.
     private boolean hasNewId(List<Integer> currentIds, Set<Integer> displayed) {
         for (Integer id : currentIds) {
             if (!displayed.contains(id)) return true;
@@ -291,6 +314,9 @@ final class RowController {
         return false;
     }
 
+    // Compares what is on screen with the model (card ids, current player, game
+    // state, whose turn, which rows are pickable) and returns true if anything
+    // differs, meaning the rows need to be redrawn.
     private boolean marketBandsOutOfDate() {
         return !model.getUpperRowCharacterIds().equals(displayedUpperCharIds)
             || !model.getUpperRowBuildingIds().equals(displayedUpperBuildIds)
@@ -303,6 +329,8 @@ final class RowController {
             || model.canCurrentActionPlayerPickFromRow(false) != displayedCanPickLower;
     }
 
+    // Rebuilds a whole row (both characters and buildings) and then saves the new
+    // ids as "what is shown", so later checks know the row is up to date.
     private void refreshMarketBandTracked(HBox band, boolean upper) {
         refreshMarketBand(band,
                 cardMarketView.characterRow(upper),
@@ -317,6 +345,8 @@ final class RowController {
         rememberMarketState();
     }
 
+    // Rebuilds only the character part of a row (leaving the buildings as they are)
+    // and updates the saved ids. Used when buildings did not change.
     private void refreshCharactersOnly(HBox band, boolean upper) {
         VBox newCharacters = cardMarketView.characterRow(upper);
         HBox.setHgrow(newCharacters, Priority.ALWAYS);
@@ -333,6 +363,8 @@ final class RowController {
         rememberMarketState();
     }
 
+    // Saves the current "context" (player, game state, turn, pickable rows) as the
+    // shown state, so marketBandsOutOfDate() can compare against it next time.
     private void rememberMarketState() {
         displayedActionPlayer = model.getCurrentActionPlayer();
         displayedGameState = model.getGameState();
@@ -341,12 +373,17 @@ final class RowController {
         displayedCanPickLower = model.canCurrentActionPlayerPickFromRow(false);
     }
 
+    // Replaces a row's content with the new character and building boxes and lets
+    // them stretch to share the width evenly.
     private void refreshMarketBand(HBox band, VBox characters, VBox buildings) {
         band.getChildren().setAll(characters, buildings);
         HBox.setHgrow(characters, Priority.ALWAYS);
         HBox.setHgrow(buildings, Priority.ALWAYS);
     }
 
+    // Plays the end-of-round animation: the old lower cards fade out while the old
+    // upper cards slide down to take their place. When that finishes it rebuilds
+    // the upper row and deals fresh cards into it from the deck.
     private void playRoundEndAnimation(boolean includeBuildings, Runnable onRebuildBands) {
         roundTransitionPlaying = true;
         upperMarketBand.setOpacity(1);
@@ -402,6 +439,8 @@ final class RowController {
         phase1.play();
     }
 
+    // Plays the first deal of the game: builds both rows, hides every card, then
+    // deals them all out from the deck one by one.
     private void playInitialDealAnimation(Runnable onRebuildBands) {
         roundTransitionPlaying = true;
         upperMarketBand.setOpacity(1);
@@ -417,6 +456,8 @@ final class RowController {
         Platform.runLater(() -> dealCardsFromDeck(upperCards, lowerCards));
     }
 
+    // Measures the vertical distance between the upper and lower rows, so the
+    // slide-down animation knows how far to move the cards.
     private double computeBandsDistanceY() {
         if (upperMarketBand.getScene() == null || lowerMarketBand.getScene() == null) {
             return 0;
@@ -428,6 +469,10 @@ final class RowController {
         return lowerCenterY - upperCenterY;
     }
 
+    // The actual dealing animation. It orders the cards upper/lower like a real
+    // dealer, moves each one so it starts on top of the deck (still invisible),
+    // then makes them appear and slide to their slot one after another (staggered).
+    // After everything lands it resets the cards, saves the state and unlocks.
     private void dealCardsFromDeck(List<Node> upperCards, List<Node> lowerCards) {
         // Interleave upper/lower like a real dealer
         List<Node> dealOrder = new ArrayList<>();
@@ -492,6 +537,8 @@ final class RowController {
         done.play();
     }
 
+    // Finds the center point of the deck on screen (so cards can start from there);
+    // if the deck is not visible it falls back to the center of the board.
     private Point2D computeDeckCenter(StackPane deckCardNode) {
         if (deckCardNode != null && deckCardNode.getScene() != null) {
             Bounds db = deckCardNode.localToScene(deckCardNode.getBoundsInLocal());
@@ -505,6 +552,7 @@ final class RowController {
                            (br.getMinY() + br.getMaxY()) / 2.0);
     }
 
+    // Walks through a whole row and gathers every single card node into one list.
     private List<Node> collectCardNodes(HBox marketBand) {
         List<Node> cards = new ArrayList<>();
         for (Node section : marketBand.getChildren()) {
@@ -515,6 +563,7 @@ final class RowController {
         return cards;
     }
 
+    // Gathers the card nodes from just one part of a row (0 = characters, 1 = buildings).
     private List<Node> collectCardNodesFromSection(HBox marketBand, int sectionIndex) {
         List<Node> cards = new ArrayList<>();
         if (marketBand.getChildren().size() > sectionIndex) {
@@ -526,14 +575,17 @@ final class RowController {
         return cards;
     }
 
+    // Small helper: returns the child nodes of a container.
     private List<Node> childrenOf(Node node) {
         return ((Parent) node).getChildrenUnmodifiable();
     }
 
+    // Shortcut: gets only the character cards of a row.
     private List<Node> collectCharacterCardNodes(HBox marketBand) {
         return collectCardNodesFromSection(marketBand, 0);
     }
 
+    // Shortcut: gets only the building cards of a row.
     private List<Node> collectBuildingCardNodes(HBox marketBand) {
         return collectCardNodesFromSection(marketBand, 1);
     }

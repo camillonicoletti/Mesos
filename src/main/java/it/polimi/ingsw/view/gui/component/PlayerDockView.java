@@ -96,6 +96,7 @@ final class PlayerDockView {
         this.hideInlinePanel = hideInlinePanel;
     }
 
+    // Builds the bottom dock: the status row (era, round, turn, buttons) and the player summaries.
     VBox render() {
         VBox dock = new VBox(6);
         dock.getStyleClass().add("player-dock");
@@ -135,6 +136,7 @@ final class PlayerDockView {
         return dock;
     }
 
+    // Builds the button that turns the game audio on and off.
     private Button audioToggleButton() {
         Button button = new Button();
         button.getStyleClass().add("dock-audio-button");
@@ -149,10 +151,12 @@ final class PlayerDockView {
         return button;
     }
 
+    // Updates the audio button icon to match the current on/off state.
     private void refreshAudioToggleIcon(Button button) {
         button.setGraphic(GuiIcons.icon(GuiViews.audioIcon(), 16));
     }
 
+    // Builds the player summaries: a simple row if few players, a carousel if many.
     private VBox playerSummaryRows() {
         summaryTargets.clear();
         deckCardTargets.clear();
@@ -174,6 +178,7 @@ final class PlayerDockView {
         return rows;
     }
 
+    // Builds a scrollable strip showing a few players at a time with prev/next arrows.
     private Node playerSummaryCarousel(List<PlayerView> players) {
         summaryStartIndex = clampSummaryStart(players);
 
@@ -211,6 +216,7 @@ final class PlayerDockView {
         return carousel;
     }
 
+    // Builds the empty horizontal box that will hold the player summary cards.
     private HBox playerSummaryStrip() {
         HBox row = new HBox(9);
         row.setAlignment(Pos.CENTER);
@@ -218,6 +224,7 @@ final class PlayerDockView {
         return row;
     }
 
+    // Builds a small left/right arrow button for the carousel.
     private Button carouselButton(String text) {
         Button button = new Button(text);
         button.getStyleClass().add("player-summary-carousel-button");
@@ -226,6 +233,7 @@ final class PlayerDockView {
         return button;
     }
 
+    // Keeps the carousel start index inside valid limits.
     private int clampSummaryStart(List<PlayerView> players) {
         int maxStart = Math.max(0, players.size() - MAX_VISIBLE_SUMMARIES);
         if (summaryStartIndex < 0) {
@@ -234,6 +242,7 @@ final class PlayerDockView {
         return Math.min(summaryStartIndex, maxStart);
     }
 
+    // Builds one player's summary card: name, totem, resources, tribe stats and buildings.
     private Node playerSummary(PlayerView player, int playerCount) {
         boolean disconnected = model.isPlayerDisconnected(player.getNickname());
         boolean current = player.getNickname().equals(GuiViews.currentTurnNickname(model));
@@ -277,6 +286,7 @@ final class PlayerDockView {
         return card;
     }
 
+    // Builds the small row of the player's building cards (with a "+N" if there are more).
     private Node buildingSummaryStrip(PlayerView player) {
         List<Integer> buildingIds = player.getBuildingCardIds();
         if (buildingIds.isEmpty()) {
@@ -305,6 +315,7 @@ final class PlayerDockView {
         return strip;
     }
 
+    // Opens the big popup with all the details of a player's tribe.
     private void showTribePanel(PlayerView player) {
         VBox panel = panelFactory.apply("Tribe of " + player.getNickname());
         panel.getStyleClass().add("tribe-focus-panel");
@@ -332,6 +343,7 @@ final class PlayerDockView {
         showInlinePanel.accept(panel, Pos.CENTER);
     }
 
+    // Builds the popup header: totem, player name and their food/PP.
     private Node tribePanelHeader(PlayerView player) {
         HBox header = new HBox(10);
         header.setAlignment(Pos.CENTER_LEFT);
@@ -343,6 +355,7 @@ final class PlayerDockView {
         return header;
     }
 
+    // Builds the two badges showing the player's food and prestige points.
     private Node playerResourceBadges(PlayerView player) {
         HBox badges = new HBox(7);
         badges.getStyleClass().add("player-resource-badges");
@@ -354,6 +367,7 @@ final class PlayerDockView {
         return badges;
     }
 
+    // Builds one resource badge: an icon with the number on top of it.
     private Node playerResourceBadge(String iconPath, int value, String valueStyleClass) {
         StackPane badge = new StackPane();
         badge.getStyleClass().add("player-resource-badge");
@@ -380,6 +394,7 @@ final class PlayerDockView {
         return badge;
     }
 
+    // Loads the icon image for a resource badge (null if missing).
     private Node resourceBadgeImage(String iconPath) {
         Optional<Image> cached = assetCatalog.image(iconPath);
         if (cached.isEmpty()) {
@@ -392,12 +407,14 @@ final class PlayerDockView {
         return image;
     }
 
+    // Builds the small totem marker shown next to the player's name.
     private Node playerSummaryTotem(PlayerView player) {
         StackPane marker = totemMarkers.create(player.getTotemColor(), player.getNickname(), 34);
         marker.getStyleClass().add("player-summary-totem");
         return marker;
     }
 
+    // Builds the grid with all the player's character and building cards.
     private FlowPane tribeCards(PlayerView player, double width, double height) {
         FlowPane cards = new FlowPane(6, 6);
         cards.setAlignment(Pos.CENTER);
@@ -415,6 +432,7 @@ final class PlayerDockView {
         return cards;
     }
 
+    // Builds one small clickable card that opens the card details when clicked.
     private Node miniCardNode(int cardId, double width, double height) {
         StackPane card = new StackPane();
         card.getStyleClass().add("mini-card");
@@ -425,12 +443,14 @@ final class PlayerDockView {
         return card;
     }
 
+    // Builds a small "label: value" pill (e.g. "Characters: ...").
     private Label summaryPill(String label, String value) {
         Label pill = new Label(label + ": " + value);
         pill.getStyleClass().add("tribe-summary-pill");
         return pill;
     }
 
+    // Builds the grid of tribe stats (one cell per character type), compact or full.
     private Node tribeStatsGrid(PlayerView player, boolean compact) {
         TribeSummaryStats stats = tribeSummaries.statsFor(player);
 
@@ -449,6 +469,7 @@ final class PlayerDockView {
         return grid;
     }
 
+    // Adds one stat cell for each character type (gatherer, hunter, builder, shaman, artist, inventor).
     private void addTribeStatCells(Pane grid, PlayerView player, TribeSummaryStats stats, boolean compact) {
         grid.getChildren().add(tribeStatCell("gatherer",
                 List.of(ICON_GATHERER, ICON_SUSTENANCE_DISCOUNT),
@@ -488,6 +509,7 @@ final class PlayerDockView {
                 player));
     }
 
+    // Builds one stat cell: the type icons, the count numbers and (if compact) the card stack.
     private Node tribeStatCell(String type, List<String> iconPaths, String primary, String secondary,
                                boolean compact, PlayerView player) {
         VBox cell = new VBox(3);
@@ -523,6 +545,7 @@ final class PlayerDockView {
         return cell;
     }
 
+    // Builds the little stacked pile of the player's cards of one character type.
     private Node characterCardsForType(PlayerView player, String type) {
         Pane cards = new Pane();
         cards.getStyleClass().add("tribe-stat-card-strip");
@@ -584,6 +607,7 @@ final class PlayerDockView {
         return cards;
     }
 
+    // Builds one small fixed-size card used inside the stacked piles.
     private Node stackedMiniCardNode(int cardId, double width, double height) {
         StackPane card = new StackPane();
         card.getStyleClass().addAll("mini-card", "mini-card-stacked");
@@ -595,6 +619,7 @@ final class PlayerDockView {
         return card;
     }
 
+    // Finds the on-screen card a deal animation should fly to (used by the animations).
     Node deckTargetFor(String nickname, int cardId) {
         Node cardTarget = deckCardTargets.get(deckTargetKey(nickname, cardId));
         if (cardTarget != null) {
@@ -603,16 +628,19 @@ final class PlayerDockView {
         return summaryTargets.get(nickname);
     }
 
+    // Saves which on-screen node belongs to a player's card, so animations can find it later.
     private void rememberDeckCardTarget(PlayerView player, int cardId, Node target) {
         if (player != null && target != null) {
             deckCardTargets.put(deckTargetKey(player.getNickname(), cardId), target);
         }
     }
 
+    // Builds the map key "nickname:cardId" used to store/find card targets.
     private String deckTargetKey(String nickname, int cardId) {
         return nickname + ":" + cardId;
     }
 
+    // Loads a small stat icon image (or an empty fallback if missing).
     private Node statIcon(String path, double size) {
         Optional<Image> cached = assetCatalog.image(path);
         if (cached.isPresent()) {
@@ -629,6 +657,7 @@ final class PlayerDockView {
         return fallback;
     }
 
+    // Counts how many cards of each kind there are and makes a short text like "A 2 · B 1".
     private String countSummary(List<Integer> cardIds) {
         if (cardIds.isEmpty()) {
             return "0";
@@ -644,6 +673,7 @@ final class PlayerDockView {
                 .collect(Collectors.joining(" · "));
     }
 
+    // Builds a small "label + value" status item (e.g. Era, Round, Turn).
     private HBox smallStatus(String label, String value) {
         Label key = new Label(label);
         key.getStyleClass().add("table-status-key");
@@ -656,6 +686,7 @@ final class PlayerDockView {
         return row;
     }
 
+    // Builds a small colored dot showing the player's totem color.
     private Region totemDot(PlayerView player) {
         Region dot = new Region();
         dot.getStyleClass().add("totem-dot");
@@ -663,6 +694,7 @@ final class PlayerDockView {
         return dot;
     }
 
+    // Small interface: something that can build a card image from its id and size.
     @FunctionalInterface
     interface CardImageProvider {
         Node create(int cardId, double width, double height);

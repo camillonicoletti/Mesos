@@ -6,6 +6,8 @@ import javafx.scene.CacheHint;
 import javafx.scene.Node;
 import javafx.util.Duration;
 
+// Small helpers for simple UI animations shared by the GUI.
+// For example: grow a little on mouse hover, or pulse gently forever.
 public final class GuiAnimations {
     private GuiAnimations() {
     }
@@ -22,17 +24,6 @@ public final class GuiAnimations {
             node.setCacheHint(CacheHint.DEFAULT);
             node.setCache(false);
         }));
-    }
-
-    public static void pulse(Node node) {
-        ScaleTransition transition = new ScaleTransition(Duration.millis(820), node);
-        transition.setFromX(1.0);
-        transition.setFromY(1.0);
-        transition.setToX(1.025);
-        transition.setToY(1.025);
-        transition.setAutoReverse(true);
-        transition.setCycleCount(Animation.INDEFINITE);
-        transition.play();
     }
 
     private static void scaleTo(Node node, double scale, int millis, Runnable onFinished) {

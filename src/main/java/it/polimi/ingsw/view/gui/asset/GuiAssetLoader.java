@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+// Finds asset files (images, sounds, etc.) and opens them.
+// It first looks in an external folder set by the user, then inside the app's resources.
 public final class GuiAssetLoader {
     public static final String ASSETS_DIR_PROPERTY = "mesos.assets.dir";
     public static final String ASSETS_DIR_ENV = "MESOS_ASSETS_DIR";

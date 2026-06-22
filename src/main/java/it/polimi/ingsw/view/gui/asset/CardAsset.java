@@ -3,6 +3,8 @@ package it.polimi.ingsw.view.gui.asset;
 import java.util.Objects;
 import java.util.Optional;
 
+// Simple data holder describing one card's images and info.
+// Keeps its id, kind, type, era and the file paths of its front and back pictures.
 public final class CardAsset {
     private final int id;
     private final String kind;

@@ -5,13 +5,8 @@ import it.polimi.ingsw.model.enums.TotemColor;
 import java.util.EnumMap;
 import java.util.Map;
 
-/**
- * Single source of truth for how each {@link TotemColor} is rendered in the GUI.
- * {@code fillHex} is the darker shade used for solid markers/dots; {@code textHex}
- * is the brighter shade used for coloured text/accents; {@code assetPath} points
- * to the token image. Replaces the per-view {@code switch} statements that had
- * drifted out of sync.
- */
+// The one place that says how each totem color looks in the GUI.
+// For each color it gives the fill shade, the brighter text shade and the token image.
 public final class TotemPalette {
     private static final String NEUTRAL_FILL_HEX = "#b8ad98";
     private static final Map<TotemColor, String> FILL_HEX = new EnumMap<>(TotemColor.class);
