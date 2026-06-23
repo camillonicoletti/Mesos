@@ -30,17 +30,7 @@ public class CavePaintingsEventCard extends EventCard {
         this.ppPerArtist = ppPerArtist;
     }
 
-    public int getMinArtists() {
-        return minArtists;
-    }
 
-    public int getPpPenalty() {
-        return ppPenalty;
-    }
-
-    public int getPpPerArtists() {
-        return ppPerArtist;
-    }
 
     /**
      * Applies the artist threshold rule to every player.
