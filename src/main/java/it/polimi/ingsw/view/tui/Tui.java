@@ -11,6 +11,8 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Tui implements View {
 
@@ -22,6 +24,7 @@ public class Tui implements View {
     private final ClientModel model;
     private final CommandParser parser;
     private final Scanner scanner;
+    private final ExecutorService outboundExecutor;
     private final Object modelLock = new Object();
     private final Renderer renderer;
     private volatile String activePrompt;
@@ -41,6 +44,12 @@ public class Tui implements View {
         this.model      = model;
         this.parser     = new CommandParser(controller);
         this.scanner    = new Scanner(System.in);
+        this.outboundExecutor = Executors.newSingleThreadExecutor(runnable -> {
+            Thread thread = new Thread(runnable, "tui-client-outbound");
+            thread.setDaemon(true);
+            return thread;
+        });
+        this.controller.setOutboundDispatcher(outboundExecutor::execute);
         this.renderer   = new Renderer(model);
     }
 
@@ -80,27 +89,31 @@ public class Tui implements View {
     // Entry point: login, wait for first sync, start input + timer threads, then block until the game ends.
     @Override
     public void run() {
-        renderer.render(model);
-        loginLoop();
-        if (!isClientActive()) {
-            return;
+        try {
+            renderer.render(model);
+            loginLoop();
+            if (!isClientActive()) {
+                return;
+            }
+
+            waitForInitialStateSync();
+            if (!isClientActive()) {
+                return;
+            }
+
+            inputThread = new Thread(this::interactiveInputLoop);
+            inputThread.setDaemon(true);
+            inputThread.start();
+
+            Thread timerThread = new Thread(this::suspensionTimerRenderLoop);
+            timerThread.setDaemon(true);
+            timerThread.start();
+
+            waitForGameEnd();
+            endGame();
+        } finally {
+            outboundExecutor.shutdownNow();
         }
-
-        waitForInitialStateSync();
-        if (!isClientActive()) {
-            return;
-        }
-
-        inputThread = new Thread(this::interactiveInputLoop);
-        inputThread.setDaemon(true);
-        inputThread.start();
-
-        Thread timerThread = new Thread(this::suspensionTimerRenderLoop);
-        timerThread.setDaemon(true);
-        timerThread.start();
-
-        waitForGameEnd();
-        endGame();
     }
 
     // ── Login ────────────────────────────────────────────────────────────────
