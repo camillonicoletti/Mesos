@@ -53,6 +53,14 @@ class ServerLaunchOptionsTest {
     }
 
     @Test
+    void rmiOnlyParsesAdvertisedHost() {
+        ServerLaunchOptions options = ServerLaunchOptions.rmiOnly(
+                new String[] {"2099", "CustomServer", "172.20.10.2"});
+
+        assertEquals("172.20.10.2", options.rmiHost());
+    }
+
+    @Test
     void unifiedParsesSocketRmiAndBindingName() {
         ServerLaunchOptions options = ServerLaunchOptions.unified(
                 new String[] {"--fresh", "1235", "2099", "UnifiedServer"});
@@ -61,6 +69,14 @@ class ServerLaunchOptionsTest {
         assertEquals(1235, options.socketPort());
         assertEquals(2099, options.rmiPort());
         assertEquals("UnifiedServer", options.rmiBindingName());
+    }
+
+    @Test
+    void unifiedParsesAdvertisedHost() {
+        ServerLaunchOptions options = ServerLaunchOptions.unified(
+                new String[] {"1235", "2099", "UnifiedServer", "172.20.10.2"});
+
+        assertEquals("172.20.10.2", options.rmiHost());
     }
 
     @Test

@@ -51,6 +51,14 @@ class ClientLaunchOptionsTest {
     }
 
     @Test
+    void rmiParsesClientAdvertisedHost() {
+        ClientLaunchOptions options = ClientLaunchOptions.rmi(
+                new String[] {"172.20.10.2", "1099", "MesosServer", "172.20.10.3"});
+
+        assertEquals("172.20.10.3", options.rmiHost());
+    }
+
+    @Test
     void invalidPortsAreRejected() {
         assertThrows(IllegalArgumentException.class,
                 () -> ClientLaunchOptions.socket(new String[] {"localhost", "not-a-port"}));
@@ -61,6 +69,6 @@ class ClientLaunchOptionsTest {
     @Test
     void rmiRejectsTooManyArguments() {
         assertThrows(IllegalArgumentException.class,
-                () -> ClientLaunchOptions.rmi(new String[] {"localhost", "1099", "MesosServer", "extra"}));
+                () -> ClientLaunchOptions.rmi(new String[] {"localhost", "1099", "MesosServer", "client", "extra"}));
     }
 }

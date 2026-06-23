@@ -1,5 +1,6 @@
 package it.polimi.ingsw.network.client;
 
+import it.polimi.ingsw.network.rmi.RMIHostConfigurator;
 import it.polimi.ingsw.network.transport.ClientSideConnection;
 import java.util.Arrays;
 
@@ -60,6 +61,10 @@ public final class ClientLauncher {
                 options.host(),
                 options.registryPort(),
                 options.rmiBindingName());
+        String advertisedHost = RMIHostConfigurator.configure(options.rmiHost());
+        if (advertisedHost != null) {
+            System.out.println("RMI callback advertises host " + advertisedHost);
+        }
         ClientSideConnection connection = createConnectionOrExit(factory, factory.endpointDescription());
         // RMI must export and register the client callback before the view starts.
         ClientRuntime.run(connection, factory,
@@ -79,7 +84,7 @@ public final class ClientLauncher {
     private static void printUsageAndExit() {
         System.err.println("Usage:");
         System.err.println("  java -jar mesos-client.jar socket <host> <socketPort>");
-        System.err.println("  java -jar mesos-client.jar rmi <host> [registryPort] [bindingName]");
+        System.err.println("  java -jar mesos-client.jar rmi <host> [registryPort] [bindingName] [clientRmiHost]");
         System.exit(1);
     }
 

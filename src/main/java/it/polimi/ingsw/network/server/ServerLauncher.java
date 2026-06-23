@@ -2,6 +2,7 @@ package it.polimi.ingsw.network.server;
 
 import it.polimi.ingsw.controller.leaderboard.LeaderboardFactory;
 import it.polimi.ingsw.controller.leaderboard.LeaderboardService;
+import it.polimi.ingsw.network.rmi.RMIHostConfigurator;
 import it.polimi.ingsw.network.rmi.RMIServer;
 
 import java.io.IOException;
@@ -21,12 +22,16 @@ public final class ServerLauncher {
         LeaderboardService leaderboard = LeaderboardFactory.createDefault();
         LobbyManager lobby = LobbyBootstrap.create(options.freshStart(), leaderboard);
         MessageDispatcher dispatcher = new MessageDispatcher(lobby);
+        String advertisedHost = RMIHostConfigurator.configure(options.rmiHost());
 
         // RMI clients find this server through the registry and binding name.
         Registry registry = LocateRegistry.createRegistry(options.rmiPort());
         RMIServer rmiServer = new RMIServer(lobby);
         registry.rebind(options.rmiBindingName(), rmiServer);
         System.out.println("Server listening for RMI clients on registry port " + options.rmiPort());
+        if (advertisedHost != null) {
+            System.out.println("RMI stubs advertise host " + advertisedHost);
+        }
 
         // Socket clients are accepted on a dedicated thread but use the same lobby.
         final int finalSocketPort = options.socketPort();

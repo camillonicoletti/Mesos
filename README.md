@@ -73,13 +73,19 @@ java -jar deliverables/final/jar/mesos-server.jar --fresh
 Avvio con parametri personalizzati:
 
 ```bash
-java -jar deliverables/final/jar/mesos-server.jar [--fresh] [socketPort] [rmiPort] [rmiBindingName]
+java -jar deliverables/final/jar/mesos-server.jar [--fresh] [socketPort] [rmiPort] [rmiBindingName] [rmiHost]
 ```
 
 Esempio:
 
 ```bash
 java -jar deliverables/final/jar/mesos-server.jar --fresh 1234 1099 MesosServer
+```
+
+Se i client RMI si collegano da un altro computer, indicare anche l'indirizzo IP del server da pubblicare negli stub RMI:
+
+```bash
+java -jar deliverables/final/jar/mesos-server.jar --fresh 1234 1099 MesosServer 172.20.10.2
 ```
 
 ## Esecuzione client
@@ -99,7 +105,7 @@ java -jar deliverables/final/jar/mesos-client.jar socket localhost 1234
 Client RMI:
 
 ```bash
-java -jar deliverables/final/jar/mesos-client.jar rmi <host> [registryPort] [bindingName]
+java -jar deliverables/final/jar/mesos-client.jar rmi <host> [registryPort] [bindingName] [clientRmiHost]
 ```
 
 Esempio:
@@ -107,6 +113,8 @@ Esempio:
 ```bash
 java -jar deliverables/final/jar/mesos-client.jar rmi localhost 1099 MesosServer
 ```
+
+Da un altro computer, usare l'IP del server come `<host>`; se anche il client deve ricevere callback RMI su rete, indicare come ultimo argomento l'IP del client.
 
 Dopo la connessione, il client chiede quale interfaccia usare:
 

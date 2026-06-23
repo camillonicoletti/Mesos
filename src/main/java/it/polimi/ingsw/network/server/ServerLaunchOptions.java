@@ -18,12 +18,14 @@ public final class ServerLaunchOptions {
     private final int socketPort;
     private final int rmiPort;
     private final String rmiBindingName;
+    private final String rmiHost;
 
-    private ServerLaunchOptions(boolean freshStart, int socketPort, int rmiPort, String rmiBindingName) {
+    private ServerLaunchOptions(boolean freshStart, int socketPort, int rmiPort, String rmiBindingName, String rmiHost) {
         this.freshStart = freshStart;
         this.socketPort = socketPort;
         this.rmiPort = rmiPort;
         this.rmiBindingName = rmiBindingName;
+        this.rmiHost = rmiHost;
     }
 
     public static ServerLaunchOptions socketOnly(String[] args) {
@@ -35,7 +37,8 @@ public final class ServerLaunchOptions {
         return new ServerLaunchOptions(parsed.freshStart(),
                 socketPort.orElse(DEFAULT_SOCKET_PORT),
                 Registry.REGISTRY_PORT,
-                RMIServerMain.DEFAULT_BINDING_NAME);
+                RMIServerMain.DEFAULT_BINDING_NAME,
+                null);
     }
 
     public static ServerLaunchOptions rmiOnly(String[] args) {
@@ -43,12 +46,14 @@ public final class ServerLaunchOptions {
         PositionalArguments parsed = PositionalArguments.from(args);
         Optional<Integer> rmiPort = parsed.nextPort("RMI registry port");
         Optional<String> rmiBindingName = parsed.nextString();
+        Optional<String> rmiHost = parsed.nextString();
         parsed.rejectRemaining("Too many arguments for RMI server startup.");
 
         return new ServerLaunchOptions(parsed.freshStart(),
                 DEFAULT_SOCKET_PORT,
                 rmiPort.orElse(Registry.REGISTRY_PORT),
-                rmiBindingName.orElse(RMIServerMain.DEFAULT_BINDING_NAME));
+                rmiBindingName.orElse(RMIServerMain.DEFAULT_BINDING_NAME),
+                rmiHost.orElse(null));
     }
 
     public static ServerLaunchOptions unified(String[] args) {
@@ -57,12 +62,14 @@ public final class ServerLaunchOptions {
         Optional<Integer> socketPort = parsed.nextPort("socket port");
         Optional<Integer> rmiPort = parsed.nextPort("RMI registry port");
         Optional<String> rmiBindingName = parsed.nextString();
+        Optional<String> rmiHost = parsed.nextString();
         parsed.rejectRemaining("Too many arguments for unified server startup.");
 
         return new ServerLaunchOptions(parsed.freshStart(),
                 socketPort.orElse(DEFAULT_SOCKET_PORT),
                 rmiPort.orElse(Registry.REGISTRY_PORT),
-                rmiBindingName.orElse(RMIServerMain.DEFAULT_BINDING_NAME));
+                rmiBindingName.orElse(RMIServerMain.DEFAULT_BINDING_NAME),
+                rmiHost.orElse(null));
     }
 
     public boolean freshStart() {
@@ -79,6 +86,10 @@ public final class ServerLaunchOptions {
 
     public String rmiBindingName() {
         return rmiBindingName;
+    }
+
+    public String rmiHost() {
+        return rmiHost;
     }
 
     private static int parsePort(String raw, String label) {

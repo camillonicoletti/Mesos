@@ -20,6 +20,7 @@ public final class RMIServerMain {
     public static void main(String[] args) throws Exception {
         ServerLaunchOptions options = ServerLaunchOptions.rmiOnly(args);
         LobbyManager lobbyManager = LobbyBootstrap.create(options.freshStart());
+        String advertisedHost = RMIHostConfigurator.configure(options.rmiHost());
         // The registry is the RMI name service where clients look up the server.
         Registry registry = LocateRegistry.createRegistry(options.rmiPort());
         RMIServer server = new RMIServer(lobbyManager);
@@ -28,5 +29,8 @@ public final class RMIServerMain {
 
         System.out.println("RMI server started on registry port "
                 + options.rmiPort() + " with name '" + options.rmiBindingName() + "'");
+        if (advertisedHost != null) {
+            System.out.println("RMI stubs advertise host " + advertisedHost);
+        }
     }
 }
