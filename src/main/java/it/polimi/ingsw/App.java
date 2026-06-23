@@ -1,7 +1,7 @@
 package it.polimi.ingsw;
 
 /**
- * Hello Mesosss!
+ * Hello Mesosss, it was a pleasure!
  *
  */
 public class App 
