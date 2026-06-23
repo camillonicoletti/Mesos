@@ -335,7 +335,7 @@ public class ClientController {
     }
 
     private void handleRecoverableConnectionLoss(String reason) {
-        // The model stores a visible disconnected state while reconnect attempts continue.
+        // The model stores a visible disconnected state while reconnect attempts can continue.
         model.applyServerDisconnected(reason);
         if (view != null) {
             view.onConnectionLost();

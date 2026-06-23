@@ -118,7 +118,7 @@ public class RMIServer extends UnicastRemoteObject implements RemoteServer {
     }
 
     private void receive(RemoteClient client, ClientMessage message) {
-        // From this point on, RMI and socket clients share the same dispatcher path.
+        // From this point on, RMI and socket clients share the same dispatcher path (RMIServerConnnection).
         connectionFor(client).receive(message);
     }
 

@@ -61,13 +61,17 @@ public class SocketClientConnection implements ClientSideConnection {
         this.disconnectNotified = false;
         this.lastReceivedAtMillis = System.currentTimeMillis();
         this.handlerInstalled = false;
+        //Where we store messages before Handler is installed
         this.onMessage = this::bufferUntilHandlerInstalled;
+        //no act, se we can avoid check this everytime
         this.onDisconnect = () -> { };
         this.out = new ObjectOutputStream(socket.getOutputStream());
         this.out.flush();
         this.in = new ObjectInputStream(socket.getInputStream());
         this.readerThread = new Thread(this::readerLoop, "socket-client-reader");
+        //service Thread
         this.readerThread.setDaemon(true);
+        //thread managed by the executor
         this.heartbeatExecutor = Executors.newSingleThreadScheduledExecutor(runnable -> {
             Thread thread = new Thread(runnable, "socket-client-heartbeat");
             thread.setDaemon(true);
@@ -117,6 +121,7 @@ public class SocketClientConnection implements ClientSideConnection {
     public void setOnMessage(Consumer<ServerMessage> onMessage) {
         Consumer<ServerMessage> handler = onMessage != null ? onMessage : message -> { };
         List<ServerMessage> drain;
+        //only one thread a time
         synchronized (handlerLock) {
             // After this point new messages go directly to the real handler.
             drain = new ArrayList<>(pendingMessages);
@@ -125,6 +130,7 @@ public class SocketClientConnection implements ClientSideConnection {
             handlerInstalled = true;
         }
         for (ServerMessage queued : drain) {
+            //send it to ClientController
             handler.accept(queued);
         }
     }
@@ -136,7 +142,7 @@ public class SocketClientConnection implements ClientSideConnection {
                 return;
             }
         }
-        // setOnMessage won the race while we were taking the lock.
+        // setOnMessage arrived before while we were taking the lock.
         onMessage.accept(message);
     }
 
@@ -164,13 +170,13 @@ public class SocketClientConnection implements ClientSideConnection {
     }
 
     private void handleInboundObject(Object inboundObject) {
-        // Ping is a transport-level message: it is answered here, not by the controller.
+        // Ping is a TRANSPORT-LEVEL message: it is answered here, not by the controller (no visitor).
         if (inboundObject instanceof PingMessage) {
             send(new PongMessage());
             return;
         }
 
-        // Real game messages are passed to ClientController.
+        // Real game messages are passed to ClientController (visitor).
         if (inboundObject instanceof ServerMessage serverMessage) {
             onMessage.accept(serverMessage);
         }
