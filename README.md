@@ -6,7 +6,7 @@ Progetto di Ingegneria del Software - Politecnico di Milano, A.A. 2025/2026.
 
 Benedetto Oliva, Giorgio Ortona, Alessandro Mazzeo, Camillo Nicoletti.
 
-## Funzionalita
+## Funzionalità
 
 Regole complete, TUI, GUI JavaFX, Socket, RMI, server unico Socket+RMI, disconnessione/riconnessione, sospensione partita, persistenza su disco e leaderboard JDBC opzionale.
 
