@@ -15,6 +15,7 @@ public class EndRoundState extends AbstractGameState {
     @Serial
     private static final long serialVersionUID = 1L;
     private static final long END_ROUND_DISPLAY_MILLIS = 5_000L;
+    private boolean roundPrepared;
 
     @Override
     public void onEnter(GameController ctx) {
@@ -22,6 +23,10 @@ public class EndRoundState extends AbstractGameState {
         Round round = game.getCurrentRound();
         game.getBoard().resetOfferTiles();
 
+        if (roundPrepared) {
+            completePreparedRound(ctx);
+            return;
+        }
 
         if (game.isLastRound()) {
             game.end();
@@ -35,6 +40,7 @@ public class EndRoundState extends AbstractGameState {
             round.checkEraTransition();
             game.nextRound();
             ctx.activateWaitingPlayersForNextRound();
+            roundPrepared = true;
 
             ctx.notifyListeners(l -> l.onRoundEnded(finishedRound));
             ctx.notifyListeners(GameListener::onGameSnapshotChanged);
@@ -49,6 +55,21 @@ public class EndRoundState extends AbstractGameState {
             ctx.changeState(new TotemPlacementState());
         }
     }
+
+    @Override
+    public void onResume(GameController ctx) {
+        if (roundPrepared) {
+            completePreparedRound(ctx);
+        } else {
+            onEnter(ctx);
+        }
+    }
+
+    private void completePreparedRound(GameController ctx) {
+        ctx.activateWaitingPlayersForNextRound();
+        ctx.changeState(new TotemPlacementState());
+    }
+
     @Override
     public void handleAction(GameController ctx, String playerNickname, GameAction action) {
         rejectAction(action);

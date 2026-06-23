@@ -28,9 +28,15 @@ public class EventResolutionState extends AbstractGameState {
     private static final long serialVersionUID = 1L;
 
     private static final long EVENT_DISPLAY_MS = 5_000L;
+    private boolean resolutionCompleted;
 
     @Override
     public void onEnter(GameController ctx) {
+        if (resolutionCompleted) {
+            ctx.changeState(new EndRoundState());
+            return;
+        }
+
         Round round = ctx.getGame().getCurrentRound();
         // Upper-row events are only resolved on the last round of the game.
         boolean includeUpperRow = ctx.getGame().isLastRound();
@@ -66,7 +72,13 @@ public class EventResolutionState extends AbstractGameState {
             sleep();
         }
 
+        resolutionCompleted = true;
         ctx.changeState(new EndRoundState());
+    }
+
+    @Override
+    public void onResume(GameController ctx) {
+        onEnter(ctx);
     }
 
     @Override
