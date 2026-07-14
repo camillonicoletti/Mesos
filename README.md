@@ -1,6 +1,6 @@
 # Mesos
 
-Progetto di Ingegneria del Software - Politecnico di Milano, A.A. 2025/2026.
+Progetto di Ingegneria del Software - Politecnico di Milano, A.A. 2025/2026. Voto Finale: 30L
 
 ## Gruppo
 
