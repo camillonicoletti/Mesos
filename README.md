@@ -1,10 +1,28 @@
+<h1 align="center">MESOS</h1>
+
+<!-- GAMEPLAY VIDEO: the video goes here, in place of the cover image. -->
+
 <p align="center">
-  <img src="docs/images/cover.jpg" alt="Mesos" width="900">
+  <img src="https://img.shields.io/badge/Java-23-ED8B00?style=flat-square&logo=openjdk&logoColor=white" alt="Java 23">
+  <img src="https://img.shields.io/badge/JavaFX-GUI-1E88E5?style=flat-square" alt="JavaFX">
+  <img src="https://img.shields.io/badge/players-2--5-8E44AD?style=flat-square" alt="2-5 players">
+  <img src="https://img.shields.io/badge/multiplayer-Socket%20%7C%20RMI-2E7D32?style=flat-square" alt="Socket and RMI multiplayer">
+  <img src="https://img.shields.io/badge/grade-30L-C62828?style=flat-square" alt="Grade 30 cum laude">
 </p>
 
 <p align="center">
   <b>Software Engineering Project</b> · Politecnico di Milano · A.Y. 2025/2026 · <b>Final grade: 30 cum laude</b>
 </p>
+
+<p align="center">
+  <a href="https://github.com/camillonicoletti/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/releases/latest"><img src="https://img.shields.io/badge/Download-Play%20Mesos-E4572E?style=for-the-badge&logo=github&logoColor=white" alt="Download Mesos"></a>
+</p>
+
+## Quick start
+
+1. Install **Java 23** or later and download `mesos-server.jar` and `mesos-client.jar` from the [latest release](https://github.com/camillonicoletti/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/releases/latest).
+2. Start the server: `java -jar mesos-server.jar`
+3. Each player starts the client: `java -jar mesos-client.jar socket localhost 1234`
 
 ---
 
@@ -20,10 +38,6 @@ We followed the **official board game** closely. The rules, the cards, the tiles
 - Players using different interfaces can play in the same match
 - If your connection drops, you can rejoin the match
 - An interrupted match is saved and resumes where it stopped
-
-## Gameplay
-
-<!-- Gameplay video: on GitHub, edit this README in the browser and drag an .mp4 file here. GitHub then inserts a link that plays inside the page. -->
 
 ## Rules
 
@@ -68,8 +82,6 @@ java -jar deliverables/final/jar/mesos-server.jar --fresh
 ```bash
 mvn clean package
 ```
-
-> The original game artwork is copyrighted and is not included in this repository. To see the graphics, place it in `src/main/resources/assets/`.
 
 ---
 
