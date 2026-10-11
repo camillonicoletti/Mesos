@@ -28,14 +28,31 @@ Requires **Java 23** or later.
 ```bash
 git clone https://github.com/camillonicoletti/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti.git
 cd ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti
-java -jar deliverables/final/jar/mesos-server.jar
+java -jar deliverables/final/jar/mesos-server.jar --fresh
 ```
+
+`--fresh` starts the server with a new match. Without it, the server resumes the last saved match.
 
 Then each player opens a new terminal in the same folder and runs:
 
 ```bash
 java -jar deliverables/final/jar/mesos-client.jar socket localhost 1234
 ```
+
+## Play your way
+
+After connecting, each player chooses how to play: type `1` for the **text interface** or `2` for the **graphical interface**. Players using different interfaces can join the same match.
+
+<table>
+  <tr>
+    <th width="50%">🖥️ Graphical interface (GUI)</th>
+    <th width="50%">⌨️ Text interface (TUI)</th>
+  </tr>
+  <tr>
+    <td><img src="docs/images/gui.jpg" alt="Mesos played with the graphical interface"></td>
+    <td><img src="docs/images/tui.png" alt="Mesos played from the terminal"></td>
+  </tr>
+</table>
 
 ---
 
