@@ -26,8 +26,8 @@
 Requires **Java 23** or later.
 
 ```bash
-git clone https://github.com/camillonicoletti/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti.git
-cd ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti
+git clone https://github.com/camillonicoletti/Mesos.git
+cd Mesos
 java -jar deliverables/final/jar/mesos-server.jar --fresh
 ```
 
