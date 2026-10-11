@@ -15,8 +15,8 @@ import it.polimi.ingsw.network.protocol.serverbound.SetPlayersCountMessage;
 import it.polimi.ingsw.network.transport.ServerSideConnection;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -221,7 +221,7 @@ class LobbyManagerTest {
     }
 
     private static class RecordingConnection implements ServerSideConnection {
-        private final List<ServerMessage> messages = new ArrayList<>();
+        private final List<ServerMessage> messages = new CopyOnWriteArrayList<>();
         private String nickname;
         private boolean alive = true;
 
