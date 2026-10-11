@@ -116,5 +116,5 @@ mvn clean package
 ---
 
 <p align="center">
-  <sub><i>Mesos</i> is a game by Yaniv Kahana and Simone Luciani, published by Cranio Creations. This project was made for educational purposes only.</sub>
+  <sub>Made by <b>Camillo Nicoletti</b>, <b>Benedetto Oliva</b>, <b>Giorgio Ortona</b> and <b>Alessandro Mazzeo</b></sub>
 </p>
