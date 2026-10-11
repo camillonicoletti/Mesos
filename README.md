@@ -18,9 +18,7 @@
 </p>
 
 <p align="center">
-  <a href="docs/rec.mp4"><img src="docs/images/gameplay.jpg" alt="Mesos gameplay video" width="900"></a>
-  <br>
-  <sub>▶ <a href="docs/rec.mp4"><b>Watch the gameplay video</b></a></sub>
+  <img src="docs/images/gameplay.gif" alt="Mesos gameplay" width="900">
 </p>
 
 ## Quick start
