@@ -1,7 +1,5 @@
 <h1 align="center">MESOS</h1>
 
-<!-- GAMEPLAY VIDEO: the video goes here, in place of the cover image. -->
-
 <p align="center">
   <img src="https://img.shields.io/badge/Java-23-ED8B00?style=flat-square&logo=openjdk&logoColor=white" alt="Java 23">
   <img src="https://img.shields.io/badge/JavaFX-GUI-1E88E5?style=flat-square" alt="JavaFX">
@@ -15,14 +13,31 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/camillonicoletti/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/releases/latest"><img src="https://img.shields.io/badge/Download-Play%20Mesos-E4572E?style=for-the-badge&logo=github&logoColor=white" alt="Download Mesos"></a>
+  <a href="#quick-start"><img src="https://img.shields.io/badge/%E2%96%B6%20Play-Quick%20start-E4572E?style=for-the-badge" alt="Quick start"></a>
+  <a href="docs/Mesos-Rulebook-ITA.pdf"><img src="https://img.shields.io/badge/%F0%9F%93%96%20Rules-Rulebook-2B2D42?style=for-the-badge" alt="Rulebook"></a>
+</p>
+
+<p align="center">
+  <a href="docs/rec.mp4"><img src="docs/images/gameplay.jpg" alt="Mesos gameplay video" width="900"></a>
+  <br>
+  <sub>▶ <a href="docs/rec.mp4"><b>Watch the gameplay video</b></a></sub>
 </p>
 
 ## Quick start
 
-1. Install **Java 23** or later and download `mesos-server.jar` and `mesos-client.jar` from the [latest release](https://github.com/camillonicoletti/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti/releases/latest).
-2. Start the server: `java -jar mesos-server.jar`
-3. Each player starts the client: `java -jar mesos-client.jar socket localhost 1234`
+Requires **Java 23** or later.
+
+```bash
+git clone https://github.com/camillonicoletti/ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti.git
+cd ing-sw-2026-Ortona-Mazzeo-Oliva-Nicoletti
+java -jar deliverables/final/jar/mesos-server.jar
+```
+
+Then each player opens a new terminal in the same folder and runs:
+
+```bash
+java -jar deliverables/final/jar/mesos-client.jar socket localhost 1234
+```
 
 ---
 
